@@ -69,11 +69,6 @@ export default function Page() {
             </div>
 
             <BottomNavbar />
-
-            {/* Semantic Footer for SEO */}
-            <footer className="w-full py-8 text-center text-[10px] text-muted-foreground/30 uppercase tracking-[0.2em] font-light z-10 relative">
-                © {new Date().getFullYear()} Focus Track • Built for Deep Work
-            </footer>
         </main>
     );
 }
