@@ -4,8 +4,9 @@ import { useAppStore } from "@/lib/store";
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
-import { Activity, Flame, StickyNote, CheckCircle2, List } from "lucide-react";
+import { Activity, Flame, StickyNote, CheckCircle2, List, Clock } from "lucide-react";
 import { isSameDay, parseISO } from "date-fns";
+import { Progress } from "@/components/ui/progress";
 
 export function StatsJournal() {
     const { notes, setNotes, sessions, sessionStartTime, isActive, todos } =
@@ -59,8 +60,33 @@ export function StatsJournal() {
     // TODO: Improvement - check consecutive days
     const streak = uniqueDates.length;
 
+    // Day Progress Calculation
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    const totalMinutesPassed = currentHour * 60 + currentMinute;
+    const totalMinutesInDay = 24 * 60;
+    const dayProgress = Math.round((totalMinutesPassed / totalMinutesInDay) * 100);
+
     return (
         <div className="h-full flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Day Progress */}
+            <Card className="p-4 bg-primary/5 border-primary/10 shadow-lg backdrop-blur-sm">
+                <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                        <div className="p-2 bg-primary/10 rounded-full text-primary">
+                            <Clock className="w-4 h-4" />
+                        </div>
+                        <span className="text-sm font-medium">Day Progress</span>
+                    </div>
+                    <span className="text-sm font-bold text-primary">{dayProgress}%</span>
+                </div>
+                <Progress value={dayProgress} className="h-2" />
+                <p className="text-xs text-muted-foreground mt-2">
+                    {totalMinutesInDay - totalMinutesPassed} minutes remaining today
+                </p>
+            </Card>
+
             {/* Stats Overview */}
             <div className="grid grid-cols-2 gap-4">
                 <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border-primary/10 shadow-lg backdrop-blur-sm">
