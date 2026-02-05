@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-    title: "Focus Track",
+    title: "Focus",
     description: "app that make you focus on your work",
 };
 
