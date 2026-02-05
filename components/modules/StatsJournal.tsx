@@ -83,7 +83,7 @@ export function StatsJournal() {
                 </div>
                 <Progress value={dayProgress} className="h-2" />
                 <p className="text-xs text-muted-foreground mt-2">
-                    {totalMinutesInDay - totalMinutesPassed} minutes remaining today
+                    {Math.floor((totalMinutesInDay - totalMinutesPassed) / 60)}h {(totalMinutesInDay - totalMinutesPassed) % 60}m remaining today
                 </p>
             </Card>
 

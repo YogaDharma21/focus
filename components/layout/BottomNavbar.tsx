@@ -3,6 +3,7 @@
 import { useAppStore, ViewType } from "@/lib/store";
 import { Timer, CheckSquare, BarChart2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { InfoButton } from "./InfoModal";
 
 export function BottomNavbar() {
     const { currentView, setView } = useAppStore();
@@ -57,6 +58,7 @@ export function BottomNavbar() {
                         </button>
                     );
                 })}
+                <InfoButton />
             </nav>
         </div>
     );
