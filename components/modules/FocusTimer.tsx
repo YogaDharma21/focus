@@ -36,10 +36,8 @@ export function FocusTimer() {
 
     const [settingsOpen, setSettingsOpen] = useState(false);
 
-    // Audio ref
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
-    // Track session start for accurate stats
     const sessionStartTimeRef = useRef<number | null>(null);
 
     useEffect(() => {
@@ -63,7 +61,6 @@ export function FocusTimer() {
             );
         }
 
-        // For Pomodoro, we cap it at the work duration to avoid over-counting if the tab was suspended
         const duration =
             timerMode === "POMODORO"
                 ? Math.min(elapsedSeconds, pomodoroSettings.work * 60)
@@ -78,7 +75,6 @@ export function FocusTimer() {
             });
         }
 
-        // Reset
         if (timerMode === "POMODORO") {
             setTimeLeft(pomodoroSettings.work * 60);
         } else {
@@ -94,7 +90,6 @@ export function FocusTimer() {
         pomodoroSettings,
     ]);
 
-    // Reactive sync for Pomodoro time settings
     useEffect(() => {
         if (timerMode === "POMODORO" && !isActive) {
             setTimeLeft(pomodoroSettings.work * 60);
@@ -109,13 +104,11 @@ export function FocusTimer() {
                 if (timerMode === "POMODORO") {
                     setTimeLeft(timeLeft - 1);
                     if (timeLeft <= 1) {
-                        // Timer finished
                         setIsActive(false);
                         handleCompleteSession();
                         audioRef.current?.play();
                     }
                 } else {
-                    // Stopwatch
                     setTimeLeft(timeLeft + 1);
                 }
             }, 1000);
@@ -154,7 +147,6 @@ export function FocusTimer() {
 
     return (
         <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center min-h-[50vh] animate-in fade-in duration-700 relative">
-            {/* Settings Trigger */}
             <div className="absolute top-0 right-0">
                 <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
                     <DialogTrigger asChild>
@@ -172,7 +164,7 @@ export function FocusTimer() {
                         </DialogHeader>
                         <div className="space-y-6 py-4">
                             <div className="space-y-4">
-                                <div className="flex items-center justify-between p-3 rounded-2xl bg-secondary/20">
+                                <div className="flex items-center justify-between p-3 rounded-none bg-secondary/20">
                                     <Label className="font-medium">
                                         Work Duration
                                     </Label>
@@ -196,7 +188,7 @@ export function FocusTimer() {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between p-3 rounded-2xl bg-secondary/20">
+                                <div className="flex items-center justify-between p-3 rounded-none bg-secondary/20">
                                     <Label className="font-medium">
                                         Break Duration
                                     </Label>
@@ -221,7 +213,7 @@ export function FocusTimer() {
                                 </div>
                             </div>
 
-                            <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-between shadow-inner">
+                            <div className="p-4 rounded-none bg-primary/5 border border-primary/10 flex items-center justify-between shadow-inner">
                                 <div className="space-y-0.5">
                                     <Label className="text-base font-semibold">
                                         Auto-start Break
@@ -253,11 +245,9 @@ export function FocusTimer() {
                 </Dialog>
             </div>
 
-            {/* Hidden Audio for notifications */}
             <audio ref={audioRef} src="/sounds/bell.mp3" />
 
-            {/* Mode Toggles */}
-            <div className="flex gap-2 mb-12 p-1 bg-secondary/30 rounded-full backdrop-blur-md">
+            <div className="flex gap-2 mb-12 p-1 bg-secondary/30 rounded-none backdrop-blur-md">
                 <button
                     onClick={() => {
                         setTimerMode("POMODORO");
@@ -280,7 +270,7 @@ export function FocusTimer() {
                         setTimeLeft(0);
                     }}
                     className={cn(
-                        "px-6 py-2 rounded-full text-sm font-medium transition-all duration-300",
+                        "px-6 py-2 rounded-none text-sm font-medium transition-all duration-300",
                         timerMode === "STOPWATCH"
                             ? "bg-primary text-primary-foreground shadow-lg"
                             : "text-muted-foreground hover:text-foreground",
@@ -290,13 +280,11 @@ export function FocusTimer() {
                 </button>
             </div>
 
-            {/* Main Timer Display */}
             <div className="flex flex-col items-center gap-8 mb-12 w-full">
                 <div className="text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow-2xl">
                     {formatTime(timeLeft)}
                 </div>
 
-                {/* Session Label Input - Increased Contrast */}
                 <Input
                     value={sessionName}
                     onChange={(e) => setSessionName(e.target.value)}
@@ -304,29 +292,25 @@ export function FocusTimer() {
                     className="text-center bg-transparent border-none text-xl focus-visible:ring-0 placeholder:text-muted-foreground/70 text-foreground max-w-sm"
                 />
 
-                {/* Progress Bar */}
                 <div className="w-full max-w-xs">
                     <Progress value={progressValue} className="h-1.5" />
                 </div>
             </div>
 
-            {/* Controls */}
             <div className="flex items-center gap-6">
-                {/* Reset */}
                 <Button
                     variant="outline"
                     size="icon"
-                    className="w-12 h-12 rounded-full border-2 hover:bg-white/5 hover:border-white/20 transition-all"
+                    className="w-12 h-12 rounded-none border-2 hover:bg-white/5 hover:border-white/20 transition-all"
                     onClick={resetTimer}
                 >
                     <RotateCcw className="w-5 h-5" />
                 </Button>
 
-                {/* Play/Pause */}
                 <Button
                     size="icon"
                     className={cn(
-                        "w-20 h-20 rounded-full shadow-[0_0_40px_rgba(var(--primary),0.3)] hover:shadow-[0_0_60px_rgba(var(--primary),0.5)] active:scale-95 transition-all duration-300",
+                        "w-20 h-20 rounded-none shadow-[0_0_40px_rgba(var(--primary),0.3)] hover:shadow-[0_0_60px_rgba(var(--primary),0.5)] active:scale-95 transition-all duration-300",
                         isActive
                             ? "bg-white text-black hover:bg-gray-200"
                             : "bg-primary text-primary-foreground",
@@ -340,11 +324,10 @@ export function FocusTimer() {
                     )}
                 </Button>
 
-                {/* Complete */}
                 <Button
                     variant="outline"
                     size="icon"
-                    className="w-12 h-12 rounded-full border-2 hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50 transition-all"
+                    className="w-12 h-12 rounded-none border-2 hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50 transition-all"
                     onClick={handleCompleteSession}
                     title="Complete Session"
                 >
