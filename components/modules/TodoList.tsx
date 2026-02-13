@@ -11,6 +11,8 @@ import {
     Settings2,
     CheckCircle2,
     Target,
+    Trash,
+    Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,7 +69,6 @@ export function TodoList() {
     const [newGroupName, setNewGroupName] = useState("");
     const [settingsOpen, setSettingsOpen] = useState(false);
 
-    // Task Detail State - Use ID to find task in store for reactivity
     const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
     const editingTask = todos.find((t) => t.id === editingTaskId) || null;
 
@@ -79,7 +80,7 @@ export function TodoList() {
             id: crypto.randomUUID(),
             text: newTodo,
             completed: false,
-            category: "General", // Legacy fallback
+            category: "General",
             groupId: selectedGroupId,
         };
 
@@ -101,67 +102,118 @@ export function TodoList() {
     );
 
     return (
-        <div className="h-full flex flex-col p-4 animate-in fade-in slide-in-from-right-8 duration-500 relative">
-            {/* Settings Trigger */}
-            <div className="absolute top-4 right-4 z-10">
-                <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-                    <DialogTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-muted-foreground hover:text-foreground"
-                        >
-                            <Settings2 className="w-5 h-5" />
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>List Settings</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-4 py-4 text-sm text-muted-foreground">
-                            <p>Global To-Do settings coming soon.</p>
-                            <p>Here you could configure:</p>
-                            <ul className="list-disc pl-5">
-                                <li>Default list behavior</li>
-                                <li>Sorting preferences</li>
-                                <li>Auto-delete completed tasks</li>
-                            </ul>
-                        </div>
-                    </DialogContent>
-                </Dialog>
-            </div>
-
-            {/* Header / Input */}
-            <div className="mb-6 space-y-4 pr-12">
-                <div className="flex items-center justify-between">
+        <div className="h-full flex flex-col p-4 animate-in fade-in slide-in-from-right-8 duration-500">
+            <div className="mb-6">
+                <div className="flex items-center justify-between mb-4">
                     <h2 className="text-2xl font-light tracking-wide">Tasks</h2>
+                    <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+                        <DialogTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="text-muted-foreground hover:text-foreground"
+                            >
+                                <Settings2 className="w-5 h-5" />
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>List Settings</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-4 py-4">
+                                <div className="space-y-2">
+                                    <h4 className="font-medium text-sm">
+                                        Actions
+                                    </h4>
+                                    <div className="grid gap-2">
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                                const completedIds = todos
+                                                    .filter((t) => t.completed)
+                                                    .map((t) => t.id);
+                                                completedIds.forEach((id) =>
+                                                    deleteTodo(id),
+                                                );
+                                                setSettingsOpen(false);
+                                            }}
+                                            disabled={
+                                                !todos.some((t) => t.completed)
+                                            }
+                                            className="justify-start"
+                                        >
+                                            <Check className="w-4 h-4 mr-2" />
+                                            Clear Completed (
+                                            {
+                                                todos.filter((t) => t.completed)
+                                                    .length
+                                            }
+                                            )
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => {
+                                                if (
+                                                    confirm(
+                                                        "Are you sure you want to delete all tasks?",
+                                                    )
+                                                ) {
+                                                    todos.forEach((t) =>
+                                                        deleteTodo(t.id),
+                                                    );
+                                                    setSettingsOpen(false);
+                                                }
+                                            }}
+                                            disabled={todos.length === 0}
+                                            className="justify-start text-destructive hover:text-destructive"
+                                        >
+                                            <Trash className="w-4 h-4 mr-2" />
+                                            Clear All Tasks ({todos.length})
+                                        </Button>
+                                    </div>
+                                </div>
+                                <div className="pt-4 border-t">
+                                    <p className="text-xs text-muted-foreground">
+                                        {todos.length} total task
+                                        {todos.length !== 1 ? "s" : ""} •{" "}
+                                        {
+                                            todos.filter((t) => t.completed)
+                                                .length
+                                        }{" "}
+                                        completed
+                                    </p>
+                                </div>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
                 </div>
 
-                <form onSubmit={handleAddTodo} className="relative">
+                <form onSubmit={handleAddTodo} className="flex gap-2">
                     <Input
                         value={newTodo}
                         onChange={(e) => setNewTodo(e.target.value)}
                         placeholder={`Add task to ${groups.find((g) => g.id === selectedGroupId)?.name || "Inbox"}...`}
-                        className="bg-secondary/20 border-none h-12 rounded-xl pl-4 pr-12 text-base placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary/20"
+                        className="flex-1 bg-secondary/20 border-none h-12 rounded-none pl-4 text-base placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary/20"
                     />
                     <Button
                         type="submit"
                         size="icon"
                         disabled={!newTodo}
-                        className="absolute right-1 top-1 h-10 w-10 rounded-lg bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all"
+                        className="h-12 w-12 rounded-none bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all flex-shrink-0"
                     >
                         <Plus className="w-5 h-5" />
                     </Button>
                 </form>
             </div>
 
-            {/* Groups Scroll */}
             <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-none items-center">
                 {groups.map((group) => (
                     <button
                         key={group.id}
                         className={cn(
-                            "px-4 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors flex items-center gap-2",
+                            "px-4 py-1.5 rounded-none text-xs font-medium whitespace-nowrap transition-colors flex items-center gap-2",
                             selectedGroupId === group.id
                                 ? "bg-primary text-primary-foreground"
                                 : "bg-secondary/30 text-muted-foreground hover:bg-secondary/50",
@@ -185,7 +237,6 @@ export function TodoList() {
                     </button>
                 ))}
 
-                {/* Add Group Popup */}
                 <Dialog
                     open={isCreatingGroup}
                     onOpenChange={setIsCreatingGroup}
@@ -194,7 +245,7 @@ export function TodoList() {
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 px-2 rounded-full border border-dashed text-muted-foreground text-xs hover:text-primary hover:border-primary"
+                            className="h-7 px-2 rounded-none border border-dashed text-muted-foreground text-xs hover:text-primary hover:border-primary"
                         >
                             + Group
                         </Button>
@@ -227,7 +278,6 @@ export function TodoList() {
                 </Dialog>
             </div>
 
-            {/* Task List */}
             <ScrollArea className="flex-1 pr-4 -mr-4">
                 <div className="space-y-3 pb-24">
                     {filteredTodos.length === 0 && (
@@ -246,12 +296,12 @@ export function TodoList() {
                     {filteredTodos.map((todo) => (
                         <div
                             key={todo.id}
-                            className="group flex items-start gap-3 p-3 rounded-xl hover:bg-white/5 transition-all border border-transparent hover:border-white/5"
+                            className="group flex items-start gap-3 p-3 rounded-none hover:bg-white/5 transition-all border border-transparent hover:border-white/5"
                         >
                             <button
                                 onClick={() => toggleTodo(todo.id)}
                                 className={cn(
-                                    "mt-0.5 shrink-0 w-5 h-5 rounded-md border flex items-center justify-center transition-all",
+                                    "mt-0.5 shrink-0 w-5 h-5 rounded-none border flex items-center justify-center transition-all",
                                     todo.completed
                                         ? "bg-primary border-primary text-primary-foreground"
                                         : "border-muted-foreground/30 hover:border-primary/50 text-transparent",
@@ -299,7 +349,6 @@ export function TodoList() {
                                 </div>
                             </div>
 
-                            {/* Actions */}
                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Button
                                     variant="ghost"
@@ -327,7 +376,6 @@ export function TodoList() {
                 </div>
             </ScrollArea>
 
-            {/* Task Details Sheet */}
             <Sheet
                 open={!!editingTaskId}
                 onOpenChange={(open) => !open && setEditingTaskId(null)}
@@ -343,17 +391,15 @@ export function TodoList() {
                                     Task Details
                                 </SheetTitle>
                             </SheetHeader>
-                            {/* Title (Read only for now or simple edit could be added) */}
                             <div className="space-y-2">
                                 <label className="text-xs font-semibold text-muted-foreground uppercase">
                                     Task
                                 </label>
-                                <div className="text-lg font-medium p-2 bg-secondary/10 rounded-md">
+                                <div className="text-lg font-medium p-2 bg-secondary/10 rounded-none">
                                     {editingTask.text}
                                 </div>
                             </div>
 
-                            {/* Deadline */}
                             <div className="space-y-2">
                                 <label className="text-xs font-semibold text-muted-foreground uppercase">
                                     Deadline
@@ -468,7 +514,6 @@ export function TodoList() {
                                 </div>
                             </div>
 
-                            {/* Group Move */}
                             <div className="space-y-2">
                                 <label className="text-xs font-semibold text-muted-foreground uppercase">
                                     Group
@@ -496,7 +541,6 @@ export function TodoList() {
                                 </Select>
                             </div>
 
-                            {/* Subtasks */}
                             <div className="space-y-4">
                                 <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center justify-between">
                                     Subtasks

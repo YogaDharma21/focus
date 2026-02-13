@@ -6,9 +6,7 @@ export type ViewType = "FOCUS" | "TODO" | "JOURNAL";
 interface AppState {
     currentView: ViewType;
     setView: (view: ViewType) => void;
-    // Placeholder for timer/media state later
 
-    // Media State
     mediaType: "YOUTUBE" | "SPOTIFY";
     youtubeUrl: string;
     youtubePlaylist: string[];
@@ -17,8 +15,9 @@ interface AppState {
     setMediaUrl: (type: "YOUTUBE" | "SPOTIFY", url: string) => void;
     addToPlaylist: (url: string) => void;
     removeFromPlaylist: (url: string) => void;
+    mediaPlayerOpen: boolean;
+    setMediaPlayerOpen: (open: boolean) => void;
 
-    // Timer State
     timerMode: "POMODORO" | "STOPWATCH";
     timerState: "WORK" | "BREAK";
     timeLeft: number;
@@ -32,25 +31,21 @@ interface AppState {
     sessionName: string;
     setSessionName: (name: string) => void;
 
-    // Todo State
     todos: TodoItem[];
     addTodo: (todo: TodoItem) => void;
     toggleTodo: (id: string) => void;
-    updateTodo: (id: string, updates: Partial<TodoItem>) => void; // V2
+    updateTodo: (id: string, updates: Partial<TodoItem>) => void;
     deleteTodo: (id: string) => void;
-    // V2 Groups
     groups: Group[];
     addGroup: (name: string) => void;
     deleteGroup: (id: string) => void;
 
-    // Journal & Stats State
-    notes: string; // V2: Renamed from journalEntry
+    notes: string;
     sessions: Session[];
 
     setNotes: (text: string) => void;
     addSession: (session: Session) => void;
 
-    // Global Settings (V2)
     pomodoroSettings: { work: number; break: number; autoStartBreak: boolean };
     setPomodoroSettings: (
         settings: Partial<{
@@ -60,7 +55,6 @@ interface AppState {
         }>,
     ) => void;
 
-    // Subtasks logic (V2)
     addSubtask: (todoId: string, text: string) => void;
     toggleSubtask: (todoId: string, subtaskId: string) => void;
     deleteSubtask: (todoId: string, subtaskId: string) => void;
@@ -74,8 +68,8 @@ export interface Group {
 
 export interface Session {
     id: string;
-    date: string; // ISO string
-    duration: number; // seconds
+    date: string;
+    duration: number;
     mode: "POMODORO" | "STOPWATCH";
 }
 
@@ -87,15 +81,15 @@ export interface TodoItem {
     dueDate?: string;
     subtasks?: { id: string; text: string; completed: boolean }[];
     link?: string;
-    groupId?: string; // V2
-    deadline?: string; // V2
-    completedAt?: string; // V2
+    groupId?: string;
+    deadline?: string;
+    completedAt?: string;
 }
 
 export const useAppStore = create<AppState>()(
     persist(
         (set) => ({
-            currentView: "FOCUS", // Default per requirements
+            currentView: "FOCUS",
             setView: (view) => set({ currentView: view }),
 
             mediaType: "YOUTUBE",
@@ -108,7 +102,6 @@ export const useAppStore = create<AppState>()(
             setMediaUrl: (type, url) =>
                 set((state) => ({
                     [type === "YOUTUBE" ? "youtubeUrl" : "spotifyUrl"]: url,
-                    // If updating youtubeUrl, also ensure it's in the playlist if not already
                     ...(type === "YOUTUBE" &&
                     !state.youtubePlaylist.includes(url)
                         ? { youtubePlaylist: [...state.youtubePlaylist, url] }
@@ -119,7 +112,6 @@ export const useAppStore = create<AppState>()(
                     youtubePlaylist: state.youtubePlaylist.includes(url)
                         ? state.youtubePlaylist
                         : [...state.youtubePlaylist, url],
-                    // Set as current if it's the first or user just added it
                     youtubeUrl: url,
                 })),
             removeFromPlaylist: (url) =>
@@ -129,7 +121,6 @@ export const useAppStore = create<AppState>()(
                     );
                     return {
                         youtubePlaylist: newPlaylist,
-                        // If we removed the current URL, pick another one or default
                         youtubeUrl:
                             state.youtubeUrl === url
                                 ? newPlaylist[0] ||
@@ -137,6 +128,8 @@ export const useAppStore = create<AppState>()(
                                 : state.youtubeUrl,
                     };
                 }),
+            mediaPlayerOpen: true,
+            setMediaPlayerOpen: (open) => set({ mediaPlayerOpen: open }),
 
             timerMode: "POMODORO",
             timerState: "WORK",
@@ -182,7 +175,6 @@ export const useAppStore = create<AppState>()(
                     todos: state.todos.filter((t) => t.id !== id),
                 })),
 
-            // V2 Groups - Current Tasks and Finished by default
             groups: [
                 { id: "current", name: "Current Tasks", type: "system" },
                 { id: "finished", name: "Finished", type: "system" },
@@ -256,7 +248,6 @@ export const useAppStore = create<AppState>()(
                     ),
                 })),
 
-            // Default settings
             pomodoroSettings: { work: 25, break: 5, autoStartBreak: false },
             setPomodoroSettings: (updates) =>
                 set((state) => ({
@@ -264,7 +255,7 @@ export const useAppStore = create<AppState>()(
                 })),
         }),
         {
-            name: "focus-app-storage-v2", // Bump version to reset state if needed, or keep same
+            name: "focus-app-storage-v2",
         },
     ),
 );
