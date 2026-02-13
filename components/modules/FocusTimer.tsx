@@ -255,7 +255,7 @@ export function FocusTimer() {
                         setTimeLeft(pomodoroSettings.work * 60);
                     }}
                     className={cn(
-                        "px-6 py-2 rounded-full text-sm font-medium transition-all duration-300",
+                        "px-6 py-2 rounded-null text-sm font-medium transition-all duration-300",
                         timerMode === "POMODORO"
                             ? "bg-primary text-primary-foreground shadow-lg"
                             : "text-muted-foreground hover:text-foreground",

@@ -9,7 +9,7 @@
 
 **Focus** is a modern, minimalist productivity application designed to help you stay in the flow. Whether you're working, studying, or relaxing, Focus provides the tools you need to manage your time and environment.
 
-![Main Dashboard](./public/screenshots/screenshot-main.png)
+![Main Dashboard](./public/screenshots/screenshot-main.jpeg)
 
 ---
 
@@ -29,17 +29,13 @@
 <details>
 <summary>Click to view more screenshots</summary>
 
-### Focus Timer
-
-![Focus Timer](./public/screenshots/screenshot-timer.png)
-
 ### Task Management
 
-![Task Management](./public/screenshots/screenshot-tasks.png)
+![Task Management](./public/screenshots/screenshot-tasks.jpeg)
 
 ### Stats & Journal
 
-![Stats & Journal](./public/screenshots/screenshot-stats.png)
+![Stats & Journal](./public/screenshots/screenshot-stats.jpeg)
 
 </details>
 
