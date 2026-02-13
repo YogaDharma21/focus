@@ -24,8 +24,8 @@ export default function Page() {
     return (
         <main className="relative flex min-h-screen flex-col overflow-hidden bg-background text-foreground transition-colors duration-500">
             <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] opacity-20" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] opacity-20" />
+                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-null blur-[120px] opacity-20" />
+                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-null blur-[120px] opacity-20" />
             </div>
 
             <div className="flex-1 w-full max-w-7xl mx-auto p-6 pb-20 z-10 relative">
