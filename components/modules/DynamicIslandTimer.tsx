@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useAppStore } from "@/lib/store";
 import { Play, Pause, CheckCircle2 } from "lucide-react";
 import { useMediaQuery } from "@/lib/hooks";
@@ -25,6 +25,8 @@ export function DynamicIslandTimer() {
     } = useAppStore();
     const [isExpanded, setIsExpanded] = useState(false);
     const isMobile = useMediaQuery("(max-width: 768px)");
+
+    const audioRef = useRef<HTMLAudioElement | null>(null);
 
     const modeConfig: Record<string, { icon: string; label: string }> = {
         POMODORO: { icon: "🍅", label: "Pomodoro" },
@@ -78,6 +80,8 @@ export function DynamicIslandTimer() {
 
     const completeSession = () => {
         setIsActive(false);
+        audioRef.current?.play();
+
         const duration =
             timerMode === "POMODORO"
                 ? Math.max(0, pomodoroSettings.work * 60 - timeLeft)
@@ -204,6 +208,8 @@ export function DynamicIslandTimer() {
                                     </span>
                                 )}
                             </div>
+
+                            <audio ref={audioRef} src="/soundeffect.mp3" />
 
                             <div className="flex items-center justify-center gap-2 pt-1">
                                 <Button
