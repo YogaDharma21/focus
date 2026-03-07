@@ -54,6 +54,8 @@ export function FocusTimer() {
     const handleCompleteSession = React.useCallback(() => {
         setIsActive(false);
 
+        audioRef.current?.play();
+
         let elapsedSeconds = 0;
         if (sessionStartTimeRef.current) {
             elapsedSeconds = Math.floor(
@@ -106,7 +108,6 @@ export function FocusTimer() {
                     if (timeLeft <= 1) {
                         setIsActive(false);
                         handleCompleteSession();
-                        audioRef.current?.play();
                     }
                 } else {
                     setTimeLeft(timeLeft + 1);
@@ -245,7 +246,7 @@ export function FocusTimer() {
                 </Dialog>
             </div>
 
-            <audio ref={audioRef} src="/sounds/bell.mp3" />
+            <audio ref={audioRef} src="/soundeffect.mp3" />
 
             <div className="flex gap-2 mb-12 p-1 bg-secondary/30 rounded-none backdrop-blur-md">
                 <button
