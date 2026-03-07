@@ -17,8 +17,8 @@ export function DynamicIslandTimer() {
         sessionName,
         setIsActive,
         setTimeLeft,
-        pomodoroSettings,
         setTimerState,
+        pomodoroSettings,
         setTimerMode,
         addSession,
         setSessionStartTime,
@@ -29,10 +29,18 @@ export function DynamicIslandTimer() {
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
     const modeConfig: Record<string, { icon: string; label: string }> = {
-        POMODORO: { icon: "🍅", label: "Pomodoro" },
+        POMODORO_WORK: { icon: "🍅", label: "Pomodoro" },
+        POMODORO_BREAK: { icon: "☕", label: "Break" },
         STOPWATCH: { icon: "⏱️", label: "Flow" },
     };
-    const currentMode = modeConfig[timerMode] || modeConfig.POMODORO;
+    
+    const getCurrentModeKey = () => {
+        if (timerMode === "POMODORO") {
+            return timerState === "WORK" ? "POMODORO_WORK" : "POMODORO_BREAK";
+        }
+        return "STOPWATCH";
+    };
+    const currentMode = modeConfig[getCurrentModeKey()];
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -42,9 +50,13 @@ export function DynamicIslandTimer() {
 
     const progressValue =
         timerMode === "POMODORO"
-            ? ((pomodoroSettings.work * 60 - timeLeft) /
-                  (pomodoroSettings.work * 60)) *
-              100
+            ? timerState === "WORK"
+                ? ((pomodoroSettings.work * 60 - timeLeft) /
+                      (pomodoroSettings.work * 60)) *
+                  100
+                : ((pomodoroSettings.break * 60 - timeLeft) /
+                      (pomodoroSettings.break * 60)) *
+                  100
             : 100;
 
     useEffect(() => {
@@ -57,25 +69,35 @@ export function DynamicIslandTimer() {
 
     useEffect(() => {
         if (!isActive) return;
-        if (timerState !== "WORK") return;
+        if (timerState !== "WORK" && timerState !== "BREAK") return;
 
         const interval = setInterval(() => {
             if (timerMode === "POMODORO") {
                 setTimeLeft(Math.max(0, timeLeft - 1));
+                // Auto-complete when timer reaches 0
+                if (timeLeft <= 1) {
+                    setIsActive(false);
+                    completeSession();
+                }
             } else {
                 setTimeLeft(timeLeft + 1);
             }
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [isActive, timerState, timerMode, timeLeft, setTimeLeft]);
+    }, [isActive, timerState, timerMode, timeLeft, setTimeLeft, setIsActive]);
 
     const toggleTimer = () => setIsActive(!isActive);
 
-    const switchMode = (mode: "POMODORO" | "STOPWATCH") => {
+    const switchMode = (mode: "POMODORO" | "STOPWATCH", state: "WORK" | "BREAK" = "WORK") => {
         setIsActive(false);
         setTimerMode(mode);
-        setTimeLeft(mode === "POMODORO" ? pomodoroSettings.work * 60 : 0);
+        setTimerState(state);
+        if (mode === "POMODORO") {
+            setTimeLeft(state === "WORK" ? pomodoroSettings.work * 60 : pomodoroSettings.break * 60);
+        } else {
+            setTimeLeft(0);
+        }
     };
 
     const completeSession = () => {
@@ -84,7 +106,7 @@ export function DynamicIslandTimer() {
 
         const duration =
             timerMode === "POMODORO"
-                ? Math.max(0, pomodoroSettings.work * 60 - timeLeft)
+                ? Math.max(0, (timerState === "WORK" ? pomodoroSettings.work * 60 : pomodoroSettings.break * 60) - timeLeft)
                 : timeLeft;
         if (duration > 0) {
             addSession({
@@ -94,8 +116,21 @@ export function DynamicIslandTimer() {
                 mode: timerMode,
             });
         }
+
+        // If in WORK phase, switch to BREAK; if in BREAK, switch to WORK
+        if (timerMode === "POMODORO") {
+            if (timerState === "WORK") {
+                setTimerState("BREAK");
+                setTimeLeft(pomodoroSettings.break * 60);
+                if (pomodoroSettings.autoStartBreak) {
+                    setIsActive(true);
+                }
+            } else {
+                setTimerState("WORK");
+                setTimeLeft(pomodoroSettings.work * 60);
+            }
+        }
         setSessionStartTime(null);
-        setTimeLeft(timerMode === "POMODORO" ? pomodoroSettings.work * 60 : 0);
     };
 
     return (
@@ -153,18 +188,33 @@ export function DynamicIslandTimer() {
                             <div className="flex items-center gap-2">
                                 <Button
                                     variant={
-                                        timerMode === "POMODORO"
+                                        timerMode === "POMODORO" && timerState === "WORK"
                                             ? "default"
                                             : "outline"
                                     }
                                     size="sm"
                                     onClick={(e) => {
                                         e.stopPropagation();
-                                        switchMode("POMODORO");
+                                        switchMode("POMODORO", "WORK");
                                     }}
                                     className="rounded-none text-xs"
                                 >
                                     🍅 Pomodoro
+                                </Button>
+                                <Button
+                                    variant={
+                                        timerMode === "POMODORO" && timerState === "BREAK"
+                                            ? "default"
+                                            : "outline"
+                                    }
+                                    size="sm"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        switchMode("POMODORO", "BREAK");
+                                    }}
+                                    className="rounded-none text-xs"
+                                >
+                                    ☕ Break
                                 </Button>
                                 <Button
                                     variant={

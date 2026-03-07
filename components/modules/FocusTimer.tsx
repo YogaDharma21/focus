@@ -24,6 +24,7 @@ export function FocusTimer() {
         timeLeft,
         isActive,
         setTimerMode,
+        setTimerState,
         setTimeLeft,
         setIsActive,
         setSessionStartTime,
@@ -77,31 +78,42 @@ export function FocusTimer() {
             });
         }
 
-        if (timerMode === "POMODORO") {
+        if (timerMode === "POMODORO" && timerState === "WORK") {
+            setTimerState("BREAK");
+            setTimeLeft(pomodoroSettings.break * 60);
+            if (pomodoroSettings.autoStartBreak) {
+                setIsActive(true);
+            }
+        } else if (timerMode === "POMODORO" && timerState === "BREAK") {
+            setTimerState("WORK");
             setTimeLeft(pomodoroSettings.work * 60);
-        } else {
+        } else if (timerMode === "STOPWATCH") {
             setTimeLeft(0);
         }
         sessionStartTimeRef.current = null;
     }, [
         addSession,
         timerMode,
+        timerState,
         timeLeft,
         setTimeLeft,
         setIsActive,
+        setTimerState,
         pomodoroSettings,
     ]);
 
     useEffect(() => {
-        if (timerMode === "POMODORO" && !isActive) {
+        if (timerMode === "POMODORO" && timerState === "WORK" && !isActive) {
             setTimeLeft(pomodoroSettings.work * 60);
+        } else if (timerMode === "POMODORO" && timerState === "BREAK" && !isActive) {
+            setTimeLeft(pomodoroSettings.break * 60);
         }
-    }, [pomodoroSettings.work, timerMode, isActive, setTimeLeft]);
+    }, [pomodoroSettings.work, pomodoroSettings.break, timerMode, timerState, isActive, setTimeLeft]);
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
 
-        if (isActive && timerState === "WORK") {
+        if (isActive && (timerState === "WORK" || timerState === "BREAK")) {
             interval = setInterval(() => {
                 if (timerMode === "POMODORO") {
                     setTimeLeft(timeLeft - 1);
@@ -109,7 +121,7 @@ export function FocusTimer() {
                         setIsActive(false);
                         handleCompleteSession();
                     }
-                } else {
+                } else if (timerMode === "STOPWATCH") {
                     setTimeLeft(timeLeft + 1);
                 }
             }, 1000);
@@ -130,7 +142,12 @@ export function FocusTimer() {
 
     const resetTimer = () => {
         setIsActive(false);
-        setTimeLeft(timerMode === "POMODORO" ? pomodoroSettings.work * 60 : 0);
+        if (timerMode === "POMODORO") {
+            setTimerState("WORK");
+            setTimeLeft(pomodoroSettings.work * 60);
+        } else {
+            setTimeLeft(0);
+        }
     };
 
     const formatTime = (seconds: number) => {
@@ -141,9 +158,13 @@ export function FocusTimer() {
 
     const progressValue =
         timerMode === "POMODORO"
-            ? ((pomodoroSettings.work * 60 - timeLeft) /
-                  (pomodoroSettings.work * 60)) *
-              100
+            ? timerState === "WORK"
+                ? ((pomodoroSettings.work * 60 - timeLeft) /
+                      (pomodoroSettings.work * 60)) *
+                  100
+                : ((pomodoroSettings.break * 60 - timeLeft) /
+                      (pomodoroSettings.break * 60)) *
+                  100
             : 100;
 
     return (
@@ -252,17 +273,34 @@ export function FocusTimer() {
                 <button
                     onClick={() => {
                         setTimerMode("POMODORO");
+                        setTimerState("WORK");
                         setIsActive(false);
                         setTimeLeft(pomodoroSettings.work * 60);
                     }}
                     className={cn(
-                        "px-6 py-2 rounded-null text-sm font-medium transition-all duration-300",
-                        timerMode === "POMODORO"
+                        "px-6 py-2 rounded-none text-sm font-medium transition-all duration-300",
+                        timerMode === "POMODORO" && timerState === "WORK"
                             ? "bg-primary text-primary-foreground shadow-lg"
                             : "text-muted-foreground hover:text-foreground",
                     )}
                 >
                     Pomodoro
+                </button>
+                <button
+                    onClick={() => {
+                        setTimerMode("POMODORO");
+                        setTimerState("BREAK");
+                        setIsActive(false);
+                        setTimeLeft(pomodoroSettings.break * 60);
+                    }}
+                    className={cn(
+                        "px-6 py-2 rounded-none text-sm font-medium transition-all duration-300",
+                        timerMode === "POMODORO" && timerState === "BREAK"
+                            ? "bg-green-500 text-primary-foreground shadow-lg"
+                            : "text-muted-foreground hover:text-foreground",
+                    )}
+                >
+                    Break
                 </button>
                 <button
                     onClick={() => {
