@@ -42,6 +42,12 @@ export function FocusTimer() {
     const sessionStartTimeRef = useRef<number | null>(null);
 
     useEffect(() => {
+        if (audioRef.current) {
+            audioRef.current.volume = 0.5;
+        }
+    }, []);
+
+    useEffect(() => {
         if (isActive && !sessionStartTimeRef.current) {
             const now = Date.now();
             sessionStartTimeRef.current = now;
@@ -55,7 +61,10 @@ export function FocusTimer() {
     const handleCompleteSession = React.useCallback(() => {
         setIsActive(false);
 
-        audioRef.current?.play();
+        if (audioRef.current) {
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(() => {});
+        }
 
         let elapsedSeconds = 0;
         if (sessionStartTimeRef.current) {
@@ -102,13 +111,19 @@ export function FocusTimer() {
         pomodoroSettings,
     ]);
 
+    const prevSettingsRef = useRef({ work: pomodoroSettings.work, break: pomodoroSettings.break });
+
     useEffect(() => {
-        if (timerMode === "POMODORO" && timerState === "WORK" && !isActive) {
-            setTimeLeft(pomodoroSettings.work * 60);
-        } else if (timerMode === "POMODORO" && timerState === "BREAK" && !isActive) {
-            setTimeLeft(pomodoroSettings.break * 60);
+        const prev = prevSettingsRef.current;
+        if (pomodoroSettings.work !== prev.work || pomodoroSettings.break !== prev.break) {
+            prevSettingsRef.current = { work: pomodoroSettings.work, break: pomodoroSettings.break };
+            if (timerMode === "POMODORO" && timerState === "WORK") {
+                setTimeLeft(pomodoroSettings.work * 60);
+            } else if (timerMode === "POMODORO" && timerState === "BREAK") {
+                setTimeLeft(pomodoroSettings.break * 60);
+            }
         }
-    }, [pomodoroSettings.work, pomodoroSettings.break, timerMode, timerState, isActive, setTimeLeft]);
+    }, [pomodoroSettings.work, pomodoroSettings.break, timerMode, timerState, setTimeLeft]);
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
@@ -366,8 +381,14 @@ export function FocusTimer() {
                 <Button
                     variant="outline"
                     size="icon"
-                    className="w-12 h-12 rounded-none border-2 hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50 transition-all"
+                    className={cn(
+                        "w-12 h-12 rounded-none border-2 transition-all",
+                        isActive
+                            ? "hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50"
+                            : "opacity-50 cursor-not-allowed",
+                    )}
                     onClick={handleCompleteSession}
+                    disabled={!isActive}
                     title="Complete Session"
                 >
                     <CheckCircle2 className="w-5 h-5" />
