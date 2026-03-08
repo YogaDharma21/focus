@@ -102,7 +102,11 @@ export function DynamicIslandTimer() {
 
     const completeSession = () => {
         setIsActive(false);
-        audioRef.current?.play();
+        if (audioRef.current) {
+            audioRef.current.volume = 0.5;
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(() => {});
+        }
 
         const duration =
             timerMode === "POMODORO"
@@ -269,6 +273,7 @@ export function DynamicIslandTimer() {
                                         e.stopPropagation();
                                         completeSession();
                                     }}
+                                    disabled={!isActive}
                                     className="rounded-none text-xs"
                                     title="Complete Session"
                                 >
