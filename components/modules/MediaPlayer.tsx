@@ -239,10 +239,10 @@ export function MediaPlayer() {
         >
             <div
                 className={cn(
-                    "bg-card/90 backdrop-blur-2xl border border-border/20 shadow-2xl overflow-hidden flex flex-col relative",
+                    "bg-card/90 backdrop-blur-2xl border border-border/20 shadow-lg overflow-hidden flex flex-col relative",
                     mediaPlayerOpen
-                        ? "rounded-none p-4 gap-3"
-                        : "rounded-none items-center justify-center w-full h-full",
+                        ? "rounded-[var(--radius)] p-4 gap-3"
+                        : "rounded-[var(--radius)] items-center justify-center w-full h-full",
                 )}
             >
                 {mediaPlayerOpen && (
@@ -255,7 +255,7 @@ export function MediaPlayer() {
                         </div>
                         <button
                             onClick={() => setMediaPlayerOpen(false)}
-                            className="w-8 h-8 rounded-none bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                            className="w-8 h-8 rounded-[var(--radius)] bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
                         >
                             <ChevronUp className="w-4 h-4 rotate-180" />
                         </button>
@@ -269,14 +269,14 @@ export function MediaPlayer() {
                     >
                         <Input
                             placeholder="Paste YouTube URL..."
-                            className="h-8 text-xs bg-black/20 rounded-none"
+                            className="h-8 text-xs bg-black/20 rounded-[var(--radius)]"
                             value={inputUrl}
                             onChange={(e) => setInputUrl(e.target.value)}
                         />
                         <Button
                             type="submit"
                             size="sm"
-                            className="h-8 rounded-none px-3"
+                            className="h-8 rounded-[var(--radius)] px-3"
                         >
                             Play
                         </Button>
@@ -304,7 +304,7 @@ export function MediaPlayer() {
                         <div className="flex items-center gap-2 px-1 shrink-0">
                             <button
                                 onClick={toggleMute}
-                                className="p-1.5 rounded-none hover:bg-white/10 transition-colors"
+                                className="p-1.5 rounded-[var(--radius)] hover:bg-white/10 transition-colors"
                             >
                                 {muted ? (
                                     <VolumeX className="w-4 h-4" />
@@ -334,7 +334,7 @@ export function MediaPlayer() {
                                         }
                                     }
                                 }}
-                                className="h-8 rounded-none px-3"
+                                className="h-8 rounded-[var(--radius)] px-3"
                             >
                                 {isPlaying ? (
                                     <Pause className="w-4 h-4" />
@@ -406,7 +406,7 @@ export function MediaPlayer() {
                                     {youtubePlaylist.map((url, idx) => (
                                         <div
                                             key={idx}
-                                            className="flex items-center justify-between p-2 rounded-none bg-white/5 group"
+                                            className="flex items-center justify-between p-2 rounded-[var(--radius)] bg-white/5 group"
                                         >
                                             <span className="text-[10px] text-muted-foreground truncate flex-1">
                                                 {extractId(url)}
