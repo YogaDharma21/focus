@@ -133,6 +133,8 @@ export function DynamicIslandTimer() {
                 setTimerState("WORK");
                 setTimeLeft(pomodoroSettings.work * 60);
             }
+        } else if (timerMode === "STOPWATCH") {
+            setTimeLeft(0);
         }
         setSessionStartTime(null);
     };
@@ -273,7 +275,7 @@ export function DynamicIslandTimer() {
                                         e.stopPropagation();
                                         completeSession();
                                     }}
-                                    disabled={!isActive}
+                                    disabled={timeLeft === 0}
                                     className="rounded-none text-xs"
                                     title="Complete Session"
                                 >
@@ -288,8 +290,10 @@ export function DynamicIslandTimer() {
                                         toggleTimer();
                                     }}
                                     className={cn(
-                                        "rounded-none px-4 text-xs",
-                                        isActive ? "bg-white/10" : "",
+                                        "rounded-none px-4 text-xs font-medium",
+                                        isActive 
+                                            ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 border border-amber-500/50" 
+                                            : "bg-primary hover:bg-primary/90"
                                     )}
                                 >
                                     {isActive ? (
