@@ -39,10 +39,10 @@ export function BottomNavbar() {
         >
             <nav
                 className={cn(
-                    "flex items-center gap-2 p-2 bg-sidebar/80 backdrop-blur-xl border border-sidebar-border shadow-2xl ring-1 ring-white/5",
+                    "flex items-center gap-2 p-2 bg-sidebar/80 backdrop-blur-xl border border-sidebar-border shadow-lg ring-1 ring-white/5",
                     isDesktop
-                        ? "flex-col rounded-none"
-                        : "flex-row rounded-none",
+                        ? "flex-col rounded-[var(--radius)]"
+                        : "flex-row rounded-[var(--radius)]",
                 )}
             >
                 {navItems.map((item) => {
@@ -54,9 +54,9 @@ export function BottomNavbar() {
                             className={cn(
                                 "relative flex flex-col items-center justify-center w-16 h-14 transition-all duration-300 ease-out group",
                                 isActive
-                                    ? "text-primary-foreground bg-primary shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+                                    ? "text-primary-foreground bg-primary shadow-lg"
                                     : "text-muted-foreground hover:text-foreground hover:bg-white/5",
-                                isDesktop ? "rounded-none" : "rounded-none",
+                                isDesktop ? "rounded-[var(--radius)]" : "rounded-[var(--radius)]",
                             )}
                         >
                             <span
@@ -76,7 +76,7 @@ export function BottomNavbar() {
                     onClick={() => setMediaPlayerOpen(!mediaPlayerOpen)}
                     className={cn(
                         "relative flex flex-col items-center justify-center w-16 h-14 transition-all duration-300 ease-out group text-muted-foreground hover:text-foreground hover:bg-white/5",
-                        isDesktop ? "rounded-none" : "rounded-none",
+                        isDesktop ? "rounded-[var(--radius)]" : "rounded-[var(--radius)]",
                     )}
                     aria-label="Toggle media player"
                 >
@@ -84,7 +84,7 @@ export function BottomNavbar() {
                         <Youtube className="w-6 h-6" />
                     </span>
                     {mediaPlayerOpen && (
-                        <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-primary rounded-none" />
+                        <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-primary rounded-[var(--radius)]" />
                     )}
                 </button>
             </nav>

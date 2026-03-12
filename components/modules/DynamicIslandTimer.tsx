@@ -150,8 +150,8 @@ export function DynamicIslandTimer() {
         >
             <div
                 className={cn(
-                    "bg-sidebar/80 backdrop-blur-xl border border-sidebar-border shadow-2xl transition-all duration-300 cursor-pointer",
-                    isExpanded ? "rounded-none" : "rounded-none",
+                    "bg-sidebar/80 backdrop-blur-xl border border-sidebar-border shadow-lg transition-all duration-300 cursor-pointer",
+                    isExpanded ? "rounded-[var(--radius)]" : "rounded-[var(--radius)]",
                 )}
                 onClick={() => setIsExpanded(!isExpanded)}
             >
@@ -203,7 +203,7 @@ export function DynamicIslandTimer() {
                                         e.stopPropagation();
                                         switchMode("POMODORO", "WORK");
                                     }}
-                                    className="rounded-none text-xs"
+                                    className="rounded-[var(--radius)] text-xs"
                                 >
                                     🍅 Pomodoro
                                 </Button>
@@ -218,7 +218,7 @@ export function DynamicIslandTimer() {
                                         e.stopPropagation();
                                         switchMode("POMODORO", "BREAK");
                                     }}
-                                    className="rounded-none text-xs"
+                                    className="rounded-[var(--radius)] text-xs"
                                 >
                                     ☕ Break
                                 </Button>
@@ -233,7 +233,7 @@ export function DynamicIslandTimer() {
                                         e.stopPropagation();
                                         switchMode("STOPWATCH");
                                     }}
-                                    className="rounded-none text-xs"
+                                    className="rounded-[var(--radius)] text-xs"
                                 >
                                     ⏱️ Flow
                                 </Button>
@@ -250,7 +250,7 @@ export function DynamicIslandTimer() {
                             <div className="flex items-center gap-2">
                                 <span
                                     className={cn(
-                                        "text-xs px-2 py-0.5 rounded-none",
+                                        "text-xs px-2 py-0.5 rounded-[var(--radius)]",
                                         timerState === "WORK"
                                             ? "bg-primary/20 text-primary"
                                             : "bg-green-500/20 text-green-500",
@@ -276,7 +276,7 @@ export function DynamicIslandTimer() {
                                         completeSession();
                                     }}
                                     disabled={timeLeft === 0}
-                                    className="rounded-none text-xs"
+                                    className="rounded-[var(--radius)] text-xs"
                                     title="Complete Session"
                                 >
                                     <CheckCircle2 className="w-3 h-3 mr-1" />
@@ -290,7 +290,7 @@ export function DynamicIslandTimer() {
                                         toggleTimer();
                                     }}
                                     className={cn(
-                                        "rounded-none px-4 text-xs font-medium",
+                                        "rounded-[var(--radius)] px-4 text-xs font-medium",
                                         isActive 
                                             ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 border border-amber-500/50" 
                                             : "bg-primary hover:bg-primary/90"
