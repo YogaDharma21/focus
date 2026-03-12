@@ -57,7 +57,7 @@ export function InfoModal() {
                             {PROJECT_INFO.techStack.map((tech) => (
                                 <span
                                     key={tech}
-                                    className="px-2 py-1 bg-secondary rounded-none text-xs"
+                                    className="px-2 py-1 bg-secondary rounded-[var(--radius)] text-xs"
                                 >
                                     {tech}
                                 </span>
@@ -74,7 +74,7 @@ export function InfoModal() {
                                     href={link.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-2 p-2 rounded-none hover:bg-secondary transition-colors text-sm"
+                                    className="flex items-center gap-2 p-2 rounded-[var(--radius)] hover:bg-secondary transition-colors text-sm"
                                 >
                                     <link.icon className="w-4 h-4" />
                                     <span>{link.label}</span>
@@ -96,7 +96,7 @@ export function InfoButton() {
         <>
             <button
                 onClick={() => setOpen(true)}
-                className="flex flex-col items-center justify-center w-16 h-14 rounded-none transition-all duration-300 ease-out group text-muted-foreground hover:text-foreground hover:bg-white/5"
+                className="flex flex-col items-center justify-center w-16 h-14 rounded-[var(--radius)] transition-all duration-300 ease-out group text-muted-foreground hover:text-foreground hover:bg-white/5"
             >
                 <span className="transform transition-transform duration-300 group-hover:scale-105">
                     <svg
@@ -140,7 +140,7 @@ export function InfoButton() {
                                 {PROJECT_INFO.techStack.map((tech) => (
                                     <span
                                         key={tech}
-                                        className="px-2 py-1 bg-secondary rounded-none text-xs"
+                                        className="px-2 py-1 bg-secondary rounded-[var(--radius)] text-xs"
                                     >
                                         {tech}
                                     </span>
@@ -157,7 +157,7 @@ export function InfoButton() {
                                         href={link.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center gap-2 p-2 rounded-none hover:bg-secondary transition-colors text-sm"
+                                        className="flex items-center gap-2 p-2 rounded-[var(--radius)] hover:bg-secondary transition-colors text-sm"
                                     >
                                         <link.icon className="w-4 h-4" />
                                         <span>{link.label}</span>

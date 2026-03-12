@@ -195,13 +195,13 @@ export function TodoList() {
                         value={newTodo}
                         onChange={(e) => setNewTodo(e.target.value)}
                         placeholder={`Add task to ${groups.find((g) => g.id === selectedGroupId)?.name || "Inbox"}...`}
-                        className="flex-1 bg-secondary/20 border-none h-12 rounded-none pl-4 text-base placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary/20"
+                        className="flex-1 bg-secondary/20 border-none h-12 rounded-[var(--radius)] pl-4 text-base placeholder:text-muted-foreground/50 focus-visible:ring-1 focus-visible:ring-primary/20"
                     />
                     <Button
                         type="submit"
                         size="icon"
                         disabled={!newTodo}
-                        className="h-12 w-12 rounded-none bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all flex-shrink-0"
+                        className="h-12 w-12 rounded-[var(--radius)] bg-primary/10 text-primary hover:bg-primary hover:text-primary-foreground transition-all flex-shrink-0"
                     >
                         <Plus className="w-5 h-5" />
                     </Button>
@@ -213,7 +213,7 @@ export function TodoList() {
                     <button
                         key={group.id}
                         className={cn(
-                            "px-4 py-1.5 rounded-none text-xs font-medium whitespace-nowrap transition-colors flex items-center gap-2",
+                            "px-4 py-1.5 rounded-[var(--radius)] text-xs font-medium whitespace-nowrap transition-colors flex items-center gap-2",
                             selectedGroupId === group.id
                                 ? "bg-primary text-primary-foreground"
                                 : "bg-secondary/30 text-muted-foreground hover:bg-secondary/50",
@@ -245,7 +245,7 @@ export function TodoList() {
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-7 px-2 rounded-none border border-dashed text-muted-foreground text-xs hover:text-primary hover:border-primary"
+                            className="h-7 px-2 rounded-[var(--radius)] border border-dashed text-muted-foreground text-xs hover:text-primary hover:border-primary"
                         >
                             + Group
                         </Button>
@@ -296,12 +296,12 @@ export function TodoList() {
                     {filteredTodos.map((todo) => (
                         <div
                             key={todo.id}
-                            className="group flex items-start gap-3 p-3 rounded-none hover:bg-white/5 transition-all border border-transparent hover:border-white/5"
+                            className="group flex items-start gap-3 p-3 rounded-[var(--radius)] hover:bg-white/5 transition-all border border-transparent hover:border-white/5"
                         >
                             <button
                                 onClick={() => toggleTodo(todo.id)}
                                 className={cn(
-                                    "mt-0.5 shrink-0 w-5 h-5 rounded-none border flex items-center justify-center transition-all",
+                                    "mt-0.5 shrink-0 w-5 h-5 rounded-[var(--radius)] border flex items-center justify-center transition-all",
                                     todo.completed
                                         ? "bg-primary border-primary text-primary-foreground"
                                         : "border-muted-foreground/30 hover:border-primary/50 text-transparent",
@@ -395,7 +395,7 @@ export function TodoList() {
                                 <label className="text-xs font-semibold text-muted-foreground uppercase">
                                     Task
                                 </label>
-                                <div className="text-lg font-medium p-2 bg-secondary/10 rounded-none">
+                                <div className="text-lg font-medium p-2 bg-secondary/10 rounded-[var(--radius)]">
                                     {editingTask.text}
                                 </div>
                             </div>

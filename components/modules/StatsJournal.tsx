@@ -73,10 +73,10 @@ export function StatsJournal() {
 
     return (
         <div className="h-full flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <Card className="p-4 bg-primary/5 border-primary/10 shadow-lg backdrop-blur-sm">
+            <Card className="p-4 bg-primary/5 border-primary/10 shadow-md backdrop-blur-sm rounded-[var(--radius)]">
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                        <div className="p-2 bg-primary/10 rounded-none text-primary">
+                        <div className="p-2 bg-primary/10 rounded-[var(--radius)] text-primary">
                             <Clock className="w-4 h-4" />
                         </div>
                         <span className="text-sm font-medium">
@@ -96,8 +96,8 @@ export function StatsJournal() {
             </Card>
 
             <div className="grid grid-cols-2 gap-4">
-                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border-primary/10 shadow-lg backdrop-blur-sm">
-                    <div className="p-2 bg-primary/10 rounded-none text-primary mb-1">
+                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border-primary/10 shadow-md backdrop-blur-sm rounded-[var(--radius)]">
+                    <div className="p-2 bg-primary/10 rounded-[var(--radius)] text-primary mb-1">
                         <Activity className="w-5 h-5" />
                     </div>
                     <div className="text-2xl font-bold">{focusMinutes}</div>
@@ -106,8 +106,8 @@ export function StatsJournal() {
                     </span>
                 </Card>
 
-                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-orange-500/5 border-orange-500/10 shadow-lg backdrop-blur-sm">
-                    <div className="p-2 bg-orange-500/10 rounded-none text-orange-500 mb-1">
+                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-orange-500/5 border-orange-500/10 shadow-md backdrop-blur-sm rounded-[var(--radius)]">
+                    <div className="p-2 bg-orange-500/10 rounded-[var(--radius)] text-orange-500 mb-1">
                         <Flame className="w-5 h-5" />
                     </div>
                     <div className="text-2xl font-bold">{streak}</div>
@@ -116,8 +116,8 @@ export function StatsJournal() {
                     </span>
                 </Card>
 
-                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-green-500/5 border-green-500/10 shadow-lg backdrop-blur-sm">
-                    <div className="p-2 bg-green-500/10 rounded-none text-green-500 mb-1">
+                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-green-500/5 border-green-500/10 shadow-md backdrop-blur-sm rounded-[var(--radius)]">
+                    <div className="p-2 bg-green-500/10 rounded-[var(--radius)] text-green-500 mb-1">
                         <CheckCircle2 className="w-5 h-5" />
                     </div>
                     <div className="text-2xl font-bold">
@@ -128,8 +128,8 @@ export function StatsJournal() {
                     </span>
                 </Card>
 
-                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-blue-500/5 border-blue-500/10 shadow-lg backdrop-blur-sm">
-                    <div className="p-2 bg-blue-500/10 rounded-none text-blue-500 mb-1">
+                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-blue-500/5 border-blue-500/10 shadow-md backdrop-blur-sm rounded-[var(--radius)]">
+                    <div className="p-2 bg-blue-500/10 rounded-[var(--radius)] text-blue-500 mb-1">
                         <List className="w-5 h-5" />
                     </div>
                     <div className="text-2xl font-bold">{tasksPending}</div>
@@ -139,7 +139,7 @@ export function StatsJournal() {
                 </Card>
             </div>
 
-            <Card className="flex-1 p-6 bg-card/50 border-0 shadow-lg backdrop-blur-sm flex flex-col gap-4">
+            <Card className="flex-1 p-6 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-4 rounded-[var(--radius)]">
                 <div className="flex items-center justify-between">
                     <h2 className="font-semibold text-lg flex items-center gap-2">
                         <StickyNote className="w-4 h-4 text-primary" />

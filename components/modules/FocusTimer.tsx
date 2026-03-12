@@ -201,7 +201,7 @@ export function FocusTimer() {
                         </DialogHeader>
                         <div className="space-y-6 py-4">
                             <div className="space-y-4">
-                                <div className="flex items-center justify-between p-3 rounded-none bg-secondary/20">
+                                <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
                                     <Label className="font-medium">
                                         Work Duration
                                     </Label>
@@ -225,7 +225,7 @@ export function FocusTimer() {
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-between p-3 rounded-none bg-secondary/20">
+                                <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
                                     <Label className="font-medium">
                                         Break Duration
                                     </Label>
@@ -250,7 +250,7 @@ export function FocusTimer() {
                                 </div>
                             </div>
 
-                            <div className="p-4 rounded-none bg-primary/5 border border-primary/10 flex items-center justify-between shadow-inner">
+                            <div className="p-4 rounded-[var(--radius)] bg-primary/5 border border-primary/10 flex items-center justify-between shadow-inner">
                                 <div className="space-y-0.5">
                                     <Label className="text-base font-semibold">
                                         Auto-start Break
@@ -284,7 +284,7 @@ export function FocusTimer() {
 
             <audio ref={audioRef} src="/soundeffect.mp3" />
 
-            <div className="flex gap-2 mb-12 p-1 bg-secondary/30 rounded-none backdrop-blur-md">
+            <div className="flex gap-2 mb-12 p-1 bg-secondary/30 rounded-[var(--radius)] backdrop-blur-md">
                 <button
                     onClick={() => {
                         setTimerMode("POMODORO");
@@ -293,9 +293,9 @@ export function FocusTimer() {
                         setTimeLeft(pomodoroSettings.work * 60);
                     }}
                     className={cn(
-                        "px-6 py-2 rounded-none text-sm font-medium transition-all duration-300",
+                        "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
                         timerMode === "POMODORO" && timerState === "WORK"
-                            ? "bg-primary text-primary-foreground shadow-lg"
+                            ? "bg-primary text-primary-foreground shadow-md"
                             : "text-muted-foreground hover:text-foreground",
                     )}
                 >
@@ -309,9 +309,9 @@ export function FocusTimer() {
                         setTimeLeft(pomodoroSettings.break * 60);
                     }}
                     className={cn(
-                        "px-6 py-2 rounded-none text-sm font-medium transition-all duration-300",
+                        "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
                         timerMode === "POMODORO" && timerState === "BREAK"
-                            ? "bg-green-500 text-primary-foreground shadow-lg"
+                            ? "bg-green-500 text-primary-foreground shadow-md"
                             : "text-muted-foreground hover:text-foreground",
                     )}
                 >
@@ -324,9 +324,9 @@ export function FocusTimer() {
                         setTimeLeft(0);
                     }}
                     className={cn(
-                        "px-6 py-2 rounded-none text-sm font-medium transition-all duration-300",
+                        "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
                         timerMode === "STOPWATCH"
-                            ? "bg-primary text-primary-foreground shadow-lg"
+                            ? "bg-primary text-primary-foreground shadow-md"
                             : "text-muted-foreground hover:text-foreground",
                     )}
                 >
@@ -335,7 +335,7 @@ export function FocusTimer() {
             </div>
 
             <div className="flex flex-col items-center gap-8 mb-12 w-full">
-                <div className="text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow-2xl">
+                <div className="text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow">
                     {formatTime(timeLeft)}
                 </div>
 
@@ -355,7 +355,7 @@ export function FocusTimer() {
                 <Button
                     variant="outline"
                     size="icon"
-                    className="w-12 h-12 rounded-none border-2 hover:bg-white/5 hover:border-white/20 transition-all"
+                    className="w-12 h-12 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 transition-all"
                     onClick={resetTimer}
                 >
                     <RotateCcw className="w-5 h-5" />
@@ -364,7 +364,7 @@ export function FocusTimer() {
                 <Button
                     size="icon"
                     className={cn(
-                        "w-20 h-20 rounded-none shadow-[0_0_40px_rgba(var(--primary),0.3)] hover:shadow-[0_0_60px_rgba(var(--primary),0.5)] active:scale-95 transition-all duration-300",
+                        "w-20 h-20 rounded-[var(--radius)] shadow-md hover:shadow active:scale-95 transition-all duration-300",
                         isActive
                             ? "bg-white text-black hover:bg-gray-200"
                             : "bg-primary text-primary-foreground",
@@ -382,7 +382,7 @@ export function FocusTimer() {
                     variant="outline"
                     size="icon"
                     className={cn(
-                        "w-12 h-12 rounded-none border-2 transition-all",
+                        "w-12 h-12 rounded-[var(--radius)] border-2 transition-all",
                         isActive
                             ? "hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50"
                             : "opacity-50 cursor-not-allowed",
