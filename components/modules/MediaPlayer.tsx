@@ -13,6 +13,7 @@ import {
     VolumeX,
     Play,
     Pause,
+    ChevronUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -44,6 +45,9 @@ export function MediaPlayer() {
     const unmutedOnce = useRef(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const userPaused = useRef(false);
+    const [volumeInputMode, setVolumeInputMode] = useState(false);
+    const [volumeInputValue, setVolumeInputValue] = useState("");
+    const volumeInputRef = useRef<HTMLInputElement>(null);
 
     const extractId = (url: string) => {
         return url.split("v=")[1]?.split("&")[0] || url.split("/").pop();
@@ -161,6 +165,54 @@ export function MediaPlayer() {
         [muted, playerReady],
     );
 
+    const applyVolume = useCallback(
+        (value: number) => {
+            const clampedValue = Math.max(0, Math.min(100, value));
+            setVolume(clampedValue);
+            if (playerRef.current && playerReady) {
+                if (clampedValue > 0 && muted) {
+                    playerRef.current.unMute();
+                    setMuted(false);
+                }
+                playerRef.current.setVolume(clampedValue);
+            }
+        },
+        [muted, playerReady],
+    );
+
+    const handleVolumeInputKeyDown = useCallback(
+        (e: React.KeyboardEvent<HTMLInputElement>) => {
+            if (e.key === "Enter") {
+                e.preventDefault();
+                const numValue = parseFloat(volumeInputValue);
+                if (!isNaN(numValue)) {
+                    applyVolume(numValue);
+                }
+                setVolumeInputMode(false);
+            } else if (e.key === "Escape") {
+                setVolumeInputMode(false);
+                setVolumeInputValue(volume.toString());
+            }
+        },
+        [volumeInputValue, applyVolume, volume],
+    );
+
+    const handleVolumeInputBlur = useCallback(() => {
+        const numValue = parseFloat(volumeInputValue);
+        if (!isNaN(numValue)) {
+            applyVolume(numValue);
+        }
+        setVolumeInputMode(false);
+    }, [volumeInputValue, applyVolume]);
+
+    const handleVolumeDisplayClick = useCallback(() => {
+        setVolumeInputMode(true);
+        setVolumeInputValue(volume.toString());
+        setTimeout(() => {
+            volumeInputRef.current?.select();
+        }, 0);
+    }, [volume]);
+
     const toggleMute = useCallback(() => {
         if (!playerRef.current || !playerReady) return;
         if (muted) {
@@ -205,7 +257,7 @@ export function MediaPlayer() {
                             onClick={() => setMediaPlayerOpen(false)}
                             className="w-8 h-8 rounded-none bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
                         >
-                            <ChevronDown className="w-4 h-4 rotate-180" />
+                            <ChevronUp className="w-4 h-4 rotate-180" />
                         </button>
                     </div>
                 )}
@@ -297,11 +349,40 @@ export function MediaPlayer() {
                                 step="1"
                                 value={volume}
                                 onChange={handleVolumeChange}
-                                className="flex-1 h-1.5 bg-white/20 rounded-none appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-none"
+                                className="flex-1 h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125"
                             />
-                            <span className="text-xs text-muted-foreground w-8 text-right">
-                                {volume}%
-                            </span>
+                            {volumeInputMode ? (
+                                <input
+                                    ref={volumeInputRef}
+                                    type="number"
+                                    min="0"
+                                    max="100"
+                                    step="0.5"
+                                    value={volumeInputValue}
+                                    onChange={(e) =>
+                                        setVolumeInputValue(e.target.value)
+                                    }
+                                    onKeyDown={handleVolumeInputKeyDown}
+                                    onBlur={handleVolumeInputBlur}
+                                    className="w-14 h-6 text-xs font-medium bg-card/60 border border-border/40 rounded-md px-2 py-0.5 text-right text-foreground outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all"
+                                    autoFocus
+                                />
+                            ) : (
+                                <span
+                                    onClick={handleVolumeDisplayClick}
+                                    className="text-xs font-medium text-muted-foreground min-w-[3rem] text-right cursor-pointer hover:text-primary hover:bg-primary/10 px-1.5 py-0.5 rounded-md transition-all"
+                                    title="Click to edit volume"
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" || e.key === " ") {
+                                            handleVolumeDisplayClick();
+                                        }
+                                    }}
+                                >
+                                    {volume}%
+                                </span>
+                            )}
                         </div>
 
                         <button
