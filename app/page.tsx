@@ -12,7 +12,7 @@ import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export default function Page() {
-    const { currentView } = useAppStore();
+    const { currentView, mediaPlayerOpen } = useAppStore();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
@@ -28,7 +28,10 @@ export default function Page() {
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-[var(--radius)] blur-[120px] opacity-20" />
             </div>
 
-            <div className="flex-1 w-full max-w-7xl mx-auto p-6 pb-20 z-10 relative">
+            <div className={cn(
+                "flex-1 w-full max-w-7xl mx-auto p-6 pb-20 z-10 relative transition-all duration-300 ease-in-out",
+                mediaPlayerOpen && "lg:pr-[344px]"
+            )}>
                 <header className="flex items-center justify-between mb-8">
                     <h1 className="text-xl font-bold tracking-tight opacity-90">
                         {currentView === "FOCUS" && "Focus Session"}
@@ -52,7 +55,10 @@ export default function Page() {
                     )}
 
                     {(currentView === "TODO" || currentView === "JOURNAL") && (
-                        <div className="max-w-2xl mx-auto w-full pb-8 pt-12">
+                        <div className={cn(
+                            "max-w-2xl mx-auto w-full pb-8 pt-12 transition-all duration-300 ease-in-out",
+                            mediaPlayerOpen && "lg:max-w-none lg:mx-0 lg:pr-0"
+                        )}>
                             {currentView === "TODO" ? (
                                 <TodoList />
                             ) : (
