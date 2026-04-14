@@ -59,6 +59,7 @@ export function TodoList() {
         addSubtask,
         toggleSubtask,
         deleteSubtask,
+        updateSubtask,
         setSessionName,
         setView,
     } = useAppStore();
@@ -70,7 +71,16 @@ export function TodoList() {
     const [settingsOpen, setSettingsOpen] = useState(false);
 
     const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
+    const [isEditingTaskName, setIsEditingTaskName] = useState(false);
+    const [editingTaskName, setEditingTaskName] = useState("");
+    const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
+    const [editingSubtaskText, setEditingSubtaskText] = useState("");
     const editingTask = todos.find((t) => t.id === editingTaskId) || null;
+    
+    // Reset edit mode when task changes
+    if (editingTask && editingTask.text !== editingTaskName && !isEditingTaskName) {
+        setEditingTaskName(editingTask.text);
+    }
 
     const handleAddTodo = (e: React.FormEvent) => {
         e.preventDefault();
@@ -395,9 +405,41 @@ export function TodoList() {
                                 <label className="text-xs font-semibold text-muted-foreground uppercase">
                                     Task
                                 </label>
-                                <div className="text-lg font-medium p-2 bg-secondary/10 rounded-[var(--radius)]">
-                                    {editingTask.text}
-                                </div>
+                                {isEditingTaskName ? (
+                                    <Input
+                                        autoFocus
+                                        value={editingTaskName}
+                                        onChange={(e) => setEditingTaskName(e.target.value)}
+                                        onBlur={() => {
+                                            if (editingTaskName.trim()) {
+                                                updateTodo(editingTask.id, { text: editingTaskName.trim() });
+                                            }
+                                            setIsEditingTaskName(false);
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                if (editingTaskName.trim()) {
+                                                    updateTodo(editingTask.id, { text: editingTaskName.trim() });
+                                                }
+                                                setIsEditingTaskName(false);
+                                            }
+                                            if (e.key === 'Escape') {
+                                                setIsEditingTaskName(false);
+                                            }
+                                        }}
+                                        className="text-lg font-medium h-12"
+                                    />
+                                ) : (
+                                    <div 
+                                        className="text-lg font-medium p-2 bg-secondary/10 rounded-[var(--radius)] cursor-pointer hover:bg-secondary/20 transition-colors"
+                                        onClick={() => {
+                                            setEditingTaskName(editingTask.text);
+                                            setIsEditingTaskName(true);
+                                        }}
+                                    >
+                                        {editingTask.text}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="space-y-2">
@@ -576,15 +618,45 @@ export function TodoList() {
                                                     <CheckCircle2 className="w-2.5 h-2.5" />
                                                 )}
                                             </button>
-                                            <span
-                                                className={cn(
-                                                    "text-sm flex-1",
-                                                    subtask.completed &&
-                                                        "text-muted-foreground line-through",
-                                                )}
-                                            >
-                                                {subtask.text}
-                                            </span>
+                                            {editingSubtaskId === subtask.id ? (
+                                                <Input
+                                                    autoFocus
+                                                    value={editingSubtaskText}
+                                                    onChange={(e) => setEditingSubtaskText(e.target.value)}
+                                                    onBlur={() => {
+                                                        if (editingSubtaskText.trim()) {
+                                                            updateSubtask(editingTask.id, subtask.id, editingSubtaskText.trim());
+                                                        }
+                                                        setEditingSubtaskId(null);
+                                                    }}
+                                                    onKeyDown={(e) => {
+                                                        if (e.key === 'Enter') {
+                                                            if (editingSubtaskText.trim()) {
+                                                                updateSubtask(editingTask.id, subtask.id, editingSubtaskText.trim());
+                                                            }
+                                                            setEditingSubtaskId(null);
+                                                        }
+                                                        if (e.key === 'Escape') {
+                                                            setEditingSubtaskId(null);
+                                                        }
+                                                    }}
+                                                    className="h-7 text-sm flex-1"
+                                                />
+                                            ) : (
+                                                <span
+                                                    className={cn(
+                                                        "text-sm flex-1 cursor-pointer hover:bg-secondary/10 rounded px-1 py-0.5 transition-colors",
+                                                        subtask.completed &&
+                                                            "text-muted-foreground line-through",
+                                                    )}
+                                                    onClick={() => {
+                                                        setEditingSubtaskText(subtask.text);
+                                                        setEditingSubtaskId(subtask.id);
+                                                    }}
+                                                >
+                                                    {subtask.text}
+                                                </span>
+                                            )}
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
