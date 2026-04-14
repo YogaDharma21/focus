@@ -6,7 +6,6 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import {
     Activity,
-    Flame,
     StickyNote,
     CheckCircle2,
     List,
@@ -19,6 +18,7 @@ export function StatsJournal() {
     const { notes, setNotes, sessions, sessionStartTime, isActive, todos } =
         useAppStore();
     const [liveElapsed, setLiveElapsed] = useState(0);
+    const [showHours, setShowHours] = useState(false);
 
     const today = new Date();
 
@@ -47,6 +47,7 @@ export function StatsJournal() {
     );
     const totalSeconds = historicalSeconds + liveElapsed;
     const focusMinutes = Math.floor(totalSeconds / 60);
+    const focusHours = (totalSeconds / 3600).toFixed(1);
 
     const tasksCompletedToday = todos.filter(
         (t) =>
@@ -57,10 +58,49 @@ export function StatsJournal() {
 
     const tasksPending = todos.filter((t) => !t.completed).length;
 
-    const uniqueDates = Array.from(
-        new Set(sessions.map((s) => s.date.split("T")[0])),
+    // Calculate proper consecutive day streak
+    const calculateStreak = () => {
+        if (sessions.length === 0) return 0;
+        
+        // Get unique sorted dates
+        const uniqueDates = Array.from(
+            new Set(sessions.map((s) => s.date.split("T")[0])),
+        ).sort().reverse();
+        
+        let streak = 0;
+        let currentDate = new Date();
+        currentDate.setHours(0, 0, 0, 0);
+        
+        for (const dateStr of uniqueDates) {
+            const sessionDate = new Date(dateStr);
+            sessionDate.setHours(0, 0, 0, 0);
+            
+            const diffDays = Math.floor((currentDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24));
+            
+            if (diffDays === streak) {
+                streak++;
+            } else if (diffDays > streak) {
+                break;
+            }
+        }
+        
+        return streak;
+    };
+    
+    const streak = calculateStreak();
+    
+    // Calculate weekly average focus time
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+    
+    const weeklySessions = sessions.filter((s) => 
+        new Date(s.date) >= oneWeekAgo
     );
-    const streak = uniqueDates.length;
+    
+    const weeklySeconds = weeklySessions.reduce((acc, s) => acc + s.duration, 0);
+    const weeklyMinutes = Math.floor(weeklySeconds / 60);
+    const weeklyAverage = Math.round(weeklyMinutes / 7);
+    const weeklyAverageHours = (weeklySeconds / 7 / 3600).toFixed(1);
 
     const now = new Date();
     const currentHour = now.getHours();
@@ -95,24 +135,19 @@ export function StatsJournal() {
                 </p>
             </Card>
 
-            <div className="grid grid-cols-2 gap-4">
-                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border-primary/10 shadow-md backdrop-blur-sm rounded-[var(--radius)]">
+            <div className="grid grid-cols-3 gap-4">
+                <Card 
+                    className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border-primary/10 shadow-md backdrop-blur-sm rounded-[var(--radius)] cursor-pointer hover:bg-primary/10 transition-colors"
+                    onClick={() => setShowHours(!showHours)}
+                >
                     <div className="p-2 bg-primary/10 rounded-[var(--radius)] text-primary mb-1">
                         <Activity className="w-5 h-5" />
                     </div>
-                    <div className="text-2xl font-bold">{focusMinutes}</div>
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                        Minutes Today
-                    </span>
-                </Card>
-
-                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-orange-500/5 border-orange-500/10 shadow-md backdrop-blur-sm rounded-[var(--radius)]">
-                    <div className="p-2 bg-orange-500/10 rounded-[var(--radius)] text-orange-500 mb-1">
-                        <Flame className="w-5 h-5" />
+                    <div className="text-2xl font-bold">
+                        {showHours ? focusHours : focusMinutes}
                     </div>
-                    <div className="text-2xl font-bold">{streak}</div>
                     <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                        Day Streak
+                        {showHours ? "Hours Today" : "Minutes Today"}
                     </span>
                 </Card>
 
