@@ -117,6 +117,7 @@ export function MediaPlayer() {
                             rel: 0,
                             playsinline: 1,
                             origin: window.location.origin,
+                            wmode: "opaque",
                         },
                         events: {
                             onReady: () => {
@@ -231,7 +232,7 @@ export function MediaPlayer() {
     return (
         <div
             className={cn(
-                "fixed z-[100]",
+                "fixed z-40",
                 mediaPlayerOpen
                     ? "bottom-6 right-6 w-80"
                     : "opacity-0 invisible pointer-events-none w-0 h-0",
@@ -285,7 +286,7 @@ export function MediaPlayer() {
 
                 <div
                     className={cn(
-                        "overflow-hidden shrink-0",
+                        "overflow-hidden shrink-0 isolate",
                         mediaPlayerOpen
                             ? "aspect-video w-full relative opacity-100 visible"
                             : "fixed opacity-0 invisible pointer-events-none w-px h-px overflow-hidden border-0",
