@@ -12,7 +12,7 @@ import { useState } from "react";
 
 const PROJECT_INFO = {
     name: "Focus",
-    version: "1.2.0",
+    version: "1.0.0",
     description:
         "A minimalist productivity app designed to help you stay in flow. Features a Pomodoro-style timer, task management, stats/journaling, and an ambient media player for focus enhancement.",
     github: "https://github.com/YogaDharma21/focus-website",
