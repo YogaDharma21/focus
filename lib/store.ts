@@ -58,6 +58,7 @@ interface AppState {
     addSubtask: (todoId: string, text: string) => void;
     toggleSubtask: (todoId: string, subtaskId: string) => void;
     deleteSubtask: (todoId: string, subtaskId: string) => void;
+    updateSubtask: (todoId: string, subtaskId: string, text: string) => void;
 }
 
 export interface Group {
@@ -242,6 +243,21 @@ export const useAppStore = create<AppState>()(
                                   ...t,
                                   subtasks: t.subtasks?.filter(
                                       (s) => s.id !== subtaskId,
+                                  ),
+                              }
+                            : t,
+                    ),
+                })),
+            updateSubtask: (todoId, subtaskId, text) =>
+                set((state) => ({
+                    todos: state.todos.map((t) =>
+                        t.id === todoId
+                            ? {
+                                  ...t,
+                                  subtasks: t.subtasks?.map((s) =>
+                                      s.id === subtaskId
+                                          ? { ...s, text }
+                                          : s
                                   ),
                               }
                             : t,
