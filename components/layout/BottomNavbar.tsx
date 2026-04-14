@@ -31,10 +31,10 @@ export function BottomNavbar() {
     return (
         <div
             className={cn(
-                "fixed z-40 transition-all duration-300 ease-out",
+                "z-40 transition-all duration-300 ease-out",
                 isDesktop
-                    ? "left-6 top-1/2 -translate-y-1/2 flex flex-col gap-2"
-                    : "bottom-6 left-1/2 -translate-x-1/2 flex flex-row gap-2",
+                    ? "sticky top-0 flex flex-col items-center justify-center w-20 h-screen py-6 pl-6"
+                    : "fixed bottom-6 left-1/2 -translate-x-1/2 flex flex-row gap-2",
             )}
         >
             <nav
