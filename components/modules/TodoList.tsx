@@ -570,10 +570,10 @@ export function TodoList() {
                                         });
                                     }}
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="rounded-[var(--radius)]">
                                         <SelectValue placeholder="Select group" />
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="rounded-[var(--radius)]">
                                         {groups.map((g) => (
                                             <SelectItem key={g.id} value={g.id}>
                                                 {g.name}
