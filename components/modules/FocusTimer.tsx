@@ -98,7 +98,15 @@ export function FocusTimer() {
             setTimerState("WORK");
             setTimeLeft(pomodoroSettings.work * 60);
         } else if (timerMode === "STOPWATCH") {
-            setTimeLeft(0);
+            if (timerState === "WORK" && timeLeft > 0) {
+                setTimerState("BREAK");
+                setTimeLeft(Math.floor(timeLeft / 5));
+            } else if (timerState === "BREAK") {
+                setTimerState("WORK");
+                setTimeLeft(0);
+            } else {
+                setTimeLeft(0);
+            }
         }
         sessionStartTimeRef.current = null;
     }, [
@@ -138,7 +146,15 @@ export function FocusTimer() {
                         handleCompleteSession();
                     }
                 } else if (timerMode === "STOPWATCH") {
-                    setTimeLeft(timeLeft + 1);
+                    if (timerState === "WORK") {
+                        setTimeLeft(timeLeft + 1);
+                    } else {
+                        setTimeLeft(Math.max(0, timeLeft - 1));
+                        if (timeLeft <= 1) {
+                            setIsActive(false);
+                            handleCompleteSession();
+                        }
+                    }
                 }
             }, 1000);
         }
