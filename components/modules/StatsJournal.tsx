@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { isSameDay, parseISO } from "date-fns";
 import { Progress } from "@/components/ui/progress";
+import { ProductivityHeatmap } from "./ProductivityHeatmap";
 
 export function StatsJournal() {
     const { notes, setNotes, sessions, sessionStartTime, isActive, todos } =
@@ -173,6 +174,8 @@ export function StatsJournal() {
                     </span>
                 </Card>
             </div>
+
+            <ProductivityHeatmap />
 
             <Card className="flex-1 p-6 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-4 rounded-[var(--radius)]">
                 <div className="flex items-center justify-between">
