@@ -231,7 +231,9 @@ export function FocusTimer() {
                         "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
                         timerMode === "POMODORO" && timerState === "BREAK"
                             ? "bg-green-500 text-primary-foreground shadow-md"
-                            : "text-muted-foreground hover:text-foreground",
+                            : timerMode === "STOPWATCH" && timerState === "BREAK"
+                              ? "bg-green-500 text-primary-foreground shadow-md"
+                              : "text-muted-foreground hover:text-foreground",
                     )}
                 >
                     Break
@@ -244,7 +246,7 @@ export function FocusTimer() {
                     }}
                     className={cn(
                         "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
-                        timerMode === "STOPWATCH"
+                        timerMode === "STOPWATCH" && timerState === "WORK"
                             ? "bg-primary text-primary-foreground shadow-md"
                             : "text-muted-foreground hover:text-foreground",
                     )}

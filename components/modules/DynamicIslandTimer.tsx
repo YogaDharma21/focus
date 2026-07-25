@@ -228,7 +228,9 @@ export function DynamicIslandTimer() {
                                     variant={
                                         timerMode === "POMODORO" && timerState === "BREAK"
                                             ? "default"
-                                            : "outline"
+                                            : timerMode === "STOPWATCH" && timerState === "BREAK"
+                                              ? "default"
+                                              : "outline"
                                     }
                                     size="sm"
                                     onClick={(e) => {
@@ -241,7 +243,7 @@ export function DynamicIslandTimer() {
                                 </Button>
                                 <Button
                                     variant={
-                                        timerMode === "STOPWATCH"
+                                        timerMode === "STOPWATCH" && timerState === "WORK"
                                             ? "default"
                                             : "outline"
                                     }

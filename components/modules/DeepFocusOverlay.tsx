@@ -141,17 +141,6 @@ export function DeepFocusOverlay() {
                 )}
 
                 <div className="flex items-center gap-4 mt-8">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="w-14 h-14 rounded-full border-2 hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50 transition-all"
-                        onClick={handleUltimateAction}
-                        disabled={timeLeft === 0 && !isActive}
-                        title="Complete Session"
-                    >
-                        <CheckCircle2 className="w-6 h-6" />
-                    </Button>
-
                     <DistractionCounter />
 
                     <Button
@@ -165,6 +154,17 @@ export function DeepFocusOverlay() {
                         ) : (
                             <Play className="w-6 h-6 ml-1" />
                         )}
+                    </Button>
+
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="w-14 h-14 rounded-full border-2 hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50 transition-all"
+                        onClick={handleUltimateAction}
+                        disabled={timeLeft === 0 && !isActive}
+                        title="Complete Session"
+                    >
+                        <CheckCircle2 className="w-6 h-6" />
                     </Button>
                 </div>
             </div>
