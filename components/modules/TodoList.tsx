@@ -663,6 +663,19 @@ export function TodoList() {
                                                 variant="ghost"
                                                 size="icon"
                                                 className="h-6 w-6 opacity-0 group-hover/sub:opacity-100"
+                                                onClick={() => {
+                                                    setSessionName(subtask.text);
+                                                    setFocusedTodoId(editingTask.id);
+                                                    setView("FOCUS");
+                                                }}
+                                                title="Focus on this subtask"
+                                            >
+                                                <Target className="w-3 h-3" />
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="h-6 w-6 opacity-0 group-hover/sub:opacity-100"
                                                 onClick={() =>
                                                     deleteSubtask(
                                                         editingTask.id,
