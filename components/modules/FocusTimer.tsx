@@ -184,155 +184,157 @@ export function FocusTimer() {
 
     return (
         <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center min-h-[50vh] animate-in fade-in duration-700 relative">
-            <div className="mb-3 flex justify-center md:absolute md:top-0 md:right-0 md:mb-0">
-                <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-                    <DialogTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-muted-foreground hover:text-foreground"
-                        >
-                            <Settings2 className="w-5 h-5" />
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Timer Settings</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-6 py-4">
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
-                                    <Label className="font-medium">
-                                        Work Duration
-                                    </Label>
-                                    <div className="flex items-center gap-2">
-                                        <Input
-                                            type="number"
-                                            value={pomodoroSettings.work}
-                                            onChange={(e) =>
-                                                setPomodoroSettings({
-                                                    work:
-                                                        parseInt(
-                                                            e.target.value,
-                                                        ) || 25,
-                                                })
-                                            }
-                                            className="w-16 h-8 text-center bg-background/50 border-none"
-                                        />
-                                        <span className="text-xs text-muted-foreground">
-                                            min
-                                        </span>
-                                    </div>
-                                </div>
+            <div className="flex flex-col items-center gap-3 md:absolute md:top-0 md:right-0 md:flex-row md:items-center">
+                <div className="flex gap-2 p-1 bg-secondary/30 rounded-[var(--radius)] backdrop-blur-md">
+                    <button
+                        onClick={() => {
+                            setTimerMode("POMODORO");
+                            setTimerState("WORK");
+                            setIsActive(false);
+                            setTimeLeft(pomodoroSettings.work * 60);
+                        }}
+                        className={cn(
+                            "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
+                            timerMode === "POMODORO" && timerState === "WORK"
+                                ? "bg-primary text-primary-foreground shadow-md"
+                                : "text-muted-foreground hover:text-foreground",
+                        )}
+                    >
+                        Pomodoro
+                    </button>
+                    <button
+                        onClick={() => {
+                            setTimerMode("POMODORO");
+                            setTimerState("BREAK");
+                            setIsActive(false);
+                            setTimeLeft(pomodoroSettings.break * 60);
+                        }}
+                        className={cn(
+                            "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
+                            timerMode === "POMODORO" && timerState === "BREAK"
+                                ? "bg-green-500 text-primary-foreground shadow-md"
+                                : "text-muted-foreground hover:text-foreground",
+                        )}
+                    >
+                        Break
+                    </button>
+                    <button
+                        onClick={() => {
+                            setTimerMode("STOPWATCH");
+                            setIsActive(false);
+                            setTimeLeft(0);
+                        }}
+                        className={cn(
+                            "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
+                            timerMode === "STOPWATCH"
+                                ? "bg-primary text-primary-foreground shadow-md"
+                                : "text-muted-foreground hover:text-foreground",
+                        )}
+                    >
+                        Flow
+                    </button>
+                </div>
 
-                                <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
-                                    <Label className="font-medium">
-                                        Break Duration
-                                    </Label>
-                                    <div className="flex items-center gap-2">
-                                        <Input
-                                            type="number"
-                                            value={pomodoroSettings.break}
-                                            onChange={(e) =>
-                                                setPomodoroSettings({
-                                                    break:
-                                                        parseInt(
-                                                            e.target.value,
-                                                        ) || 5,
-                                                })
-                                            }
-                                            className="w-16 h-8 text-center bg-background/50 border-none"
-                                        />
-                                        <span className="text-xs text-muted-foreground">
-                                            min
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="p-4 rounded-[var(--radius)] bg-primary/5 border border-primary/10 flex items-center justify-between shadow-inner">
-                                <div className="space-y-0.5">
-                                    <Label className="text-base font-semibold">
-                                        Auto-start Break
-                                    </Label>
-                                    <p className="text-[10px] text-muted-foreground">
-                                        Launch break timer immediately after
-                                        work
-                                    </p>
-                                </div>
-                                <Switch
-                                    checked={pomodoroSettings.autoStartBreak}
-                                    onCheckedChange={(checked: boolean) =>
-                                        setPomodoroSettings({
-                                            autoStartBreak: checked,
-                                        })
-                                    }
-                                    className="scale-110"
-                                />
-                            </div>
-
+                <div className="flex justify-center">
+                    <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+                        <DialogTrigger asChild>
                             <Button
-                                className="w-full mt-4"
-                                onClick={() => setSettingsOpen(false)}
+                                variant="ghost"
+                                size="icon"
+                                className="text-muted-foreground hover:text-foreground"
                             >
-                                Confirm Changes
+                                <Settings2 className="w-5 h-5" />
                             </Button>
-                        </div>
-                    </DialogContent>
-                </Dialog>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Timer Settings</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-6 py-4">
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
+                                        <Label className="font-medium">
+                                            Work Duration
+                                        </Label>
+                                        <div className="flex items-center gap-2">
+                                            <Input
+                                                type="number"
+                                                value={pomodoroSettings.work}
+                                                onChange={(e) =>
+                                                    setPomodoroSettings({
+                                                        work:
+                                                            parseInt(
+                                                                e.target.value,
+                                                            ) || 25,
+                                                    })
+                                                }
+                                                className="w-16 h-8 text-center bg-background/50 border-none"
+                                            />
+                                            <span className="text-xs text-muted-foreground">
+                                                min
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
+                                        <Label className="font-medium">
+                                            Break Duration
+                                        </Label>
+                                        <div className="flex items-center gap-2">
+                                            <Input
+                                                type="number"
+                                                value={pomodoroSettings.break}
+                                                onChange={(e) =>
+                                                    setPomodoroSettings({
+                                                        break:
+                                                            parseInt(
+                                                                e.target.value,
+                                                            ) || 5,
+                                                    })
+                                                }
+                                                className="w-16 h-8 text-center bg-background/50 border-none"
+                                            />
+                                            <span className="text-xs text-muted-foreground">
+                                                min
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-4 rounded-[var(--radius)] bg-primary/5 border border-primary/10 flex items-center justify-between shadow-inner">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-base font-semibold">
+                                            Auto-start Break
+                                        </Label>
+                                        <p className="text-[10px] text-muted-foreground">
+                                            Launch break timer immediately after
+                                            work
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        checked={pomodoroSettings.autoStartBreak}
+                                        onCheckedChange={(checked: boolean) =>
+                                            setPomodoroSettings({
+                                                autoStartBreak: checked,
+                                            })
+                                        }
+                                        className="scale-110"
+                                    />
+                                </div>
+
+                                <Button
+                                    className="w-full mt-4"
+                                    onClick={() => setSettingsOpen(false)}
+                                >
+                                    Confirm Changes
+                                </Button>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+                </div>
             </div>
 
             <audio ref={audioRef} src="/soundeffect.mp3" />
-
-            <div className="flex gap-2 mb-12 p-1 bg-secondary/30 rounded-[var(--radius)] backdrop-blur-md">
-                <button
-                    onClick={() => {
-                        setTimerMode("POMODORO");
-                        setTimerState("WORK");
-                        setIsActive(false);
-                        setTimeLeft(pomodoroSettings.work * 60);
-                    }}
-                    className={cn(
-                        "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
-                        timerMode === "POMODORO" && timerState === "WORK"
-                            ? "bg-primary text-primary-foreground shadow-md"
-                            : "text-muted-foreground hover:text-foreground",
-                    )}
-                >
-                    Pomodoro
-                </button>
-                <button
-                    onClick={() => {
-                        setTimerMode("POMODORO");
-                        setTimerState("BREAK");
-                        setIsActive(false);
-                        setTimeLeft(pomodoroSettings.break * 60);
-                    }}
-                    className={cn(
-                        "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
-                        timerMode === "POMODORO" && timerState === "BREAK"
-                            ? "bg-green-500 text-primary-foreground shadow-md"
-                            : "text-muted-foreground hover:text-foreground",
-                    )}
-                >
-                    Break
-                </button>
-                <button
-                    onClick={() => {
-                        setTimerMode("STOPWATCH");
-                        setIsActive(false);
-                        setTimeLeft(0);
-                    }}
-                    className={cn(
-                        "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
-                        timerMode === "STOPWATCH"
-                            ? "bg-primary text-primary-foreground shadow-md"
-                            : "text-muted-foreground hover:text-foreground",
-                    )}
-                >
-                    Flow
-                </button>
-            </div>
 
             <div className="flex flex-col items-center gap-8 mb-12 w-full">
                 <div className="text-[3.5rem] sm:text-[5rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow">
