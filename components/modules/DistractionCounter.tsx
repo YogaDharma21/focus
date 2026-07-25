@@ -20,12 +20,13 @@ const DISTRACTION_CATEGORIES = [
 ] as const;
 
 export function DistractionCounter() {
-    const { isActive, setIsActive, addDistraction } = useAppStore();
+    const { isActive, setIsActive, addDistraction, setDeepFocusMode } = useAppStore();
     const [open, setOpen] = useState(false);
 
     const handleDistraction = (category: string) => {
         addDistraction(category);
         setIsActive(false);
+        setDeepFocusMode(false);
         setOpen(false);
     };
 
