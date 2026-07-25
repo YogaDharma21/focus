@@ -40,6 +40,8 @@ export function FocusTimer() {
         setSessionName,
         focusedTodoId,
         setFocusedTodoId,
+        focusedSubtaskId,
+        setFocusedSubtaskId,
         todos,
         addSession,
         pomodoroSettings,
@@ -355,12 +357,24 @@ export function FocusTimer() {
                 <div className="w-full max-w-sm flex flex-col items-center gap-2">
                     <div className="flex items-center gap-2 w-full">
                         <Select
-                            value={focusedTodoId || ""}
+                            value={focusedTodoId ? (focusedSubtaskId ? `${focusedTodoId}/${focusedSubtaskId}` : focusedTodoId) : ""}
                             onValueChange={(value) => {
-                                const todo = todos.find((t) => t.id === value);
-                                if (todo) {
-                                    setFocusedTodoId(value);
-                                    setSessionName(todo.text);
+                                if (value.includes("/")) {
+                                    const [todoId, subtaskId] = value.split("/");
+                                    const todo = todos.find((t) => t.id === todoId);
+                                    const subtask = todo?.subtasks?.find((s) => s.id === subtaskId);
+                                    if (todo && subtask) {
+                                        setFocusedTodoId(todoId);
+                                        setFocusedSubtaskId(subtaskId);
+                                        setSessionName(subtask.text);
+                                    }
+                                } else {
+                                    const todo = todos.find((t) => t.id === value);
+                                    if (todo) {
+                                        setFocusedTodoId(value);
+                                        setFocusedSubtaskId(null);
+                                        setSessionName(todo.text);
+                                    }
                                 }
                             }}
                         >
@@ -376,9 +390,16 @@ export function FocusTimer() {
                                 {todos
                                     .filter((t) => !t.completed && t.groupId !== "finished" && t.groupId !== "completed")
                                     .map((todo) => (
-                                        <SelectItem key={todo.id} value={todo.id}>
-                                            {todo.text}
-                                        </SelectItem>
+                                        <React.Fragment key={todo.id}>
+                                            <SelectItem value={todo.id}>
+                                                {todo.text}
+                                            </SelectItem>
+                                            {todo.subtasks?.map((subtask) => (
+                                                <SelectItem key={subtask.id} value={`${todo.id}/${subtask.id}`}>
+                                                    <span className="pl-4 text-muted-foreground">↳ {subtask.text}</span>
+                                                </SelectItem>
+                                            ))}
+                                        </React.Fragment>
                                     ))}
                             </SelectContent>
                         </Select>
@@ -387,7 +408,10 @@ export function FocusTimer() {
                                 variant="ghost"
                                 size="icon"
                                 className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                                onClick={() => setFocusedTodoId(null)}
+                                onClick={() => {
+                                    setFocusedTodoId(null);
+                                    setFocusedSubtaskId(null);
+                                }}
                                 title="Unlink task"
                             >
                                 <X className="w-4 h-4" />

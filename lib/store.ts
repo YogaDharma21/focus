@@ -35,6 +35,8 @@ interface AppState {
     setSessionName: (name: string) => void;
     focusedTodoId: string | null;
     setFocusedTodoId: (id: string | null) => void;
+    focusedSubtaskId: string | null;
+    setFocusedSubtaskId: (id: string | null) => void;
 
     todos: TodoItem[];
     addTodo: (todo: TodoItem) => void;
@@ -199,6 +201,8 @@ export const useAppStore = create<AppState>()(
             setSessionName: (name) => set({ sessionName: name }),
             focusedTodoId: null,
             setFocusedTodoId: (id) => set({ focusedTodoId: id }),
+            focusedSubtaskId: null,
+            setFocusedSubtaskId: (id) => set({ focusedSubtaskId: id }),
 
             todos: [],
             addTodo: (todo) =>

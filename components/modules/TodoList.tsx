@@ -62,6 +62,7 @@ export function TodoList() {
         updateSubtask,
         setSessionName,
         setFocusedTodoId,
+        setFocusedSubtaskId,
         setView,
     } = useAppStore();
 
@@ -368,6 +369,7 @@ export function TodoList() {
                                     onClick={() => {
                                         setSessionName(todo.text);
                                         setFocusedTodoId(todo.id);
+                                        setFocusedSubtaskId(null);
                                         setView("FOCUS");
                                     }}
                                     title="Focus on this task"
@@ -666,6 +668,7 @@ export function TodoList() {
                                                 onClick={() => {
                                                     setSessionName(subtask.text);
                                                     setFocusedTodoId(editingTask.id);
+                                                    setFocusedSubtaskId(subtask.id);
                                                     setView("FOCUS");
                                                 }}
                                                 title="Focus on this subtask"
