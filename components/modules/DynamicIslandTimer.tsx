@@ -119,6 +119,7 @@ export function DynamicIslandTimer() {
                 date: new Date().toISOString(),
                 duration,
                 mode: timerMode,
+                name: sessionName.trim() || "Untitled Session",
             });
         }
 
