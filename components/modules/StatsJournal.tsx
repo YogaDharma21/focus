@@ -1,20 +1,22 @@
 "use client";
 
-import { useAppStore } from "@/lib/store";
-import { useState, useEffect } from "react";
+import { useAppStore, Distraction } from "@/lib/store";
+import { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import { Progress } from "@/components/ui/progress";
 import {
     Activity,
     StickyNote,
     CheckCircle2,
     List,
     Clock,
+    Flame,
+    TrendingUp,
+    Target,
     BarChart3,
 } from "lucide-react";
-import { isSameDay, parseISO } from "date-fns";
-import { Progress } from "@/components/ui/progress";
-import { Distraction } from "@/lib/store";
+import { isSameDay, parseISO, addDays, format, eachDayOfInterval } from "date-fns";
 
 export function StatsJournal() {
     const { notes, setNotes, sessions, sessionStartTime, isActive, todos, distractions } =
@@ -84,46 +86,80 @@ export function StatsJournal() {
     // Calculate proper consecutive day streak
     const calculateStreak = () => {
         if (sessions.length === 0) return 0;
-        
-        // Get unique sorted dates
+
         const uniqueDates = Array.from(
             new Set(sessions.map((s) => s.date.split("T")[0])),
         ).sort().reverse();
-        
+
         let streak = 0;
         let currentDate = new Date();
         currentDate.setHours(0, 0, 0, 0);
-        
+
         for (const dateStr of uniqueDates) {
             const sessionDate = new Date(dateStr);
             sessionDate.setHours(0, 0, 0, 0);
-            
+
             const diffDays = Math.floor((currentDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24));
-            
+
             if (diffDays === streak) {
                 streak++;
             } else if (diffDays > streak) {
                 break;
             }
         }
-        
+
         return streak;
     };
-    
-    const streak = calculateStreak();
-    
-    // Calculate weekly average focus time
-    const oneWeekAgo = new Date();
-    oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-    
-    const weeklySessions = sessions.filter((s) => 
-        new Date(s.date) >= oneWeekAgo
-    );
-    
-    const weeklySeconds = weeklySessions.reduce((acc, s) => acc + s.duration, 0);
-    const weeklyMinutes = Math.floor(weeklySeconds / 60);
-    const weeklyAverage = Math.round(weeklyMinutes / 7);
-    const weeklyAverageHours = (weeklySeconds / 7 / 3600).toFixed(1);
+
+    const currentStreak = calculateStreak();
+
+    // Calculate best streak
+    const calculateBestStreak = () => {
+        if (sessions.length === 0) return 0;
+
+        const uniqueDates = Array.from(
+            new Set(sessions.map((s) => s.date.split("T")[0])),
+        ).sort();
+
+        let bestStreak = 1;
+        let currentRun = 1;
+
+        for (let i = 1; i < uniqueDates.length; i++) {
+            const prev = new Date(uniqueDates[i - 1]);
+            const curr = new Date(uniqueDates[i]);
+            const diffDays = Math.floor((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 1) {
+                currentRun++;
+                bestStreak = Math.max(bestStreak, currentRun);
+            } else {
+                currentRun = 1;
+            }
+        }
+
+        return bestStreak;
+    };
+
+    const bestStreak = calculateBestStreak();
+
+    // Focus trend - last 7 days
+    const focusTrend = useMemo(() => {
+        const days = eachDayOfInterval({
+            start: addDays(today, -6),
+            end: today,
+        });
+
+        return days.map((date) => {
+            const daySessions = sessions.filter((s) =>
+                isSameDay(parseISO(s.date), date),
+            );
+            const totalSeconds = daySessions.reduce((acc, s) => acc + s.duration, 0);
+            const minutes = Math.floor(totalSeconds / 60);
+            return { date: format(date, "EEE"), minutes };
+        });
+    }, [sessions, today]);
+
+    const maxTrendMinutes = Math.max(...focusTrend.map((d) => d.minutes), 1);
 
     const now = new Date();
     const currentHour = now.getHours();
@@ -159,7 +195,7 @@ export function StatsJournal() {
             </Card>
 
             <div className="grid grid-cols-3 gap-4">
-                <Card 
+                <Card
                     className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border-primary/10 shadow-md backdrop-blur-sm rounded-[var(--radius)] cursor-pointer hover:bg-primary/10 transition-colors"
                     onClick={() => setShowHours(!showHours)}
                 >
@@ -196,6 +232,73 @@ export function StatsJournal() {
                     </span>
                 </Card>
             </div>
+
+            {/* Statistics Grid */}
+            <div className="grid grid-cols-2 gap-4">
+                {/* Longest Streak */}
+                <Card className="p-4 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-3 rounded-[var(--radius)]">
+                    <div className="flex items-center gap-2">
+                        <Flame className="w-4 h-4 text-orange-500" />
+                        <h3 className="text-sm font-medium">Longest Streak</h3>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">Current</span>
+                            <span className="text-lg font-bold">{currentStreak} Days</span>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">Best</span>
+                            <span className="text-lg font-bold">{bestStreak} Days</span>
+                        </div>
+                    </div>
+                </Card>
+
+                {/* Completion Rate */}
+                <Card className="p-4 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-3 rounded-[var(--radius)]">
+                    <div className="flex items-center gap-2">
+                        <Target className="w-4 h-4 text-green-500" />
+                        <h3 className="text-sm font-medium">Completion Rate</h3>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                        <div className="text-2xl font-bold">
+                            {todos.length > 0 ? Math.round((todos.filter((t) => t.completed).length / todos.length) * 100) : 0}%
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <CheckCircle2 className="w-3 h-3" />
+                            Tasks Finished
+                        </div>
+                    </div>
+                </Card>
+            </div>
+
+            {/* Focus Trend */}
+            <Card className="p-4 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-4 rounded-[var(--radius)]">
+                <div className="flex items-center gap-2">
+                    <TrendingUp className="w-4 h-4 text-primary" />
+                    <h3 className="text-sm font-medium">Focus Trend</h3>
+                </div>
+                <div className="flex flex-col gap-1">
+                    <span className="text-xs text-muted-foreground">This Week</span>
+                    <div className="flex items-end gap-1 h-16 mt-2">
+                        {focusTrend.map((item, index) => (
+                            <div
+                                key={index}
+                                className="flex-1 flex flex-col items-center gap-1"
+                            >
+                                <div
+                                    className="w-full bg-primary/80 rounded-t-sm transition-all duration-500"
+                                    style={{
+                                        height: `${Math.max((item.minutes / maxTrendMinutes) * 100, 4)}%`,
+                                    }}
+                                />
+                                <span className="text-[10px] text-muted-foreground">
+                                    {item.date}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </Card>
 
             <Card className="flex-1 p-6 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-4 rounded-[var(--radius)]">
                 <div className="flex items-center justify-between">
