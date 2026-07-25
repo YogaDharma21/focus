@@ -16,6 +16,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
+import { DistractionCounter } from "./DistractionCounter";
 
 export function FocusTimer() {
     const {
@@ -360,6 +361,8 @@ export function FocusTimer() {
                 >
                     <RotateCcw className="w-5 h-5" />
                 </Button>
+
+                <DistractionCounter />
 
                 <Button
                     size="icon"
