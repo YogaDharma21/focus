@@ -14,10 +14,8 @@ import {
     Flame,
     TrendingUp,
     Target,
-    CalendarDays,
 } from "lucide-react";
-import { isSameDay, parseISO, startOfWeek, addDays, format, eachDayOfInterval } from "date-fns";
-import { cn } from "@/lib/utils";
+import { isSameDay, parseISO, addDays, format, eachDayOfInterval } from "date-fns";
 
 export function StatsJournal() {
     const { notes, setNotes, sessions, sessionStartTime, isActive, todos } =
@@ -122,53 +120,6 @@ export function StatsJournal() {
 
     const bestStreak = calculateBestStreak();
 
-    // Completion rate
-    const totalTodos = todos.length;
-    const completedTodos = todos.filter((t) => t.completed).length;
-    const completionRate = totalTodos > 0 ? Math.round((completedTodos / totalTodos) * 100) : 0;
-
-    // Heatmap data - current week (Mon-Fri)
-    const heatmapData = useMemo(() => {
-        const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-        const days = ["Mon", "Tue", "Wed", "Thu", "Fri"];
-
-        return days.map((day, index) => {
-            const date = addDays(weekStart, index);
-            const daySessions = sessions.filter((s) =>
-                isSameDay(parseISO(s.date), date),
-            );
-            const totalSeconds = daySessions.reduce((acc, s) => acc + s.duration, 0);
-            const minutes = Math.floor(totalSeconds / 60);
-            return { day, minutes, date: format(date, "d") };
-        });
-    }, [sessions, today]);
-
-    const maxHeatmapMinutes = Math.max(...heatmapData.map((d) => d.minutes), 1);
-
-    // Productivity by hour - all time
-    const productivityByHour = useMemo(() => {
-        const hourMap = new Array(24).fill(0);
-
-        sessions.forEach((s) => {
-            const date = parseISO(s.date);
-            const hour = date.getHours();
-            hourMap[hour] += s.duration;
-        });
-
-        const activeHours = hourMap
-            .map((seconds, hour) => ({ hour, minutes: Math.floor(seconds / 60) }))
-            .filter((h) => h.minutes > 0)
-            .sort((a, b) => b.minutes - a.minutes)
-            .slice(0, 6);
-
-        const maxMinutes = Math.max(...activeHours.map((h) => h.minutes), 1);
-
-        return activeHours.map((h) => ({
-            ...h,
-            blocks: Math.max(1, Math.round((h.minutes / maxMinutes) * 5)),
-        }));
-    }, [sessions]);
-
     // Focus trend - last 7 days
     const focusTrend = useMemo(() => {
         const days = eachDayOfInterval({
@@ -262,69 +213,6 @@ export function StatsJournal() {
 
             {/* Statistics Grid */}
             <div className="grid grid-cols-2 gap-4">
-                {/* Heatmap */}
-                <Card className="p-4 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-3 rounded-[var(--radius)]">
-                    <div className="flex items-center gap-2">
-                        <CalendarDays className="w-4 h-4 text-primary" />
-                        <h3 className="text-sm font-medium">Heatmap</h3>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        {heatmapData.map((item) => (
-                            <div key={item.day} className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground w-6">
-                                    {item.day}
-                                </span>
-                                <div className="flex gap-0.5">
-                                    {Array.from({ length: 5 }).map((_, i) => (
-                                        <div
-                                            key={i}
-                                            className={cn(
-                                                "w-2 h-3 rounded-[2px] transition-all",
-                                                i < Math.round((item.minutes / maxHeatmapMinutes) * 5)
-                                                    ? "bg-primary"
-                                                    : "bg-muted",
-                                            )}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </Card>
-
-                {/* Productivity by Hour */}
-                <Card className="p-4 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-3 rounded-[var(--radius)]">
-                    <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-primary" />
-                        <h3 className="text-sm font-medium">Productivity by Hour</h3>
-                    </div>
-                    <div className="flex flex-col gap-2">
-                        {productivityByHour.slice(0, 5).map((item) => (
-                            <div key={item.hour} className="flex items-center gap-2">
-                                <span className="text-xs text-muted-foreground w-6">
-                                    {String(item.hour).padStart(2, "0")}
-                                </span>
-                                <div className="flex gap-0.5">
-                                    {Array.from({ length: 5 }).map((_, i) => (
-                                        <div
-                                            key={i}
-                                            className={cn(
-                                                "w-2 h-3 rounded-[2px] transition-all",
-                                                i < item.blocks
-                                                    ? "bg-primary"
-                                                    : "bg-muted",
-                                            )}
-                                        />
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-1">
-                        Shows your most productive hours.
-                    </p>
-                </Card>
-
                 {/* Longest Streak */}
                 <Card className="p-4 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-3 rounded-[var(--radius)]">
                     <div className="flex items-center gap-2">
@@ -351,7 +239,7 @@ export function StatsJournal() {
                     </div>
                     <div className="flex flex-col gap-2">
                         <div className="text-2xl font-bold">
-                            {completionRate}%
+                            {todos.length > 0 ? Math.round((todos.filter((t) => t.completed).length / todos.length) * 100) : 0}%
                         </div>
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <CheckCircle2 className="w-3 h-3" />
