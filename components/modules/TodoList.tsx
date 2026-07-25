@@ -473,8 +473,6 @@ export function TodoList() {
                                     >
                                         {editingTask.text}
                                     </div>
-                                
-                                </div>
                                 )}
                             </div>
 
