@@ -43,6 +43,9 @@ interface AppState {
     notes: string;
     sessions: Session[];
 
+    deepFocusMode: boolean;
+    setDeepFocusMode: (mode: boolean) => void;
+
     setNotes: (text: string) => void;
     addSession: (session: Session) => void;
 
@@ -194,6 +197,9 @@ export const useAppStore = create<AppState>()(
 
             notes: "",
             sessions: [],
+
+            deepFocusMode: false,
+            setDeepFocusMode: (mode) => set({ deepFocusMode: mode }),
 
             setNotes: (text) => set({ notes: text }),
 
