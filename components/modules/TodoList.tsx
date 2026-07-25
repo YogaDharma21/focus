@@ -61,6 +61,7 @@ export function TodoList() {
         deleteSubtask,
         updateSubtask,
         setSessionName,
+        setFocusedTodoId,
         setView,
     } = useAppStore();
 
@@ -366,6 +367,7 @@ export function TodoList() {
                                     className="h-7 w-7 text-muted-foreground hover:text-primary transition-colors"
                                     onClick={() => {
                                         setSessionName(todo.text);
+                                        setFocusedTodoId(todo.id);
                                         setView("FOCUS");
                                     }}
                                     title="Focus on this task"

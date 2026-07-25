@@ -33,6 +33,8 @@ interface AppState {
     setSessionStartTime: (time: string | null) => void;
     sessionName: string;
     setSessionName: (name: string) => void;
+    focusedTodoId: string | null;
+    setFocusedTodoId: (id: string | null) => void;
 
     todos: TodoItem[];
     addTodo: (todo: TodoItem) => void;
@@ -84,6 +86,7 @@ export interface Session {
     date: string;
     duration: number;
     mode: "POMODORO" | "STOPWATCH";
+    todoId?: string | null;
 }
 
 export interface Distraction {
@@ -194,6 +197,8 @@ export const useAppStore = create<AppState>()(
             setSessionStartTime: (time) => set({ sessionStartTime: time }),
             sessionName: "",
             setSessionName: (name) => set({ sessionName: name }),
+            focusedTodoId: null,
+            setFocusedTodoId: (id) => set({ focusedTodoId: id }),
 
             todos: [],
             addTodo: (todo) =>

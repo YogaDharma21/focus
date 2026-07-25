@@ -23,6 +23,7 @@ export function DynamicIslandTimer() {
         setTimerMode,
         addSession,
         setSessionStartTime,
+        focusedTodoId,
     } = useAppStore();
     const [isExpanded, setIsExpanded] = useState(false);
     const isMobile = useMediaQuery("(max-width: 768px)");
@@ -119,6 +120,7 @@ export function DynamicIslandTimer() {
                 date: new Date().toISOString(),
                 duration,
                 mode: timerMode,
+                todoId: focusedTodoId,
             });
         }
 

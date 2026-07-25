@@ -4,7 +4,14 @@ import { useAppStore } from "@/lib/store";
 import React, { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Play, Pause, RotateCcw, CheckCircle2, Settings2 } from "lucide-react";
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from "@/components/ui/select";
+import { Play, Pause, RotateCcw, CheckCircle2, Settings2, X } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import {
     Dialog,
@@ -31,6 +38,9 @@ export function FocusTimer() {
         setSessionStartTime,
         sessionName,
         setSessionName,
+        focusedTodoId,
+        setFocusedTodoId,
+        todos,
         addSession,
         pomodoroSettings,
         setPomodoroSettings,
@@ -85,6 +95,7 @@ export function FocusTimer() {
                 date: new Date().toISOString(),
                 duration: duration,
                 mode: timerMode,
+                todoId: focusedTodoId,
             });
         }
 
@@ -110,6 +121,7 @@ export function FocusTimer() {
         setIsActive,
         setTimerState,
         pomodoroSettings,
+        focusedTodoId,
     ]);
 
     const prevSettingsRef = useRef({ work: pomodoroSettings.work, break: pomodoroSettings.break });
@@ -340,12 +352,56 @@ export function FocusTimer() {
                     {formatTime(timeLeft)}
                 </div>
 
-                <Input
-                    value={sessionName}
-                    onChange={(e) => setSessionName(e.target.value)}
-                    placeholder="What are you focusing on?"
-                    className="text-center bg-transparent border-none text-xl focus-visible:ring-0 placeholder:text-muted-foreground/70 text-foreground max-w-sm"
-                />
+                <div className="w-full max-w-sm flex flex-col items-center gap-2">
+                    <div className="flex items-center gap-2 w-full">
+                        <Select
+                            value={focusedTodoId || ""}
+                            onValueChange={(value) => {
+                                const todo = todos.find((t) => t.id === value);
+                                if (todo) {
+                                    setFocusedTodoId(value);
+                                    setSessionName(todo.text);
+                                }
+                            }}
+                        >
+                            <SelectTrigger className="flex-1 bg-transparent border-none text-muted-foreground/70 focus-visible:ring-0 h-auto justify-center">
+                                <SelectValue placeholder="Link a task (optional)" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {todos.filter((t) => !t.completed && t.groupId !== "finished" && t.groupId !== "completed").length === 0 && (
+                                    <div className="px-2 py-1.5 text-sm text-muted-foreground">
+                                        No active tasks
+                                    </div>
+                                )}
+                                {todos
+                                    .filter((t) => !t.completed && t.groupId !== "finished" && t.groupId !== "completed")
+                                    .map((todo) => (
+                                        <SelectItem key={todo.id} value={todo.id}>
+                                            {todo.text}
+                                        </SelectItem>
+                                    ))}
+                            </SelectContent>
+                        </Select>
+                        {focusedTodoId && (
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                                onClick={() => setFocusedTodoId(null)}
+                                title="Unlink task"
+                            >
+                                <X className="w-4 h-4" />
+                            </Button>
+                        )}
+                    </div>
+
+                    <Input
+                        value={sessionName}
+                        onChange={(e) => setSessionName(e.target.value)}
+                        placeholder="What are you focusing on?"
+                        className="text-center bg-transparent border-none text-xl focus-visible:ring-0 placeholder:text-muted-foreground/70 text-foreground max-w-sm"
+                    />
+                </div>
 
                 <div className="w-full max-w-xs">
                     <Progress value={progressValue} className="h-1.5" />
