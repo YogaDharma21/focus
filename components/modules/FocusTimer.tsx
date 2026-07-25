@@ -267,7 +267,7 @@ export function FocusTimer() {
                                             autoStartBreak: checked,
                                         })
                                     }
-                                    className="scale-110 rounded-full"
+                                    className="scale-110"
                                 />
                             </div>
 
