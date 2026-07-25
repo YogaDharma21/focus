@@ -34,6 +34,9 @@ export function FocusTimer() {
         addSession,
         pomodoroSettings,
         setPomodoroSettings,
+        todos,
+        updateTodo,
+        toggleTodo,
     } = useAppStore();
 
     const [settingsOpen, setSettingsOpen] = useState(false);
@@ -94,6 +97,23 @@ export function FocusTimer() {
             if (pomodoroSettings.autoStartBreak) {
                 setIsActive(true);
             }
+            if (sessionName) {
+                const focusedTask = todos.find(
+                    (t) => t.text === sessionName && !t.completed,
+                );
+                if (focusedTask) {
+                    const newCompleted = (focusedTask.completedPomodoros || 0) + 1;
+                    updateTodo(focusedTask.id, {
+                        completedPomodoros: newCompleted,
+                    });
+                    if (
+                        focusedTask.estimatedPomodoros &&
+                        newCompleted >= focusedTask.estimatedPomodoros
+                    ) {
+                        toggleTodo(focusedTask.id);
+                    }
+                }
+            }
         } else if (timerMode === "POMODORO" && timerState === "BREAK") {
             setTimerState("WORK");
             setTimeLeft(pomodoroSettings.work * 60);
@@ -110,6 +130,10 @@ export function FocusTimer() {
         setIsActive,
         setTimerState,
         pomodoroSettings,
+        sessionName,
+        todos,
+        updateTodo,
+        toggleTodo,
     ]);
 
     const prevSettingsRef = useRef({ work: pomodoroSettings.work, break: pomodoroSettings.break });
