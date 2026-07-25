@@ -184,7 +184,7 @@ export function FocusTimer() {
 
     return (
         <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center min-h-[50vh] animate-in fade-in duration-700 relative">
-            <div className="absolute top-0 right-0">
+            <div className="mb-3 flex justify-center md:absolute md:top-0 md:right-0 md:mb-0">
                 <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
                     <DialogTrigger asChild>
                         <Button
@@ -335,7 +335,7 @@ export function FocusTimer() {
             </div>
 
             <div className="flex flex-col items-center gap-8 mb-12 w-full">
-                <div className="text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow">
+                <div className="text-[3.5rem] sm:text-[5rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow">
                     {formatTime(timeLeft)}
                 </div>
 
