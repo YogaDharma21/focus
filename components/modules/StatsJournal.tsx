@@ -14,6 +14,7 @@ import {
     TrendingUp,
     Target,
     BarChart3,
+    StickyNote,
 } from "lucide-react";
 import { isSameDay, parseISO, addDays, format, eachDayOfInterval } from "date-fns";
 
@@ -22,6 +23,7 @@ export function StatsJournal() {
         useAppStore();
     const [liveElapsed, setLiveElapsed] = useState(0);
     const [showHours, setShowHours] = useState(false);
+    const [notes, setNotes] = useState("");
 
     const today = new Date();
 
