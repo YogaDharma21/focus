@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export type ViewType = "FOCUS" | "TODO" | "JOURNAL";
+export type ViewType = "FOCUS" | "TODO" | "JOURNAL" | "NOTES";
 export type BackgroundType = "dark" | "gradient" | "mountain" | "library" | "cafe" | "anime-room";
 
 interface AppState {
@@ -43,7 +43,9 @@ interface AppState {
     addGroup: (name: string) => void;
     deleteGroup: (id: string) => void;
 
-    notes: string;
+    moodNotes: MoodNote[];
+    addMoodNote: (note: MoodNote) => void;
+    deleteMoodNote: (id: string) => void;
     sessions: Session[];
     distractions: Distraction[];
 
@@ -53,7 +55,6 @@ interface AppState {
     background: BackgroundType;
     setBackground: (bg: BackgroundType) => void;
 
-    setNotes: (text: string) => void;
     addSession: (session: Session) => void;
     addDistraction: (category: string) => void;
 
@@ -102,6 +103,13 @@ export interface TodoItem {
     groupId?: string;
     deadline?: string;
     completedAt?: string;
+}
+
+export interface MoodNote {
+    id: string;
+    date: string;
+    mood: string;
+    text: string;
 }
 
 export const useAppStore = create<AppState>()(
@@ -234,7 +242,13 @@ export const useAppStore = create<AppState>()(
                     groups: (state.groups || []).filter((g) => g.id !== id),
                 })),
 
-            notes: "",
+            moodNotes: [],
+            addMoodNote: (note) =>
+                set((state) => ({ moodNotes: [...(state.moodNotes || []), note] })),
+            deleteMoodNote: (id) =>
+                set((state) => ({
+                    moodNotes: (state.moodNotes || []).filter((n) => n.id !== id),
+                })),
             sessions: [],
             distractions: [],
 
@@ -243,8 +257,6 @@ export const useAppStore = create<AppState>()(
 
             background: "dark",
             setBackground: (bg) => set({ background: bg }),
-
-            setNotes: (text) => set({ notes: text }),
 
             addSession: (session) =>
                 set((state) => ({
