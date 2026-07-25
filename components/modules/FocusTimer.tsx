@@ -335,7 +335,7 @@ export function FocusTimer() {
             </div>
 
             <div className="flex flex-col items-center gap-8 mb-12 w-full">
-                <div className="text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow">
+                <div className="text-[3.5rem] sm:text-[5rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow">
                     {formatTime(timeLeft)}
                 </div>
 
