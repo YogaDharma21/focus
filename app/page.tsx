@@ -11,6 +11,7 @@ import { DynamicIslandTimer } from "@/components/modules/DynamicIslandTimer";
 import { DeepFocusOverlay } from "@/components/modules/DeepFocusOverlay";
 import { BackgroundDisplay } from "@/components/modules/BackgroundDisplay";
 import { BackgroundSelector } from "@/components/modules/BackgroundSelector";
+import { MoodNotes } from "@/components/modules/MoodNotes";
 import { useAppStore } from "@/lib/store";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -76,6 +77,7 @@ export default function Page() {
                             {currentView === "FOCUS" && "Focus Session"}
                             {currentView === "TODO" && "Tasks"}
                             {currentView === "JOURNAL" && "Journal & Stats"}
+                            {currentView === "NOTES" && "Notes"}
                         </h1>
                         <div className="flex items-center gap-1">
                             <button
@@ -118,6 +120,15 @@ export default function Page() {
                                 ) : (
                                     <StatsJournal />
                                 )}
+                            </div>
+                        )}
+
+                        {currentView === "NOTES" && (
+                            <div className={cn(
+                                "max-w-2xl mx-auto w-full pb-8 pt-12 transition-all duration-300 ease-in-out",
+                                mediaPlayerOpen && "lg:max-w-none lg:mx-0 lg:pr-0"
+                            )}>
+                                <MoodNotes />
                             </div>
                         )}
                     </div>
