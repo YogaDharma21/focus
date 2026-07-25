@@ -5,6 +5,7 @@ import { Pause, Play, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
+import { DistractionCounter } from "./DistractionCounter";
 
 export function DeepFocusOverlay() {
     const {
@@ -77,6 +78,8 @@ export function DeepFocusOverlay() {
                 )}
 
                 <div className="flex items-center gap-4 mt-8">
+                    <DistractionCounter />
+
                     <Button
                         variant="ghost"
                         size="icon"

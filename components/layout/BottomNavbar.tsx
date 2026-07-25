@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppStore, ViewType } from "@/lib/store";
-import { Timer, CheckSquare, BarChart2, Youtube } from "lucide-react";
+import { Timer, CheckSquare, BarChart2, Music } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/hooks";
 
@@ -81,7 +81,7 @@ export function BottomNavbar() {
                     aria-label="Toggle media player"
                 >
                     <span className="transform transition-transform duration-300 group-hover:scale-105">
-                        <Youtube className="w-6 h-6" />
+                        <Music className="w-6 h-6" />
                     </span>
                     {mediaPlayerOpen && (
                         <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-primary rounded-[var(--radius)]" />

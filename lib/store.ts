@@ -2,17 +2,20 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export type ViewType = "FOCUS" | "TODO" | "JOURNAL";
+export type BackgroundType = "dark" | "gradient" | "mountain" | "library" | "cafe" | "anime-room";
 
 interface AppState {
     currentView: ViewType;
     setView: (view: ViewType) => void;
 
-    mediaType: "YOUTUBE" | "SPOTIFY";
+    mediaType: "YOUTUBE" | "SPOTIFY" | "LOCAL";
     youtubeUrl: string;
     youtubePlaylist: string[];
     spotifyUrl: string;
-    setMediaType: (type: "YOUTUBE" | "SPOTIFY") => void;
-    setMediaUrl: (type: "YOUTUBE" | "SPOTIFY", url: string) => void;
+    localUrl: string;
+    localPlaylist: { id: string; title: string; artist: string; url: string }[];
+    setMediaType: (type: "YOUTUBE" | "SPOTIFY" | "LOCAL") => void;
+    setMediaUrl: (type: "YOUTUBE" | "SPOTIFY" | "LOCAL", url: string) => void;
     addToPlaylist: (url: string) => void;
     removeFromPlaylist: (url: string) => void;
     mediaPlayerOpen: boolean;
@@ -42,12 +45,17 @@ interface AppState {
 
     notes: string;
     sessions: Session[];
+    distractions: Distraction[];
 
     deepFocusMode: boolean;
     setDeepFocusMode: (mode: boolean) => void;
 
+    background: BackgroundType;
+    setBackground: (bg: BackgroundType) => void;
+
     setNotes: (text: string) => void;
     addSession: (session: Session) => void;
+    addDistraction: (category: string) => void;
 
     pomodoroSettings: { work: number; break: number; autoStartBreak: boolean };
     setPomodoroSettings: (
@@ -77,6 +85,12 @@ export interface Session {
     mode: "POMODORO" | "STOPWATCH";
 }
 
+export interface Distraction {
+    id: string;
+    timestamp: string;
+    category: string;
+}
+
 export interface TodoItem {
     id: string;
     text: string;
@@ -101,11 +115,36 @@ export const useAppStore = create<AppState>()(
             youtubePlaylist: ["https://www.youtube.com/watch?v=DEWzT1geuPU"],
             spotifyUrl:
                 "https://open.spotify.com/playlist/37i9dQZF1DX8Uebhn9wzrS?si=5rvssghNSWKXYYRCYbb5Xg",
+            localUrl: "",
+            localPlaylist: [
+                {
+                    id: "local-1",
+                    title: "Peaceful Piano",
+                    artist: "Focus Lo-Fi",
+                    url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3",
+                },
+                {
+                    id: "local-2",
+                    title: "Ambient Waves",
+                    artist: "Deep Focus",
+                    url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3",
+                },
+                {
+                    id: "local-3",
+                    title: "Coding Beats",
+                    artist: "Dev Music",
+                    url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3",
+                },
+            ],
 
             setMediaType: (type) => set({ mediaType: type }),
             setMediaUrl: (type, url) =>
                 set((state) => ({
-                    [type === "YOUTUBE" ? "youtubeUrl" : "spotifyUrl"]: url,
+                    [type === "YOUTUBE"
+                        ? "youtubeUrl"
+                        : type === "SPOTIFY"
+                          ? "spotifyUrl"
+                          : "localUrl"]: url,
                     ...(type === "YOUTUBE" &&
                     !state.youtubePlaylist.includes(url)
                         ? { youtubePlaylist: [...state.youtubePlaylist, url] }
@@ -197,15 +236,28 @@ export const useAppStore = create<AppState>()(
 
             notes: "",
             sessions: [],
+            distractions: [],
 
             deepFocusMode: false,
             setDeepFocusMode: (mode) => set({ deepFocusMode: mode }),
+
+            background: "dark",
+            setBackground: (bg) => set({ background: bg }),
 
             setNotes: (text) => set({ notes: text }),
 
             addSession: (session) =>
                 set((state) => ({
                     sessions: [...(state.sessions || []), session],
+                })),
+
+            addDistraction: (category) =>
+                set((state) => ({
+                    distractions: [...(state.distractions || []), {
+                        id: crypto.randomUUID(),
+                        timestamp: new Date().toISOString(),
+                        category,
+                    }],
                 })),
 
             addSubtask: (todoId, text) =>
