@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export type ViewType = "FOCUS" | "TODO" | "JOURNAL" | "NOTES";
+export type ViewType = "FOCUS" | "TODO" | "JOURNAL" | "NOTES" | "HISTORY";
 export type BackgroundType = "dark" | "gradient" | "mountain" | "library" | "cafe" | "anime-room";
 
 interface AppState {
@@ -84,6 +84,7 @@ export interface Session {
     date: string;
     duration: number;
     mode: "POMODORO" | "STOPWATCH";
+    name: string;
 }
 
 export interface Distraction {

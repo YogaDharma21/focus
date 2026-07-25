@@ -12,6 +12,7 @@ import { DeepFocusOverlay } from "@/components/modules/DeepFocusOverlay";
 import { BackgroundDisplay } from "@/components/modules/BackgroundDisplay";
 import { BackgroundSelector } from "@/components/modules/BackgroundSelector";
 import { MoodNotes } from "@/components/modules/MoodNotes";
+import { FocusSessionHistory } from "@/components/modules/FocusSessionHistory";
 import { useAppStore } from "@/lib/store";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -74,10 +75,11 @@ export default function Page() {
                 )}>
                     <header className="flex items-center justify-between mb-8">
                         <h1 className="text-xl font-bold tracking-tight opacity-90">
-                            {currentView === "FOCUS" && "Focus Session"}
-                            {currentView === "TODO" && "Tasks"}
-                            {currentView === "JOURNAL" && "Journal & Stats"}
-                            {currentView === "NOTES" && "Notes"}
+                        {currentView === "FOCUS" && "Focus Session"}
+                        {currentView === "TODO" && "Tasks"}
+                        {currentView === "JOURNAL" && "Journal & Stats"}
+                        {currentView === "NOTES" && "Notes"}
+                        {currentView === "HISTORY" && "Session History"}
                         </h1>
                         <div className="flex items-center gap-1">
                             <button
@@ -129,6 +131,15 @@ export default function Page() {
                                 mediaPlayerOpen && "lg:max-w-none lg:mx-0 lg:pr-0"
                             )}>
                                 <MoodNotes />
+                            </div>
+                        )}
+
+                        {currentView === "HISTORY" && (
+                            <div className={cn(
+                                "max-w-2xl mx-auto w-full pb-8 pt-12 transition-all duration-300 ease-in-out",
+                                mediaPlayerOpen && "lg:max-w-none lg:mx-0 lg:pr-0"
+                            )}>
+                                <FocusSessionHistory />
                             </div>
                         )}
                     </div>

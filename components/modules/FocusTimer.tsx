@@ -85,6 +85,7 @@ export function FocusTimer() {
                 date: new Date().toISOString(),
                 duration: duration,
                 mode: timerMode,
+                name: sessionName.trim() || "Untitled Session",
             });
         }
 
