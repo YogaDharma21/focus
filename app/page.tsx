@@ -32,7 +32,7 @@ export default function Page() {
                 <BottomNavbar />
                 
                 <div className={cn(
-                    "flex-1 w-full max-w-7xl mx-auto p-6 pb-20 z-10 relative transition-all duration-300 ease-in-out",
+                    "flex-1 w-full max-w-7xl mx-auto p-6 pb-24 z-10 relative transition-all duration-300 ease-in-out",
                     mediaPlayerOpen && "md:pr-[344px]"
                 )}>
                     <header className="flex items-center justify-between mb-8">
