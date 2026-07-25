@@ -9,6 +9,8 @@ import { TodoList } from "@/components/modules/TodoList";
 import { StatsJournal } from "@/components/modules/StatsJournal";
 import { DynamicIslandTimer } from "@/components/modules/DynamicIslandTimer";
 import { DeepFocusOverlay } from "@/components/modules/DeepFocusOverlay";
+import { BackgroundDisplay } from "@/components/modules/BackgroundDisplay";
+import { BackgroundSelector } from "@/components/modules/BackgroundSelector";
 import { useAppStore } from "@/lib/store";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
@@ -50,6 +52,8 @@ export default function Page() {
 
     return (
         <main className="relative min-h-screen overflow-hidden bg-background text-foreground transition-colors duration-500">
+            <BackgroundDisplay />
+
             <div className="fixed inset-0 pointer-events-none z-0">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-[var(--radius)] blur-[120px] opacity-20" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-[var(--radius)] blur-[120px] opacity-20" />
@@ -88,6 +92,7 @@ export default function Page() {
                                     <Focus className="w-6 h-6" />
                                 </span>
                             </button>
+                            <BackgroundSelector />
                             <div className="scale-90">
                                 <InfoButton />
                             </div>

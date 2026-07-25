@@ -7,6 +7,7 @@ import { useMediaQuery } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
+import { DistractionCounter } from "./DistractionCounter";
 
 export function DynamicIslandTimer() {
     const {
@@ -282,6 +283,8 @@ export function DynamicIslandTimer() {
                                     <CheckCircle2 className="w-3 h-3 mr-1" />
                                     Complete
                                 </Button>
+
+                                <DistractionCounter />
 
                                 <Button
                                     size="sm"
