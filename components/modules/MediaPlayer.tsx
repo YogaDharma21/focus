@@ -389,8 +389,25 @@ export function MediaPlayer() {
                     </div>
                 )}
 
+                {mediaPlayerOpen && (
+                    <div
+                        id="youtube-player-wrapper"
+                        className={cn(
+                            "overflow-hidden shrink-0 isolate transition-all duration-200",
+                            activeTab === "YOUTUBE"
+                                ? "aspect-video w-full relative opacity-100 visible"
+                                : "fixed opacity-0 invisible pointer-events-none w-px h-px overflow-hidden border-0",
+                        )}
+                    >
+                        <div
+                            id="youtube-player-container"
+                            className="w-full h-full"
+                        />
+                    </div>
+                )}
+
                 {mediaPlayerOpen && activeTab === "YOUTUBE" && (
-                    <>
+                    <div className="w-full space-y-3">
                         <form
                             onSubmit={handleYoutubeSubmit}
                             className="flex gap-2 shrink-0 w-full"
@@ -410,173 +427,157 @@ export function MediaPlayer() {
                             </Button>
                         </form>
 
-                        <div
-                            className={cn(
-                                "overflow-hidden shrink-0 isolate",
-                                mediaPlayerOpen && activeTab === "YOUTUBE"
-                                    ? "aspect-video w-full relative opacity-100 visible"
-                                    : "fixed opacity-0 invisible pointer-events-none w-px h-px overflow-hidden border-0",
-                            )}
-                        >
-                            <div
-                                id="youtube-player-container"
-                                className="w-full h-full"
-                            />
-                        </div>
-
-                        <div className="w-full space-y-3">
-                            <div className="flex items-center gap-2 px-1 shrink-0">
-                                <button
-                                    onClick={toggleMute}
-                                    className="p-1.5 rounded-[var(--radius)] hover:bg-white/10 transition-colors"
-                                >
-                                    {muted ? (
-                                        <VolumeX className="w-4 h-4" />
-                                    ) : (
-                                        <Volume2 className="w-4 h-4" />
-                                    )}
-                                </button>
-                                <Button
-                                    size="sm"
-                                    onClick={() => {
-                                        if (!playerRef.current) return;
-                                        if (isPlaying) {
-                                            userPaused.current = true;
-                                            playerRef.current.pauseVideo();
-                                            setIsPlaying(false);
-                                        } else {
-                                            userPaused.current = false;
-                                            playerRef.current.playVideo();
-                                            setIsPlaying(true);
-                                            if (muted) {
-                                                playerRef.current.unMute();
-                                                setMuted(false);
-                                            }
-                                            if (volume === 0) {
-                                                setVolume(50);
-                                                playerRef.current.setVolume(50);
-                                            }
+                        <div className="flex items-center gap-2 px-1 shrink-0">
+                            <button
+                                onClick={toggleMute}
+                                className="p-1.5 rounded-[var(--radius)] hover:bg-white/10 transition-colors"
+                            >
+                                {muted ? (
+                                    <VolumeX className="w-4 h-4" />
+                                ) : (
+                                    <Volume2 className="w-4 h-4" />
+                                )}
+                            </button>
+                            <Button
+                                size="sm"
+                                onClick={() => {
+                                    if (!playerRef.current) return;
+                                    if (isPlaying) {
+                                        userPaused.current = true;
+                                        playerRef.current.pauseVideo();
+                                        setIsPlaying(false);
+                                    } else {
+                                        userPaused.current = false;
+                                        playerRef.current.playVideo();
+                                        setIsPlaying(true);
+                                        if (muted) {
+                                            playerRef.current.unMute();
+                                            setMuted(false);
                                         }
-                                    }}
-                                    className="h-8 rounded-[var(--radius)] px-3"
-                                >
-                                    {isPlaying ? (
-                                        <Pause className="w-4 h-4" />
-                                    ) : (
-                                        <Play className="w-4 h-4" />
-                                    )}
-                                </Button>
+                                        if (volume === 0) {
+                                            setVolume(50);
+                                            playerRef.current.setVolume(50);
+                                        }
+                                    }
+                                }}
+                                className="h-8 rounded-[var(--radius)] px-3"
+                            >
+                                {isPlaying ? (
+                                    <Pause className="w-4 h-4" />
+                                ) : (
+                                    <Play className="w-4 h-4" />
+                                )}
+                            </Button>
+                            <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                step="1"
+                                value={volume}
+                                onChange={handleVolumeChange}
+                                className="flex-1 h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125"
+                            />
+                            {volumeInputMode ? (
                                 <input
-                                    type="range"
+                                    ref={volumeInputRef}
+                                    type="number"
                                     min="0"
                                     max="100"
-                                    step="1"
-                                    value={volume}
-                                    onChange={handleVolumeChange}
-                                    className="flex-1 h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125"
+                                    step="0.5"
+                                    value={volumeInputValue}
+                                    onChange={(e) =>
+                                        setVolumeInputValue(e.target.value)
+                                    }
+                                    onKeyDown={handleVolumeInputKeyDown}
+                                    onBlur={handleVolumeInputBlur}
+                                    className="w-14 h-6 text-xs font-medium bg-card/60 border border-border/40 rounded-md px-2 py-0.5 text-right text-foreground outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all"
+                                    autoFocus
                                 />
-                                {volumeInputMode ? (
-                                    <input
-                                        ref={volumeInputRef}
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        step="0.5"
-                                        value={volumeInputValue}
-                                        onChange={(e) =>
-                                            setVolumeInputValue(e.target.value)
+                            ) : (
+                                <span
+                                    onClick={handleVolumeDisplayClick}
+                                    className="text-xs font-medium text-muted-foreground min-w-[3rem] text-right cursor-pointer hover:text-primary hover:bg-primary/10 px-1.5 py-0.5 rounded-md transition-all"
+                                    title="Click to edit volume"
+                                    role="button"
+                                    tabIndex={0}
+                                    onKeyDown={(e) => {
+                                        if (
+                                            e.key === "Enter" ||
+                                            e.key === " "
+                                        ) {
+                                            handleVolumeDisplayClick();
                                         }
-                                        onKeyDown={handleVolumeInputKeyDown}
-                                        onBlur={handleVolumeInputBlur}
-                                        className="w-14 h-6 text-xs font-medium bg-card/60 border border-border/40 rounded-md px-2 py-0.5 text-right text-foreground outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all"
-                                        autoFocus
-                                    />
-                                ) : (
-                                    <span
-                                        onClick={handleVolumeDisplayClick}
-                                        className="text-xs font-medium text-muted-foreground min-w-[3rem] text-right cursor-pointer hover:text-primary hover:bg-primary/10 px-1.5 py-0.5 rounded-md transition-all"
-                                        title="Click to edit volume"
-                                        role="button"
-                                        tabIndex={0}
-                                        onKeyDown={(e) => {
-                                            if (
-                                                e.key === "Enter" ||
-                                                e.key === " "
-                                            ) {
-                                                handleVolumeDisplayClick();
-                                            }
-                                        }}
-                                    >
-                                        {volume}%
-                                    </span>
-                                )}
-                            </div>
-
-                            <button
-                                onClick={() =>
-                                    setShowPlaylist(!showPlaylist)
-                                }
-                                className={cn(
-                                    "w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors shrink-0",
-                                    showPlaylist
-                                        ? "bg-primary/20 text-primary"
-                                        : "bg-white/5 hover:bg-white/10",
-                                )}
-                            >
-                                <span className="flex items-center gap-2">
-                                    <LinkIcon className="w-4 h-4" />
-                                    History ({youtubePlaylist.length})
+                                    }}
+                                >
+                                    {volume}%
                                 </span>
-                            </button>
-
-                            {showPlaylist && (
-                                <div className="space-y-2 overflow-y-auto max-h-32">
-                                    <div className="space-y-1">
-                                        {youtubePlaylist.map((url, idx) => (
-                                            <div
-                                                key={idx}
-                                                className="flex items-center justify-between p-2 rounded-[var(--radius)] bg-white/5 group"
-                                            >
-                                                <span className="text-[10px] text-muted-foreground truncate flex-1">
-                                                    {extractId(url)}
-                                                </span>
-                                                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <button
-                                                        onClick={() =>
-                                                            setMediaUrl(
-                                                                "YOUTUBE",
-                                                                url,
-                                                            )
-                                                        }
-                                                        className={cn(
-                                                            "text-[10px] px-2 py-0.5 rounded",
-                                                            youtubeUrl === url
-                                                                ? "bg-primary text-primary-foreground"
-                                                                : "hover:bg-white/20",
-                                                        )}
-                                                    >
-                                                        {youtubeUrl === url
-                                                            ? "Current"
-                                                            : "Play"}
-                                                    </button>
-                                                    <button
-                                                        onClick={() =>
-                                                            removeFromPlaylist(
-                                                                url,
-                                                            )
-                                                        }
-                                                        className="text-muted-foreground hover:text-destructive p-1"
-                                                    >
-                                                        <Trash2 className="w-3 h-3" />
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
                             )}
                         </div>
-                    </>
+
+                        <button
+                            onClick={() =>
+                                setShowPlaylist(!showPlaylist)
+                            }
+                            className={cn(
+                                "w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors shrink-0",
+                                showPlaylist
+                                    ? "bg-primary/20 text-primary"
+                                    : "bg-white/5 hover:bg-white/10",
+                            )}
+                        >
+                            <span className="flex items-center gap-2">
+                                <LinkIcon className="w-4 h-4" />
+                                History ({youtubePlaylist.length})
+                            </span>
+                        </button>
+
+                        {showPlaylist && (
+                            <div className="space-y-2 overflow-y-auto max-h-32">
+                                <div className="space-y-1">
+                                    {youtubePlaylist.map((url, idx) => (
+                                        <div
+                                            key={idx}
+                                            className="flex items-center justify-between p-2 rounded-[var(--radius)] bg-white/5 group"
+                                        >
+                                            <span className="text-[10px] text-muted-foreground truncate flex-1">
+                                                {extractId(url)}
+                                            </span>
+                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() =>
+                                                        setMediaUrl(
+                                                            "YOUTUBE",
+                                                            url,
+                                                        )
+                                                    }
+                                                    className={cn(
+                                                        "text-[10px] px-2 py-0.5 rounded",
+                                                        youtubeUrl === url
+                                                            ? "bg-primary text-primary-foreground"
+                                                            : "hover:bg-white/20",
+                                                    )}
+                                                >
+                                                    {youtubeUrl === url
+                                                        ? "Current"
+                                                        : "Play"}
+                                                </button>
+                                                <button
+                                                    onClick={() =>
+                                                        removeFromPlaylist(
+                                                            url,
+                                                        )
+                                                    }
+                                                    className="text-muted-foreground hover:text-destructive p-1"
+                                                >
+                                                    <Trash2 className="w-3 h-3" />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
                 )}
 
                 {mediaPlayerOpen && activeTab === "SPOTIFY" && (
