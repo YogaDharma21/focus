@@ -1,5 +1,6 @@
 "use client";
 
+import { Focus } from "lucide-react";
 import { BottomNavbar } from "@/components/layout/BottomNavbar";
 import { InfoButton } from "@/components/layout/InfoModal";
 import { MediaPlayer } from "@/components/modules/MediaPlayer";
@@ -9,21 +10,23 @@ import { StatsJournal } from "@/components/modules/StatsJournal";
 import { DynamicIslandTimer } from "@/components/modules/DynamicIslandTimer";
 import { DeepFocusOverlay } from "@/components/modules/DeepFocusOverlay";
 import { useAppStore } from "@/lib/store";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export default function Page() {
     const { currentView, mediaPlayerOpen, isActive, deepFocusMode, setDeepFocusMode } = useAppStore();
     const [mounted, setMounted] = useState(false);
+    const prevActiveRef = useRef(isActive);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
     useEffect(() => {
-        if (isActive && !deepFocusMode) {
+        if (isActive && !prevActiveRef.current && !deepFocusMode) {
             setDeepFocusMode(true);
         }
+        prevActiveRef.current = isActive;
     }, [isActive, deepFocusMode, setDeepFocusMode]);
 
     useEffect(() => {
@@ -40,6 +43,8 @@ export default function Page() {
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [deepFocusMode, setDeepFocusMode]);
+
+    const toggleFocusMode = () => setDeepFocusMode(!deepFocusMode);
 
     if (!mounted) return null;
 
@@ -68,7 +73,21 @@ export default function Page() {
                             {currentView === "TODO" && "Tasks"}
                             {currentView === "JOURNAL" && "Journal & Stats"}
                         </h1>
-                        <div className="flex items-center">
+                        <div className="flex items-center gap-1">
+                            <button
+                                onClick={toggleFocusMode}
+                                className={cn(
+                                    "flex flex-col items-center justify-center w-16 h-14 rounded-[var(--radius)] transition-all duration-300 ease-out group",
+                                    deepFocusMode
+                                        ? "text-primary-foreground bg-primary shadow-lg"
+                                        : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+                                )}
+                                title="Toggle Deep Focus Mode"
+                            >
+                                <span className="transform transition-transform duration-300 group-hover:scale-105">
+                                    <Focus className="w-6 h-6" />
+                                </span>
+                            </button>
                             <div className="scale-90">
                                 <InfoButton />
                             </div>
