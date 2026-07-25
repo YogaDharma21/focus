@@ -7,17 +7,39 @@ import { FocusTimer } from "@/components/modules/FocusTimer";
 import { TodoList } from "@/components/modules/TodoList";
 import { StatsJournal } from "@/components/modules/StatsJournal";
 import { DynamicIslandTimer } from "@/components/modules/DynamicIslandTimer";
+import { DeepFocusOverlay } from "@/components/modules/DeepFocusOverlay";
 import { useAppStore } from "@/lib/store";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export default function Page() {
-    const { currentView, mediaPlayerOpen } = useAppStore();
+    const { currentView, mediaPlayerOpen, isActive, deepFocusMode, setDeepFocusMode } = useAppStore();
     const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
         setMounted(true);
     }, []);
+
+    useEffect(() => {
+        if (isActive && !deepFocusMode) {
+            setDeepFocusMode(true);
+        }
+    }, [isActive, deepFocusMode, setDeepFocusMode]);
+
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "f" || e.key === "F") {
+                const tag = (document.activeElement as HTMLElement)?.tagName?.toLowerCase();
+                if (tag === "input" || tag === "textarea" || tag === "select") {
+                    return;
+                }
+                setDeepFocusMode(!deepFocusMode);
+            }
+        };
+
+        window.addEventListener("keydown", handleKeyDown);
+        return () => window.removeEventListener("keydown", handleKeyDown);
+    }, [deepFocusMode, setDeepFocusMode]);
 
     if (!mounted) return null;
 
@@ -28,7 +50,12 @@ export default function Page() {
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-[var(--radius)] blur-[120px] opacity-20" />
             </div>
 
-            <div className="flex min-h-screen">
+            {deepFocusMode && <DeepFocusOverlay />}
+
+            <div className={cn(
+                "flex min-h-screen transition-opacity duration-500",
+                deepFocusMode && "opacity-0 pointer-events-none"
+            )}>
                 <BottomNavbar />
                 
                 <div className={cn(
