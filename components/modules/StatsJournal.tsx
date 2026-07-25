@@ -3,10 +3,8 @@
 import { useAppStore } from "@/lib/store";
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import {
     Activity,
-    StickyNote,
     CheckCircle2,
     List,
     Clock,
@@ -17,7 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { Distraction } from "@/lib/store";
 
 export function StatsJournal() {
-    const { notes, setNotes, sessions, sessionStartTime, isActive, todos, distractions } =
+    const { sessions, sessionStartTime, isActive, todos, distractions } =
         useAppStore();
     const [liveElapsed, setLiveElapsed] = useState(0);
     const [showHours, setShowHours] = useState(false);
@@ -196,22 +194,6 @@ export function StatsJournal() {
                     </span>
                 </Card>
             </div>
-
-            <Card className="flex-1 p-6 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-4 rounded-[var(--radius)]">
-                <div className="flex items-center justify-between">
-                    <h2 className="font-semibold text-lg flex items-center gap-2">
-                        <StickyNote className="w-4 h-4 text-primary" />
-                        Quick Notes
-                    </h2>
-                </div>
-
-                <Textarea
-                    placeholder="Brain dump, ideas, or reminders..."
-                    className="flex-1 resize-none bg-background/50 border-none focus-visible:ring-1 focus-visible:ring-primary/20 text-base"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                />
-            </Card>
 
             {totalDistractions > 0 && (
                 <Card className="p-6 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-4 rounded-[var(--radius)]">
