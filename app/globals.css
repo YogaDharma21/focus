@@ -138,3 +138,11 @@
         @apply bg-background text-foreground;
     }
 }
+
+.heatmap-scroll::-webkit-scrollbar {
+  display: none;
+}
+.heatmap-scroll {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}

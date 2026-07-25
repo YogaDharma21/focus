@@ -121,7 +121,7 @@ export function ProductivityHeatmap() {
 
   return (
     <Card className="p-4 bg-primary/5 border-primary/10 shadow-md backdrop-blur-sm rounded-[var(--radius)]">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="p-2 bg-orange-500/10 rounded-[var(--radius)] text-orange-500">
             <Flame className="w-4 h-4" />
@@ -154,7 +154,7 @@ export function ProductivityHeatmap() {
       </div>
 
       <div className="flex gap-1">
-        <div className="flex flex-col gap-[2px] mr-1 pt-5">
+        <div className="flex flex-col gap-[2px] mr-1">
           {DAY_LABELS.map((label, i) => (
             <div
               key={i}
@@ -165,32 +165,37 @@ export function ProductivityHeatmap() {
           ))}
         </div>
 
-        <div className="flex-1 overflow-x-auto">
-          <div className="flex gap-[2px] min-w-fit">
-            {weeks.map((week, weekIndex) => (
-              <div
-                key={weekIndex}
-                className="flex flex-col gap-[2px]"
-              >
-                <div className="h-5 text-[9px] text-muted-foreground flex items-start">
-                  {getMonthLabel(week)}
+        <div className="flex-1 overflow-x-auto heatmap-scroll pt-3">
+          <div className="flex gap-[2px] min-w-fit relative">
+            {weeks.map((week, weekIndex) => {
+              const monthLabel = getMonthLabel(week);
+              return (
+                <div
+                  key={weekIndex}
+                  className="relative flex flex-col gap-[2px]"
+                >
+                  {monthLabel && (
+                    <div className="absolute -top-3 left-0 text-[9px] text-muted-foreground pointer-events-none whitespace-nowrap">
+                      {monthLabel}
+                    </div>
+                  )}
+                  {week.map((day, dayIndex) => (
+                    <div
+                      key={`${weekIndex}-${dayIndex}`}
+                      title={
+                        !isNaN(day.date.getTime())
+                          ? `${format(day.date, "MMM d, yyyy")}: ${Math.round(day.minutes)} min`
+                          : ""
+                      }
+                      className={cn(
+                        "w-[10px] h-[10px] rounded-[2px] shrink-0",
+                        LEVEL_COLORS[day.level],
+                      )}
+                    />
+                  ))}
                 </div>
-                {week.map((day, dayIndex) => (
-                  <div
-                    key={`${weekIndex}-${dayIndex}`}
-                    title={
-                      !isNaN(day.date.getTime())
-                        ? `${format(day.date, "MMM d, yyyy")}: ${Math.round(day.minutes)} min`
-                        : ""
-                    }
-                    className={cn(
-                      "w-[10px] h-[10px] rounded-[2px]",
-                      LEVEL_COLORS[day.level],
-                    )}
-                  />
-                ))}
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>
