@@ -49,7 +49,7 @@ export function DistractionCounter() {
                 </Button>
             </PopoverTrigger>
             <PopoverContent
-                className="w-48 p-2 rounded-[var(--radius)]"
+                className="w-48 p-2 rounded-[var(--radius)] z-[200]"
                 align="center"
             >
                 <div className="flex flex-col gap-1">
