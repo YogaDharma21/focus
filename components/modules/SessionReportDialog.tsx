@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { CheckCircle2, Star } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const MOODS = [
@@ -22,7 +22,6 @@ const MOODS = [
 export interface SessionReportData {
     duration: number;
     mood: string;
-    focus: number;
     note: string;
     tasks: string[];
 }
@@ -46,7 +45,6 @@ export function SessionReportDialog({
 }: SessionReportDialogProps) {
     const { todos, addMoodNote } = useAppStore();
     const [mood, setMood] = useState("");
-    const [focus, setFocus] = useState(3);
     const [note, setNote] = useState("");
     const [submitting, setSubmitting] = useState(false);
 
@@ -64,7 +62,6 @@ export function SessionReportDialog({
         const reportData: SessionReportData = {
             duration,
             mood,
-            focus,
             note,
             tasks: tasks.length > 0 ? tasks : todos.map((t) => t.text),
         };
@@ -87,7 +84,6 @@ export function SessionReportDialog({
                 }
                 onSubmit(reportData);
                 setMood("");
-                setFocus(3);
                 setNote("");
             }
         } catch {
@@ -156,30 +152,6 @@ export function SessionReportDialog({
                                     title={m.label}
                                 >
                                     {m.emoji}
-                                </button>
-                            ))}
-                        </div>
-                    </div>
-
-                    <div className="space-y-2">
-                        <h3 className="text-sm font-medium text-muted-foreground">
-                            How focused were you?
-                        </h3>
-                        <div className="flex gap-1">
-                            {[1, 2, 3, 4, 5].map((value) => (
-                                <button
-                                    key={value}
-                                    onClick={() => setFocus(value)}
-                                    className="transition-transform hover:scale-110"
-                                >
-                                    <Star
-                                        className={cn(
-                                            "w-6 h-6",
-                                            value <= focus
-                                                ? "fill-yellow-400 text-yellow-400"
-                                                : "text-muted-foreground/30",
-                                        )}
-                                    />
                                 </button>
                             ))}
                         </div>
