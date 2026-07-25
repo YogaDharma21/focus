@@ -45,6 +45,7 @@ interface AppState {
 
     notes: string;
     sessions: Session[];
+    distractions: Distraction[];
 
     deepFocusMode: boolean;
     setDeepFocusMode: (mode: boolean) => void;
@@ -54,6 +55,7 @@ interface AppState {
 
     setNotes: (text: string) => void;
     addSession: (session: Session) => void;
+    addDistraction: (category: string) => void;
 
     pomodoroSettings: { work: number; break: number; autoStartBreak: boolean };
     setPomodoroSettings: (
@@ -81,6 +83,12 @@ export interface Session {
     date: string;
     duration: number;
     mode: "POMODORO" | "STOPWATCH";
+}
+
+export interface Distraction {
+    id: string;
+    timestamp: string;
+    category: string;
 }
 
 export interface TodoItem {
@@ -228,6 +236,7 @@ export const useAppStore = create<AppState>()(
 
             notes: "",
             sessions: [],
+            distractions: [],
 
             deepFocusMode: false,
             setDeepFocusMode: (mode) => set({ deepFocusMode: mode }),
@@ -240,6 +249,15 @@ export const useAppStore = create<AppState>()(
             addSession: (session) =>
                 set((state) => ({
                     sessions: [...(state.sessions || []), session],
+                })),
+
+            addDistraction: (category) =>
+                set((state) => ({
+                    distractions: [...(state.distractions || []), {
+                        id: crypto.randomUUID(),
+                        timestamp: new Date().toISOString(),
+                        category,
+                    }],
                 })),
 
             addSubtask: (todoId, text) =>

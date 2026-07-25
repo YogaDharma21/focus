@@ -10,17 +10,40 @@ import {
     CheckCircle2,
     List,
     Clock,
+    BarChart3,
 } from "lucide-react";
 import { isSameDay, parseISO } from "date-fns";
 import { Progress } from "@/components/ui/progress";
+import { Distraction } from "@/lib/store";
 
 export function StatsJournal() {
-    const { notes, setNotes, sessions, sessionStartTime, isActive, todos } =
+    const { notes, setNotes, sessions, sessionStartTime, isActive, todos, distractions } =
         useAppStore();
     const [liveElapsed, setLiveElapsed] = useState(0);
     const [showHours, setShowHours] = useState(false);
 
     const today = new Date();
+
+    // Distraction stats
+    const totalDistractions = distractions.length;
+    const categoryCounts: Record<string, number> = {};
+    distractions.forEach((d: Distraction) => {
+        categoryCounts[d.category] = (categoryCounts[d.category] || 0) + 1;
+    });
+    const sortedCategories = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1]);
+    const mostCommon = sortedCategories[0];
+    const distractionCategories = ["Phone", "Social Media", "Bathroom", "Meeting", "Other"];
+
+    const getCategoryColor = (category: string) => {
+        const colors: Record<string, string> = {
+            "Phone": "bg-blue-500",
+            "Social Media": "bg-purple-500",
+            "Bathroom": "bg-green-500",
+            "Meeting": "bg-amber-500",
+            "Other": "bg-gray-500",
+        };
+        return colors[category] || "bg-gray-500";
+    };
 
     useEffect(() => {
         let interval: NodeJS.Timeout;
@@ -189,6 +212,48 @@ export function StatsJournal() {
                     onChange={(e) => setNotes(e.target.value)}
                 />
             </Card>
+
+            {totalDistractions > 0 && (
+                <Card className="p-6 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-4 rounded-[var(--radius)]">
+                    <div className="flex items-center gap-2">
+                        <div className="p-2 bg-red-500/10 rounded-[var(--radius)] text-red-500">
+                            <BarChart3 className="w-4 h-4" />
+                        </div>
+                        <h2 className="font-semibold text-lg">Distraction Analysis</h2>
+                    </div>
+
+                    <div className="text-sm text-muted-foreground">
+                        Most common:{" "}
+                        <span className="font-medium text-foreground">
+                            {mostCommon?.[0]}
+                        </span>{" "}
+                        ({Math.round((mostCommon?.[1] || 0) / totalDistractions * 100)}%)
+                    </div>
+
+                    <div className="space-y-3">
+                        {distractionCategories.map((cat) => {
+                            const count = categoryCounts[cat] || 0;
+                            if (count === 0) return null;
+                            const percentage = Math.round(count / totalDistractions * 100);
+                            return (
+                                <div key={cat} className="space-y-1">
+                                    <div className="flex items-center justify-between text-sm">
+                                        <span className="font-medium">{cat}</span>
+                                        <span className="text-muted-foreground">
+                                            {count} ({percentage}%)
+                                        </span>
+                                    </div>
+                                    <Progress
+                                        value={percentage}
+                                        className="h-1.5"
+                                        indicatorClassName={getCategoryColor(cat)}
+                                    />
+                                </div>
+                            );
+                        })}
+                    </div>
+                </Card>
+            )}
         </div>
     );
 }
