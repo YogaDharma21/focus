@@ -7,7 +7,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import {
     Activity,
-    StickyNote,
     CheckCircle2,
     List,
     Clock,
@@ -15,14 +14,16 @@ import {
     TrendingUp,
     Target,
     BarChart3,
+    StickyNote,
 } from "lucide-react";
 import { isSameDay, parseISO, addDays, format, eachDayOfInterval } from "date-fns";
 
 export function StatsJournal() {
-    const { notes, setNotes, sessions, sessionStartTime, isActive, todos, distractions } =
+    const { sessions, sessionStartTime, isActive, todos, distractions } =
         useAppStore();
     const [liveElapsed, setLiveElapsed] = useState(0);
     const [showHours, setShowHours] = useState(false);
+    const [notes, setNotes] = useState("");
 
     const today = new Date();
 
