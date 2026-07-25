@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppStore, TodoItem } from "@/lib/store";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
     CheckSquare,
     Trash2,
@@ -13,9 +13,17 @@ import {
     Target,
     Trash,
     Check,
+    Sparkles,
+    Timer,
+    Repeat,
+    Bell,
+    Tag,
+    FileText,
+    StickyNote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
     Sheet,
@@ -43,6 +51,7 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -75,12 +84,22 @@ export function TodoList() {
     const [editingTaskName, setEditingTaskName] = useState("");
     const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
     const [editingSubtaskText, setEditingSubtaskText] = useState("");
+    const [tempDescription, setTempDescription] = useState("");
+    const [tempNotes, setTempNotes] = useState("");
+    const [tempTagsInput, setTempTagsInput] = useState("");
+    const [tempRemindersInput, setTempRemindersInput] = useState("");
     const editingTask = todos.find((t) => t.id === editingTaskId) || null;
     
-    // Reset edit mode when task changes
-    if (editingTask && editingTask.text !== editingTaskName && !isEditingTaskName) {
-        setEditingTaskName(editingTask.text);
-    }
+    useEffect(() => {
+        if (editingTask) {
+            setIsEditingTaskName(false);
+            setEditingTaskName(editingTask.text);
+            setTempDescription(editingTask.description || "");
+            setTempNotes(editingTask.notes || "");
+            setTempTagsInput((editingTask.tags || []).join(", "));
+            setTempRemindersInput((editingTask.reminders || []).join(", "));
+        }
+    }, [editingTask?.id]);
 
     const handleAddTodo = (e: React.FormEvent) => {
         e.preventDefault();
@@ -92,6 +111,9 @@ export function TodoList() {
             completed: false,
             category: "General",
             groupId: selectedGroupId,
+            priority: "medium",
+            estimatedPomodoros: 1,
+            recurring: "none",
         };
 
         addTodo(todo);
@@ -334,7 +356,7 @@ export function TodoList() {
                                 >
                                     {todo.text}
                                 </p>
-                                <div className="flex gap-3 text-[10px] text-muted-foreground/70">
+                                <div className="flex gap-3 text-[10px] text-muted-foreground/70 flex-wrap">
                                     {todo.deadline && (
                                         <div className="flex items-center gap-1 text-orange-400">
                                             <CalendarIcon className="w-3 h-3" />
@@ -342,6 +364,18 @@ export function TodoList() {
                                                 new Date(todo.deadline),
                                                 "MMM d",
                                             )}
+                                        </div>
+                                    )}
+                                    {todo.tags && todo.tags.length > 0 && (
+                                        <div className="flex items-center gap-1">
+                                            <Tag className="w-3 h-3" />
+                                            {todo.tags.slice(0, 2).join(", ")}
+                                        </div>
+                                    )}
+                                    {todo.priority && todo.priority !== "medium" && (
+                                        <div className="flex items-center gap-1">
+                                            <Sparkles className="w-3 h-3" />
+                                            {todo.priority}
                                         </div>
                                     )}
                                     {todo.subtasks &&
@@ -415,14 +449,14 @@ export function TodoList() {
                                                 updateTodo(editingTask.id, { text: editingTaskName.trim() });
                                             }
                                             setIsEditingTaskName(false);
-                                        }}
-                                        onKeyDown={(e) => {
-                                            if (e.key === 'Enter') {
-                                                if (editingTaskName.trim()) {
-                                                    updateTodo(editingTask.id, { text: editingTaskName.trim() });
-                                                }
-                                                setIsEditingTaskName(false);
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            if (editingTaskName.trim()) {
+                                                updateTodo(editingTask.id, { text: editingTaskName.trim() });
                                             }
+                                            setIsEditingTaskName(false);
+                                        }
                                             if (e.key === 'Escape') {
                                                 setIsEditingTaskName(false);
                                             }
@@ -438,6 +472,220 @@ export function TodoList() {
                                         }}
                                     >
                                         {editingTask.text}
+                                    </div>
+                                
+                                </div>
+                                )}
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1">
+                                    <FileText className="w-3 h-3" /> Description
+                                </label>
+                                <Textarea
+                                    placeholder="Add a description..."
+                                    value={tempDescription}
+                                    onChange={(e) => setTempDescription(e.target.value)}
+                                    onBlur={() => {
+                                        if (tempDescription !== (editingTask.description || "")) {
+                                            updateTodo(editingTask.id, { description: tempDescription || undefined });
+                                        }
+                                    }}
+                                    className="resize-none min-h-[80px]"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1">
+                                    <Sparkles className="w-3 h-3" /> Priority
+                                </label>
+                                <Select
+                                    defaultValue={editingTask.priority || "medium"}
+                                    onValueChange={(val) => {
+                                        updateTodo(editingTask.id, { priority: val as TodoItem["priority"] });
+                                    }}
+                                >
+                                    <SelectTrigger className="rounded-[var(--radius)]">
+                                        <SelectValue placeholder="Select priority" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-[var(--radius)]">
+                                        <SelectItem value="low">Low</SelectItem>
+                                        <SelectItem value="medium">Medium</SelectItem>
+                                        <SelectItem value="high">High</SelectItem>
+                                        <SelectItem value="urgent">Urgent</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1">
+                                    <Tag className="w-3 h-3" /> Tags
+                                </label>
+                                <div className="flex flex-wrap gap-1 mb-2">
+                                    {(editingTask.tags || []).map((tag, idx) => (
+                                        <Badge key={idx} variant="secondary" className="text-xs">
+                                            {tag}
+                                            <button
+                                                className="ml-1 opacity-50 hover:opacity-100"
+                                                onClick={() => {
+                                                    updateTodo(editingTask.id, {
+                                                        tags: (editingTask.tags || []).filter((_, i) => i !== idx),
+                                                    });
+                                                }}
+                                            >
+                                                ×
+                                            </button>
+                                        </Badge>
+                                    ))}
+                                </div>
+                                <Input
+                                    placeholder="Add tags (comma separated)..."
+                                    value={tempTagsInput}
+                                    onChange={(e) => setTempTagsInput(e.target.value)}
+                                    onBlur={() => {
+                                        const newTags = tempTagsInput.split(",").map(t => t.trim()).filter(Boolean);
+                                        if (JSON.stringify(newTags) !== JSON.stringify(editingTask.tags || [])) {
+                                            updateTodo(editingTask.id, { tags: newTags });
+                                        }
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            const newTags = tempTagsInput.split(",").map(t => t.trim()).filter(Boolean);
+                                            if (JSON.stringify(newTags) !== JSON.stringify(editingTask.tags || [])) {
+                                                updateTodo(editingTask.id, { tags: newTags });
+                                            }
+                                            setTempTagsInput("");
+                                        }
+                                    }}
+                                    className="h-8 text-xs bg-secondary/10"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1">
+                                    <StickyNote className="w-3 h-3" /> Notes
+                                </label>
+                                <Textarea
+                                    placeholder="Add notes..."
+                                    value={tempNotes}
+                                    onChange={(e) => setTempNotes(e.target.value)}
+                                    onBlur={() => {
+                                        if (tempNotes !== (editingTask.notes || "")) {
+                                            updateTodo(editingTask.id, { notes: tempNotes || undefined });
+                                        }
+                                    }}
+                                    className="resize-none min-h-[80px]"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1">
+                                    <Repeat className="w-3 h-3" /> Recurring
+                                </label>
+                                <Select
+                                    defaultValue={editingTask.recurring || "none"}
+                                    onValueChange={(val) => {
+                                        updateTodo(editingTask.id, { recurring: val as TodoItem["recurring"] });
+                                    }}
+                                >
+                                    <SelectTrigger className="rounded-[var(--radius)]">
+                                        <SelectValue placeholder="Select recurrence" />
+                                    </SelectTrigger>
+                                    <SelectContent className="rounded-[var(--radius)]">
+                                        <SelectItem value="none">No</SelectItem>
+                                        <SelectItem value="daily">Daily</SelectItem>
+                                        <SelectItem value="weekly">Weekly</SelectItem>
+                                        <SelectItem value="monthly">Monthly</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1">
+                                    <Bell className="w-3 h-3" /> Reminders
+                                </label>
+                                <div className="flex flex-wrap gap-1 mb-2">
+                                    {(editingTask.reminders || []).map((reminder, idx) => (
+                                        <Badge key={idx} variant="outline" className="text-xs">
+                                            {reminder}
+                                            <button
+                                                className="ml-1 opacity-50 hover:opacity-100"
+                                                onClick={() => {
+                                                    updateTodo(editingTask.id, {
+                                                        reminders: (editingTask.reminders || []).filter((_, i) => i !== idx),
+                                                    });
+                                                }}
+                                            >
+                                                ×
+                                            </button>
+                                        </Badge>
+                                    ))}
+                                </div>
+                                <Input
+                                    placeholder="Add reminder (comma separated datetime)..."
+                                    value={tempRemindersInput}
+                                    onChange={(e) => setTempRemindersInput(e.target.value)}
+                                    onBlur={() => {
+                                        const newReminders = tempRemindersInput.split(",").map(t => t.trim()).filter(Boolean);
+                                        if (JSON.stringify(newReminders) !== JSON.stringify(editingTask.reminders || [])) {
+                                            updateTodo(editingTask.id, { reminders: newReminders });
+                                        }
+                                    }}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter") {
+                                            const newReminders = tempRemindersInput.split(",").map(t => t.trim()).filter(Boolean);
+                                            if (JSON.stringify(newReminders) !== JSON.stringify(editingTask.reminders || [])) {
+                                                updateTodo(editingTask.id, { reminders: newReminders });
+                                            }
+                                            setTempRemindersInput("");
+                                        }
+                                    }}
+                                    className="h-8 text-xs bg-secondary/10"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1">
+                                    <Timer className="w-3 h-3" /> Pomodoro
+                                </label>
+                                <div className="flex gap-3">
+                                    <div className="flex-1">
+                                        <label className="text-[10px] text-muted-foreground mb-1 block">Estimated</label>
+                                        <Input
+                                            type="number"
+                                            min={1}
+                                            value={editingTask.estimatedPomodoros || 1}
+                                            onChange={(e) => {
+                                                updateTodo(editingTask.id, {
+                                                    estimatedPomodoros: parseInt(e.target.value) || 1,
+                                                });
+                                            }}
+                                            className="h-9"
+                                        />
+                                    </div>
+                                    <div className="flex-1">
+                                        <label className="text-[10px] text-muted-foreground mb-1 block">Completed</label>
+                                        <Input
+                                            type="number"
+                                            min={0}
+                                            value={editingTask.completedPomodoros || 0}
+                                            onChange={(e) => {
+                                                updateTodo(editingTask.id, {
+                                                    completedPomodoros: parseInt(e.target.value) || 0,
+                                                });
+                                            }}
+                                            className="h-9"
+                                        />
+                                    </div>
+                                </div>
+                                {(editingTask.estimatedPomodoros || 0) > 0 && (
+                                    <div className="w-full bg-secondary/30 rounded-full h-2 overflow-hidden">
+                                        <div
+                                            className="bg-primary h-full rounded-full transition-all"
+                                            style={{
+                                                width: `${Math.min(100, ((editingTask.completedPomodoros || 0) / (editingTask.estimatedPomodoros || 1)) * 100)}%`,
+                                            }}
+                                        />
                                     </div>
                                 )}
                             </div>

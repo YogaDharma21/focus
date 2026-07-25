@@ -95,13 +95,21 @@ export interface Distraction {
 export interface TodoItem {
     id: string;
     text: string;
+    description?: string;
     completed: boolean;
     category?: string;
+    priority?: "low" | "medium" | "high" | "urgent";
+    tags?: string[];
+    deadline?: string;
     dueDate?: string;
     subtasks?: { id: string; text: string; completed: boolean }[];
+    notes?: string;
+    estimatedPomodoros?: number;
+    completedPomodoros?: number;
+    recurring?: "none" | "daily" | "weekly" | "monthly";
+    reminders?: string[];
     link?: string;
     groupId?: string;
-    deadline?: string;
     completedAt?: string;
 }
 
