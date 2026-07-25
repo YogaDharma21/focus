@@ -1,6 +1,6 @@
 "use client";
 
-import { useAppStore } from "@/lib/store";
+import { useAppStore, Distraction } from "@/lib/store";
 import { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -14,6 +14,7 @@ import {
     Flame,
     TrendingUp,
     Target,
+    BarChart3,
 } from "lucide-react";
 import { isSameDay, parseISO, addDays, format, eachDayOfInterval } from "date-fns";
 
