@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { DistractionCounter } from "./DistractionCounter";
+import { SessionReportDialog, type SessionReportData } from "./SessionReportDialog";
 
 export function FocusTimer() {
     const {
@@ -37,6 +38,8 @@ export function FocusTimer() {
     } = useAppStore();
 
     const [settingsOpen, setSettingsOpen] = useState(false);
+    const [reportOpen, setReportOpen] = useState(false);
+    const [completedDuration, setCompletedDuration] = useState(0);
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -80,12 +83,8 @@ export function FocusTimer() {
                 : timeLeft;
 
         if (duration > 0) {
-            addSession({
-                id: crypto.randomUUID(),
-                date: new Date().toISOString(),
-                duration: duration,
-                mode: timerMode,
-            });
+            setCompletedDuration(duration);
+            setReportOpen(true);
         }
 
         if (timerMode === "POMODORO" && timerState === "WORK") {
@@ -102,7 +101,6 @@ export function FocusTimer() {
         }
         sessionStartTimeRef.current = null;
     }, [
-        addSession,
         timerMode,
         timerState,
         timeLeft,
@@ -111,6 +109,16 @@ export function FocusTimer() {
         setTimerState,
         pomodoroSettings,
     ]);
+
+    const handleReportSubmit = (data: SessionReportData) => {
+        addSession({
+            id: crypto.randomUUID(),
+            date: new Date().toISOString(),
+            duration: data.duration,
+            mode: timerMode,
+        });
+        setReportOpen(false);
+    };
 
     const prevSettingsRef = useRef({ work: pomodoroSettings.work, break: pomodoroSettings.break });
 
@@ -397,6 +405,15 @@ export function FocusTimer() {
                     <CheckCircle2 className="w-5 h-5" />
                 </Button>
             </div>
+
+            <SessionReportDialog
+                open={reportOpen}
+                onOpenChange={setReportOpen}
+                duration={completedDuration}
+                tasks={[]}
+                sessionName={sessionName}
+                onSubmit={handleReportSubmit}
+            />
         </div>
     );
 }
