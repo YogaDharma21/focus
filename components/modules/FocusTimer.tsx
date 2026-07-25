@@ -184,6 +184,58 @@ export function FocusTimer() {
 
     return (
         <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center min-h-[50vh] animate-in fade-in duration-700 relative">
+            <audio ref={audioRef} src="/soundeffect.mp3" />
+
+            <div className="flex gap-2 mb-3 p-1 bg-secondary/30 rounded-[var(--radius)] backdrop-blur-md">
+                <button
+                    onClick={() => {
+                        setTimerMode("POMODORO");
+                        setTimerState("WORK");
+                        setIsActive(false);
+                        setTimeLeft(pomodoroSettings.work * 60);
+                    }}
+                    className={cn(
+                        "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
+                        timerMode === "POMODORO" && timerState === "WORK"
+                            ? "bg-primary text-primary-foreground shadow-md"
+                            : "text-muted-foreground hover:text-foreground",
+                    )}
+                >
+                    Pomodoro
+                </button>
+                <button
+                    onClick={() => {
+                        setTimerMode("POMODORO");
+                        setTimerState("BREAK");
+                        setIsActive(false);
+                        setTimeLeft(pomodoroSettings.break * 60);
+                    }}
+                    className={cn(
+                        "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
+                        timerMode === "POMODORO" && timerState === "BREAK"
+                            ? "bg-green-500 text-primary-foreground shadow-md"
+                            : "text-muted-foreground hover:text-foreground",
+                    )}
+                >
+                    Break
+                </button>
+                <button
+                    onClick={() => {
+                        setTimerMode("STOPWATCH");
+                        setIsActive(false);
+                        setTimeLeft(0);
+                    }}
+                    className={cn(
+                        "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
+                        timerMode === "STOPWATCH"
+                            ? "bg-primary text-primary-foreground shadow-md"
+                            : "text-muted-foreground hover:text-foreground",
+                    )}
+                >
+                    Flow
+                </button>
+            </div>
+
             <div className="mb-3 flex justify-center md:absolute md:top-0 md:right-0 md:mb-0">
                 <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
                     <DialogTrigger asChild>
@@ -280,58 +332,6 @@ export function FocusTimer() {
                         </div>
                     </DialogContent>
                 </Dialog>
-            </div>
-
-            <audio ref={audioRef} src="/soundeffect.mp3" />
-
-            <div className="flex gap-2 mb-12 p-1 bg-secondary/30 rounded-[var(--radius)] backdrop-blur-md">
-                <button
-                    onClick={() => {
-                        setTimerMode("POMODORO");
-                        setTimerState("WORK");
-                        setIsActive(false);
-                        setTimeLeft(pomodoroSettings.work * 60);
-                    }}
-                    className={cn(
-                        "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
-                        timerMode === "POMODORO" && timerState === "WORK"
-                            ? "bg-primary text-primary-foreground shadow-md"
-                            : "text-muted-foreground hover:text-foreground",
-                    )}
-                >
-                    Pomodoro
-                </button>
-                <button
-                    onClick={() => {
-                        setTimerMode("POMODORO");
-                        setTimerState("BREAK");
-                        setIsActive(false);
-                        setTimeLeft(pomodoroSettings.break * 60);
-                    }}
-                    className={cn(
-                        "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
-                        timerMode === "POMODORO" && timerState === "BREAK"
-                            ? "bg-green-500 text-primary-foreground shadow-md"
-                            : "text-muted-foreground hover:text-foreground",
-                    )}
-                >
-                    Break
-                </button>
-                <button
-                    onClick={() => {
-                        setTimerMode("STOPWATCH");
-                        setIsActive(false);
-                        setTimeLeft(0);
-                    }}
-                    className={cn(
-                        "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
-                        timerMode === "STOPWATCH"
-                            ? "bg-primary text-primary-foreground shadow-md"
-                            : "text-muted-foreground hover:text-foreground",
-                    )}
-                >
-                    Flow
-                </button>
             </div>
 
             <div className="flex flex-col items-center gap-8 mb-12 w-full">
