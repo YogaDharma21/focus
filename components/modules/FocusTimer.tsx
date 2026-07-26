@@ -117,8 +117,25 @@ export function FocusTimer() {
         } else if (timerMode === "POMODORO" && timerState === "BREAK") {
             setTimerState("WORK");
             setTimeLeft(pomodoroSettings.work * 60);
-        } else if (timerMode === "STOPWATCH") {
+        } else if (timerMode === "STOPWATCH" && duration > 0) {
             setTimeLeft(0);
+            if (sessionName) {
+                const focusedTask = todos.find(
+                    (t) => t.text === sessionName && !t.completed,
+                );
+                if (focusedTask) {
+                    const newCompleted = (focusedTask.completedPomodoros || 0) + 1;
+                    updateTodo(focusedTask.id, {
+                        completedPomodoros: newCompleted,
+                    });
+                    if (
+                        focusedTask.estimatedPomodoros &&
+                        newCompleted >= focusedTask.estimatedPomodoros
+                    ) {
+                        toggleTodo(focusedTask.id);
+                    }
+                }
+            }
         }
         sessionStartTimeRef.current = null;
     }, [
