@@ -37,7 +37,7 @@ export function DistractionCounter() {
                     variant="outline"
                     size="icon"
                     className={cn(
-                        "w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 transition-all",
+                        "w-11 h-11 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 transition-all",
                         isActive
                             ? "hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/50"
                             : "opacity-50 cursor-not-allowed",
