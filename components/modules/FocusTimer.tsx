@@ -360,50 +360,56 @@ export function FocusTimer() {
                 </div>
             </div>
 
-            <div className="flex items-center gap-6">
-                <Button
-                    variant="outline"
-                    size="icon"
-                    className="w-12 h-12 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 transition-all"
-                    onClick={resetTimer}
-                >
-                    <RotateCcw className="w-5 h-5" />
-                </Button>
+            <div className="grid grid-cols-3 items-center w-full max-w-[280px] sm:max-w-xs">
+                <div className="flex items-center gap-2 sm:gap-3 justify-start">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="w-10 h-10 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 transition-all"
+                        onClick={resetTimer}
+                    >
+                        <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </Button>
 
-                <DistractionCounter />
+                    <DistractionCounter />
+                </div>
 
-                <Button
-                    size="icon"
-                    className={cn(
-                        "w-20 h-20 rounded-[var(--radius)] shadow-md hover:shadow active:scale-95 transition-all duration-300",
-                        isActive
-                            ? "bg-white text-black hover:bg-gray-200"
-                            : "bg-primary text-primary-foreground",
-                    )}
-                    onClick={toggleTimer}
-                >
-                    {isActive ? (
-                        <Pause className="w-8 h-8 fill-current" />
-                    ) : (
-                        <Play className="w-8 h-8 fill-current ml-1" />
-                    )}
-                </Button>
+                <div className="flex items-center justify-center">
+                    <Button
+                        size="icon"
+                        className={cn(
+                            "w-16 h-16 sm:w-20 sm:h-20 rounded-[var(--radius)] shadow-md hover:shadow active:scale-95 transition-all duration-300",
+                            isActive
+                                ? "bg-white text-black hover:bg-gray-200"
+                                : "bg-primary text-primary-foreground",
+                        )}
+                        onClick={toggleTimer}
+                    >
+                        {isActive ? (
+                            <Pause className="w-6 h-6 sm:w-8 sm:h-8 fill-current" />
+                        ) : (
+                            <Play className="w-6 h-6 sm:w-8 sm:h-8 fill-current ml-0.5 sm:ml-1" />
+                        )}
+                    </Button>
+                </div>
 
-                <Button
-                    variant="outline"
-                    size="icon"
-                    className={cn(
-                        "w-12 h-12 rounded-[var(--radius)] border-2 transition-all",
-                        isActive
-                            ? "hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50"
-                            : "opacity-50 cursor-not-allowed",
-                    )}
-                    onClick={handleCompleteSession}
-                    disabled={!isActive}
-                    title="Complete Session"
-                >
-                    <CheckCircle2 className="w-5 h-5" />
-                </Button>
+                <div className="flex items-center gap-2 sm:gap-3 justify-end">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className={cn(
+                            "w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 transition-all",
+                            isActive
+                                ? "hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50"
+                                : "opacity-50 cursor-not-allowed",
+                        )}
+                        onClick={handleCompleteSession}
+                        disabled={!isActive}
+                        title="Complete Session"
+                    >
+                        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </Button>
+                </div>
             </div>
 
             <SessionReportDialog
