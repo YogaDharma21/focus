@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { DistractionCounter } from "./DistractionCounter";
+import { SessionReportDialog, type SessionReportData } from "./SessionReportDialog";
 
 export function FocusTimer() {
     const {
@@ -51,6 +52,8 @@ export function FocusTimer() {
 
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [taskSelectorOpen, setTaskSelectorOpen] = useState(false);
+    const [reportOpen, setReportOpen] = useState(false);
+    const [completedDuration, setCompletedDuration] = useState(0);
 
     const uncompletedTodos = useMemo(
         () => todos.filter((t) => !t.completed),
@@ -109,12 +112,8 @@ export function FocusTimer() {
                 : timeLeft;
 
         if (duration > 0) {
-            addSession({
-                id: crypto.randomUUID(),
-                date: new Date().toISOString(),
-                duration: duration,
-                mode: timerMode,
-            });
+            setCompletedDuration(duration);
+            setReportOpen(true);
         }
 
         if (timerMode === "POMODORO" && timerState === "WORK") {
@@ -158,7 +157,6 @@ export function FocusTimer() {
         }
         sessionStartTimeRef.current = null;
     }, [
-        addSession,
         timerMode,
         timerState,
         timeLeft,
@@ -174,6 +172,16 @@ export function FocusTimer() {
         toggleTodo,
         toggleSubtask,
     ]);
+
+    const handleReportSubmit = (data: SessionReportData) => {
+        addSession({
+            id: crypto.randomUUID(),
+            date: new Date().toISOString(),
+            duration: data.duration,
+            mode: timerMode,
+        });
+        setReportOpen(false);
+    };
 
     const prevSettingsRef = useRef({ work: pomodoroSettings.work, break: pomodoroSettings.break });
 
@@ -593,6 +601,15 @@ export function FocusTimer() {
                     <CheckCircle2 className="w-5 h-5" />
                 </Button>
             </div>
+
+            <SessionReportDialog
+                open={reportOpen}
+                onOpenChange={setReportOpen}
+                duration={completedDuration}
+                tasks={[]}
+                sessionName={sessionName}
+                onSubmit={handleReportSubmit}
+            />
         </div>
     );
 }
