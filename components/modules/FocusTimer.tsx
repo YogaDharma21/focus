@@ -318,104 +318,6 @@ export function FocusTimer() {
                 </button>
             </div>
 
-            <div className="mb-3 flex justify-center md:absolute md:top-0 md:right-0 md:mb-0">
-                <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-                    <DialogTrigger asChild>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            className="text-muted-foreground hover:text-foreground"
-                        >
-                            <Settings2 className="w-5 h-5" />
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Timer Settings</DialogTitle>
-                        </DialogHeader>
-                        <div className="space-y-6 py-4">
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
-                                    <Label className="font-medium">
-                                        Work Duration
-                                    </Label>
-                                    <div className="flex items-center gap-2">
-                                        <Input
-                                            type="number"
-                                            value={pomodoroSettings.work}
-                                            onChange={(e) =>
-                                                setPomodoroSettings({
-                                                    work:
-                                                        parseInt(
-                                                            e.target.value,
-                                                        ) || 25,
-                                                })
-                                            }
-                                            className="w-16 h-8 text-center bg-background/50 border-none"
-                                        />
-                                        <span className="text-xs text-muted-foreground">
-                                            min
-                                        </span>
-                                    </div>
-                                </div>
-
-                                <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
-                                    <Label className="font-medium">
-                                        Break Duration
-                                    </Label>
-                                    <div className="flex items-center gap-2">
-                                        <Input
-                                            type="number"
-                                            value={pomodoroSettings.break}
-                                            onChange={(e) =>
-                                                setPomodoroSettings({
-                                                    break:
-                                                        parseInt(
-                                                            e.target.value,
-                                                        ) || 5,
-                                                })
-                                            }
-                                            className="w-16 h-8 text-center bg-background/50 border-none"
-                                        />
-                                        <span className="text-xs text-muted-foreground">
-                                            min
-                                        </span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="p-4 rounded-[var(--radius)] bg-primary/5 border border-primary/10 flex items-center justify-between shadow-inner">
-                                <div className="space-y-0.5">
-                                    <Label className="text-base font-semibold">
-                                        Auto-start Break
-                                    </Label>
-                                    <p className="text-[10px] text-muted-foreground">
-                                        Launch break timer immediately after
-                                        work
-                                    </p>
-                                </div>
-                                <Switch
-                                    checked={pomodoroSettings.autoStartBreak}
-                                    onCheckedChange={(checked: boolean) =>
-                                        setPomodoroSettings({
-                                            autoStartBreak: checked,
-                                        })
-                                    }
-                                    className="scale-110"
-                                />
-                            </div>
-
-                            <Button
-                                className="w-full mt-4"
-                                onClick={() => setSettingsOpen(false)}
-                            >
-                                Confirm Changes
-                            </Button>
-                        </div>
-                    </DialogContent>
-                </Dialog>
-            </div>
-
             <div className="flex flex-col items-center gap-4 mb-12 w-full">
                 <div className="text-[3.5rem] sm:text-[5rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow">
                     {formatTime(timeLeft)}
@@ -556,50 +458,153 @@ export function FocusTimer() {
                 </div>
             </div>
 
-            <div className="flex items-center gap-6">
-                <Button
-                    variant="outline"
-                    size="icon"
-                    className="w-12 h-12 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 transition-all"
-                    onClick={resetTimer}
-                >
-                    <RotateCcw className="w-5 h-5" />
-                </Button>
+            <div className="grid grid-cols-3 items-center w-full max-w-[280px] sm:max-w-xs">
+                <div className="flex items-center gap-2 sm:gap-3 justify-start">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="w-10 h-10 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 transition-all"
+                        onClick={resetTimer}
+                    >
+                        <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </Button>
 
-                <DistractionCounter />
+                    <DistractionCounter />
+                </div>
 
-                <Button
-                    size="icon"
-                    className={cn(
-                        "w-20 h-20 rounded-[var(--radius)] shadow-md hover:shadow active:scale-95 transition-all duration-300",
-                        isActive
-                            ? "bg-white text-black hover:bg-gray-200"
-                            : "bg-primary text-primary-foreground",
-                    )}
-                    onClick={toggleTimer}
-                >
-                    {isActive ? (
-                        <Pause className="w-8 h-8 fill-current" />
-                    ) : (
-                        <Play className="w-8 h-8 fill-current ml-1" />
-                    )}
-                </Button>
+                <div className="flex items-center justify-center">
+                    <Button
+                        size="icon"
+                        className={cn(
+                            "w-16 h-16 sm:w-20 sm:h-20 rounded-[var(--radius)] shadow-md hover:shadow active:scale-95 transition-all duration-300",
+                            isActive
+                                ? "bg-white text-black hover:bg-gray-200"
+                                : "bg-primary text-primary-foreground",
+                        )}
+                        onClick={toggleTimer}
+                    >
+                        {isActive ? (
+                            <Pause className="w-6 h-6 sm:w-8 sm:h-8 fill-current" />
+                        ) : (
+                            <Play className="w-6 h-6 sm:w-8 sm:h-8 fill-current ml-0.5 sm:ml-1" />
+                        )}
+                    </Button>
+                </div>
 
-                <Button
-                    variant="outline"
-                    size="icon"
-                    className={cn(
-                        "w-12 h-12 rounded-[var(--radius)] border-2 transition-all",
-                        isActive
-                            ? "hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50"
-                            : "opacity-50 cursor-not-allowed",
-                    )}
-                    onClick={handleCompleteSession}
-                    disabled={!isActive}
-                    title="Complete Session"
-                >
-                    <CheckCircle2 className="w-5 h-5" />
-                </Button>
+                <div className="flex items-center gap-2 sm:gap-3 justify-end">
+                    <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+                        <DialogTrigger asChild>
+                            <Button
+                                variant="outline"
+                                size="icon"
+                                className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 transition-all"
+                                title="Timer Settings"
+                            >
+                                <Settings2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Timer Settings</DialogTitle>
+                            </DialogHeader>
+                            <div className="space-y-6 py-4">
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
+                                        <Label className="font-medium">
+                                            Work Duration
+                                        </Label>
+                                        <div className="flex items-center gap-2">
+                                            <Input
+                                                type="number"
+                                                value={pomodoroSettings.work}
+                                                onChange={(e) =>
+                                                    setPomodoroSettings({
+                                                        work:
+                                                            parseInt(
+                                                                e.target.value,
+                                                            ) || 25,
+                                                    })
+                                                }
+                                                className="w-16 h-8 text-center bg-background/50 border-none"
+                                            />
+                                            <span className="text-xs text-muted-foreground">
+                                                min
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
+                                        <Label className="font-medium">
+                                            Break Duration
+                                        </Label>
+                                        <div className="flex items-center gap-2">
+                                            <Input
+                                                type="number"
+                                                value={pomodoroSettings.break}
+                                                onChange={(e) =>
+                                                    setPomodoroSettings({
+                                                        break:
+                                                            parseInt(
+                                                                e.target.value,
+                                                            ) || 5,
+                                                    })
+                                                }
+                                                className="w-16 h-8 text-center bg-background/50 border-none"
+                                            />
+                                            <span className="text-xs text-muted-foreground">
+                                                min
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="p-4 rounded-[var(--radius)] bg-primary/5 border border-primary/10 flex items-center justify-between shadow-inner">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-base font-semibold">
+                                            Auto-start Break
+                                        </Label>
+                                        <p className="text-[10px] text-muted-foreground">
+                                            Launch break timer immediately after
+                                            work
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        checked={pomodoroSettings.autoStartBreak}
+                                        onCheckedChange={(checked: boolean) =>
+                                            setPomodoroSettings({
+                                                autoStartBreak: checked,
+                                            })
+                                        }
+                                        className="scale-110"
+                                    />
+                                </div>
+
+                                <Button
+                                    className="w-full mt-4"
+                                    onClick={() => setSettingsOpen(false)}
+                                >
+                                    Confirm Changes
+                                </Button>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className={cn(
+                            "w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 transition-all",
+                            isActive
+                                ? "hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50"
+                                : "opacity-50 cursor-not-allowed",
+                        )}
+                        onClick={handleCompleteSession}
+                        disabled={!isActive}
+                        title="Complete Session"
+                    >
+                        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </Button>
+                </div>
             </div>
 
             <SessionReportDialog
