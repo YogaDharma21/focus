@@ -4,7 +4,7 @@ import { useAppStore } from "@/lib/store";
 import { Pause, Play, X, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { DistractionCounter } from "./DistractionCounter";
 
 export function DeepFocusOverlay() {
@@ -19,38 +19,22 @@ export function DeepFocusOverlay() {
         pomodoroSettings,
         setTimeLeft,
         setTimerState,
-        setTimerMode,
         addSession,
         setSessionStartTime,
         sessionStartTime,
     } = useAppStore();
-
-    const [showHint, setShowHint] = useState(true);
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Escape") {
-                handleUltimateAction();
+                handleExit();
             }
         };
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [
-        timeLeft,
-        isActive,
-        timerMode,
-        timerState,
-        sessionStartTime,
-        pomodoroSettings,
-    ]);
-
-    useEffect(() => {
-        setShowHint(true);
-        const timeout = setTimeout(() => setShowHint(false), 3000);
-        return () => clearTimeout(timeout);
     }, []);
 
     const formatTime = (seconds: number) => {
@@ -61,7 +45,7 @@ export function DeepFocusOverlay() {
 
     const toggleTimer = () => setIsActive(!isActive);
 
-    const handleUltimateAction = () => {
+    const handleComplete = () => {
         setIsActive(false);
 
         if (audioRef.current) {
@@ -114,10 +98,14 @@ export function DeepFocusOverlay() {
         setDeepFocusMode(false);
     };
 
+    const handleExit = () => {
+        setDeepFocusMode(false);
+    };
+
     return (
         <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-500">
             <button
-                onClick={handleUltimateAction}
+                onClick={handleExit}
                 className="absolute top-6 right-6 text-muted-foreground hover:text-foreground transition-colors"
                 aria-label="Exit focus mode"
             >
@@ -160,7 +148,7 @@ export function DeepFocusOverlay() {
                         variant="ghost"
                         size="icon"
                         className="w-14 h-14 rounded-full border-2 hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50 transition-all"
-                        onClick={handleUltimateAction}
+                        onClick={handleComplete}
                         disabled={timeLeft === 0 && !isActive}
                         title="Complete Session"
                     >
@@ -171,12 +159,7 @@ export function DeepFocusOverlay() {
 
             <audio ref={audioRef} src="/soundeffect.mp3" />
 
-            <div
-                className={cn(
-                    "absolute bottom-8 text-xs text-muted-foreground transition-opacity duration-500",
-                    showHint ? "opacity-100" : "opacity-0",
-                )}
-            >
+            <div className="absolute bottom-8 text-xs text-muted-foreground">
                 Press <kbd className="px-2 py-1 bg-secondary/50 rounded text-[10px] font-mono border border-border">Esc</kbd> to exit focus mode
             </div>
         </div>

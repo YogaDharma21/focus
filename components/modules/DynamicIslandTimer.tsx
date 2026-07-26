@@ -23,6 +23,8 @@ export function DynamicIslandTimer() {
         setTimerMode,
         addSession,
         setSessionStartTime,
+        deepFocusMode,
+        setDeepFocusMode,
     } = useAppStore();
     const [isExpanded, setIsExpanded] = useState(false);
     const isMobile = useMediaQuery("(max-width: 768px)");
@@ -138,6 +140,7 @@ export function DynamicIslandTimer() {
                 if (pomodoroSettings.autoStartBreak) {
                     setIsActive(true);
                 }
+                setDeepFocusMode(false);
             } else {
                 setTimerState("WORK");
                 setTimeLeft(pomodoroSettings.work * 60);
@@ -146,6 +149,7 @@ export function DynamicIslandTimer() {
             if (timerState === "WORK" && timeLeft > 0) {
                 setTimerState("BREAK");
                 setTimeLeft(Math.floor(timeLeft / 5));
+                setDeepFocusMode(false);
             } else if (timerState === "BREAK") {
                 setTimerState("WORK");
                 setTimeLeft(0);
@@ -209,53 +213,56 @@ export function DynamicIslandTimer() {
                             </div>
 
                             <div className="flex items-center gap-2">
-                                <Button
-                                    variant={
-                                        timerMode === "POMODORO" && timerState === "WORK"
-                                            ? "default"
-                                            : "outline"
-                                    }
-                                    size="sm"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        switchMode("POMODORO", "WORK");
-                                    }}
-                                    className="rounded-[var(--radius)] text-xs"
-                                >
-                                    🍅 Pomodoro
-                                </Button>
-                                <Button
-                                    variant={
-                                        timerMode === "POMODORO" && timerState === "BREAK"
-                                            ? "default"
-                                            : timerMode === "STOPWATCH" && timerState === "BREAK"
-                                              ? "default"
-                                              : "outline"
-                                    }
-                                    size="sm"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        switchMode("POMODORO", "BREAK");
-                                    }}
-                                    className="rounded-[var(--radius)] text-xs"
-                                >
-                                    ☕ Break
-                                </Button>
-                                <Button
-                                    variant={
-                                        timerMode === "STOPWATCH" && timerState === "WORK"
-                                            ? "default"
-                                            : "outline"
-                                    }
-                                    size="sm"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        switchMode("STOPWATCH");
-                                    }}
-                                    className="rounded-[var(--radius)] text-xs"
-                                >
-                                    ⏱️ Flow
-                                </Button>
+<Button
+                                            variant={
+                                                timerMode === "POMODORO" && timerState === "WORK"
+                                                    ? "default"
+                                                    : "outline"
+                                            }
+                                            size="sm"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                switchMode("POMODORO", "WORK");
+                                            }}
+                                            className="rounded-[var(--radius)] text-xs"
+                                            title="Pomodoro: Fixed work time. Complete to start break with configured duration."
+                                        >
+                                            🍅 Pomodoro
+                                        </Button>
+<Button
+                                            variant={
+                                                timerMode === "POMODORO" && timerState === "BREAK"
+                                                    ? "default"
+                                                    : timerMode === "STOPWATCH" && timerState === "BREAK"
+                                                      ? "default"
+                                                      : "outline"
+                                            }
+                                            size="sm"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                switchMode("POMODORO", "BREAK");
+                                            }}
+                                            className="rounded-[var(--radius)] text-xs"
+                                            title="Break: Pause and recharge. After Pomodoro or Flow session."
+                                        >
+                                            ☕ Break
+                                        </Button>
+<Button
+                                            variant={
+                                                timerMode === "STOPWATCH" && timerState === "WORK"
+                                                    ? "default"
+                                                    : "outline"
+                                            }
+                                            size="sm"
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                switchMode("STOPWATCH");
+                                            }}
+                                            className="rounded-[var(--radius)] text-xs"
+                                            title="Flow: Open-ended timer. Complete to get break time (elapsed ÷ 5)."
+                                        >
+                                            ⏱️ Flow
+                                        </Button>
                             </div>
 
                             <Progress value={progressValue} className="h-1.5" />

@@ -17,6 +17,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { DistractionCounter } from "./DistractionCounter";
+import { HelpCircle } from "lucide-react";
 
 export function FocusTimer() {
     const {
@@ -34,6 +35,8 @@ export function FocusTimer() {
         addSession,
         pomodoroSettings,
         setPomodoroSettings,
+        deepFocusMode,
+        setDeepFocusMode,
     } = useAppStore();
 
     const [settingsOpen, setSettingsOpen] = useState(false);
@@ -94,6 +97,7 @@ export function FocusTimer() {
             if (pomodoroSettings.autoStartBreak) {
                 setIsActive(true);
             }
+            setDeepFocusMode(false);
         } else if (timerMode === "POMODORO" && timerState === "BREAK") {
             setTimerState("WORK");
             setTimeLeft(pomodoroSettings.work * 60);
@@ -101,6 +105,7 @@ export function FocusTimer() {
             if (timerState === "WORK" && timeLeft > 0) {
                 setTimerState("BREAK");
                 setTimeLeft(Math.floor(timeLeft / 5));
+                setDeepFocusMode(false);
             } else if (timerState === "BREAK") {
                 setTimerState("WORK");
                 setTimeLeft(0);
@@ -118,6 +123,8 @@ export function FocusTimer() {
         setIsActive,
         setTimerState,
         pomodoroSettings,
+        deepFocusMode,
+        setDeepFocusMode,
     ]);
 
     const prevSettingsRef = useRef({ work: pomodoroSettings.work, break: pomodoroSettings.break });
@@ -217,6 +224,7 @@ export function FocusTimer() {
                             ? "bg-primary text-primary-foreground shadow-md"
                             : "text-muted-foreground hover:text-foreground",
                     )}
+                    title="Pomodoro: Fixed work time. Complete to start break with configured duration."
                 >
                     Pomodoro
                 </button>
@@ -235,12 +243,14 @@ export function FocusTimer() {
                               ? "bg-green-500 text-primary-foreground shadow-md"
                               : "text-muted-foreground hover:text-foreground",
                     )}
+                    title="Break: Pause and recharge. After Pomodoro or Flow session."
                 >
                     Break
                 </button>
                 <button
                     onClick={() => {
                         setTimerMode("STOPWATCH");
+                        setTimerState("WORK");
                         setIsActive(false);
                         setTimeLeft(0);
                     }}
@@ -250,6 +260,7 @@ export function FocusTimer() {
                             ? "bg-primary text-primary-foreground shadow-md"
                             : "text-muted-foreground hover:text-foreground",
                     )}
+                    title="Flow: Open-ended timer. Complete to get break time (elapsed ÷ 5)."
                 >
                     Flow
                 </button>
