@@ -15,21 +15,21 @@ export function BottomNavbar() {
         value: ViewType;
         icon: React.ReactNode;
     }[] = [
-        { label: "Focus", value: "FOCUS", icon: <Timer className="w-5 h-5 sm:w-6 sm:h-6" /> },
+        { label: "Focus", value: "FOCUS", icon: <Timer className="w-5 h-5" /> },
         {
             label: "Tasks",
             value: "TODO",
-            icon: <CheckSquare className="w-5 h-5 sm:w-6 sm:h-6" />,
+            icon: <CheckSquare className="w-5 h-5" />,
         },
         {
             label: "Stats",
             value: "JOURNAL",
-            icon: <BarChart2 className="w-5 h-5 sm:w-6 sm:h-6" />,
+            icon: <BarChart2 className="w-5 h-5" />,
         },
         {
             label: "Notes",
             value: "NOTES",
-            icon: <NotebookPen className="w-5 h-5 sm:w-6 sm:h-6" />,
+            icon: <NotebookPen className="w-5 h-5" />,
         },
     ];
 
@@ -57,7 +57,7 @@ export function BottomNavbar() {
                             key={item.value}
                             onClick={() => setView(item.value)}
                             className={cn(
-                                "relative flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-14 transition-all duration-300 ease-out group",
+                                "relative flex flex-col items-center justify-center w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 transition-all duration-300 ease-out group",
                                 isActive
                                     ? "text-primary-foreground bg-primary shadow-lg"
                                     : "text-muted-foreground hover:text-foreground hover:bg-white/5",
@@ -80,7 +80,7 @@ export function BottomNavbar() {
                 <button
                     onClick={() => setMediaPlayerOpen(!mediaPlayerOpen)}
                     className={cn(
-                        "relative flex flex-col items-center justify-center w-12 h-12 sm:w-16 sm:h-14 transition-all duration-300 ease-out group text-muted-foreground hover:text-foreground hover:bg-white/5",
+                        "relative flex flex-col items-center justify-center w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 transition-all duration-300 ease-out group text-muted-foreground hover:text-foreground hover:bg-white/5",
                         isDesktop ? "rounded-[var(--radius)]" : "rounded-[var(--radius)]",
                     )}
                     aria-label="Toggle media player"
