@@ -38,11 +38,6 @@ interface AppState {
     selectedSubtaskId: string | null;
     setSelectedSubtaskId: (id: string | null) => void;
 
-    selectedTodoId: string | null;
-    setSelectedTodoId: (id: string | null) => void;
-    selectedSubtaskId: string | null;
-    setSelectedSubtaskId: (id: string | null) => void;
-
     todos: TodoItem[];
     addTodo: (todo: TodoItem) => void;
     toggleTodo: (id: string) => void;
@@ -120,8 +115,6 @@ export interface TodoItem {
     link?: string;
     groupId?: string;
     completedAt?: string;
-    completedPomodoros?: number;
-    estimatedPomodoros?: number;
 }
 
 export interface MoodNote {
@@ -213,11 +206,6 @@ export const useAppStore = create<AppState>()(
             setSessionStartTime: (time) => set({ sessionStartTime: time }),
             sessionName: "",
             setSessionName: (name) => set({ sessionName: name }),
-            selectedTodoId: null,
-            setSelectedTodoId: (id) => set({ selectedTodoId: id }),
-            selectedSubtaskId: null,
-            setSelectedSubtaskId: (id) => set({ selectedSubtaskId: id }),
-
             selectedTodoId: null,
             setSelectedTodoId: (id) => set({ selectedTodoId: id }),
             selectedSubtaskId: null,
