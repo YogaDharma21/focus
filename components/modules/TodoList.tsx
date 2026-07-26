@@ -315,14 +315,17 @@ export function TodoList() {
             <ScrollArea className="flex-1 pr-4 -mr-4">
                 <div className="space-y-3 pb-24">
                     {filteredTodos.length === 0 && (
-                        <div className="text-center py-12 text-muted-foreground/30">
-                            <CheckSquare className="w-12 h-12 mx-auto mb-2 opacity-20" />
+                        <div className="text-center py-12 text-muted-foreground">
+                            <CheckSquare className="w-12 h-12 mx-auto mb-3 opacity-20" />
                             <p>
                                 No tasks in{" "}
                                 {
                                     groups.find((g) => g.id === selectedGroupId)
                                         ?.name
-                                }
+                                } yet.
+                            </p>
+                            <p className="text-sm">
+                                Add a task above to get started.
                             </p>
                         </div>
                     )}
