@@ -71,6 +71,8 @@ export function TodoList() {
         updateSubtask,
         setSessionName,
         setView,
+        setSelectedTodoId,
+        setSelectedSubtaskId,
     } = useAppStore();
 
     const [newTodo, setNewTodo] = useState("");
@@ -400,6 +402,8 @@ export function TodoList() {
                                     className="h-7 w-7 text-muted-foreground hover:text-primary transition-colors"
                                     onClick={() => {
                                         setSessionName(todo.text);
+                                        setSelectedTodoId(todo.id);
+                                        setSelectedSubtaskId(null);
                                         setView("FOCUS");
                                     }}
                                     title="Focus on this task"
@@ -644,7 +648,7 @@ export function TodoList() {
 
                             <div className="space-y-2">
                                 <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1">
-                                    <Timer className="w-3 h-3" /> Pomodoro
+                                    <Timer className="w-3 h-3" /> Sessions
                                 </label>
                                 <div className="flex gap-3">
                                     <div className="flex-1">

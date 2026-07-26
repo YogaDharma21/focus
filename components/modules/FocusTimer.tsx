@@ -1,10 +1,10 @@
 "use client";
 
 import { useAppStore } from "@/lib/store";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Play, Pause, RotateCcw, CheckCircle2, Settings2 } from "lucide-react";
+import { Play, Pause, RotateCcw, CheckCircle2, Settings2, ChevronDown, ListTodo } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import {
     Dialog,
@@ -15,6 +15,11 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+    Popover,
+    PopoverContent,
+    PopoverTrigger,
+} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { DistractionCounter } from "./DistractionCounter";
 
@@ -37,9 +42,30 @@ export function FocusTimer() {
         todos,
         updateTodo,
         toggleTodo,
+        toggleSubtask,
+        selectedTodoId,
+        setSelectedTodoId,
+        selectedSubtaskId,
+        setSelectedSubtaskId,
     } = useAppStore();
 
     const [settingsOpen, setSettingsOpen] = useState(false);
+    const [taskSelectorOpen, setTaskSelectorOpen] = useState(false);
+
+    const uncompletedTodos = useMemo(
+        () => todos.filter((t) => !t.completed),
+        [todos],
+    );
+
+    const selectedTodo = useMemo(
+        () => (selectedTodoId ? todos.find((t) => t.id === selectedTodoId) ?? null : null),
+        [selectedTodoId, todos],
+    );
+
+    const selectedTodoSubtasks = useMemo(
+        () => selectedTodo?.subtasks ?? [],
+        [selectedTodo],
+    );
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -97,43 +123,36 @@ export function FocusTimer() {
             if (pomodoroSettings.autoStartBreak) {
                 setIsActive(true);
             }
-            if (sessionName) {
-                const focusedTask = todos.find(
-                    (t) => t.text === sessionName && !t.completed,
-                );
-                if (focusedTask) {
-                    const newCompleted = (focusedTask.completedPomodoros || 0) + 1;
-                    updateTodo(focusedTask.id, {
-                        completedPomodoros: newCompleted,
-                    });
-                    if (
-                        focusedTask.estimatedPomodoros &&
-                        newCompleted >= focusedTask.estimatedPomodoros
-                    ) {
-                        toggleTodo(focusedTask.id);
-                    }
-                }
-            }
         } else if (timerMode === "POMODORO" && timerState === "BREAK") {
             setTimerState("WORK");
             setTimeLeft(pomodoroSettings.work * 60);
         } else if (timerMode === "STOPWATCH" && duration > 0) {
             setTimeLeft(0);
-            if (sessionName) {
-                const focusedTask = todos.find(
-                    (t) => t.text === sessionName && !t.completed,
+        }
+
+        const focusedTask = selectedTodoId
+            ? todos.find((t) => t.id === selectedTodoId && !t.completed)
+            : sessionName
+              ? todos.find((t) => t.text === sessionName && !t.completed)
+              : null;
+        if (focusedTask) {
+            if (selectedSubtaskId) {
+                const subtask = focusedTask.subtasks?.find(
+                    (s) => s.id === selectedSubtaskId && !s.completed,
                 );
-                if (focusedTask) {
-                    const newCompleted = (focusedTask.completedPomodoros || 0) + 1;
-                    updateTodo(focusedTask.id, {
-                        completedPomodoros: newCompleted,
-                    });
-                    if (
-                        focusedTask.estimatedPomodoros &&
-                        newCompleted >= focusedTask.estimatedPomodoros
-                    ) {
-                        toggleTodo(focusedTask.id);
-                    }
+                if (subtask) {
+                    toggleSubtask(focusedTask.id, selectedSubtaskId);
+                }
+            } else {
+                const newCompleted = (focusedTask.completedPomodoros || 0) + 1;
+                updateTodo(focusedTask.id, {
+                    completedPomodoros: newCompleted,
+                });
+                if (
+                    focusedTask.estimatedPomodoros &&
+                    newCompleted >= focusedTask.estimatedPomodoros
+                ) {
+                    toggleTodo(focusedTask.id);
                 }
             }
         }
@@ -148,9 +167,12 @@ export function FocusTimer() {
         setTimerState,
         pomodoroSettings,
         sessionName,
+        selectedTodoId,
+        selectedSubtaskId,
         todos,
         updateTodo,
         toggleTodo,
+        toggleSubtask,
     ]);
 
     const prevSettingsRef = useRef({ work: pomodoroSettings.work, break: pomodoroSettings.break });
@@ -196,6 +218,16 @@ export function FocusTimer() {
     ]);
 
     const toggleTimer = () => setIsActive(!isActive);
+
+    const handleSelectTask = (todoId: string | null) => {
+        setSelectedTodoId(todoId);
+        setSelectedSubtaskId(null);
+        if (todoId) {
+            const task = todos.find((t) => t.id === todoId);
+            if (task) setSessionName(task.text);
+        }
+        setTaskSelectorOpen(false);
+    };
 
     const resetTimer = () => {
         setIsActive(false);
@@ -376,17 +408,140 @@ export function FocusTimer() {
                 </Dialog>
             </div>
 
-            <div className="flex flex-col items-center gap-8 mb-12 w-full">
+            <div className="flex flex-col items-center gap-4 mb-12 w-full">
                 <div className="text-[3.5rem] sm:text-[5rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow">
                     {formatTime(timeLeft)}
                 </div>
 
-                <Input
-                    value={sessionName}
-                    onChange={(e) => setSessionName(e.target.value)}
-                    placeholder="What are you focusing on?"
-                    className="text-center bg-transparent border-none text-xl focus-visible:ring-0 placeholder:text-muted-foreground/70 text-foreground max-w-sm"
-                />
+                <div className="flex flex-col items-center gap-2 w-full max-w-sm">
+                    <Popover open={taskSelectorOpen} onOpenChange={setTaskSelectorOpen}>
+                        <PopoverTrigger asChild>
+                            <button
+                                className={cn(
+                                    "w-full text-center bg-transparent text-xl placeholder:text-muted-foreground/70 text-foreground transition-all",
+                                    "border border-dashed border-border/60 hover:border-border rounded-[var(--radius)] px-4 py-2",
+                                    selectedTodo && "border-solid border-primary/40 bg-primary/5",
+                                )}
+                            >
+                                {selectedTodo ? (
+                                    <span className="flex items-center justify-center gap-2">
+                                        <ListTodo className="w-4 h-4 text-primary shrink-0" />
+                                        <span className="truncate">{selectedTodo.text}</span>
+                                    </span>
+                                ) : sessionName ? (
+                                    <span className="truncate">{sessionName}</span>
+                                ) : (
+                                    <span className="text-muted-foreground/70">What are you focusing on?</span>
+                                )}
+                                <ChevronDown className="w-4 h-4 inline-block ml-1 text-muted-foreground" />
+                            </button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-[--radix-popover-trigger-width] max-h-80 overflow-y-auto p-1">
+                            <div className="flex flex-col">
+                                <button
+                                    onClick={() => {
+                                        setSessionName("");
+                                        setSelectedTodoId(null);
+                                        setSelectedSubtaskId(null);
+                                        setTaskSelectorOpen(false);
+                                    }}
+                                    className={cn(
+                                        "text-left px-3 py-2 text-sm rounded-sm transition-colors",
+                                        !selectedTodo && !sessionName
+                                            ? "bg-primary/10 text-primary"
+                                            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                                    )}
+                                >
+                                    Custom focus...
+                                </button>
+                                {uncompletedTodos.length > 0 && (
+                                    <div className="h-px bg-border my-1" />
+                                )}
+                                {uncompletedTodos.map((todo) => (
+                                    <button
+                                        key={todo.id}
+                                        onClick={() => handleSelectTask(todo.id)}
+                                        className={cn(
+                                            "text-left px-3 py-2 text-sm rounded-sm transition-colors flex items-center gap-2",
+                                            selectedTodoId === todo.id
+                                                ? "bg-primary/10 text-primary font-medium"
+                                                : "hover:bg-accent hover:text-accent-foreground",
+                                        )}
+                                    >
+                                        <ListTodo className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
+                                        <span className="truncate">{todo.text}</span>
+                                        {todo.subtasks && todo.subtasks.length > 0 && (
+                                            <span className="ml-auto text-xs text-muted-foreground shrink-0">
+                                                {todo.subtasks.filter((s) => s.completed).length}/{todo.subtasks.length}
+                                            </span>
+                                        )}
+                                    </button>
+                                ))}
+                                {uncompletedTodos.length === 0 && (
+                                    <p className="text-xs text-muted-foreground text-center py-3">No tasks available</p>
+                                )}
+                            </div>
+                        </PopoverContent>
+                    </Popover>
+
+                    {!selectedTodo && (
+                        <Input
+                            value={sessionName}
+                            onChange={(e) => setSessionName(e.target.value)}
+                            placeholder="Or type a custom focus..."
+                            className="text-center bg-transparent border-none text-sm focus-visible:ring-0 placeholder:text-muted-foreground/50 text-foreground max-w-sm"
+                        />
+                    )}
+                </div>
+
+                {selectedTodo && selectedTodoSubtasks.length > 0 && (
+                    <div className="w-full max-w-sm border border-border/40 rounded-[var(--radius)] bg-card/30 backdrop-blur-sm overflow-hidden">
+                        <div className="px-3 py-2 text-xs font-medium text-muted-foreground border-b border-border/30 flex items-center gap-1.5">
+                            <ListTodo className="w-3 h-3" />
+                            Subtasks
+                        </div>
+                        <div className="max-h-40 overflow-y-auto">
+                            {selectedTodoSubtasks.map((subtask) => (
+                                <button
+                                    key={subtask.id}
+                                    onClick={() => {
+                                        if (selectedSubtaskId === subtask.id) {
+                                            setSelectedSubtaskId(null);
+                                        } else {
+                                            setSelectedSubtaskId(subtask.id);
+                                        }
+                                    }}
+                                    className={cn(
+                                        "w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors border-b border-border/20 last:border-b-0",
+                                        subtask.completed
+                                            ? "opacity-50"
+                                            : selectedSubtaskId === subtask.id
+                                              ? "bg-primary/10 text-primary"
+                                              : "hover:bg-accent/50",
+                                    )}
+                                >
+                                    <div
+                                        className={cn(
+                                            "w-4 h-4 rounded-sm border flex items-center justify-center shrink-0 transition-colors",
+                                            subtask.completed
+                                                ? "bg-primary border-primary"
+                                                : selectedSubtaskId === subtask.id
+                                                  ? "border-primary bg-primary/20"
+                                                  : "border-border",
+                                        )}
+                                    >
+                                        {subtask.completed && (
+                                            <CheckCircle2 className="w-3 h-3 text-primary-foreground" />
+                                        )}
+                                    </div>
+                                    <span className={cn(subtask.completed && "line-through")}>
+                                        {subtask.text}
+                                    </span>
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 <div className="w-full max-w-xs">
                     <Progress value={progressValue} className="h-1.5" />
