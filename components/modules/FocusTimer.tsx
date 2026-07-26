@@ -243,17 +243,14 @@ export function FocusTimer() {
                 >
                     Flow
                 </button>
-            </div>
-
-            <div className="mb-3 flex justify-center md:absolute md:top-0 md:right-0 md:mb-0">
                 <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
                     <DialogTrigger asChild>
                         <Button
                             variant="ghost"
                             size="icon"
-                            className="text-muted-foreground hover:text-foreground"
+                            className="text-muted-foreground hover:text-foreground ml-1"
                         >
-                            <Settings2 className="w-5 h-5" />
+                            <Settings2 className="w-4 h-4" />
                         </Button>
                     </DialogTrigger>
                     <DialogContent>
