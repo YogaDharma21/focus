@@ -23,6 +23,9 @@ export function DeepFocusOverlay() {
         setTimerMode,
         setSessionStartTime,
         addSession,
+        todos,
+        selectedTodoId,
+        selectedSubtaskId,
     } = useAppStore();
 
     const [showHint, setShowHint] = useState(true);
@@ -142,8 +145,19 @@ export function DeepFocusOverlay() {
                 </div>
 
                 {sessionName && (
-                    <div className="text-lg sm:text-xl text-muted-foreground text-center max-w-md px-4 truncate">
-                        {sessionName}
+                    <div className="flex flex-col items-center gap-1">
+                        <div className="text-lg sm:text-xl text-muted-foreground text-center max-w-md px-4 truncate">
+                            {sessionName}
+                        </div>
+                        {selectedTodoId && selectedSubtaskId && (() => {
+                            const todo = todos.find((t) => t.id === selectedTodoId);
+                            const subtask = todo?.subtasks?.find((s) => s.id === selectedSubtaskId);
+                            return subtask ? (
+                                <div className="text-sm text-muted-foreground/60 text-center max-w-md px-4 truncate">
+                                    {subtask.text}
+                                </div>
+                            ) : null;
+                        })()}
                     </div>
                 )}
 
