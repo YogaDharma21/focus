@@ -96,6 +96,9 @@ export function MediaPlayer() {
 
     useEffect(() => {
         if (typeof window !== "undefined") {
+            if (window.innerWidth < 768) {
+                setMediaPlayerOpen(false);
+            }
             if (!window.YT) {
                 const tag = document.createElement("script");
                 tag.src = "https://www.youtube.com/iframe_api";
@@ -107,7 +110,7 @@ export function MediaPlayer() {
                 setYtApiReady(true);
             }
         }
-    }, []);
+    }, [setMediaPlayerOpen]);
 
     useEffect(() => {
         if (ytApiReady && !initialized.current) {
