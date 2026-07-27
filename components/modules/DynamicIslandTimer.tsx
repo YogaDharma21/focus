@@ -13,21 +13,60 @@ export function DynamicIslandTimer() {
     const {
         timerMode,
         timerState,
+        previousMode,
         timeLeft,
         isActive,
         sessionName,
         setIsActive,
         setTimeLeft,
         setTimerState,
-        pomodoroSettings,
         setTimerMode,
+        setPreviousMode,
+        pomodoroSettings,
         addSession,
         setSessionStartTime,
+        setDeepFocusMode,
     } = useAppStore();
     const [isExpanded, setIsExpanded] = useState(false);
     const isMobile = useMediaQuery("(max-width: 768px)");
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    const playSound = React.useCallback(() => {
+        try {
+            if (audioRef.current) {
+                audioRef.current.currentTime = 0;
+                audioRef.current.volume = 0.5;
+                audioRef.current.play().catch(() => {
+                    const fallback = new Audio("/soundeffect.mp3");
+                    fallback.volume = 0.5;
+                    fallback.play().catch(() => {});
+                });
+            } else {
+                const fallback = new Audio("/soundeffect.mp3");
+                fallback.volume = 0.5;
+                fallback.play().catch(() => {});
+            }
+        } catch {
+            // ignore
+        }
+    }, []);
+
+    useEffect(() => {
+        const unlockAudio = () => {
+            if (audioRef.current) {
+                audioRef.current.load();
+            }
+            window.removeEventListener("click", unlockAudio);
+            window.removeEventListener("keydown", unlockAudio);
+        };
+        window.addEventListener("click", unlockAudio);
+        window.addEventListener("keydown", unlockAudio);
+        return () => {
+            window.removeEventListener("click", unlockAudio);
+            window.removeEventListener("keydown", unlockAudio);
+        };
+    }, []);
 
     const modeConfig: Record<string, { icon: string; label: string }> = {
         POMODORO_WORK: { icon: "🍅", label: "Pomodoro" },
@@ -103,11 +142,7 @@ export function DynamicIslandTimer() {
 
     const completeSession = () => {
         setIsActive(false);
-        if (audioRef.current) {
-            audioRef.current.volume = 0.5;
-            audioRef.current.currentTime = 0;
-            audioRef.current.play().catch(() => {});
-        }
+        playSound();
 
         const duration =
             timerMode === "POMODORO"
@@ -122,22 +157,37 @@ export function DynamicIslandTimer() {
             });
         }
 
-        // If in WORK phase, switch to BREAK; if in BREAK, switch to WORK
-        if (timerMode === "POMODORO") {
-            if (timerState === "WORK") {
-                setTimerState("BREAK");
-                setTimeLeft(pomodoroSettings.break * 60);
-                if (pomodoroSettings.autoStartBreak) {
-                    setIsActive(true);
-                }
+        // If in WORK phase, switch to BREAK; if in BREAK, switch to WORK or back to STOPWATCH
+        if (timerMode === "POMODORO" && timerState === "WORK") {
+            setPreviousMode("POMODORO");
+            setTimerState("BREAK");
+            setTimeLeft(pomodoroSettings.break * 60);
+            if (pomodoroSettings.autoStartBreak) {
+                setIsActive(true);
+            }
+        } else if (timerMode === "POMODORO" && timerState === "BREAK") {
+            if (previousMode === "STOPWATCH") {
+                setTimerMode("STOPWATCH");
+                setTimerState("WORK");
+                setTimeLeft(0);
             } else {
+                setTimerMode("POMODORO");
                 setTimerState("WORK");
                 setTimeLeft(pomodoroSettings.work * 60);
             }
-        } else if (timerMode === "STOPWATCH") {
-            setTimeLeft(0);
+        } else if (timerMode === "STOPWATCH" && duration > 0) {
+            setPreviousMode("STOPWATCH");
+            const breakSeconds = Math.floor(duration / 5);
+            if (breakSeconds > 0) {
+                setTimerMode("POMODORO");
+                setTimerState("BREAK");
+                setTimeLeft(breakSeconds);
+            } else {
+                setTimeLeft(0);
+            }
         }
         setSessionStartTime(null);
+        setDeepFocusMode(false);
     };
 
     return (
@@ -266,7 +316,7 @@ export function DynamicIslandTimer() {
                                 )}
                             </div>
 
-                            <audio ref={audioRef} src="/soundeffect.mp3" />
+                            <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
 
                             <div className="flex items-center justify-center gap-2 pt-1">
                                 <Button

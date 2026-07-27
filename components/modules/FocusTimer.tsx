@@ -1,6 +1,6 @@
 "use client";
 
-import { useAppStore } from "@/lib/store";
+import { useAppStore, TodoItem } from "@/lib/store";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,10 +28,12 @@ export function FocusTimer() {
     const {
         timerMode,
         timerState,
+        previousMode,
         timeLeft,
         isActive,
         setTimerMode,
         setTimerState,
+        setPreviousMode,
         setTimeLeft,
         setIsActive,
         setSessionStartTime,
@@ -41,6 +43,7 @@ export function FocusTimer() {
         pomodoroSettings,
         setPomodoroSettings,
         todos,
+        addTodo,
         updateTodo,
         toggleTodo,
         toggleSubtask,
@@ -48,6 +51,7 @@ export function FocusTimer() {
         setSelectedTodoId,
         selectedSubtaskId,
         setSelectedSubtaskId,
+        setDeepFocusMode,
     } = useAppStore();
 
     const [settingsOpen, setSettingsOpen] = useState(false);
@@ -74,10 +78,40 @@ export function FocusTimer() {
 
     const sessionStartTimeRef = useRef<number | null>(null);
 
-    useEffect(() => {
-        if (audioRef.current) {
-            audioRef.current.volume = 0.5;
+    const playSound = React.useCallback(() => {
+        try {
+            if (audioRef.current) {
+                audioRef.current.currentTime = 0;
+                audioRef.current.volume = 0.5;
+                audioRef.current.play().catch(() => {
+                    const fallback = new Audio("/soundeffect.mp3");
+                    fallback.volume = 0.5;
+                    fallback.play().catch(() => {});
+                });
+            } else {
+                const fallback = new Audio("/soundeffect.mp3");
+                fallback.volume = 0.5;
+                fallback.play().catch(() => {});
+            }
+        } catch {
+            // ignore
         }
+    }, []);
+
+    useEffect(() => {
+        const unlockAudio = () => {
+            if (audioRef.current) {
+                audioRef.current.load();
+            }
+            window.removeEventListener("click", unlockAudio);
+            window.removeEventListener("keydown", unlockAudio);
+        };
+        window.addEventListener("click", unlockAudio);
+        window.addEventListener("keydown", unlockAudio);
+        return () => {
+            window.removeEventListener("click", unlockAudio);
+            window.removeEventListener("keydown", unlockAudio);
+        };
     }, []);
 
     useEffect(() => {
@@ -94,10 +128,7 @@ export function FocusTimer() {
     const handleCompleteSession = React.useCallback(() => {
         setIsActive(false);
 
-        if (audioRef.current) {
-            audioRef.current.currentTime = 0;
-            audioRef.current.play().catch(() => {});
-        }
+        playSound();
 
         let elapsedSeconds = 0;
         if (sessionStartTimeRef.current) {
@@ -117,16 +148,32 @@ export function FocusTimer() {
         }
 
         if (timerMode === "POMODORO" && timerState === "WORK") {
+            setPreviousMode("POMODORO");
             setTimerState("BREAK");
             setTimeLeft(pomodoroSettings.break * 60);
             if (pomodoroSettings.autoStartBreak) {
                 setIsActive(true);
             }
         } else if (timerMode === "POMODORO" && timerState === "BREAK") {
-            setTimerState("WORK");
-            setTimeLeft(pomodoroSettings.work * 60);
+            if (previousMode === "STOPWATCH") {
+                setTimerMode("STOPWATCH");
+                setTimerState("WORK");
+                setTimeLeft(0);
+            } else {
+                setTimerMode("POMODORO");
+                setTimerState("WORK");
+                setTimeLeft(pomodoroSettings.work * 60);
+            }
         } else if (timerMode === "STOPWATCH" && duration > 0) {
-            setTimeLeft(0);
+            setPreviousMode("STOPWATCH");
+            const breakSeconds = Math.floor(duration / 5);
+            if (breakSeconds > 0) {
+                setTimerMode("POMODORO");
+                setTimerState("BREAK");
+                setTimeLeft(breakSeconds);
+            } else {
+                setTimeLeft(0);
+            }
         }
 
         const focusedTask = selectedTodoId
@@ -156,13 +203,19 @@ export function FocusTimer() {
             }
         }
         sessionStartTimeRef.current = null;
+        setDeepFocusMode(false);
     }, [
         timerMode,
         timerState,
+        previousMode,
         timeLeft,
         setTimeLeft,
         setIsActive,
         setTimerState,
+        setTimerMode,
+        setPreviousMode,
+        setDeepFocusMode,
+        playSound,
         pomodoroSettings,
         sessionName,
         selectedTodoId,
@@ -266,7 +319,7 @@ export function FocusTimer() {
 
     return (
         <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center min-h-[50vh] animate-in fade-in duration-700 relative">
-            <audio ref={audioRef} src="/soundeffect.mp3" />
+            <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
 
             <div className="flex gap-2 mb-3 p-1 bg-secondary/30 rounded-[var(--radius)] backdrop-blur-md">
                 <button
@@ -398,6 +451,23 @@ export function FocusTimer() {
                         <Input
                             value={sessionName}
                             onChange={(e) => setSessionName(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === "Enter" && sessionName.trim()) {
+                                    e.preventDefault();
+                                    const newId = crypto.randomUUID();
+                                    const item: TodoItem = {
+                                        id: newId,
+                                        text: sessionName.trim(),
+                                        completed: false,
+                                        groupId: "current",
+                                        completedPomodoros: 0,
+                                        estimatedPomodoros: 1,
+                                    };
+                                    addTodo(item);
+                                    setSelectedTodoId(newId);
+                                    setSessionName("");
+                                }
+                            }}
                             placeholder="Or type a custom focus..."
                             className="text-center bg-transparent border-none text-sm focus-visible:ring-0 placeholder:text-muted-foreground/50 text-foreground max-w-sm"
                         />

@@ -3,7 +3,6 @@
 import { useAppStore, Distraction } from "@/lib/store";
 import { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import {
     Activity,
@@ -14,16 +13,15 @@ import {
     TrendingUp,
     Target,
     BarChart3,
-    StickyNote,
 } from "lucide-react";
 import { isSameDay, parseISO, addDays, format, eachDayOfInterval } from "date-fns";
+import { cn } from "@/lib/utils";
 
 export function StatsJournal() {
     const { sessions, sessionStartTime, isActive, todos, distractions } =
         useAppStore();
     const [liveElapsed, setLiveElapsed] = useState(0);
     const [showHours, setShowHours] = useState(false);
-    const [notes, setNotes] = useState("");
 
     const today = new Date();
 
@@ -64,7 +62,7 @@ export function StatsJournal() {
     }, [isActive, sessionStartTime]);
 
     const todaysSessions = sessions.filter((s) =>
-        isSameDay(parseISO(s.date), today),
+        s.date && isSameDay(parseISO(s.date), today),
     );
 
     const historicalSeconds = todaysSessions.reduce(
@@ -145,20 +143,26 @@ export function StatsJournal() {
 
     // Focus trend - last 7 days
     const focusTrend = useMemo(() => {
+        const todayDate = new Date();
         const days = eachDayOfInterval({
-            start: addDays(today, -6),
-            end: today,
+            start: addDays(todayDate, -6),
+            end: todayDate,
         });
 
         return days.map((date) => {
             const daySessions = sessions.filter((s) =>
-                isSameDay(parseISO(s.date), date),
+                s.date && isSameDay(parseISO(s.date), date),
             );
-            const totalSeconds = daySessions.reduce((acc, s) => acc + s.duration, 0);
-            const minutes = Math.floor(totalSeconds / 60);
-            return { date: format(date, "EEE"), minutes };
+            const totalSecs = daySessions.reduce((acc, s) => acc + s.duration, 0);
+            const isToday = isSameDay(date, todayDate);
+            const effectiveSecs = totalSecs + (isToday ? liveElapsed : 0);
+            const minutes = Math.round(effectiveSecs / 60);
+            const displayLabel = effectiveSecs > 0
+                ? (effectiveSecs < 60 ? `${effectiveSecs}s` : `${Math.round(effectiveSecs / 60)}m`)
+                : "0m";
+            return { date: format(date, "EEE"), minutes, seconds: effectiveSecs, displayLabel };
         });
-    }, [sessions, today]);
+    }, [sessions, liveElapsed]);
 
     const maxTrendMinutes = Math.max(...focusTrend.map((d) => d.minutes), 1);
 
@@ -280,16 +284,23 @@ export function StatsJournal() {
                 </div>
                 <div className="flex flex-col gap-1">
                     <span className="text-xs text-muted-foreground">This Week</span>
-                    <div className="flex items-end gap-1 h-16 mt-2">
+                    <div className="flex items-end gap-2 h-24 mt-2 pt-5">
                         {focusTrend.map((item, index) => (
                             <div
                                 key={index}
-                                className="flex-1 flex flex-col items-center gap-1"
+                                className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group relative"
+                                title={`${item.date}: ${item.displayLabel}`}
                             >
+                                <span className="text-[10px] font-medium text-primary/80 group-hover:text-primary transition-colors">
+                                    {item.seconds > 0 ? item.displayLabel : ""}
+                                </span>
                                 <div
-                                    className="w-full bg-primary/80 rounded-t-sm transition-all duration-500"
+                                    className={cn(
+                                        "w-full rounded-t-sm transition-all duration-500",
+                                        item.seconds > 0 ? "bg-primary" : "bg-primary/10"
+                                    )}
                                     style={{
-                                        height: `${Math.max((item.minutes / maxTrendMinutes) * 100, 4)}%`,
+                                        height: `${Math.max((item.minutes / maxTrendMinutes) * 100, item.seconds > 0 ? 15 : 6)}%`,
                                     }}
                                 />
                                 <span className="text-[10px] text-muted-foreground">
@@ -299,22 +310,6 @@ export function StatsJournal() {
                         ))}
                     </div>
                 </div>
-            </Card>
-
-            <Card className="flex-1 p-6 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-4 rounded-[var(--radius)]">
-                <div className="flex items-center justify-between">
-                    <h2 className="font-semibold text-lg flex items-center gap-2">
-                        <StickyNote className="w-4 h-4 text-primary" />
-                        Quick Notes
-                    </h2>
-                </div>
-
-                <Textarea
-                    placeholder="Brain dump, ideas, or reminders..."
-                    className="flex-1 resize-none bg-background/50 border-none focus-visible:ring-1 focus-visible:ring-primary/20 text-base"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                />
             </Card>
 
             {totalDistractions > 0 && (

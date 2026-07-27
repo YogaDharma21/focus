@@ -17,10 +17,12 @@ export function DeepFocusOverlay() {
         setDeepFocusMode,
         timerMode,
         timerState,
+        previousMode,
         pomodoroSettings,
         setTimeLeft,
         setTimerState,
         setTimerMode,
+        setPreviousMode,
         setSessionStartTime,
         addSession,
         todos,
@@ -28,11 +30,42 @@ export function DeepFocusOverlay() {
         selectedSubtaskId,
     } = useAppStore();
 
-    const [showHint, setShowHint] = useState(true);
     const [reportOpen, setReportOpen] = useState(false);
     const [completedDuration, setCompletedDuration] = useState(0);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const sessionStartTimeRef = useRef<number | null>(null);
+
+    const playSound = useCallback(() => {
+        try {
+            const audio = new Audio("/soundeffect.mp3");
+            audio.volume = 0.5;
+            audio.play().catch(() => {
+                if (audioRef.current) {
+                    audioRef.current.currentTime = 0;
+                    audioRef.current.volume = 0.5;
+                    audioRef.current.play().catch(() => {});
+                }
+            });
+        } catch {
+            // ignore
+        }
+    }, []);
+
+    useEffect(() => {
+        const unlockAudio = () => {
+            if (audioRef.current) {
+                audioRef.current.load();
+            }
+            window.removeEventListener("click", unlockAudio);
+            window.removeEventListener("keydown", unlockAudio);
+        };
+        window.addEventListener("click", unlockAudio);
+        window.addEventListener("keydown", unlockAudio);
+        return () => {
+            window.removeEventListener("click", unlockAudio);
+            window.removeEventListener("keydown", unlockAudio);
+        };
+    }, []);
 
     useEffect(() => {
         if (isActive && !sessionStartTimeRef.current) {
@@ -48,10 +81,7 @@ export function DeepFocusOverlay() {
     const handleCompleteSession = useCallback(() => {
         setIsActive(false);
 
-        if (audioRef.current) {
-            audioRef.current.currentTime = 0;
-            audioRef.current.play().catch(() => {});
-        }
+        playSound();
 
         let elapsedSeconds = 0;
         if (sessionStartTimeRef.current) {
@@ -68,22 +98,53 @@ export function DeepFocusOverlay() {
         if (duration > 0) {
             setCompletedDuration(duration);
             setReportOpen(true);
+        } else {
+            setDeepFocusMode(false);
         }
 
         if (timerMode === "POMODORO" && timerState === "WORK") {
+            setPreviousMode("POMODORO");
             setTimerState("BREAK");
             setTimeLeft(pomodoroSettings.break * 60);
             if (pomodoroSettings.autoStartBreak) {
                 setIsActive(true);
             }
         } else if (timerMode === "POMODORO" && timerState === "BREAK") {
-            setTimerState("WORK");
-            setTimeLeft(pomodoroSettings.work * 60);
-        } else if (timerMode === "STOPWATCH") {
-            setTimeLeft(0);
+            if (previousMode === "STOPWATCH") {
+                setTimerMode("STOPWATCH");
+                setTimerState("WORK");
+                setTimeLeft(0);
+            } else {
+                setTimerMode("POMODORO");
+                setTimerState("WORK");
+                setTimeLeft(pomodoroSettings.work * 60);
+            }
+        } else if (timerMode === "STOPWATCH" && duration > 0) {
+            setPreviousMode("STOPWATCH");
+            const breakSeconds = Math.floor(duration / 5);
+            if (breakSeconds > 0) {
+                setTimerMode("POMODORO");
+                setTimerState("BREAK");
+                setTimeLeft(breakSeconds);
+            } else {
+                setTimeLeft(0);
+            }
         }
         sessionStartTimeRef.current = null;
-    }, [timerMode, timerState, timeLeft, setTimeLeft, setIsActive, setTimerState, pomodoroSettings]);
+    }, [
+        timerMode,
+        timerState,
+        previousMode,
+        timeLeft,
+        setTimeLeft,
+        setIsActive,
+        setTimerState,
+        setTimerMode,
+        setPreviousMode,
+        setDeepFocusMode,
+        playSound,
+        pomodoroSettings,
+    ]);
 
     const handleReportSubmit = (data: SessionReportData) => {
         addSession({
@@ -93,6 +154,7 @@ export function DeepFocusOverlay() {
             mode: timerMode,
         });
         setReportOpen(false);
+        setDeepFocusMode(false);
     };
 
     useEffect(() => {
@@ -106,12 +168,6 @@ export function DeepFocusOverlay() {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [setDeepFocusMode]);
 
-    useEffect(() => {
-        setShowHint(true);
-        const timeout = setTimeout(() => setShowHint(false), 3000);
-        return () => clearTimeout(timeout);
-    }, []);
-
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -124,7 +180,7 @@ export function DeepFocusOverlay() {
 
     return (
         <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-500">
-            <audio ref={audioRef} src="/soundeffect.mp3" />
+            <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
             
             <button
                 onClick={exitFocusMode}
@@ -167,7 +223,7 @@ export function DeepFocusOverlay() {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="w-14 h-14 rounded-full border-2 hover:bg-white/5 hover:border-white/20 transition-all"
+                        className="w-14 h-14 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 transition-all"
                         onClick={toggleTimer}
                     >
                         {isActive ? (
@@ -181,7 +237,7 @@ export function DeepFocusOverlay() {
                         variant="ghost"
                         size="icon"
                         className={cn(
-                            "w-14 h-14 rounded-full border-2 transition-all",
+                            "w-14 h-14 rounded-[var(--radius)] border-2 transition-all",
                             isActive
                                 ? "hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50"
                                 : "opacity-50 cursor-not-allowed",
@@ -195,18 +251,18 @@ export function DeepFocusOverlay() {
                 </div>
             </div>
 
-            <div
-                className={cn(
-                    "absolute bottom-8 text-xs text-muted-foreground transition-opacity duration-500",
-                    showHint ? "opacity-100" : "opacity-0",
-                )}
-            >
+            <div className="absolute bottom-8 text-xs text-muted-foreground">
                 Press <kbd className="px-2 py-1 bg-secondary/50 rounded text-[10px] font-mono border border-border">Esc</kbd> to exit focus mode
             </div>
 
             <SessionReportDialog
                 open={reportOpen}
-                onOpenChange={setReportOpen}
+                onOpenChange={(open) => {
+                    setReportOpen(open);
+                    if (!open) {
+                        setDeepFocusMode(false);
+                    }
+                }}
                 duration={completedDuration}
                 tasks={[]}
                 sessionName={sessionName}
