@@ -29,8 +29,6 @@ import {
   FolderPlus,
   ArrowRight,
   ListTodo,
-  Calendar,
-  ChevronRight,
   Edit3
 } from "lucide-react";
 import { AppStateData, TodoItem, PriorityType, RecurringType } from "../types";
@@ -47,22 +45,30 @@ const MOOD_EMOJIS = [
   "🤯 Overwhelmed"
 ];
 
+const DISTRACTION_CATEGORIES = [
+  "📱 Phone",
+  "🌐 Social Media",
+  "🚪 Bathroom",
+  "💬 Meeting",
+  "❓ Other"
+];
+
 export function Popup() {
   const [state, setState] = useState<AppStateData | null>(null);
   const [activeTab, setActiveTab] = useState<"timer" | "tasks" | "shield" | "notes" | "stats">("timer");
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [showDistractionPicker, setShowDistractionPicker] = useState(false);
   const [selectedTaskDetail, setSelectedTaskDetail] = useState<TodoItem | null>(null);
 
   // Local inputs
   const [newTaskText, setNewTaskText] = useState("");
-  const [newTaskPriority, setNewTaskPriority] = useState<PriorityType>("medium");
   const [activeGroupId, setActiveGroupId] = useState<string>("current");
   const [newGroupName, setNewGroupName] = useState("");
   const [showAddGroupInput, setShowAddGroupInput] = useState(false);
   const [newSiteUrl, setNewSiteUrl] = useState("");
   const [newMoodText, setNewMoodText] = useState("");
-  const [selectedMood, setSelectedMood] = useState(MOOD_EMOJIS[1]); // 😊 Calm
+  const [selectedMood, setSelectedMood] = useState(MOOD_EMOJIS[1]);
   const [newSubtaskText, setNewSubtaskText] = useState("");
 
   // Settings inputs
@@ -87,7 +93,7 @@ export function Popup() {
     return () => unsubscribe();
   }, []);
 
-  // Timer tick interval for UI reactivity when popup is open
+  // Real-time timer tick update
   useEffect(() => {
     if (!state || !state.isActive) return;
 
@@ -149,15 +155,18 @@ export function Popup() {
     else if (timerState === "BREAK") nextTime = state.pomodoroSettings.break * 60;
     else if (timerState === "FLOW") nextTime = 0;
 
+    const prevMode = timerState === "FLOW" ? "FLOW" : (timerState === "WORK" ? "POMODORO" : state.previousMode);
+
     updateState({
       timerMode: mode,
       timerState,
+      previousMode: prevMode,
       isActive: false,
       timeLeft: nextTime
     });
   };
 
-  // Complete current session manually
+  // Complete session: flow break = flow_duration / 5
   const completeSession = () => {
     const isWorkOrFlow = state.timerState === "WORK" || state.timerState === "FLOW";
     const durationLogged = state.timerState === "FLOW" ? state.timeLeft : (state.pomodoroSettings.work * 60 - state.timeLeft);
@@ -176,7 +185,6 @@ export function Popup() {
       todoId: state.selectedTodoId || undefined
     };
 
-    // If a task was selected, increment completed pomodoros
     let updatedTodos = state.todos;
     if (state.selectedTodoId && isWorkOrFlow) {
       updatedTodos = state.todos.map(t => t.id === state.selectedTodoId ? {
@@ -185,12 +193,32 @@ export function Popup() {
       } : t);
     }
 
-    const nextState = isWorkOrFlow ? "BREAK" : "WORK";
-    const nextTime = isWorkOrFlow ? state.pomodoroSettings.break * 60 : state.pomodoroSettings.work * 60;
+    let nextState: "WORK" | "BREAK" | "FLOW" = "BREAK";
+    let nextTime = 0;
+    let prevMode = state.previousMode;
+
+    if (isWorkOrFlow) {
+      prevMode = state.timerState === "FLOW" ? "FLOW" : "POMODORO";
+      nextState = "BREAK";
+      // Flow mode break = duration / 5 (minimum 1 minute / 60 seconds)
+      nextTime = state.timerState === "FLOW"
+        ? Math.max(60, Math.floor(state.timeLeft / 5))
+        : state.pomodoroSettings.break * 60;
+    } else {
+      // Return to previous mode after break completes
+      if (state.previousMode === "FLOW") {
+        nextState = "FLOW";
+        nextTime = 0;
+      } else {
+        nextState = "WORK";
+        nextTime = state.pomodoroSettings.work * 60;
+      }
+    }
 
     updateState({
       isActive: false,
       timerState: nextState,
+      previousMode: prevMode,
       timeLeft: nextTime,
       todos: updatedTodos,
       sessions: [newSession, ...state.sessions],
@@ -202,16 +230,17 @@ export function Popup() {
     });
   };
 
-  // Log distraction
-  const logDistraction = () => {
+  // Log Distraction with category selection
+  const selectDistractionCategory = (category: string) => {
     const entry = {
       id: crypto.randomUUID(),
       timestamp: new Date().toISOString(),
-      category: "Distraction Alert"
+      category
     };
     updateState({
       distractions: [...state.distractions, entry]
     });
+    setShowDistractionPicker(false);
   };
 
   // Save Settings
@@ -256,7 +285,7 @@ export function Popup() {
     }
   };
 
-  // Task Handlers
+  // Task Handlers (without instant priority selector)
   const addTodo = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTaskText.trim()) return;
@@ -264,7 +293,7 @@ export function Popup() {
       id: crypto.randomUUID(),
       text: newTaskText.trim(),
       completed: false,
-      priority: newTaskPriority,
+      priority: "medium",
       groupId: activeGroupId === "finished" ? "current" : activeGroupId,
       subtasks: []
     };
@@ -306,7 +335,7 @@ export function Popup() {
     setActiveTab("timer");
   };
 
-  // Subtask Handlers inside Task Detail or Timer
+  // Subtask Handlers
   const addSubtask = (todoId: string, text: string) => {
     if (!text.trim()) return;
     const updated = state.todos.map(t => {
@@ -404,11 +433,6 @@ export function Popup() {
     }
   };
 
-  // Day Progress Calculation
-  const now = new Date();
-  const currentMinutesInDay = now.getHours() * 60 + now.getMinutes();
-  const dayProgressPercent = Math.min(100, Math.round((currentMinutesInDay / 1440) * 100));
-
   // Selected Task Object
   const selectedTask = state.todos.find(t => t.id === state.selectedTodoId);
 
@@ -418,6 +442,18 @@ export function Popup() {
   const timeFormatted = `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   const totalDuration = state.timerState === "WORK" ? state.pomodoroSettings.work * 60 : state.pomodoroSettings.break * 60;
   const progressPercent = state.timerState === "FLOW" ? 100 : (totalDuration > 0 ? Math.min(100, Math.max(0, ((totalDuration - state.timeLeft) / totalDuration) * 100)) : 0);
+
+  // Stats Calculations
+  const finishedTasksTodayCount = state.todos.filter(t => t.completed).length;
+  const pendingTasksCount = state.todos.filter(t => !t.completed).length;
+  const taskDoneRatePercent = state.todos.length > 0 ? Math.round((finishedTasksTodayCount / state.todos.length) * 100) : 100;
+
+  // Distraction Analysis Breakdown
+  const distractionCounts: { [cat: string]: number } = {};
+  state.distractions.forEach(d => {
+    const cat = d.category || "Other";
+    distractionCounts[cat] = (distractionCounts[cat] || 0) + 1;
+  });
 
   return (
     <div className={`w-[420px] h-[580px] flex flex-col overflow-hidden select-none font-sans relative ${
@@ -437,9 +473,6 @@ export function Popup() {
             <h1 className="text-sm font-extrabold tracking-wider uppercase font-heading">
               FOCUS
             </h1>
-            <p className={`text-[10px] font-mono -mt-0.5 ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
-              Monochrome Companion
-            </p>
           </div>
         </div>
 
@@ -471,7 +504,7 @@ export function Popup() {
         </div>
       </header>
 
-      {/* Info Modal Overlay */}
+      {/* Info Modal Overlay (1 short description) */}
       {showInfoModal && (
         <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
           isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
@@ -491,21 +524,8 @@ export function Popup() {
             </button>
           </div>
 
-          <div className="space-y-3 my-3 text-xs leading-relaxed overflow-y-auto pr-1">
-            <p className="opacity-90 font-medium">
-              Focus is a minimalist, black & white productivity extension engineered for deep work execution.
-            </p>
-
-            <div className={`p-3 rounded-xl border space-y-1.5 font-mono text-[11px] ${
-              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
-            }`}>
-              <div className="font-bold border-b pb-1 opacity-70 border-current">FEATURES</div>
-              <div>• ⏱️ <b>Pomodoro, Break & Flow</b> stopwatch timer.</div>
-              <div>• 🛡️ <b>Distraction Shield</b> auto-blocks sites during work sessions.</div>
-              <div>• 📋 <b>Task Manager</b> with groups & subtask checklists.</div>
-              <div>• 📝 <b>Mood Reflections</b> with emotion emoji logs.</div>
-              <div>• 📊 <b>Stats & Focus Trends</b> with day completion rate.</div>
-            </div>
+          <div className="my-auto text-xs leading-relaxed p-4 rounded-xl border text-center font-medium opacity-90 border-current">
+            Focus is a minimalist, monochrome extension designed for distraction-free deep work, pomodoro tracking, and site blocking.
           </div>
 
           <div className="space-y-2 pt-2 border-t border-current">
@@ -527,7 +547,47 @@ export function Popup() {
         </div>
       )}
 
-      {/* Timer Settings Modal Overlay */}
+      {/* Distraction Picker Modal */}
+      {showDistractionPicker && (
+        <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
+          isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
+        }`}>
+          <div className="flex items-center justify-between pb-3 border-b border-current">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              <h2 className="text-sm font-bold font-mono uppercase tracking-wider">LOG DISTRACTION</h2>
+            </div>
+            <button
+              onClick={() => setShowDistractionPicker(false)}
+              className={`p-1 rounded-lg border ${
+                isDark ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800" : "bg-neutral-100 border-neutral-300 text-black hover:bg-neutral-200"
+              }`}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="space-y-2 my-auto">
+            <p className="text-xs font-mono text-center mb-3 opacity-80">Select what distracted you:</p>
+            {DISTRACTION_CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                onClick={() => selectDistractionCategory(cat)}
+                className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold font-mono border transition-all text-left flex items-center justify-between ${
+                  isDark
+                    ? "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-white"
+                    : "bg-neutral-100 border-neutral-300 hover:bg-neutral-200 text-black"
+                }`}
+              >
+                <span>{cat}</span>
+                <Plus className="w-4 h-4 opacity-50" />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Timer Settings Modal */}
       {showSettingsModal && (
         <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
           isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
@@ -549,7 +609,7 @@ export function Popup() {
 
           <form onSubmit={saveSettings} className="space-y-4 my-auto">
             <div>
-              <label className="text-xs font-mono font-bold block mb-1">Work Session Duration (Minutes)</label>
+              <label className="text-xs font-mono font-bold block mb-1">Work Duration (Minutes)</label>
               <input
                 type="number"
                 min="1"
@@ -601,7 +661,7 @@ export function Popup() {
         </div>
       )}
 
-      {/* Task Detail View Modal Overlay */}
+      {/* Task Detail View Modal */}
       {selectedTaskDetail && (
         <div className={`absolute inset-0 z-50 p-4 flex flex-col justify-between backdrop-blur-md overflow-y-auto animate-in fade-in duration-200 ${
           isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
@@ -622,7 +682,6 @@ export function Popup() {
           </div>
 
           <div className="space-y-3 my-3 text-xs overflow-y-auto pr-1">
-            {/* Task Title & Focus Action */}
             <div className="flex items-center justify-between gap-2">
               <input
                 type="text"
@@ -649,7 +708,6 @@ export function Popup() {
               <span>FOCUS ON THIS TASK</span>
             </button>
 
-            {/* Group Selection */}
             <div>
               <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Task Group</label>
               <select
@@ -670,7 +728,6 @@ export function Popup() {
               </select>
             </div>
 
-            {/* Description & Priority */}
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Priority</label>
@@ -715,7 +772,6 @@ export function Popup() {
               </div>
             </div>
 
-            {/* Pomodoro Session Estimates */}
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Estimated Sessions</label>
@@ -754,7 +810,6 @@ export function Popup() {
               </div>
             </div>
 
-            {/* Deadline Date & Time */}
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Deadline Date</label>
@@ -791,7 +846,6 @@ export function Popup() {
               </div>
             </div>
 
-            {/* Notes */}
             <div>
               <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Task Notes</label>
               <textarea
@@ -810,7 +864,6 @@ export function Popup() {
               />
             </div>
 
-            {/* Subtasks Section */}
             <div className="pt-2 border-t border-current">
               <label className="text-[10px] font-mono uppercase font-bold block mb-2 opacity-70">Subtasks Checklist</label>
 
@@ -859,7 +912,7 @@ export function Popup() {
         </div>
       )}
 
-      {/* Main Tab Navigation Bar */}
+      {/* Main Navigation Bar */}
       <nav className={`flex items-center justify-between px-3 py-1.5 border-b z-10 ${
         isDark ? "bg-neutral-900/60 border-neutral-800" : "bg-neutral-50 border-neutral-200"
       }`}>
@@ -912,7 +965,7 @@ export function Popup() {
         {/* TIMER TAB */}
         {activeTab === "timer" && (
           <div className="flex flex-col items-center justify-between h-full py-1">
-            {/* 3-Way Mode Switcher: Work, Break, Flow */}
+            {/* 3-Way Mode Switcher without emoji on Flow */}
             <div className={`flex items-center p-1 rounded-xl border w-full max-w-[320px] ${
               isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-100 border-neutral-300"
             }`}>
@@ -944,7 +997,7 @@ export function Popup() {
                     : isDark ? "text-neutral-400 hover:text-white" : "text-neutral-500 hover:text-black"
                 }`}
               >
-                Flow ⏱️
+                Flow
               </button>
             </div>
 
@@ -1006,7 +1059,7 @@ export function Popup() {
               />
             </div>
 
-            {/* Selected Task & Subtasks Checklist in Timer */}
+            {/* Selected Task & Subtasks in Timer */}
             {selectedTask && (
               <div className={`w-full max-w-[320px] p-2.5 mb-2 rounded-xl border flex flex-col gap-1.5 ${
                 isDark ? "bg-neutral-900/90 border-neutral-800" : "bg-neutral-100/90 border-neutral-300"
@@ -1033,22 +1086,22 @@ export function Popup() {
               </div>
             )}
 
-            {/* Control Buttons Grid (Play/Pause, Distraction, Settings, Complete, Reset) */}
+            {/* Control Buttons (Strict Monochrome styling for all icons) */}
             <div className="flex items-center gap-2">
-              {/* I got distracted button */}
+              {/* I got distracted button (title: "Log Distraction") */}
               <button
-                onClick={logDistraction}
+                onClick={() => setShowDistractionPicker(true)}
                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
                   isDark
-                    ? "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-amber-400"
-                    : "bg-neutral-100 border-neutral-300 hover:bg-neutral-200 text-amber-600"
+                    ? "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
+                    : "bg-neutral-100 border-neutral-300 hover:bg-neutral-200 text-neutral-700"
                 }`}
-                title="Log Distraction ('I got distracted')"
+                title="Log Distraction"
               >
                 <AlertTriangle className="w-4 h-4" />
               </button>
 
-              {/* Reset Timer button */}
+              {/* Reset Timer */}
               <button
                 onClick={resetTimer}
                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
@@ -1073,13 +1126,13 @@ export function Popup() {
                 {state.isActive ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
               </button>
 
-              {/* Complete Session Button */}
+              {/* Complete Session Button (Strict Monochrome) */}
               <button
                 onClick={completeSession}
                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
                   isDark
-                    ? "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-emerald-400"
-                    : "bg-neutral-100 border-neutral-300 hover:bg-neutral-200 text-emerald-600"
+                    ? "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
+                    : "bg-neutral-100 border-neutral-300 hover:bg-neutral-200 text-neutral-700"
                 }`}
                 title="Complete Session"
               >
@@ -1105,7 +1158,7 @@ export function Popup() {
         {/* TASKS TAB */}
         {activeTab === "tasks" && (
           <div className="flex flex-col h-full gap-2.5">
-            {/* Task Group Filter Tabs & Add Group Button */}
+            {/* Task Group Filter Tabs */}
             <div className="flex items-center justify-between gap-1 overflow-x-auto pb-1">
               <div className="flex items-center gap-1 overflow-x-auto">
                 {state.groups.map((group) => (
@@ -1134,7 +1187,6 @@ export function Popup() {
               </button>
             </div>
 
-            {/* Custom Group Input */}
             {showAddGroupInput && (
               <form onSubmit={addCustomGroup} className="flex gap-2">
                 <input
@@ -1154,7 +1206,7 @@ export function Popup() {
               </form>
             )}
 
-            {/* Add Task Input Form */}
+            {/* Quick Add Task Form (without priority select) */}
             <form onSubmit={addTodo} className="flex gap-2">
               <input
                 type="text"
@@ -1167,29 +1219,16 @@ export function Popup() {
                     : "bg-neutral-100 border-neutral-300 text-black placeholder-neutral-400 focus:border-black"
                 }`}
               />
-              <select
-                value={newTaskPriority}
-                onChange={(e) => setNewTaskPriority(e.target.value as PriorityType)}
-                className={`px-2 py-2 rounded-xl text-xs border focus:outline-none ${
-                  isDark ? "bg-neutral-900 border-neutral-800 text-neutral-300" : "bg-neutral-100 border-neutral-300 text-neutral-700"
-                }`}
-              >
-                <option value="low">Low</option>
-                <option value="medium">Med</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </select>
               <button
                 type="submit"
-                className={`p-2 rounded-xl font-bold transition-all ${
+                className={`px-4 py-2 rounded-xl font-bold transition-all text-xs ${
                   isDark ? "bg-white text-black hover:bg-neutral-200" : "bg-black text-white hover:bg-neutral-800"
                 }`}
               >
-                <Plus className="w-4 h-4" />
+                Add
               </button>
             </form>
 
-            {/* Filtered Task List */}
             <div className="flex-1 overflow-y-auto space-y-2 pr-1">
               {state.todos.filter(t => (t.groupId || "current") === activeGroupId).length === 0 ? (
                 <div className={`text-center py-12 text-xs font-mono ${isDark ? "text-neutral-600" : "text-neutral-400"}`}>
@@ -1406,25 +1445,7 @@ export function Popup() {
         {/* STATS TAB */}
         {activeTab === "stats" && (
           <div className="flex flex-col gap-3 h-full overflow-y-auto pr-1">
-            {/* Day Progress Meter */}
-            <div className={`p-3 rounded-xl border ${
-              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
-            }`}>
-              <div className="flex items-center justify-between text-xs font-mono mb-1.5">
-                <span className="font-bold">DAY PROGRESS</span>
-                <span className="font-bold">{dayProgressPercent}%</span>
-              </div>
-              <div className={`w-full h-2 rounded-full border overflow-hidden ${
-                isDark ? "bg-neutral-950 border-neutral-800" : "bg-neutral-200 border-neutral-300"
-              }`}>
-                <div
-                  className={`h-full transition-all duration-500 ${isDark ? "bg-white" : "bg-black"}`}
-                  style={{ width: `${dayProgressPercent}%` }}
-                />
-              </div>
-            </div>
-
-            {/* Core Metrics Grid */}
+            {/* Top 3 Cards Side-by-Side: Focused Today, Finished Tasks, Pending Tasks */}
             <div className="grid grid-cols-3 gap-2">
               <div className={`p-2.5 rounded-xl border flex flex-col items-center text-center ${
                 isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
@@ -1437,38 +1458,78 @@ export function Popup() {
               <div className={`p-2.5 rounded-xl border flex flex-col items-center text-center ${
                 isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
               }`}>
-                <Flame className="w-4 h-4 mb-1" />
-                <span className="text-sm font-extrabold font-mono">{state.stats.longestStreak}d</span>
-                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">Longest Streak</span>
+                <CheckSquare className="w-4 h-4 mb-1" />
+                <span className="text-sm font-extrabold font-mono">{finishedTasksTodayCount}</span>
+                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">Tasks Finished</span>
               </div>
 
               <div className={`p-2.5 rounded-xl border flex flex-col items-center text-center ${
                 isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
               }`}>
-                <CheckSquare className="w-4 h-4 mb-1" />
-                <span className="text-sm font-extrabold font-mono">
-                  {state.todos.length > 0 ? Math.round((state.stats.completedTasksCount / state.todos.length) * 100) : 100}%
-                </span>
-                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">Task Done Rate</span>
+                <ListTodo className="w-4 h-4 mb-1" />
+                <span className="text-sm font-extrabold font-mono">{pendingTasksCount}</span>
+                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">Pending Tasks</span>
               </div>
             </div>
 
-            {/* Weekly Focus Trend (Mon - Sun Bar Chart) */}
+            {/* Streak & Task Done Rate Underneath */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className={`p-2.5 rounded-xl border flex items-center justify-between ${
+                isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+              }`}>
+                <div className="flex items-center gap-2">
+                  <Flame className="w-4 h-4 text-amber-400" />
+                  <div>
+                    <div className="text-[9px] uppercase tracking-wider font-mono opacity-60">STREAK</div>
+                    <div className="text-xs font-bold font-mono">
+                      Current: {state.stats.streakDays}d | Best: {state.stats.longestStreak}d
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className={`p-2.5 rounded-xl border flex items-center justify-between ${
+                isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+              }`}>
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-emerald-400" />
+                  <div>
+                    <div className="text-[9px] uppercase tracking-wider font-mono opacity-60">TASK DONE RATE</div>
+                    <div className="text-xs font-bold font-mono">
+                      {taskDoneRatePercent}%
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Weekly Focus Trend Chart with Actual Data & Hover Tooltips */}
             <div className={`p-3 rounded-xl border ${
               isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
             }`}>
-              <div className="text-[10px] font-mono uppercase tracking-wider font-bold mb-3">WEEKLY FOCUS TREND (MINS)</div>
+              <div className="text-[10px] font-mono uppercase tracking-wider font-bold mb-3">FOCUS TREND (ACTUAL DATA)</div>
               <div className="flex items-end justify-between gap-2 h-24 pt-2 border-b border-current">
                 {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => {
                   const minsLogged = state.stats.weeklyMinutes[day] || 0;
                   const maxMins = 120;
-                  const heightPercent = Math.min(100, Math.max(10, Math.round((minsLogged / maxMins) * 100)));
+                  const heightPercent = Math.min(100, Math.max(8, Math.round((minsLogged / maxMins) * 100)));
                   return (
-                    <div key={day} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+                    <div
+                      key={day}
+                      className="flex-1 flex flex-col items-center gap-1 h-full justify-end group relative cursor-pointer"
+                      title={`${day}: ${minsLogged} mins`}
+                    >
+                      {/* Tooltip on hover */}
+                      <div className={`absolute -top-7 px-2 py-1 rounded text-[9px] font-mono font-bold border pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap ${
+                        isDark ? "bg-white text-black border-white shadow-lg" : "bg-black text-white border-black shadow-lg"
+                      }`}>
+                        {day}: {minsLogged} mins
+                      </div>
+
                       <span className="text-[8px] font-mono opacity-60">{minsLogged}m</span>
                       <div
-                        className={`w-full rounded-t transition-all duration-500 ${
-                          isDark ? "bg-white" : "bg-black"
+                        className={`w-full rounded-t transition-all duration-300 ${
+                          isDark ? "bg-white group-hover:bg-neutral-300" : "bg-black group-hover:bg-neutral-700"
                         }`}
                         style={{ height: `${heightPercent}%` }}
                       />
@@ -1477,6 +1538,25 @@ export function Popup() {
                   );
                 })}
               </div>
+            </div>
+
+            {/* Distraction Analysis Section */}
+            <div className={`p-3 rounded-xl border ${
+              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+            }`}>
+              <div className="text-[10px] font-mono uppercase tracking-wider font-bold mb-2">DISTRACTION ANALYSIS</div>
+              {Object.keys(distractionCounts).length === 0 ? (
+                <div className="text-xs font-mono opacity-50 py-1">No distractions logged yet.</div>
+              ) : (
+                <div className="space-y-1.5">
+                  {Object.entries(distractionCounts).map(([cat, count]) => (
+                    <div key={cat} className="flex items-center justify-between text-xs font-mono">
+                      <span>{cat}</span>
+                      <span className="font-bold border px-1.5 py-0.5 rounded text-[10px]">{count} times</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         )}

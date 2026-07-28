@@ -1,11 +1,12 @@
 import { AppStateData } from "../types";
 
-const STORAGE_KEY = "focus_extension_state_v4";
+const STORAGE_KEY = "focus_extension_state_v5";
 
 export const DEFAULT_STATE: AppStateData = {
   themeMode: "dark",
   timerMode: "POMODORO",
   timerState: "WORK",
+  previousMode: "POMODORO",
   timeLeft: 25 * 60,
   isActive: false,
   sessionStartTime: null,
@@ -32,8 +33,7 @@ export const DEFAULT_STATE: AppStateData = {
       completedPomodoros: 1,
       subtasks: [
         { id: "sub-1", text: "Implement Flow stopwatch mode", completed: true },
-        { id: "sub-2", text: "Add distraction button & settings modal", completed: false },
-        { id: "sub-3", text: "Build task details drawer", completed: false }
+        { id: "sub-2", text: "Add distraction button & settings modal", completed: false }
       ]
     },
     {
@@ -61,7 +61,10 @@ export const DEFAULT_STATE: AppStateData = {
     }
   ],
   sessions: [],
-  distractions: [],
+  distractions: [
+    { id: "dist-1", timestamp: new Date().toISOString(), category: "Phone" },
+    { id: "dist-2", timestamp: new Date().toISOString(), category: "Social Media" }
+  ],
   shield: {
     enabled: true,
     blockedSites: [
