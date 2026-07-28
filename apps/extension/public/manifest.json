@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Focus - Productivity & Distraction Shield",
+  "name": "Focus - Monochrome Distraction Shield",
   "version": "1.0.0",
-  "description": "Stay focused with Pomodoro timers, distraction shields, task management, ambient sounds, and daily reflections.",
+  "description": "Black & white browser extension for Pomodoro focus timers, site blocking, task tracking, and ambient audio.",
   "permissions": [
     "storage",
     "tabs",
@@ -30,7 +30,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["blocked.html", "dashboard.html", "assets/*"],
+      "resources": ["blocked.html", "assets/*"],
       "matches": ["<all_urls>"]
     }
   ]

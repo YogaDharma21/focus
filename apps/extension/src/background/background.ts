@@ -1,6 +1,66 @@
 import { getStoredState, saveStoredState } from "../lib/storage";
+import { AppStateData } from "../types";
 
 let timerInterval: ReturnType<typeof setInterval> | null = null;
+
+// Helper: check if a URL matches any blocked domain
+function isUrlBlocked(targetUrl: string, blockedSites: string[]): boolean {
+  if (!targetUrl || targetUrl.startsWith("chrome://") || targetUrl.startsWith("chrome-extension://") || targetUrl.startsWith("about:")) {
+    return false;
+  }
+
+  let hostname = "";
+  try {
+    const parsed = new URL(targetUrl);
+    hostname = parsed.hostname.toLowerCase();
+  } catch {
+    hostname = targetUrl.toLowerCase();
+  }
+
+  return blockedSites.some((site) => {
+    const cleanSite = site.toLowerCase().trim().replace(/^https?:\/\//, "").replace(/^www\./, "");
+    if (!cleanSite) return false;
+    return hostname.includes(cleanSite) || targetUrl.toLowerCase().includes(cleanSite);
+  });
+}
+
+// Actively inspect all open tabs and redirect any tab visiting a blocked domain
+async function enforceTabBlocking(state?: AppStateData) {
+  if (typeof chrome === "undefined" || !chrome.tabs) return;
+
+  const currentState = state || (await getStoredState());
+  const isBlockingRequired =
+    currentState.shield.enabled &&
+    currentState.isActive &&
+    currentState.timerState === "WORK";
+
+  if (!isBlockingRequired) return;
+
+  chrome.tabs.query({}, (tabs) => {
+    if (!tabs) return;
+    for (const tab of tabs) {
+      if (tab.id && tab.url && isUrlBlocked(tab.url, currentState.shield.blockedSites)) {
+        const blockedPageUrl = chrome.runtime.getURL(
+          `blocked.html?target=${encodeURIComponent(tab.url)}`
+        );
+        chrome.tabs.update(tab.id, { url: blockedPageUrl });
+
+        // Record distraction log
+        saveStoredState({
+          distractions: [
+            ...currentState.distractions,
+            {
+              id: crypto.randomUUID(),
+              timestamp: new Date().toISOString(),
+              category: "Shield Blocked Tab",
+              website: tab.url,
+            },
+          ],
+        });
+      }
+    }
+  });
+}
 
 async function updateBadge(timeLeft: number, isActive: boolean, timerState: string) {
   if (typeof chrome === "undefined" || !chrome.action) return;
@@ -16,12 +76,15 @@ async function updateBadge(timeLeft: number, isActive: boolean, timerState: stri
 
   chrome.action.setBadgeText({ text: badgeText });
   chrome.action.setBadgeBackgroundColor({
-    color: timerState === "WORK" ? "#10b981" : "#06b6d4",
+    color: timerState === "WORK" ? "#000000" : "#525252",
   });
 }
 
 async function startBackgroundTimer() {
   if (timerInterval) clearInterval(timerInterval);
+
+  // Enforce blocking immediately upon starting timer
+  enforceTabBlocking();
 
   timerInterval = setInterval(async () => {
     const state = await getStoredState();
@@ -31,12 +94,17 @@ async function startBackgroundTimer() {
       return;
     }
 
+    // Periodically re-check open tabs every second while timer is active
+    if (state.timerState === "WORK" && state.shield.enabled) {
+      enforceTabBlocking(state);
+    }
+
     if (state.timeLeft > 1) {
       const nextTime = state.timeLeft - 1;
       await saveStoredState({ timeLeft: nextTime });
       updateBadge(nextTime, true, state.timerState);
     } else {
-      // Session finished!
+      // Session completed!
       if (timerInterval) clearInterval(timerInterval);
       const isWork = state.timerState === "WORK";
       const nextState = isWork ? "BREAK" : "WORK";
@@ -74,15 +142,15 @@ async function startBackgroundTimer() {
 
       updateBadge(nextTime, false, nextState);
 
-      // Trigger Desktop Notification
+      // Desktop notification
       if (typeof chrome !== "undefined" && chrome.notifications) {
         chrome.notifications.create({
           type: "basic",
-          iconUrl: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 24 24' fill='none' stroke='%236366f1' stroke-width='2'><circle cx='12' cy='12' r='10'/><path d='M12 6v6l4 2'/></svg>",
-          title: isWork ? "🎉 Work Session Completed!" : "🔔 Break Finished!",
+          iconUrl: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2'><circle cx='12' cy='12' r='10'/><path d='M12 6v6l4 2'/></svg>",
+          title: isWork ? "Focus Session Completed!" : "Break Finished!",
           message: isWork
-            ? "Great job staying focused! Time to take a refreshing break."
-            : "Break is over! Ready to get back into the focus zone?",
+            ? "Session complete. Take a short break."
+            : "Break is over. Ready to start focusing?",
           priority: 2,
         });
       }
@@ -90,57 +158,43 @@ async function startBackgroundTimer() {
   }, 1000);
 }
 
-// Listen for tab navigation to block distracting sites during active focus session
+// Tab navigation listener
 if (typeof chrome !== "undefined" && chrome.tabs) {
   chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-    if (changeInfo.url || tab.url) {
-      const targetUrl = changeInfo.url || tab.url;
-      if (!targetUrl || targetUrl.startsWith("chrome://") || targetUrl.startsWith("chrome-extension://")) {
-        return;
-      }
-
+    const url = changeInfo.url || tab.url;
+    if (url) {
       const state = await getStoredState();
-      if (!state.shield.enabled) return;
-
-      const isBlockingRequired =
-        state.shield.blockMode === "ALWAYS" ||
-        (state.shield.blockMode === "ALWAYS_WHEN_ACTIVE" && state.isActive && state.timerState === "WORK");
-
-      if (isBlockingRequired) {
-        const isBlocked = state.shield.blockedSites.some((site) => {
-          const cleanSite = site.toLowerCase().trim();
-          return targetUrl.toLowerCase().includes(cleanSite);
-        });
-
-        if (isBlocked) {
+      if (state.shield.enabled && state.isActive && state.timerState === "WORK") {
+        if (isUrlBlocked(url, state.shield.blockedSites)) {
           const blockedPageUrl = chrome.runtime.getURL(
-            `blocked.html?target=${encodeURIComponent(targetUrl)}`
+            `blocked.html?target=${encodeURIComponent(url)}`
           );
           chrome.tabs.update(tabId, { url: blockedPageUrl });
-
-          // Record distraction entry
-          saveStoredState({
-            distractions: [
-              ...state.distractions,
-              {
-                id: crypto.randomUUID(),
-                timestamp: new Date().toISOString(),
-                category: "Website Shield",
-                website: targetUrl,
-              },
-            ],
-          });
         }
       }
     }
   });
+
+  chrome.tabs.onActivated.addListener(async (activeInfo) => {
+    const state = await getStoredState();
+    if (state.shield.enabled && state.isActive && state.timerState === "WORK") {
+      chrome.tabs.get(activeInfo.tabId, (tab) => {
+        if (tab?.id && tab.url && isUrlBlocked(tab.url, state.shield.blockedSites)) {
+          const blockedPageUrl = chrome.runtime.getURL(
+            `blocked.html?target=${encodeURIComponent(tab.url)}`
+          );
+          chrome.tabs.update(tab.id, { url: blockedPageUrl });
+        }
+      });
+    }
+  });
 }
 
-// Storage Listener to start/stop timer dynamically when toggled from Popup or Dashboard
+// Storage Listener
 if (typeof chrome !== "undefined" && chrome.storage) {
   chrome.storage.onChanged.addListener(async (changes, areaName) => {
-    if (areaName === "local" && changes.focus_extension_state_v1) {
-      const newState = changes.focus_extension_state_v1.newValue;
+    if (areaName === "local" && changes.focus_extension_state_v2) {
+      const newState: AppStateData = changes.focus_extension_state_v2.newValue;
       if (newState?.isActive) {
         startBackgroundTimer();
       } else {
@@ -151,7 +205,7 @@ if (typeof chrome !== "undefined" && chrome.storage) {
   });
 }
 
-// Initialize on service worker startup
+// Init
 getStoredState().then((state) => {
   if (state.isActive) {
     startBackgroundTimer();
