@@ -4,6 +4,7 @@ const STORAGE_KEY = "focus_extension_state_v3";
 
 export const DEFAULT_STATE: AppStateData = {
   themeMode: "dark",
+  activeMoodMode: "DEEP_FOCUS",
   timerMode: "POMODORO",
   timerState: "WORK",
   timeLeft: 25 * 60,
@@ -35,13 +36,12 @@ export const DEFAULT_STATE: AppStateData = {
       category: "Work"
     }
   ],
-  moodEntries: [
+  moodNotes: [
     {
       id: "note-1",
       date: new Date().toISOString().split("T")[0],
-      mood: "🎯 Focused",
-      text: "Started the morning with zero distractions and completed primary tasks!",
-      energyLevel: 5
+      mood: "Focused Flow",
+      text: "Started the morning with zero distractions and completed primary tasks!"
     }
   ],
   sessions: [],
@@ -58,7 +58,6 @@ export const DEFAULT_STATE: AppStateData = {
       "youtube.com"
     ]
   },
-  isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
   stats: {
     todayMinutes: 45,
     completedTasksCount: 3,
