@@ -2,6 +2,7 @@ export type TimerMode = "POMODORO" | "STOPWATCH";
 export type TimerState = "WORK" | "BREAK";
 export type PriorityType = "low" | "medium" | "high" | "urgent";
 export type ThemeMode = "dark" | "light";
+export type MoodType = "🎯 Focused" | "🔥 Energetic" | "☕ Calm" | "⚡ Productive" | "😴 Tired" | "🧘 Mindful";
 
 export interface TodoItem {
   id: string;
@@ -13,14 +14,14 @@ export interface TodoItem {
   dueDate?: string;
   subtasks?: { id: string; text: string; completed: boolean }[];
   completedAt?: string;
-  groupId?: string;
 }
 
-export interface MoodNote {
+export interface MoodEntry {
   id: string;
   date: string;
-  mood: string;
+  mood: MoodType;
   text: string;
+  energyLevel?: number; // 1-5
 }
 
 export interface Session {
@@ -40,7 +41,7 @@ export interface Distraction {
 
 export interface ShieldConfig {
   enabled: boolean;
-  blockedSites: string[]; // e.g., ['facebook.com', 'twitter.com', 'x.com', 'reddit.com', 'instagram.com', 'tiktok.com', 'youtube.com']
+  blockedSites: string[];
 }
 
 export interface AppStateData {
@@ -59,15 +60,20 @@ export interface AppStateData {
   };
   
   todos: TodoItem[];
-  moodNotes: MoodNote[];
+  moodEntries: MoodEntry[];
   sessions: Session[];
   distractions: Distraction[];
   
   shield: ShieldConfig;
   
-  ambientPlaying: string | null; // ambient track id or null
-  ambientVolume: number; // 0 to 1
-  
+  // Clerk & Convex cloud sync status
+  isOnline: boolean;
+  userProfile?: {
+    id: string;
+    email?: string;
+    fullName?: string;
+  };
+
   stats: {
     todayMinutes: number;
     completedTasksCount: number;
