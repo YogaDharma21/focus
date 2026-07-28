@@ -30,7 +30,7 @@ import {
   ArrowRight,
   ListTodo,
   Edit3,
-  Layers
+  Paintbrush
 } from "lucide-react";
 import { AppStateData, TodoItem, PriorityType, RecurringType, BackgroundTheme } from "../types";
 import { getStoredState, saveStoredState, subscribeToStateChanges } from "../lib/storage";
@@ -55,10 +55,10 @@ const DISTRACTION_CATEGORIES = [
 ];
 
 const BACKGROUND_THEMES: { id: BackgroundTheme; name: string }[] = [
-  { id: "default", name: "Solid Monochrome" },
+  { id: "default", name: "Solid Background" },
   { id: "gradient", name: "Minimal Gradient" },
-  { id: "mountain", name: "Geometric Outline" },
-  { id: "library", name: "Vertical Stripes" },
+  { id: "mountain", name: "Geometric Grid" },
+  { id: "library", name: "Vertical Stripe Texture" },
   { id: "cafe", name: "Diagonal Crosshatch" },
   { id: "anime-room", name: "Dot Matrix Pattern" }
 ];
@@ -104,23 +104,29 @@ export function Popup() {
     return () => unsubscribe();
   }, []);
 
-  // Real-time timer tick update
+  // Real-time timer tick & Auto-completion when timer finishes
   useEffect(() => {
     if (!state || !state.isActive) return;
 
     const interval = setInterval(() => {
       setState((prev) => {
         if (!prev || !prev.isActive) return prev;
+
         if (prev.timerState === "FLOW") {
           return { ...prev, timeLeft: prev.timeLeft + 1 };
         } else {
-          return { ...prev, timeLeft: Math.max(0, prev.timeLeft - 1) };
+          if (prev.timeLeft <= 1) {
+            // Auto-complete session instantly when timer hits 00:00
+            setTimeout(() => completeSession(), 0);
+            return { ...prev, timeLeft: 0 };
+          }
+          return { ...prev, timeLeft: prev.timeLeft - 1 };
         }
       });
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [state?.isActive, state?.timerState]);
+  }, [state?.isActive, state?.timerState, state?.timeLeft]);
 
   if (!state) {
     return (
@@ -177,7 +183,7 @@ export function Popup() {
     });
   };
 
-  // Complete session: Flow break = elapsedFlowSeconds / 5 (e.g., 5s flow -> 1s break, 10s flow -> 2s break)
+  // Complete session: Flow break = elapsedFlowSeconds / 5
   const completeSession = () => {
     const isWorkOrFlow = state.timerState === "WORK" || state.timerState === "FLOW";
     const durationLogged = state.timerState === "FLOW" ? state.timeLeft : (state.pomodoroSettings.work * 60 - state.timeLeft);
@@ -211,7 +217,6 @@ export function Popup() {
     if (isWorkOrFlow) {
       prevMode = state.timerState === "FLOW" ? "FLOW" : "POMODORO";
       nextState = "BREAK";
-      // Flow break = flow_seconds / 5 (Exact math: 5s -> 1s break, 10s -> 2s break)
       nextTime = state.timerState === "FLOW"
         ? Math.max(1, Math.floor(state.timeLeft / 5))
         : state.pomodoroSettings.break * 60;
@@ -227,7 +232,7 @@ export function Popup() {
     }
 
     updateState({
-      isActive: false,
+      isActive: state.timerState === "WORK" && state.pomodoroSettings.autoStartBreak,
       timerState: nextState,
       previousMode: prevMode,
       timeLeft: nextTime,
@@ -249,7 +254,7 @@ export function Popup() {
       category
     };
     updateState({
-      isActive: false, // PAUSE TIMER ON DISTRACTION LOG
+      isActive: false,
       distractions: [...state.distractions, entry]
     });
     setShowDistractionPicker(false);
@@ -467,7 +472,7 @@ export function Popup() {
     distractionCounts[cat] = (distractionCounts[cat] || 0) + 1;
   });
 
-  // Vector Background Pattern Class computation (0 bitmap images!)
+  // Vector Background Pattern Class computation
   const bgClass =
     state.background === "gradient"
       ? (isDark ? "bg-gradient-to-br from-black via-neutral-950 to-neutral-900" : "bg-gradient-to-br from-white via-neutral-100 to-neutral-200")
@@ -502,9 +507,9 @@ export function Popup() {
           </div>
         </div>
 
-        {/* Action Controls: Theme Mode Toggle + Background Theme Switcher + Info Button */}
+        {/* Action Controls: Theme Mode Toggle + Background Switcher (Paintbrush icon) + Info */}
         <div className="flex items-center gap-1.5">
-          {/* Background Theme Selector Button */}
+          {/* Background Theme Selector Button with Paintbrush Icon */}
           <button
             onClick={() => setShowThemePicker(!showThemePicker)}
             className={`p-1.5 rounded-lg border transition-all flex items-center justify-center ${
@@ -512,12 +517,12 @@ export function Popup() {
                 ? isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
                 : isDark ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800" : "bg-white border-neutral-300 text-black hover:bg-neutral-100"
             }`}
-            title="Choose Background Theme"
+            title="Change Background Theme"
           >
-            <Layers className="w-4 h-4" />
+            <Paintbrush className="w-4 h-4" />
           </button>
 
-          {/* Dark / Light Toggle */}
+          {/* Dark / Light Toggle Tooltip without word "monochrome" */}
           <button
             onClick={toggleThemeMode}
             className={`p-1.5 rounded-lg border transition-all flex items-center justify-center ${
@@ -525,7 +530,7 @@ export function Popup() {
                 ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800"
                 : "bg-white border-neutral-300 text-black hover:bg-neutral-100"
             }`}
-            title={`Switch to ${isDark ? "Light Monochrome" : "Dark Monochrome"} Mode`}
+            title={`Switch to ${isDark ? "Light" : "Dark"} Mode`}
           >
             {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
@@ -571,7 +576,7 @@ export function Popup() {
         </div>
       )}
 
-      {/* Info Modal Overlay (1 short description) */}
+      {/* Info Modal Overlay (Removed Manifest V3 text) */}
       {showInfoModal && (
         <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
           isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
@@ -608,13 +613,13 @@ export function Popup() {
             </button>
 
             <div className="text-[10px] font-mono text-center opacity-50">
-              Focus Extension v1.0.0 • Manifest V3
+              Focus Extension v1.0.0
             </div>
           </div>
         </div>
       )}
 
-      {/* Distraction Picker Modal (Selecting pauses timer!) */}
+      {/* Distraction Picker Modal */}
       {showDistractionPicker && (
         <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
           isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
@@ -1032,7 +1037,7 @@ export function Popup() {
         {/* TIMER TAB */}
         {activeTab === "timer" && (
           <div className="flex flex-col items-center justify-between h-full py-1">
-            {/* 3-Way Mode Switcher (Work, Break, Flow without emoji) */}
+            {/* 3-Way Mode Switcher (Pomodoro, Break, Flow - No Minutes in Toggle Labels!) */}
             <div className={`flex items-center p-1 rounded-xl border w-full max-w-[320px] ${
               isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-100 border-neutral-300"
             }`}>
@@ -1044,7 +1049,7 @@ export function Popup() {
                     : isDark ? "text-neutral-400 hover:text-white" : "text-neutral-500 hover:text-black"
                 }`}
               >
-                Work ({state.pomodoroSettings.work}m)
+                Pomodoro
               </button>
               <button
                 onClick={() => switchTimerModeAndState("POMODORO", "BREAK")}
@@ -1054,7 +1059,7 @@ export function Popup() {
                     : isDark ? "text-neutral-400 hover:text-white" : "text-neutral-500 hover:text-black"
                 }`}
               >
-                Break ({state.pomodoroSettings.break}m)
+                Break
               </button>
               <button
                 onClick={() => switchTimerModeAndState("FLOW", "FLOW")}
@@ -1110,7 +1115,7 @@ export function Popup() {
               </div>
             </div>
 
-            {/* Goal Input (Pressing Enter creates task) */}
+            {/* Goal Input */}
             <div className="w-full max-w-[280px] mb-2">
               <input
                 type="text"
@@ -1153,9 +1158,9 @@ export function Popup() {
               </div>
             )}
 
-            {/* Control Buttons Grid (Log Distraction, Reset, Play/Pause, Complete, Settings) */}
+            {/* Control Buttons Grid */}
             <div className="flex items-center gap-2">
-              {/* Log Distraction Button (title: "Log Distraction") */}
+              {/* Log Distraction Button */}
               <button
                 onClick={() => setShowDistractionPicker(true)}
                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
@@ -1273,7 +1278,7 @@ export function Popup() {
               </form>
             )}
 
-            {/* Quick Add Task Form (without priority select) */}
+            {/* Quick Add Task Form */}
             <form onSubmit={addTodo} className="flex gap-2">
               <input
                 type="text"
@@ -1539,7 +1544,7 @@ export function Popup() {
               </div>
             </div>
 
-            {/* Streak (Vertical current and best streak) & Task Done Rate Underneath */}
+            {/* Streak & Task Done Rate Underneath */}
             <div className="grid grid-cols-2 gap-2">
               <div className={`p-2.5 rounded-xl border flex items-center gap-2 ${
                 isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"

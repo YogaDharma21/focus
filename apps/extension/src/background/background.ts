@@ -106,19 +106,22 @@ async function startBackgroundTimer() {
         await saveStoredState({ timeLeft: nextTime });
         updateBadge(nextTime, true, state.timerState);
       } else {
-        // Session complete
+        // Session complete automatically when countdown finishes (00:00)
         if (timerInterval) clearInterval(timerInterval);
         
         let nextState: "WORK" | "BREAK" | "FLOW" = "BREAK";
         let nextTime = 0;
         let prevMode = state.previousMode;
+        let loggedDuration = 0;
 
         if (state.timerState === "WORK") {
           prevMode = "POMODORO";
           nextState = "BREAK";
           nextTime = state.pomodoroSettings.break * 60;
+          loggedDuration = state.pomodoroSettings.work * 60;
         } else {
           // Returning from BREAK back to previous mode (FLOW or POMODORO)
+          loggedDuration = state.pomodoroSettings.break * 60;
           if (state.previousMode === "FLOW") {
             nextState = "FLOW";
             nextTime = 0;
@@ -128,25 +131,32 @@ async function startBackgroundTimer() {
           }
         }
 
+        const minsLogged = Math.max(1, Math.round(loggedDuration / 60));
         const dayName = new Date().toLocaleDateString("en-US", { weekday: "short" });
         const updatedWeekly = { ...state.stats.weeklyMinutes };
-        updatedWeekly[dayName] = (updatedWeekly[dayName] || 0) + Math.round(state.timeLeft / 60);
+        if (state.timerState === "WORK") {
+          updatedWeekly[dayName] = (updatedWeekly[dayName] || 0) + minsLogged;
+        }
 
         const newSessionList = [
           ...state.sessions,
           {
             id: crypto.randomUUID(),
             date: new Date().toISOString(),
-            duration: state.timeLeft,
+            duration: loggedDuration,
             mode: state.timerMode,
             sessionName: state.sessionName || "Focus Session",
           },
         ];
 
-        const updatedTodayMins = state.stats.todayMinutes + Math.round(state.timeLeft / 60);
+        const updatedTodayMins = state.timerState === "WORK"
+          ? state.stats.todayMinutes + minsLogged
+          : state.stats.todayMinutes;
+
+        const autoStart = state.timerState === "WORK" && state.pomodoroSettings.autoStartBreak;
 
         await saveStoredState({
-          isActive: false,
+          isActive: autoStart,
           timerState: nextState,
           previousMode: prevMode,
           timeLeft: nextTime,
@@ -158,14 +168,16 @@ async function startBackgroundTimer() {
           },
         });
 
-        updateBadge(nextTime, false, nextState);
+        updateBadge(nextTime, autoStart, nextState);
 
         if (typeof chrome !== "undefined" && chrome.notifications) {
           chrome.notifications.create({
             type: "basic",
             iconUrl: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2'><circle cx='12' cy='12' r='10'/><path d='M12 6v6l4 2'/></svg>",
-            title: "Session Completed!",
-            message: `Break finished! Returning to ${prevMode} mode.`,
+            title: "Session Finished!",
+            message: state.timerState === "WORK"
+              ? "Pomodoro session complete! Starting break."
+              : `Break finished! Returning to ${prevMode} mode.`,
             priority: 2,
           });
         }
