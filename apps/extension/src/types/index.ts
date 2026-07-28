@@ -2,7 +2,6 @@ export type TimerMode = "POMODORO" | "STOPWATCH";
 export type TimerState = "WORK" | "BREAK";
 export type PriorityType = "low" | "medium" | "high" | "urgent";
 export type ThemeMode = "dark" | "light";
-export type MoodModeType = "DEEP_FOCUS" | "HIGH_ENERGY" | "CALM_STEADY" | "MINDFUL" | "SPRINT";
 
 export interface TodoItem {
   id: string;
@@ -41,20 +40,11 @@ export interface Distraction {
 
 export interface ShieldConfig {
   enabled: boolean;
-  blockedSites: string[];
-}
-
-export interface MoodPreset {
-  id: MoodModeType;
-  title: string;
-  tagline: string;
-  quote: string;
-  suggestedWorkMin: number;
+  blockedSites: string[]; // e.g., ['facebook.com', 'twitter.com', 'x.com', 'reddit.com', 'instagram.com', 'tiktok.com', 'youtube.com']
 }
 
 export interface AppStateData {
   themeMode: ThemeMode; // 'dark' | 'light'
-  activeMoodMode: MoodModeType;
   
   timerMode: TimerMode;
   timerState: TimerState;

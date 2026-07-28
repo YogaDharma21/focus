@@ -21,65 +21,35 @@ import {
   Moon,
   Info,
   Github,
-  Zap,
-  Target,
-  Coffee,
-  Smile,
+  BookOpen,
   X,
-  Compass
+  MessageSquarePlus
 } from "lucide-react";
-import { AppStateData, MoodModeType, MoodPreset, TodoItem } from "../types";
+import { AppStateData, TodoItem } from "../types";
 import { getStoredState, saveStoredState, subscribeToStateChanges } from "../lib/storage";
 import "../index.css";
 
-export const MOOD_PRESETS: MoodPreset[] = [
-  {
-    id: "DEEP_FOCUS",
-    title: "Deep Focus",
-    tagline: "Eliminate all noise for deep flow state.",
-    quote: "“Concentrate all your thoughts upon the work at hand.”",
-    suggestedWorkMin: 25
-  },
-  {
-    id: "HIGH_ENERGY",
-    title: "High Energy",
-    tagline: "Quick high-intensity productivity burst.",
-    quote: "“Action is the foundational key to all success.”",
-    suggestedWorkMin: 15
-  },
-  {
-    id: "CALM_STEADY",
-    title: "Calm & Steady",
-    tagline: "Methodical, stress-free long form progress.",
-    quote: "“It does not matter how slowly you go as long as you do not stop.”",
-    suggestedWorkMin: 45
-  },
-  {
-    id: "MINDFUL",
-    title: "Mindful Flow",
-    tagline: "Balanced pace with high clarity & intention.",
-    quote: "“Smile, breathe, and go slowly.”",
-    suggestedWorkMin: 30
-  },
-  {
-    id: "SPRINT",
-    title: "Sprint Mode",
-    tagline: "Maximum output crunch session.",
-    quote: "“Discipline is choosing between what you want now and what you want most.”",
-    suggestedWorkMin: 50
-  }
+const MOOD_OPTIONS = [
+  "🎯 Focused",
+  "🔥 Energetic",
+  "☕ Calm",
+  "⚡ Productive",
+  "😴 Tired",
+  "🧘 Mindful",
+  "🚀 Driven"
 ];
 
 export function Popup() {
   const [state, setState] = useState<AppStateData | null>(null);
-  const [activeTab, setActiveTab] = useState<"timer" | "tasks" | "shield" | "mood" | "stats">("timer");
+  const [activeTab, setActiveTab] = useState<"timer" | "tasks" | "shield" | "notes" | "stats">("timer");
   const [showInfoModal, setShowInfoModal] = useState(false);
 
-  // Local inputs
+  // Local input states
   const [newTaskText, setNewTaskText] = useState("");
   const [newTaskPriority, setNewTaskPriority] = useState<"low" | "medium" | "high" | "urgent">("medium");
   const [newSiteUrl, setNewSiteUrl] = useState("");
   const [newMoodText, setNewMoodText] = useState("");
+  const [selectedMood, setSelectedMood] = useState(MOOD_OPTIONS[0]);
 
   useEffect(() => {
     getStoredState().then((initial) => {
@@ -138,22 +108,6 @@ export function Popup() {
     });
   };
 
-  // Select Mood Mode
-  const selectMoodMode = (moodId: MoodModeType) => {
-    const preset = MOOD_PRESETS.find(p => p.id === moodId);
-    if (!preset) return;
-
-    const workSeconds = preset.suggestedWorkMin * 60;
-    updateState({
-      activeMoodMode: moodId,
-      pomodoroSettings: {
-        ...state.pomodoroSettings,
-        work: preset.suggestedWorkMin
-      },
-      timeLeft: state.timerState === "WORK" ? workSeconds : state.timeLeft
-    });
-  };
-
   // Task Handlers
   const addTodo = (e: React.FormEvent) => {
     e.preventDefault();
@@ -204,19 +158,22 @@ export function Popup() {
     });
   };
 
-  // Reflection
+  // Mood Notes Handlers
   const addMoodNote = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMoodText.trim()) return;
-    const activePreset = MOOD_PRESETS.find(p => p.id === state.activeMoodMode);
     const note = {
       id: crypto.randomUUID(),
       date: new Date().toISOString().split("T")[0],
-      mood: activePreset?.title || "Focused",
+      mood: selectedMood,
       text: newMoodText.trim()
     };
     updateState({ moodNotes: [note, ...state.moodNotes] });
     setNewMoodText("");
+  };
+
+  const deleteMoodNote = (id: string) => {
+    updateState({ moodNotes: state.moodNotes.filter(n => n.id !== id) });
   };
 
   const openGithubLink = () => {
@@ -228,8 +185,7 @@ export function Popup() {
     }
   };
 
-  // Calculations
-  const activePreset = MOOD_PRESETS.find(p => p.id === state.activeMoodMode) || MOOD_PRESETS[0];
+  // Time calculations
   const mins = Math.floor(state.timeLeft / 60);
   const secs = state.timeLeft % 60;
   const timeFormatted = `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
@@ -240,73 +196,7 @@ export function Popup() {
     <div className={`w-[420px] h-[580px] flex flex-col overflow-hidden select-none font-sans relative ${
       isDark ? "bg-black text-white" : "bg-white text-black"
     }`}>
-      {/* INFO MODAL OVERLAY */}
-      {showInfoModal && (
-        <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
-          isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
-        }`}>
-          <div>
-            <div className="flex items-center justify-between border-b pb-3 mb-4 border-current">
-              <div className="flex items-center gap-2">
-                <div className={`w-7 h-7 rounded border flex items-center justify-center font-bold text-xs font-mono ${
-                  isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
-                }`}>
-                  F
-                </div>
-                <h2 className="text-sm font-extrabold font-heading tracking-wider uppercase">
-                  FOCUS EXTENSION INFO
-                </h2>
-              </div>
-              <button
-                onClick={() => setShowInfoModal(false)}
-                className={`p-1 rounded border transition-all ${
-                  isDark ? "bg-neutral-900 border-neutral-700 hover:bg-neutral-800" : "bg-neutral-100 border-neutral-300 hover:bg-neutral-200"
-                }`}
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <p className="text-xs leading-relaxed opacity-80 mb-4">
-              A minimalist, high-contrast black & white productivity extension for distraction-free deep work and flow.
-            </p>
-
-            <div className={`p-3 rounded-xl border space-y-2 text-xs font-mono mb-4 ${
-              isDark ? "bg-neutral-950 border-neutral-800" : "bg-neutral-50 border-neutral-200"
-            }`}>
-              <div className="font-bold border-b pb-1 opacity-70 border-current">CORE CAPABILITIES</div>
-              <div className="space-y-1 text-[11px] opacity-90">
-                <div>• ⏱️ <b>Pomodoro & Stopwatch</b> background timer</div>
-                <div>• 🛡️ <b>Distraction Shield</b> auto-blocks sites during work</div>
-                <div>• 🎭 <b>Mood Modes</b> tailored work sessions & mindsets</div>
-                <div>• 📋 <b>Task Manager</b> with priority tags & subtasks</div>
-                <div>• 🌓 <b>Monochrome Dark & Light</b> theme toggle</div>
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <button
-              onClick={openGithubLink}
-              className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border transition-all ${
-                isDark
-                  ? "bg-white text-black border-white hover:bg-neutral-200"
-                  : "bg-black text-white border-black hover:bg-neutral-800"
-              }`}
-            >
-              <Github className="w-4 h-4" />
-              <span>View Repository on GitHub Pages</span>
-              <ExternalLink className="w-3.5 h-3.5 ml-1" />
-            </button>
-
-            <div className={`text-[10px] font-mono text-center opacity-50 ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
-              Focus Extension v1.0.0 • Manifest V3
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Header */}
+      {/* Top Header */}
       <header className={`px-4 py-3 border-b flex items-center justify-between z-10 ${
         isDark ? "bg-neutral-950 border-neutral-800" : "bg-neutral-100 border-neutral-200"
       }`}>
@@ -321,42 +211,98 @@ export function Popup() {
               FOCUS
             </h1>
             <p className={`text-[10px] font-mono -mt-0.5 ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
-              {activePreset.title} Mode
+              Monochrome Companion
             </p>
           </div>
         </div>
 
-        {/* Header Right Actions: Dark/Light Mode Toggle & Info Button side by side */}
-        <div className="flex items-center gap-1.5">
-          {/* Info Button beside Dark/Light Mode toggle */}
-          <button
-            onClick={() => setShowInfoModal(true)}
-            className={`p-2 rounded-lg border transition-all flex items-center justify-center ${
-              showInfoModal
-                ? isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
-                : isDark ? "bg-neutral-900 border-neutral-800 text-neutral-300 hover:bg-neutral-800 hover:text-white" : "bg-white border-neutral-300 text-neutral-700 hover:bg-neutral-100 hover:text-black"
-            }`}
-            title="Focus Extension Info & GitHub"
-          >
-            <Info className="w-4 h-4" />
-          </button>
-
+        {/* Action Controls: Theme Mode Toggle + Info Button (Beside each other) */}
+        <div className="flex items-center gap-2">
           {/* Black & White Mode Toggle Button */}
           <button
             onClick={toggleThemeMode}
             className={`p-2 rounded-lg border transition-all flex items-center justify-center ${
               isDark
-                ? "bg-neutral-900 border-neutral-800 text-white hover:bg-neutral-800"
+                ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800"
                 : "bg-white border-neutral-300 text-black hover:bg-neutral-100"
             }`}
             title={`Switch to ${isDark ? "Light Monochrome" : "Dark Monochrome"} Mode`}
           >
             {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
+
+          {/* Info Button directly beside Dark/Light Mode toggle */}
+          <button
+            onClick={() => setShowInfoModal(!showInfoModal)}
+            className={`p-2 rounded-lg border transition-all flex items-center justify-center ${
+              showInfoModal
+                ? isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
+                : isDark ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800" : "bg-white border-neutral-300 text-black hover:bg-neutral-100"
+            }`}
+            title="Focus Extension Info & Help"
+          >
+            <Info className="w-4 h-4" />
+          </button>
         </div>
       </header>
 
-      {/* Main Tab Navigation */}
+      {/* Info Modal Dialog Overlay */}
+      {showInfoModal && (
+        <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
+          isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
+        }`}>
+          <div className="flex items-center justify-between pb-3 border-b border-current">
+            <div className="flex items-center gap-2">
+              <Info className="w-4 h-4" />
+              <h2 className="text-sm font-bold font-mono uppercase tracking-wider">ABOUT FOCUS EXTENSION</h2>
+            </div>
+            <button
+              onClick={() => setShowInfoModal(false)}
+              className={`p-1 rounded-lg border ${
+                isDark ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800" : "bg-neutral-100 border-neutral-300 text-black hover:bg-neutral-200"
+              }`}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="space-y-3 my-3 text-xs leading-relaxed overflow-y-auto pr-1">
+            <p className="opacity-90 font-medium">
+              Focus is a minimalist, black & white browser extension engineered for distraction-free execution.
+            </p>
+
+            <div className={`p-3 rounded-xl border space-y-1.5 font-mono text-[11px] ${
+              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+            }`}>
+              <div className="font-bold border-b pb-1 opacity-70 border-current">FEATURES</div>
+              <div>• ⏱️ <b>Pomodoro & Stopwatch</b> background countdown worker.</div>
+              <div>• 🛡️ <b>Distraction Shield</b> auto-blocks sites during work sessions.</div>
+              <div>• 📋 <b>Task Manager</b> with priority tagging.</div>
+              <div>• 📝 <b>Mood Notes</b> daily reflection & focus log.</div>
+              <div>• 🌗 <b>Monochrome Theme</b> dark/light high-contrast toggle.</div>
+            </div>
+          </div>
+
+          <div className="space-y-2 pt-2 border-t border-current">
+            <button
+              onClick={openGithubLink}
+              className={`w-full py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border transition-all ${
+                isDark ? "bg-white text-black border-white hover:bg-neutral-200" : "bg-black text-white border-black hover:bg-neutral-800"
+              }`}
+            >
+              <Github className="w-4 h-4" />
+              <span>View Source on GitHub Pages</span>
+              <ExternalLink className="w-3.5 h-3.5" />
+            </button>
+
+            <div className="text-[10px] font-mono text-center opacity-50">
+              Focus Extension v1.0.0 • Manifest V3
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Tab Navigation Bar */}
       <nav className={`flex items-center justify-between px-3 py-1.5 border-b z-10 ${
         isDark ? "bg-neutral-900/60 border-neutral-800" : "bg-neutral-50 border-neutral-200"
       }`}>
@@ -364,7 +310,7 @@ export function Popup() {
           { id: "timer", label: "Timer", icon: Timer },
           { id: "tasks", label: "Tasks", icon: CheckSquare, badge: state.todos.filter(t => !t.completed).length },
           { id: "shield", label: "Shield", icon: Shield, activeIndicator: state.shield.enabled && state.isActive },
-          { id: "mood", label: "Mood Mode", icon: Compass },
+          { id: "notes", label: "Mood Notes", icon: BookOpen, badge: state.moodNotes.length },
           { id: "stats", label: "Stats", icon: BarChart3 }
         ].map((tab) => {
           const Icon = tab.icon;
@@ -404,7 +350,7 @@ export function Popup() {
         })}
       </nav>
 
-      {/* Main Content Area */}
+      {/* Main Tab Content */}
       <div className="flex-1 overflow-y-auto p-4 z-10 relative">
         {/* TIMER TAB */}
         {activeTab === "timer" && (
@@ -435,8 +381,8 @@ export function Popup() {
               </button>
             </div>
 
-            {/* Monochrome Circular Timer */}
-            <div className="relative w-44 h-44 my-2 flex items-center justify-center">
+            {/* Circular Timer Ring */}
+            <div className="relative w-44 h-44 my-3 flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90">
                 <circle
                   cx="88"
@@ -470,25 +416,18 @@ export function Popup() {
                     ? "bg-neutral-900 text-neutral-300 border-neutral-700"
                     : "bg-neutral-100 text-neutral-800 border-neutral-300"
                 }`}>
-                  {state.isActive ? (state.timerState === "WORK" ? `${activePreset.title}` : "ON BREAK") : "PAUSED"}
+                  {state.isActive ? (state.timerState === "WORK" ? "WORK IN PROGRESS" : "ON BREAK") : "PAUSED"}
                 </span>
               </div>
             </div>
 
-            {/* Active Mood Quote Banner */}
-            <div className={`w-full p-2.5 rounded-xl border text-center text-xs italic mb-2 ${
-              isDark ? "bg-neutral-900/60 border-neutral-800 text-neutral-300" : "bg-neutral-50 border-neutral-200 text-neutral-700"
-            }`}>
-              {activePreset.quote}
-            </div>
-
-            {/* Session Goal Input */}
-            <div className="w-full max-w-[280px] mb-2">
+            {/* Goal Input */}
+            <div className="w-full max-w-[280px] mb-3">
               <input
                 type="text"
                 value={state.sessionName}
                 onChange={(e) => updateState({ sessionName: e.target.value })}
-                placeholder="What are you focusing on?"
+                placeholder="Session Goal / Objective..."
                 className={`w-full px-3 py-2 rounded-xl text-xs text-center font-medium border focus:outline-none ${
                   isDark
                     ? "bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-white"
@@ -695,61 +634,87 @@ export function Popup() {
           </div>
         )}
 
-        {/* MOOD MODE TAB (NEW SECTION) */}
-        {activeTab === "mood" && (
-          <div className="flex flex-col gap-3 h-full overflow-y-auto pr-1">
-            <div className={`text-[10px] font-mono uppercase tracking-wider ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
-              Select Focus Mood & Mindset Mode
-            </div>
+        {/* MOOD NOTES TAB */}
+        {activeTab === "notes" && (
+          <div className="flex flex-col gap-3 h-full">
+            {/* New Reflection Form */}
+            <form onSubmit={addMoodNote} className={`p-3 rounded-xl border flex flex-col gap-2 ${
+              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+            }`}>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold font-mono flex items-center gap-1.5">
+                  <MessageSquarePlus className="w-3.5 h-3.5" />
+                  LOG DAILY MOOD & REFLECTION
+                </span>
+                <select
+                  value={selectedMood}
+                  onChange={(e) => setSelectedMood(e.target.value)}
+                  className={`px-2 py-1 rounded-lg text-xs font-medium border focus:outline-none ${
+                    isDark ? "bg-neutral-800 border-neutral-700 text-white" : "bg-white border-neutral-300 text-black"
+                  }`}
+                >
+                  {MOOD_OPTIONS.map((m) => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
 
-            <div className="space-y-2">
-              {MOOD_PRESETS.map((preset) => {
-                const isSelected = state.activeMoodMode === preset.id;
-                const IconComp =
-                  preset.id === "DEEP_FOCUS" ? Target :
-                  preset.id === "HIGH_ENERGY" ? Zap :
-                  preset.id === "CALM_STEADY" ? Coffee :
-                  preset.id === "MINDFUL" ? Smile : Compass;
+              <textarea
+                value={newMoodText}
+                onChange={(e) => setNewMoodText(e.target.value)}
+                placeholder="How did your focus session go? Write a reflection..."
+                rows={2}
+                className={`w-full p-2 rounded-lg text-xs border focus:outline-none ${
+                  isDark
+                    ? "bg-black border-neutral-800 text-white placeholder-neutral-600 focus:border-white"
+                    : "bg-white border-neutral-300 text-black placeholder-neutral-400 focus:border-black"
+                }`}
+              />
+              <button
+                type="submit"
+                className={`py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                  isDark ? "bg-white text-black border-white hover:bg-neutral-200" : "bg-black text-white border-black hover:bg-neutral-800"
+                }`}
+              >
+                Save Reflection
+              </button>
+            </form>
 
-                return (
-                  <button
-                    key={preset.id}
-                    onClick={() => selectMoodMode(preset.id)}
-                    className={`w-full p-3 rounded-xl border text-left flex items-start justify-between gap-3 transition-all ${
-                      isSelected
-                        ? isDark ? "bg-white text-black border-white shadow-lg" : "bg-black text-white border-black shadow-lg"
-                        : isDark ? "bg-neutral-900/60 border-neutral-800 text-neutral-300 hover:bg-neutral-800" : "bg-neutral-50 border-neutral-200 text-neutral-700 hover:bg-neutral-100"
-                    }`}
-                  >
-                    <div className="flex items-start gap-3">
-                      <div className={`p-2 rounded-lg mt-0.5 ${
-                        isSelected
-                          ? isDark ? "bg-black text-white" : "bg-white text-black"
-                          : isDark ? "bg-neutral-800 text-neutral-300" : "bg-neutral-200 text-neutral-700"
+            {/* List of Mood Notes */}
+            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+              <div className={`text-[10px] font-mono uppercase tracking-wider ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
+                Saved Reflections ({state.moodNotes.length})
+              </div>
+
+              {state.moodNotes.length === 0 ? (
+                <div className={`text-center py-8 text-xs font-mono ${isDark ? "text-neutral-600" : "text-neutral-400"}`}>
+                  NO MOOD REFLECTIONS SAVED YET.
+                </div>
+              ) : (
+                state.moodNotes.map((note) => (
+                  <div key={note.id} className={`p-3 rounded-xl border flex flex-col gap-1 text-xs transition-all ${
+                    isDark ? "bg-neutral-900/60 border-neutral-800 text-neutral-300" : "bg-neutral-50 border-neutral-200 text-neutral-800"
+                  }`}>
+                    <div className="flex items-center justify-between text-[10px] font-mono">
+                      <span className={`font-bold px-1.5 py-0.5 rounded border ${
+                        isDark ? "bg-neutral-800 text-white border-neutral-700" : "bg-neutral-200 text-black border-neutral-300"
                       }`}>
-                        <IconComp className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-xs font-bold font-mono">{preset.title}</h4>
-                          <span className={`text-[9px] font-mono px-1.5 py-0.2 rounded border ${
-                            isSelected
-                              ? isDark ? "bg-black/20 border-black/30" : "bg-white/20 border-white/30"
-                              : isDark ? "bg-neutral-800 border-neutral-700" : "bg-neutral-200 border-neutral-300"
-                          }`}>
-                            {preset.suggestedWorkMin}m
-                          </span>
-                        </div>
-                        <p className="text-[11px] opacity-80 mt-0.5">{preset.tagline}</p>
+                        {note.mood}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="opacity-60">{note.date}</span>
+                        <button
+                          onClick={() => deleteMoodNote(note.id)}
+                          className={`p-0.5 ${isDark ? "text-neutral-500 hover:text-white" : "text-neutral-400 hover:text-black"}`}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
                       </div>
                     </div>
-
-                    {isSelected && (
-                      <span className="text-xs font-bold font-mono uppercase tracking-wider">ACTIVE</span>
-                    )}
-                  </button>
-                );
-              })}
+                    <p className="text-xs leading-relaxed mt-1">{note.text}</p>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
@@ -781,45 +746,22 @@ export function Popup() {
               </div>
             </div>
 
-            {/* Reflection Note */}
-            <form onSubmit={addMoodNote} className={`p-3 rounded-xl border flex flex-col gap-2 ${
-              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
-            }`}>
-              <span className="text-xs font-bold font-mono">LOG REFLECTION ({activePreset.title})</span>
-              <textarea
-                value={newMoodText}
-                onChange={(e) => setNewMoodText(e.target.value)}
-                placeholder="Log a reflection for this session..."
-                rows={2}
-                className={`w-full p-2 rounded-lg text-xs border focus:outline-none ${
-                  isDark
-                    ? "bg-black border-neutral-800 text-white placeholder-neutral-600 focus:border-white"
-                    : "bg-white border-neutral-300 text-black placeholder-neutral-400 focus:border-black"
-                }`}
-              />
-              <button
-                type="submit"
-                className={`py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                  isDark ? "bg-white text-black border-white hover:bg-neutral-200" : "bg-black text-white border-black hover:bg-neutral-800"
-                }`}
-              >
-                Save Reflection
-              </button>
-            </form>
-
             <div className="space-y-1.5">
-              <span className={`text-[10px] font-mono uppercase tracking-wider ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>Recent Reflections</span>
-              {state.moodNotes.slice(0, 3).map((note) => (
-                <div key={note.id} className={`p-2.5 rounded-xl border text-xs ${
-                  isDark ? "bg-neutral-900/40 border-neutral-800 text-neutral-300" : "bg-neutral-50 border-neutral-200 text-neutral-700"
-                }`}>
-                  <div className="flex items-center justify-between text-[9px] font-mono opacity-60 mb-1">
-                    <span>{note.mood}</span>
-                    <span>{note.date}</span>
-                  </div>
-                  <p className="text-xs leading-relaxed">{note.text}</p>
+              <span className={`text-[10px] font-mono uppercase tracking-wider ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>Completed Sessions Log ({state.sessions.length})</span>
+              {state.sessions.length === 0 ? (
+                <div className={`p-3 rounded-xl border text-xs font-mono text-center ${isDark ? "bg-neutral-900/30 border-neutral-800 text-neutral-500" : "bg-neutral-50 border-neutral-200 text-neutral-400"}`}>
+                  No completed sessions today yet.
                 </div>
-              ))}
+              ) : (
+                state.sessions.map((s) => (
+                  <div key={s.id} className={`p-2.5 rounded-xl border flex items-center justify-between text-xs font-mono ${
+                    isDark ? "bg-neutral-900/40 border-neutral-800 text-neutral-300" : "bg-neutral-50 border-neutral-200 text-neutral-700"
+                  }`}>
+                    <span>{s.sessionName || "Work Session"}</span>
+                    <span className="opacity-60">{Math.round(s.duration / 60)}m</span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
