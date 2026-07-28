@@ -29,9 +29,10 @@ import {
   FolderPlus,
   ArrowRight,
   ListTodo,
-  Edit3
+  Edit3,
+  Layers
 } from "lucide-react";
-import { AppStateData, TodoItem, PriorityType, RecurringType } from "../types";
+import { AppStateData, TodoItem, PriorityType, RecurringType, BackgroundTheme } from "../types";
 import { getStoredState, saveStoredState, subscribeToStateChanges } from "../lib/storage";
 import "../index.css";
 
@@ -53,12 +54,22 @@ const DISTRACTION_CATEGORIES = [
   "❓ Other"
 ];
 
+const BACKGROUND_THEMES: { id: BackgroundTheme; name: string }[] = [
+  { id: "default", name: "Solid Monochrome" },
+  { id: "gradient", name: "Minimal Gradient" },
+  { id: "mountain", name: "Geometric Outline" },
+  { id: "library", name: "Vertical Stripes" },
+  { id: "cafe", name: "Diagonal Crosshatch" },
+  { id: "anime-room", name: "Dot Matrix Pattern" }
+];
+
 export function Popup() {
   const [state, setState] = useState<AppStateData | null>(null);
   const [activeTab, setActiveTab] = useState<"timer" | "tasks" | "shield" | "notes" | "stats">("timer");
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showDistractionPicker, setShowDistractionPicker] = useState(false);
+  const [showThemePicker, setShowThemePicker] = useState(false);
   const [selectedTaskDetail, setSelectedTaskDetail] = useState<TodoItem | null>(null);
 
   // Local inputs
@@ -166,7 +177,7 @@ export function Popup() {
     });
   };
 
-  // Complete session: flow break = flow_duration / 5
+  // Complete session: Flow break = elapsedFlowSeconds / 5 (e.g., 5s flow -> 1s break, 10s flow -> 2s break)
   const completeSession = () => {
     const isWorkOrFlow = state.timerState === "WORK" || state.timerState === "FLOW";
     const durationLogged = state.timerState === "FLOW" ? state.timeLeft : (state.pomodoroSettings.work * 60 - state.timeLeft);
@@ -179,7 +190,7 @@ export function Popup() {
     const newSession = {
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
-      duration: durationLogged > 0 ? durationLogged : 60,
+      duration: durationLogged > 0 ? durationLogged : 1,
       mode: state.timerMode,
       sessionName: state.sessionName || "Focus Session",
       todoId: state.selectedTodoId || undefined
@@ -200,9 +211,9 @@ export function Popup() {
     if (isWorkOrFlow) {
       prevMode = state.timerState === "FLOW" ? "FLOW" : "POMODORO";
       nextState = "BREAK";
-      // Flow mode break = duration / 5 (minimum 1 minute / 60 seconds)
+      // Flow break = flow_seconds / 5 (Exact math: 5s -> 1s break, 10s -> 2s break)
       nextTime = state.timerState === "FLOW"
-        ? Math.max(60, Math.floor(state.timeLeft / 5))
+        ? Math.max(1, Math.floor(state.timeLeft / 5))
         : state.pomodoroSettings.break * 60;
     } else {
       // Return to previous mode after break completes
@@ -230,7 +241,7 @@ export function Popup() {
     });
   };
 
-  // Log Distraction with category selection
+  // Log Distraction automatically pauses the timer!
   const selectDistractionCategory = (category: string) => {
     const entry = {
       id: crypto.randomUUID(),
@@ -238,6 +249,7 @@ export function Popup() {
       category
     };
     updateState({
+      isActive: false, // PAUSE TIMER ON DISTRACTION LOG
       distractions: [...state.distractions, entry]
     });
     setShowDistractionPicker(false);
@@ -285,7 +297,7 @@ export function Popup() {
     }
   };
 
-  // Task Handlers (without instant priority selector)
+  // Task Handlers
   const addTodo = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTaskText.trim()) return;
@@ -455,14 +467,28 @@ export function Popup() {
     distractionCounts[cat] = (distractionCounts[cat] || 0) + 1;
   });
 
+  // Vector Background Pattern Class computation (0 bitmap images!)
+  const bgClass =
+    state.background === "gradient"
+      ? (isDark ? "bg-gradient-to-br from-black via-neutral-950 to-neutral-900" : "bg-gradient-to-br from-white via-neutral-100 to-neutral-200")
+      : state.background === "mountain"
+      ? (isDark ? "bg-[radial-gradient(#262626_1px,transparent_1px)] [background-size:16px_16px] bg-black" : "bg-[radial-gradient(#d4d4d4_1px,transparent_1px)] [background-size:16px_16px] bg-white")
+      : state.background === "library"
+      ? (isDark ? "bg-[linear-gradient(to_right,#171717_1px,transparent_1px)] [background-size:24px_100%] bg-black" : "bg-[linear-gradient(to_right,#e5e5e5_1px,transparent_1px)] [background-size:24px_100%] bg-white")
+      : state.background === "cafe"
+      ? (isDark ? "bg-[repeating-linear-gradient(45deg,#171717,#171717_1px,transparent_0,transparent_16px)] bg-black" : "bg-[repeating-linear-gradient(45deg,#f5f5f5,#f5f5f5_1px,transparent_0,transparent_16px)] bg-white")
+      : state.background === "anime-room"
+      ? (isDark ? "bg-[radial-gradient(#404040_1px,transparent_1px)] [background-size:12px_12px] bg-black" : "bg-[radial-gradient(#a3a3a3_1px,transparent_1px)] [background-size:12px_12px] bg-white")
+      : (isDark ? "bg-black" : "bg-white");
+
   return (
     <div className={`w-[420px] h-[580px] flex flex-col overflow-hidden select-none font-sans relative ${
-      isDark ? "bg-black text-white" : "bg-white text-black"
-    }`}>
+      isDark ? "text-white" : "text-black"
+    } ${bgClass}`}>
       {/* Top Header */}
       <header className={`px-4 py-3 border-b flex items-center justify-between z-10 ${
-        isDark ? "bg-neutral-950 border-neutral-800" : "bg-neutral-100 border-neutral-200"
-      }`}>
+        isDark ? "bg-neutral-950/80 border-neutral-800" : "bg-neutral-100/80 border-neutral-200"
+      } backdrop-blur-sm`}>
         <div className="flex items-center gap-2.5">
           <div className={`w-7 h-7 rounded-lg border flex items-center justify-center font-bold text-xs font-mono ${
             isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
@@ -476,11 +502,25 @@ export function Popup() {
           </div>
         </div>
 
-        {/* Action Controls: Theme Toggle + Info Button */}
-        <div className="flex items-center gap-2">
+        {/* Action Controls: Theme Mode Toggle + Background Theme Switcher + Info Button */}
+        <div className="flex items-center gap-1.5">
+          {/* Background Theme Selector Button */}
+          <button
+            onClick={() => setShowThemePicker(!showThemePicker)}
+            className={`p-1.5 rounded-lg border transition-all flex items-center justify-center ${
+              showThemePicker
+                ? isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
+                : isDark ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800" : "bg-white border-neutral-300 text-black hover:bg-neutral-100"
+            }`}
+            title="Choose Background Theme"
+          >
+            <Layers className="w-4 h-4" />
+          </button>
+
+          {/* Dark / Light Toggle */}
           <button
             onClick={toggleThemeMode}
-            className={`p-2 rounded-lg border transition-all flex items-center justify-center ${
+            className={`p-1.5 rounded-lg border transition-all flex items-center justify-center ${
               isDark
                 ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800"
                 : "bg-white border-neutral-300 text-black hover:bg-neutral-100"
@@ -490,9 +530,10 @@ export function Popup() {
             {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
 
+          {/* Info Button */}
           <button
             onClick={() => setShowInfoModal(!showInfoModal)}
-            className={`p-2 rounded-lg border transition-all flex items-center justify-center ${
+            className={`p-1.5 rounded-lg border transition-all flex items-center justify-center ${
               showInfoModal
                 ? isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
                 : isDark ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800" : "bg-white border-neutral-300 text-black hover:bg-neutral-100"
@@ -503,6 +544,32 @@ export function Popup() {
           </button>
         </div>
       </header>
+
+      {/* Background Theme Selector Picker Overlay */}
+      {showThemePicker && (
+        <div className={`absolute top-14 right-4 z-50 p-3 rounded-xl border shadow-2xl flex flex-col gap-1 text-xs font-mono animate-in fade-in duration-150 ${
+          isDark ? "bg-neutral-950 border-neutral-700 text-white" : "bg-white border-neutral-300 text-black"
+        }`}>
+          <div className="text-[10px] font-bold uppercase opacity-60 px-2 py-1 border-b border-current">SELECT BACKGROUND PATTERN</div>
+          {BACKGROUND_THEMES.map((theme) => (
+            <button
+              key={theme.id}
+              onClick={() => {
+                updateState({ background: theme.id });
+                setShowThemePicker(false);
+              }}
+              className={`px-3 py-1.5 rounded-lg text-left font-bold transition-all flex items-center justify-between ${
+                state.background === theme.id
+                  ? isDark ? "bg-white text-black" : "bg-black text-white"
+                  : isDark ? "hover:bg-neutral-800" : "hover:bg-neutral-100"
+              }`}
+            >
+              <span>{theme.name}</span>
+              {state.background === theme.id && <span className="text-[10px]">✓</span>}
+            </button>
+          ))}
+        </div>
+      )}
 
       {/* Info Modal Overlay (1 short description) */}
       {showInfoModal && (
@@ -547,7 +614,7 @@ export function Popup() {
         </div>
       )}
 
-      {/* Distraction Picker Modal */}
+      {/* Distraction Picker Modal (Selecting pauses timer!) */}
       {showDistractionPicker && (
         <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
           isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
@@ -568,7 +635,7 @@ export function Popup() {
           </div>
 
           <div className="space-y-2 my-auto">
-            <p className="text-xs font-mono text-center mb-3 opacity-80">Select what distracted you:</p>
+            <p className="text-xs font-mono text-center mb-3 opacity-80">Select what distracted you (Timer paused):</p>
             {DISTRACTION_CATEGORIES.map((cat) => (
               <button
                 key={cat}
@@ -965,7 +1032,7 @@ export function Popup() {
         {/* TIMER TAB */}
         {activeTab === "timer" && (
           <div className="flex flex-col items-center justify-between h-full py-1">
-            {/* 3-Way Mode Switcher without emoji on Flow */}
+            {/* 3-Way Mode Switcher (Work, Break, Flow without emoji) */}
             <div className={`flex items-center p-1 rounded-xl border w-full max-w-[320px] ${
               isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-100 border-neutral-300"
             }`}>
@@ -1086,9 +1153,9 @@ export function Popup() {
               </div>
             )}
 
-            {/* Control Buttons (Strict Monochrome styling for all icons) */}
+            {/* Control Buttons Grid (Log Distraction, Reset, Play/Pause, Complete, Settings) */}
             <div className="flex items-center gap-2">
-              {/* I got distracted button (title: "Log Distraction") */}
+              {/* Log Distraction Button (title: "Log Distraction") */}
               <button
                 onClick={() => setShowDistractionPicker(true)}
                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
@@ -1126,7 +1193,7 @@ export function Popup() {
                 {state.isActive ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
               </button>
 
-              {/* Complete Session Button (Strict Monochrome) */}
+              {/* Complete Session Button */}
               <button
                 onClick={completeSession}
                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
@@ -1472,19 +1539,15 @@ export function Popup() {
               </div>
             </div>
 
-            {/* Streak & Task Done Rate Underneath */}
+            {/* Streak (Vertical current and best streak) & Task Done Rate Underneath */}
             <div className="grid grid-cols-2 gap-2">
-              <div className={`p-2.5 rounded-xl border flex items-center justify-between ${
+              <div className={`p-2.5 rounded-xl border flex items-center gap-2 ${
                 isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
               }`}>
-                <div className="flex items-center gap-2">
-                  <Flame className="w-4 h-4 text-amber-400" />
-                  <div>
-                    <div className="text-[9px] uppercase tracking-wider font-mono opacity-60">STREAK</div>
-                    <div className="text-xs font-bold font-mono">
-                      Current: {state.stats.streakDays}d | Best: {state.stats.longestStreak}d
-                    </div>
-                  </div>
+                <Flame className="w-5 h-5 flex-shrink-0" />
+                <div className="flex flex-col text-[11px] font-mono leading-tight">
+                  <div>Current: <b>{state.stats.streakDays}d</b></div>
+                  <div>Best: <b>{state.stats.longestStreak}d</b></div>
                 </div>
               </div>
 
@@ -1492,7 +1555,7 @@ export function Popup() {
                 isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
               }`}>
                 <div className="flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-emerald-400" />
+                  <BarChart3 className="w-4 h-4" />
                   <div>
                     <div className="text-[9px] uppercase tracking-wider font-mono opacity-60">TASK DONE RATE</div>
                     <div className="text-xs font-bold font-mono">
@@ -1512,16 +1575,15 @@ export function Popup() {
                 {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => {
                   const minsLogged = state.stats.weeklyMinutes[day] || 0;
                   const maxMins = 120;
-                  const heightPercent = Math.min(100, Math.max(8, Math.round((minsLogged / maxMins) * 100)));
+                  const heightPercent = minsLogged > 0 ? Math.min(100, Math.max(10, Math.round((minsLogged / maxMins) * 100))) : 4;
                   return (
                     <div
                       key={day}
                       className="flex-1 flex flex-col items-center gap-1 h-full justify-end group relative cursor-pointer"
-                      title={`${day}: ${minsLogged} mins`}
                     >
-                      {/* Tooltip on hover */}
-                      <div className={`absolute -top-7 px-2 py-1 rounded text-[9px] font-mono font-bold border pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap ${
-                        isDark ? "bg-white text-black border-white shadow-lg" : "bg-black text-white border-black shadow-lg"
+                      {/* Hover Tooltip showing exact length */}
+                      <div className={`absolute -top-7 px-2 py-1 rounded text-[9px] font-mono font-bold border pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap shadow-lg ${
+                        isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
                       }`}>
                         {day}: {minsLogged} mins
                       </div>
@@ -1529,7 +1591,9 @@ export function Popup() {
                       <span className="text-[8px] font-mono opacity-60">{minsLogged}m</span>
                       <div
                         className={`w-full rounded-t transition-all duration-300 ${
-                          isDark ? "bg-white group-hover:bg-neutral-300" : "bg-black group-hover:bg-neutral-700"
+                          minsLogged > 0
+                            ? isDark ? "bg-white group-hover:bg-neutral-300" : "bg-black group-hover:bg-neutral-700"
+                            : isDark ? "bg-neutral-800" : "bg-neutral-200"
                         }`}
                         style={{ height: `${heightPercent}%` }}
                       />

@@ -1,9 +1,10 @@
 import { AppStateData } from "../types";
 
-const STORAGE_KEY = "focus_extension_state_v5";
+const STORAGE_KEY = "focus_extension_state_v6";
 
 export const DEFAULT_STATE: AppStateData = {
   themeMode: "dark",
+  background: "default",
   timerMode: "POMODORO",
   timerState: "WORK",
   previousMode: "POMODORO",
@@ -11,60 +12,20 @@ export const DEFAULT_STATE: AppStateData = {
   isActive: false,
   sessionStartTime: null,
   sessionName: "",
-  selectedTodoId: "demo-1",
+  selectedTodoId: null,
   pomodoroSettings: {
     work: 25,
     break: 5,
     autoStartBreak: false,
   },
-  todos: [
-    {
-      id: "demo-1",
-      text: "Build extension feature set",
-      description: "Complete key requirements for the Focus extension",
-      completed: false,
-      priority: "urgent",
-      groupId: "current",
-      dueDate: new Date().toISOString().split("T")[0],
-      dueTime: "18:00",
-      notes: "Focus on clean monochrome UX and robust timer reactivity",
-      recurring: "none",
-      estimatedPomodoros: 4,
-      completedPomodoros: 1,
-      subtasks: [
-        { id: "sub-1", text: "Implement Flow stopwatch mode", completed: true },
-        { id: "sub-2", text: "Add distraction button & settings modal", completed: false }
-      ]
-    },
-    {
-      id: "demo-2",
-      text: "Review focus analytics & weekly trend",
-      description: "Analyze daily focus minutes and completion rates",
-      completed: false,
-      priority: "medium",
-      groupId: "current",
-      estimatedPomodoros: 2,
-      completedPomodoros: 0,
-      subtasks: []
-    }
-  ],
+  todos: [],
   groups: [
     { id: "current", name: "Current Tasks", type: "system" },
     { id: "finished", name: "Finished", type: "system" }
   ],
-  moodNotes: [
-    {
-      id: "note-1",
-      date: new Date().toISOString().split("T")[0],
-      mood: "😊 Calm",
-      text: "Productive morning session with clear goals."
-    }
-  ],
+  moodNotes: [],
   sessions: [],
-  distractions: [
-    { id: "dist-1", timestamp: new Date().toISOString(), category: "Phone" },
-    { id: "dist-2", timestamp: new Date().toISOString(), category: "Social Media" }
-  ],
+  distractions: [],
   shield: {
     enabled: true,
     blockedSites: [
@@ -78,18 +39,18 @@ export const DEFAULT_STATE: AppStateData = {
     ]
   },
   stats: {
-    todayMinutes: 50,
-    completedTasksCount: 2,
-    streakDays: 5,
-    longestStreak: 8,
+    todayMinutes: 0,
+    completedTasksCount: 0,
+    streakDays: 0,
+    longestStreak: 0,
     weeklyMinutes: {
-      "Mon": 45,
-      "Tue": 60,
-      "Wed": 50,
-      "Thu": 75,
-      "Fri": 30,
-      "Sat": 90,
-      "Sun": 40
+      "Mon": 0,
+      "Tue": 0,
+      "Wed": 0,
+      "Thu": 0,
+      "Fri": 0,
+      "Sat": 0,
+      "Sun": 0
     }
   }
 };
