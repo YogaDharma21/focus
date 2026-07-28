@@ -1,98 +1,69 @@
-# 🎯 Focus
+# Starter Kit
 
-[![Version](https://img.shields.io/badge/Version-v1.1.0-blue?style=for-the-badge)](https://github.com/YogaDharma21/focus)
-[![Next.js](https://img.shields.io/badge/Next.js-16.1.6-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
-[![React](https://img.shields.io/badge/React-19.2.3-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4.0-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Zustand](https://img.shields.io/badge/Zustand-State_Management-443E38?style=for-the-badge)](https://zustand-demo.pmnd.rs/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+A **polyglot monorepo** template for managing multiple independent projects in various languages and frameworks.
 
-**Focus** is a modern, minimalist productivity web application designed to keep you in flow state. Featuring customizable Pomodoro and Flow timers, deep focus mode, automated break duration calculations, task management, distraction tracking, mood notes, and an ambient media player.
+## Philosophy
 
-![Focus Main Dashboard](./public/screenshots/screenshot-main.png)
+- **No shared code** - Each app is completely independent
+- **Each app lives alone** - Self-contained with own dependencies, build system, and configuration
+- **Language agnostic** - Use any framework or language per app
 
----
+## Project Structure
 
-## ✨ Features
+```
+apps/           # All projects (web, mobile, desktop, backend, cli)
+├── web/        # Frontend applications
+├── mobile/     # Mobile applications
+├── desktop/    # Desktop applications
+├── backend/    # Backend services
+└── cli/        # Command-line tools
 
-- **⏱️ Focus & Flow Timers**: Flexible Pomodoro and Flow (Stopwatch) modes.
-- **🧮 Smart Flow Break Time**: Automatically calculates break duration as 1/5th of your Flow session length (e.g. 10 mins flow $\rightarrow$ 2 mins break).
-- **🧘 Deep Focus Mode**: Distraction-free immersive view with custom session controls and keyboard shortcuts (`Esc` / `F`).
-- **📝 Focus Session Custom Tasks**: Type custom focus goals directly into the timer and press `Enter` to instantly create and select new tasks.
-- **✅ Task Management**: Organize tasks into groups, subtasks, estimated pomodoros, and recurring items.
-- **📊 Stats & Productivity Trend**: Track daily focus minutes, completion rates, streak metrics, distraction breakdown, and weekly trend visualization.
-- **💭 Mood & Notes**: Record your mood, thoughts, and reflections.
-- **🎵 Ambient Media Player**: Background music player supporting YouTube playlists, Spotify embeds, and local focus tracks (auto-collapses on smaller screens).
-- **🎨 Custom Backgrounds**: Dynamic backgrounds including dark gradients, mountain scenes, cozy cafes, and anime rooms.
+docker/         # Docker configurations
+docs/           # Architecture documentation
+scripts/        # Utility scripts
+.github/        # CI/CD workflows
+```
 
----
-
-## 📸 Gallery
-
-<details open>
-<summary>Click to toggle screenshots</summary>
-
-### ⏱️ Focus Session
-![Main Dashboard](./public/screenshots/screenshot-main.png)
-
-### ✅ Task Management
-![Task Management](./public/screenshots/screenshot-tasks.png)
-
-### 📊 Stats & Trend Analytics
-![Stats & Journal](./public/screenshots/screenshot-stats.png)
-
-### 💭 Mood & Notes
-![Mood Notes](./public/screenshots/screenshot-mood.png)
-
-</details>
-
----
-
-## 🛠️ Tech Stack
-
-- **Framework**: [Next.js](https://nextjs.org/) (App Router), [React](https://reactjs.org/)
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/), [shadcn/ui](https://ui.shadcn.com/)
-- **Icons**: [Lucide React](https://lucide.dev/)
-- **State Management**: [Zustand](https://zustand-demo.pmnd.rs/) with Persistence
-- **Utilities**: [date-fns](https://date-fns.org/)
-
----
-
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
-- Node.js (v18+ recommended)
-- npm / yarn / pnpm
+- [Node.js](https://nodejs.org/) (for JS/TS projects)
+- [Docker](https://www.docker.com/) (for containerization)
+- [Python](https://www.python.org/) (for Python projects)
+- [Go](https://go.dev/) (for Go projects)
+- [Rust](https://www.rust-lang.org/) (for Rust projects)
 
-### Installation
+### Creating a New App
 
-1. **Clone the repository:**
+1. Navigate to the appropriate folder under `apps/`
+2. Initialize your project:
 
-    ```bash
-    git clone https://github.com/YogaDharma21/focus.git
-    cd focus
-    ```
+```bash
+# Example: Creating a new web app
+cd apps/web
+npm create vite@latest my-app -- --template react
+```
 
-2. **Install dependencies:**
+3. Update the CI workflow in `.github/workflows/ci.yml` if needed
 
-    ```bash
-    npm install
-    ```
+### Running with Docker
 
-3. **Run the development server:**
+```bash
+# Start all services
+docker-compose -f docker/docker-compose.yml up
 
-    ```bash
-    npm run dev
-    ```
+# Start specific service
+docker-compose -f docker/docker-compose.yml up web
+```
 
-4. **Open your browser:**
-   Navigate to [http://localhost:3000](http://localhost:3000) to start focusing.
+## CI/CD
 
----
+This repository uses GitHub Actions with path-based filtering:
+- Changes to `apps/web/**` trigger web app builds
+- Changes to `apps/backend/**` trigger backend builds
+- Each app category has its own job
 
-## 📝 License
+## License
 
-Distributed under the MIT License. See `LICENSE` for more information.
+[MIT](LICENSE)
