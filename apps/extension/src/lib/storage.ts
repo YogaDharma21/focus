@@ -1,6 +1,6 @@
 import { AppStateData } from "../types";
 
-const STORAGE_KEY = "focus_extension_state_v3";
+const STORAGE_KEY = "focus_extension_state_v4";
 
 export const DEFAULT_STATE: AppStateData = {
   themeMode: "dark",
@@ -10,6 +10,7 @@ export const DEFAULT_STATE: AppStateData = {
   isActive: false,
   sessionStartTime: null,
   sessionName: "",
+  selectedTodoId: "demo-1",
   pomodoroSettings: {
     work: 25,
     break: 5,
@@ -18,29 +19,45 @@ export const DEFAULT_STATE: AppStateData = {
   todos: [
     {
       id: "demo-1",
-      text: "Set up daily focus goals",
+      text: "Build extension feature set",
+      description: "Complete key requirements for the Focus extension",
       completed: false,
-      priority: "high",
-      category: "Productivity",
+      priority: "urgent",
+      groupId: "current",
+      dueDate: new Date().toISOString().split("T")[0],
+      dueTime: "18:00",
+      notes: "Focus on clean monochrome UX and robust timer reactivity",
+      recurring: "none",
+      estimatedPomodoros: 4,
+      completedPomodoros: 1,
       subtasks: [
-        { id: "sub-1", text: "Choose key priorities", completed: true },
-        { id: "sub-2", text: "Start 25-minute Pomodoro session", completed: false }
+        { id: "sub-1", text: "Implement Flow stopwatch mode", completed: true },
+        { id: "sub-2", text: "Add distraction button & settings modal", completed: false },
+        { id: "sub-3", text: "Build task details drawer", completed: false }
       ]
     },
     {
       id: "demo-2",
-      text: "Review focus analytics",
+      text: "Review focus analytics & weekly trend",
+      description: "Analyze daily focus minutes and completion rates",
       completed: false,
       priority: "medium",
-      category: "Work"
+      groupId: "current",
+      estimatedPomodoros: 2,
+      completedPomodoros: 0,
+      subtasks: []
     }
+  ],
+  groups: [
+    { id: "current", name: "Current Tasks", type: "system" },
+    { id: "finished", name: "Finished", type: "system" }
   ],
   moodNotes: [
     {
       id: "note-1",
       date: new Date().toISOString().split("T")[0],
-      mood: "Focused",
-      text: "Started the morning with zero distractions and completed primary tasks!"
+      mood: "😊 Calm",
+      text: "Productive morning session with clear goals."
     }
   ],
   sessions: [],
@@ -58,9 +75,19 @@ export const DEFAULT_STATE: AppStateData = {
     ]
   },
   stats: {
-    todayMinutes: 45,
-    completedTasksCount: 3,
-    streakDays: 4
+    todayMinutes: 50,
+    completedTasksCount: 2,
+    streakDays: 5,
+    longestStreak: 8,
+    weeklyMinutes: {
+      "Mon": 45,
+      "Tue": 60,
+      "Wed": 50,
+      "Thu": 75,
+      "Fri": 30,
+      "Sat": 90,
+      "Sun": 40
+    }
   }
 };
 

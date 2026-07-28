@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import {
-  Timer,
+  Timer as TimerIcon,
   CheckSquare,
   Shield,
   BarChart3,
   Play,
   Pause,
   RotateCcw,
-  SkipForward,
+  CheckCircle,
   Plus,
   Trash2,
   ExternalLink,
@@ -23,38 +23,60 @@ import {
   Github,
   BookOpen,
   X,
-  MessageSquarePlus
+  MessageSquarePlus,
+  Settings,
+  AlertTriangle,
+  FolderPlus,
+  ArrowRight,
+  ListTodo,
+  Calendar,
+  ChevronRight,
+  Edit3
 } from "lucide-react";
-import { AppStateData, TodoItem } from "../types";
+import { AppStateData, TodoItem, PriorityType, RecurringType } from "../types";
 import { getStoredState, saveStoredState, subscribeToStateChanges } from "../lib/storage";
 import "../index.css";
 
-const MOOD_OPTIONS = [
-  "🎯 Focused",
-  "🔥 Energetic",
-  "☕ Calm",
-  "⚡ Productive",
-  "😴 Tired",
-  "🧘 Mindful",
-  "🚀 Driven"
+const MOOD_EMOJIS = [
+  "😄 Happy",
+  "😊 Calm",
+  "😐 Normal",
+  "😔 Sad",
+  "😤 Frustrated",
+  "😴 Exhausted",
+  "🤯 Overwhelmed"
 ];
 
 export function Popup() {
   const [state, setState] = useState<AppStateData | null>(null);
   const [activeTab, setActiveTab] = useState<"timer" | "tasks" | "shield" | "notes" | "stats">("timer");
   const [showInfoModal, setShowInfoModal] = useState(false);
+  const [showSettingsModal, setShowSettingsModal] = useState(false);
+  const [selectedTaskDetail, setSelectedTaskDetail] = useState<TodoItem | null>(null);
 
-  // Local input states
+  // Local inputs
   const [newTaskText, setNewTaskText] = useState("");
-  const [newTaskPriority, setNewTaskPriority] = useState<"low" | "medium" | "high" | "urgent">("medium");
+  const [newTaskPriority, setNewTaskPriority] = useState<PriorityType>("medium");
+  const [activeGroupId, setActiveGroupId] = useState<string>("current");
+  const [newGroupName, setNewGroupName] = useState("");
+  const [showAddGroupInput, setShowAddGroupInput] = useState(false);
   const [newSiteUrl, setNewSiteUrl] = useState("");
   const [newMoodText, setNewMoodText] = useState("");
-  const [selectedMood, setSelectedMood] = useState(MOOD_OPTIONS[0]);
+  const [selectedMood, setSelectedMood] = useState(MOOD_EMOJIS[1]); // 😊 Calm
+  const [newSubtaskText, setNewSubtaskText] = useState("");
+
+  // Settings inputs
+  const [workMinsInput, setWorkMinsInput] = useState(25);
+  const [breakMinsInput, setBreakMinsInput] = useState(5);
+  const [autoStartBreakInput, setAutoStartBreakInput] = useState(false);
 
   useEffect(() => {
     getStoredState().then((initial) => {
       setState(initial);
       document.body.className = initial.themeMode || "dark";
+      setWorkMinsInput(initial.pomodoroSettings.work);
+      setBreakMinsInput(initial.pomodoroSettings.break);
+      setAutoStartBreakInput(initial.pomodoroSettings.autoStartBreak);
     });
 
     const unsubscribe = subscribeToStateChanges((updated) => {
@@ -64,6 +86,24 @@ export function Popup() {
 
     return () => unsubscribe();
   }, []);
+
+  // Timer tick interval for UI reactivity when popup is open
+  useEffect(() => {
+    if (!state || !state.isActive) return;
+
+    const interval = setInterval(() => {
+      setState((prev) => {
+        if (!prev || !prev.isActive) return prev;
+        if (prev.timerState === "FLOW") {
+          return { ...prev, timeLeft: prev.timeLeft + 1 };
+        } else {
+          return { ...prev, timeLeft: Math.max(0, prev.timeLeft - 1) };
+        }
+      });
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [state?.isActive, state?.timerState]);
 
   if (!state) {
     return (
@@ -95,17 +135,125 @@ export function Popup() {
   };
 
   const resetTimer = () => {
-    const defaultTime = state.timerState === "WORK" ? state.pomodoroSettings.work * 60 : state.pomodoroSettings.break * 60;
+    let defaultTime = 0;
+    if (state.timerState === "WORK") defaultTime = state.pomodoroSettings.work * 60;
+    else if (state.timerState === "BREAK") defaultTime = state.pomodoroSettings.break * 60;
+    else if (state.timerState === "FLOW") defaultTime = 0;
+
     updateState({ isActive: false, timeLeft: defaultTime });
   };
 
-  const switchTimerState = (timerState: "WORK" | "BREAK") => {
-    const nextTime = timerState === "WORK" ? state.pomodoroSettings.work * 60 : state.pomodoroSettings.break * 60;
+  const switchTimerModeAndState = (mode: "POMODORO" | "FLOW", timerState: "WORK" | "BREAK" | "FLOW") => {
+    let nextTime = 0;
+    if (timerState === "WORK") nextTime = state.pomodoroSettings.work * 60;
+    else if (timerState === "BREAK") nextTime = state.pomodoroSettings.break * 60;
+    else if (timerState === "FLOW") nextTime = 0;
+
     updateState({
+      timerMode: mode,
       timerState,
       isActive: false,
       timeLeft: nextTime
     });
+  };
+
+  // Complete current session manually
+  const completeSession = () => {
+    const isWorkOrFlow = state.timerState === "WORK" || state.timerState === "FLOW";
+    const durationLogged = state.timerState === "FLOW" ? state.timeLeft : (state.pomodoroSettings.work * 60 - state.timeLeft);
+    const minsLogged = Math.max(1, Math.round(durationLogged / 60));
+
+    const dayName = new Date().toLocaleDateString("en-US", { weekday: "short" });
+    const updatedWeekly = { ...state.stats.weeklyMinutes };
+    updatedWeekly[dayName] = (updatedWeekly[dayName] || 0) + (isWorkOrFlow ? minsLogged : 0);
+
+    const newSession = {
+      id: crypto.randomUUID(),
+      date: new Date().toISOString(),
+      duration: durationLogged > 0 ? durationLogged : 60,
+      mode: state.timerMode,
+      sessionName: state.sessionName || "Focus Session",
+      todoId: state.selectedTodoId || undefined
+    };
+
+    // If a task was selected, increment completed pomodoros
+    let updatedTodos = state.todos;
+    if (state.selectedTodoId && isWorkOrFlow) {
+      updatedTodos = state.todos.map(t => t.id === state.selectedTodoId ? {
+        ...t,
+        completedPomodoros: (t.completedPomodoros || 0) + 1
+      } : t);
+    }
+
+    const nextState = isWorkOrFlow ? "BREAK" : "WORK";
+    const nextTime = isWorkOrFlow ? state.pomodoroSettings.break * 60 : state.pomodoroSettings.work * 60;
+
+    updateState({
+      isActive: false,
+      timerState: nextState,
+      timeLeft: nextTime,
+      todos: updatedTodos,
+      sessions: [newSession, ...state.sessions],
+      stats: {
+        ...state.stats,
+        todayMinutes: state.stats.todayMinutes + (isWorkOrFlow ? minsLogged : 0),
+        weeklyMinutes: updatedWeekly
+      }
+    });
+  };
+
+  // Log distraction
+  const logDistraction = () => {
+    const entry = {
+      id: crypto.randomUUID(),
+      timestamp: new Date().toISOString(),
+      category: "Distraction Alert"
+    };
+    updateState({
+      distractions: [...state.distractions, entry]
+    });
+  };
+
+  // Save Settings
+  const saveSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    const work = Math.max(1, workMinsInput);
+    const brk = Math.max(1, breakMinsInput);
+    const newTimeLeft = state.timerState === "WORK" ? work * 60 : brk * 60;
+
+    updateState({
+      pomodoroSettings: {
+        work,
+        break: brk,
+        autoStartBreak: autoStartBreakInput
+      },
+      timeLeft: state.isActive ? state.timeLeft : newTimeLeft
+    });
+    setShowSettingsModal(false);
+  };
+
+  // Goal input key handler (pressing Enter creates a task)
+  const handleGoalKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && state.sessionName.trim()) {
+      e.preventDefault();
+      const existing = state.todos.find(t => t.text.toLowerCase() === state.sessionName.trim().toLowerCase());
+      if (existing) {
+        updateState({ selectedTodoId: existing.id });
+      } else {
+        const newTodo: TodoItem = {
+          id: crypto.randomUUID(),
+          text: state.sessionName.trim(),
+          completed: false,
+          priority: "medium",
+          groupId: "current",
+          subtasks: []
+        };
+        updateState({
+          todos: [newTodo, ...state.todos],
+          selectedTodoId: newTodo.id
+        });
+      }
+    }
   };
 
   // Task Handlers
@@ -116,20 +264,91 @@ export function Popup() {
       id: crypto.randomUUID(),
       text: newTaskText.trim(),
       completed: false,
-      priority: newTaskPriority
+      priority: newTaskPriority,
+      groupId: activeGroupId === "finished" ? "current" : activeGroupId,
+      subtasks: []
     };
     updateState({ todos: [item, ...state.todos] });
     setNewTaskText("");
   };
 
   const toggleTodo = (id: string) => {
-    const updated = state.todos.map(t => t.id === id ? { ...t, completed: !t.completed, completedAt: !t.completed ? new Date().toISOString() : undefined } : t);
+    const updated = state.todos.map(t => {
+      if (t.id === id) {
+        const nextCompleted = !t.completed;
+        return {
+          ...t,
+          completed: nextCompleted,
+          completedAt: nextCompleted ? new Date().toISOString() : undefined,
+          groupId: nextCompleted ? "finished" : "current"
+        };
+      }
+      return t;
+    });
     const completedCount = updated.filter(t => t.completed).length;
     updateState({ todos: updated, stats: { ...state.stats, completedTasksCount: completedCount } });
   };
 
   const deleteTodo = (id: string) => {
-    updateState({ todos: state.todos.filter(t => t.id !== id) });
+    updateState({
+      todos: state.todos.filter(t => t.id !== id),
+      selectedTodoId: state.selectedTodoId === id ? null : state.selectedTodoId
+    });
+    if (selectedTaskDetail?.id === id) setSelectedTaskDetail(null);
+  };
+
+  const focusOnTask = (task: TodoItem) => {
+    updateState({
+      selectedTodoId: task.id,
+      sessionName: task.text
+    });
+    setSelectedTaskDetail(null);
+    setActiveTab("timer");
+  };
+
+  // Subtask Handlers inside Task Detail or Timer
+  const addSubtask = (todoId: string, text: string) => {
+    if (!text.trim()) return;
+    const updated = state.todos.map(t => {
+      if (t.id === todoId) {
+        const newSub = { id: crypto.randomUUID(), text: text.trim(), completed: false };
+        return { ...t, subtasks: [...(t.subtasks || []), newSub] };
+      }
+      return t;
+    });
+    updateState({ todos: updated });
+    if (selectedTaskDetail?.id === todoId) {
+      setSelectedTaskDetail(updated.find(t => t.id === todoId) || null);
+    }
+  };
+
+  const toggleSubtask = (todoId: string, subId: string) => {
+    const updated = state.todos.map(t => {
+      if (t.id === todoId) {
+        const subs = (t.subtasks || []).map(s => s.id === subId ? { ...s, completed: !s.completed } : s);
+        return { ...t, subtasks: subs };
+      }
+      return t;
+    });
+    updateState({ todos: updated });
+    if (selectedTaskDetail?.id === todoId) {
+      setSelectedTaskDetail(updated.find(t => t.id === todoId) || null);
+    }
+  };
+
+  // Group Handlers
+  const addCustomGroup = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newGroupName.trim()) return;
+    const newGroup = {
+      id: crypto.randomUUID(),
+      name: newGroupName.trim(),
+      type: "custom" as const
+    };
+    updateState({ groups: [...state.groups, newGroup] });
+    setActiveGroupId(newGroup.id);
+    setNewGroupName("");
+    setShowAddGroupInput(false);
   };
 
   // Shield Handlers
@@ -185,12 +404,20 @@ export function Popup() {
     }
   };
 
+  // Day Progress Calculation
+  const now = new Date();
+  const currentMinutesInDay = now.getHours() * 60 + now.getMinutes();
+  const dayProgressPercent = Math.min(100, Math.round((currentMinutesInDay / 1440) * 100));
+
+  // Selected Task Object
+  const selectedTask = state.todos.find(t => t.id === state.selectedTodoId);
+
   // Time calculations
   const mins = Math.floor(state.timeLeft / 60);
   const secs = state.timeLeft % 60;
   const timeFormatted = `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   const totalDuration = state.timerState === "WORK" ? state.pomodoroSettings.work * 60 : state.pomodoroSettings.break * 60;
-  const progressPercent = totalDuration > 0 ? Math.min(100, Math.max(0, ((totalDuration - state.timeLeft) / totalDuration) * 100)) : 0;
+  const progressPercent = state.timerState === "FLOW" ? 100 : (totalDuration > 0 ? Math.min(100, Math.max(0, ((totalDuration - state.timeLeft) / totalDuration) * 100)) : 0);
 
   return (
     <div className={`w-[420px] h-[580px] flex flex-col overflow-hidden select-none font-sans relative ${
@@ -216,9 +443,8 @@ export function Popup() {
           </div>
         </div>
 
-        {/* Action Controls: Theme Mode Toggle + Info Button (Beside each other) */}
+        {/* Action Controls: Theme Toggle + Info Button */}
         <div className="flex items-center gap-2">
-          {/* Black & White Mode Toggle Button */}
           <button
             onClick={toggleThemeMode}
             className={`p-2 rounded-lg border transition-all flex items-center justify-center ${
@@ -231,7 +457,6 @@ export function Popup() {
             {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
 
-          {/* Info Button directly beside Dark/Light Mode toggle */}
           <button
             onClick={() => setShowInfoModal(!showInfoModal)}
             className={`p-2 rounded-lg border transition-all flex items-center justify-center ${
@@ -239,14 +464,14 @@ export function Popup() {
                 ? isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
                 : isDark ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800" : "bg-white border-neutral-300 text-black hover:bg-neutral-100"
             }`}
-            title="Focus Extension Info & Help"
+            title="Focus Extension Info"
           >
             <Info className="w-4 h-4" />
           </button>
         </div>
       </header>
 
-      {/* Info Modal Dialog Overlay */}
+      {/* Info Modal Overlay */}
       {showInfoModal && (
         <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
           isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
@@ -268,18 +493,18 @@ export function Popup() {
 
           <div className="space-y-3 my-3 text-xs leading-relaxed overflow-y-auto pr-1">
             <p className="opacity-90 font-medium">
-              Focus is a minimalist, black & white browser extension engineered for distraction-free execution.
+              Focus is a minimalist, black & white productivity extension engineered for deep work execution.
             </p>
 
             <div className={`p-3 rounded-xl border space-y-1.5 font-mono text-[11px] ${
               isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
             }`}>
               <div className="font-bold border-b pb-1 opacity-70 border-current">FEATURES</div>
-              <div>• ⏱️ <b>Pomodoro & Stopwatch</b> background countdown worker.</div>
+              <div>• ⏱️ <b>Pomodoro, Break & Flow</b> stopwatch timer.</div>
               <div>• 🛡️ <b>Distraction Shield</b> auto-blocks sites during work sessions.</div>
-              <div>• 📋 <b>Task Manager</b> with priority tagging.</div>
-              <div>• 📝 <b>Mood Notes</b> daily reflection & focus log.</div>
-              <div>• 🌗 <b>Monochrome Theme</b> dark/light high-contrast toggle.</div>
+              <div>• 📋 <b>Task Manager</b> with groups & subtask checklists.</div>
+              <div>• 📝 <b>Mood Reflections</b> with emotion emoji logs.</div>
+              <div>• 📊 <b>Stats & Focus Trends</b> with day completion rate.</div>
             </div>
           </div>
 
@@ -302,12 +527,344 @@ export function Popup() {
         </div>
       )}
 
+      {/* Timer Settings Modal Overlay */}
+      {showSettingsModal && (
+        <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
+          isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
+        }`}>
+          <div className="flex items-center justify-between pb-3 border-b border-current">
+            <div className="flex items-center gap-2">
+              <Settings className="w-4 h-4" />
+              <h2 className="text-sm font-bold font-mono uppercase tracking-wider">TIMER SETTINGS</h2>
+            </div>
+            <button
+              onClick={() => setShowSettingsModal(false)}
+              className={`p-1 rounded-lg border ${
+                isDark ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800" : "bg-neutral-100 border-neutral-300 text-black hover:bg-neutral-200"
+              }`}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <form onSubmit={saveSettings} className="space-y-4 my-auto">
+            <div>
+              <label className="text-xs font-mono font-bold block mb-1">Work Session Duration (Minutes)</label>
+              <input
+                type="number"
+                min="1"
+                max="120"
+                value={workMinsInput}
+                onChange={(e) => setWorkMinsInput(parseInt(e.target.value) || 25)}
+                className={`w-full p-2.5 rounded-xl border text-sm font-mono focus:outline-none ${
+                  isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                }`}
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-mono font-bold block mb-1">Break Duration (Minutes)</label>
+              <input
+                type="number"
+                min="1"
+                max="60"
+                value={breakMinsInput}
+                onChange={(e) => setBreakMinsInput(parseInt(e.target.value) || 5)}
+                className={`w-full p-2.5 rounded-xl border text-sm font-mono focus:outline-none ${
+                  isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                }`}
+              />
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <input
+                type="checkbox"
+                id="autoBreak"
+                checked={autoStartBreakInput}
+                onChange={(e) => setAutoStartBreakInput(e.target.checked)}
+                className="w-4 h-4 cursor-pointer"
+              />
+              <label htmlFor="autoBreak" className="text-xs font-mono cursor-pointer">
+                Auto-start break when session finishes
+              </label>
+            </div>
+
+            <button
+              type="submit"
+              className={`w-full py-3 rounded-xl font-bold text-xs border transition-all mt-4 ${
+                isDark ? "bg-white text-black border-white hover:bg-neutral-200" : "bg-black text-white border-black hover:bg-neutral-800"
+              }`}
+            >
+              Save Settings
+            </button>
+          </form>
+        </div>
+      )}
+
+      {/* Task Detail View Modal Overlay */}
+      {selectedTaskDetail && (
+        <div className={`absolute inset-0 z-50 p-4 flex flex-col justify-between backdrop-blur-md overflow-y-auto animate-in fade-in duration-200 ${
+          isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
+        }`}>
+          <div className="flex items-center justify-between pb-3 border-b border-current">
+            <div className="flex items-center gap-2">
+              <ListTodo className="w-4 h-4" />
+              <h2 className="text-xs font-bold font-mono uppercase tracking-wider">TASK DETAILS</h2>
+            </div>
+            <button
+              onClick={() => setSelectedTaskDetail(null)}
+              className={`p-1 rounded-lg border ${
+                isDark ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800" : "bg-neutral-100 border-neutral-300 text-black hover:bg-neutral-200"
+              }`}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="space-y-3 my-3 text-xs overflow-y-auto pr-1">
+            {/* Task Title & Focus Action */}
+            <div className="flex items-center justify-between gap-2">
+              <input
+                type="text"
+                value={selectedTaskDetail.text}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, text: val } : t);
+                  updateState({ todos: updated });
+                  setSelectedTaskDetail({ ...selectedTaskDetail, text: val });
+                }}
+                className={`flex-1 p-2 font-bold text-sm rounded-xl border focus:outline-none ${
+                  isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                }`}
+              />
+            </div>
+
+            <button
+              onClick={() => focusOnTask(selectedTaskDetail)}
+              className={`w-full py-2.5 rounded-xl font-extrabold text-xs border flex items-center justify-center gap-2 transition-all ${
+                isDark ? "bg-white text-black border-white hover:bg-neutral-200" : "bg-black text-white border-black hover:bg-neutral-800"
+              }`}
+            >
+              <Play className="w-4 h-4 fill-current" />
+              <span>FOCUS ON THIS TASK</span>
+            </button>
+
+            {/* Group Selection */}
+            <div>
+              <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Task Group</label>
+              <select
+                value={selectedTaskDetail.groupId || "current"}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, groupId: val } : t);
+                  updateState({ todos: updated });
+                  setSelectedTaskDetail({ ...selectedTaskDetail, groupId: val });
+                }}
+                className={`w-full p-2 rounded-xl border text-xs font-mono focus:outline-none ${
+                  isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                }`}
+              >
+                {state.groups.map(g => (
+                  <option key={g.id} value={g.id}>{g.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Description & Priority */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Priority</label>
+                <select
+                  value={selectedTaskDetail.priority || "medium"}
+                  onChange={(e) => {
+                    const val = e.target.value as PriorityType;
+                    const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, priority: val } : t);
+                    updateState({ todos: updated });
+                    setSelectedTaskDetail({ ...selectedTaskDetail, priority: val });
+                  }}
+                  className={`w-full p-2 rounded-xl border text-xs font-mono focus:outline-none ${
+                    isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                  }`}
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Recurring</label>
+                <select
+                  value={selectedTaskDetail.recurring || "none"}
+                  onChange={(e) => {
+                    const val = e.target.value as RecurringType;
+                    const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, recurring: val } : t);
+                    updateState({ todos: updated });
+                    setSelectedTaskDetail({ ...selectedTaskDetail, recurring: val });
+                  }}
+                  className={`w-full p-2 rounded-xl border text-xs font-mono focus:outline-none ${
+                    isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                  }`}
+                >
+                  <option value="none">None</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="monthly">Monthly</option>
+                </select>
+              </div>
+            </div>
+
+            {/* Pomodoro Session Estimates */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Estimated Sessions</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={selectedTaskDetail.estimatedPomodoros || 1}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || 1;
+                    const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, estimatedPomodoros: val } : t);
+                    updateState({ todos: updated });
+                    setSelectedTaskDetail({ ...selectedTaskDetail, estimatedPomodoros: val });
+                  }}
+                  className={`w-full p-2 rounded-xl border text-xs font-mono focus:outline-none ${
+                    isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Completed Sessions</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={selectedTaskDetail.completedPomodoros || 0}
+                  onChange={(e) => {
+                    const val = parseInt(e.target.value) || 0;
+                    const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, completedPomodoros: val } : t);
+                    updateState({ todos: updated });
+                    setSelectedTaskDetail({ ...selectedTaskDetail, completedPomodoros: val });
+                  }}
+                  className={`w-full p-2 rounded-xl border text-xs font-mono focus:outline-none ${
+                    isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                  }`}
+                />
+              </div>
+            </div>
+
+            {/* Deadline Date & Time */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Deadline Date</label>
+                <input
+                  type="date"
+                  value={selectedTaskDetail.dueDate || ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, dueDate: val } : t);
+                    updateState({ todos: updated });
+                    setSelectedTaskDetail({ ...selectedTaskDetail, dueDate: val });
+                  }}
+                  className={`w-full p-2 rounded-xl border text-xs font-mono focus:outline-none ${
+                    isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                  }`}
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Deadline Time</label>
+                <input
+                  type="time"
+                  value={selectedTaskDetail.dueTime || ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, dueTime: val } : t);
+                    updateState({ todos: updated });
+                    setSelectedTaskDetail({ ...selectedTaskDetail, dueTime: val });
+                  }}
+                  className={`w-full p-2 rounded-xl border text-xs font-mono focus:outline-none ${
+                    isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                  }`}
+                />
+              </div>
+            </div>
+
+            {/* Notes */}
+            <div>
+              <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Task Notes</label>
+              <textarea
+                rows={2}
+                value={selectedTaskDetail.notes || ""}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, notes: val } : t);
+                  updateState({ todos: updated });
+                  setSelectedTaskDetail({ ...selectedTaskDetail, notes: val });
+                }}
+                placeholder="Add additional task notes..."
+                className={`w-full p-2 rounded-xl border text-xs focus:outline-none ${
+                  isDark ? "bg-neutral-900 border-neutral-800 text-white placeholder-neutral-600" : "bg-neutral-100 border-neutral-300 text-black placeholder-neutral-400"
+                }`}
+              />
+            </div>
+
+            {/* Subtasks Section */}
+            <div className="pt-2 border-t border-current">
+              <label className="text-[10px] font-mono uppercase font-bold block mb-2 opacity-70">Subtasks Checklist</label>
+
+              <form onSubmit={(e) => { e.preventDefault(); addSubtask(selectedTaskDetail.id, newSubtaskText); setNewSubtaskText(""); }} className="flex gap-2 mb-2">
+                <input
+                  type="text"
+                  value={newSubtaskText}
+                  onChange={(e) => setNewSubtaskText(e.target.value)}
+                  placeholder="Add subtask..."
+                  className={`flex-1 p-2 rounded-xl border text-xs focus:outline-none ${
+                    isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                  }`}
+                />
+                <button type="submit" className={`px-3 py-2 rounded-xl font-bold text-xs border ${
+                  isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
+                }`}>
+                  Add
+                </button>
+              </form>
+
+              <div className="space-y-1.5 max-h-32 overflow-y-auto">
+                {(selectedTaskDetail.subtasks || []).map(sub => (
+                  <div key={sub.id} className={`p-2 rounded-xl border flex items-center justify-between text-xs ${
+                    sub.completed ? "line-through opacity-50" : ""
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => toggleSubtask(selectedTaskDetail.id, sub.id)}>
+                        {sub.completed ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />}
+                      </button>
+                      <span>{sub.text}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-2 border-t border-current">
+            <button
+              onClick={() => deleteTodo(selectedTaskDetail.id)}
+              className="w-full py-2 rounded-xl border border-red-500 text-red-500 text-xs font-bold hover:bg-red-500 hover:text-white transition-all"
+            >
+              Delete Task
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Main Tab Navigation Bar */}
       <nav className={`flex items-center justify-between px-3 py-1.5 border-b z-10 ${
         isDark ? "bg-neutral-900/60 border-neutral-800" : "bg-neutral-50 border-neutral-200"
       }`}>
         {[
-          { id: "timer", label: "Timer", icon: Timer },
+          { id: "timer", label: "Timer", icon: TimerIcon },
           { id: "tasks", label: "Tasks", icon: CheckSquare, badge: state.todos.filter(t => !t.completed).length },
           { id: "shield", label: "Shield", icon: Shield, activeIndicator: state.shield.enabled && state.isActive },
           { id: "notes", label: "Mood Notes", icon: BookOpen, badge: state.moodNotes.length },
@@ -355,12 +912,12 @@ export function Popup() {
         {/* TIMER TAB */}
         {activeTab === "timer" && (
           <div className="flex flex-col items-center justify-between h-full py-1">
-            {/* Work / Break Switcher */}
-            <div className={`flex items-center p-1 rounded-xl border w-full max-w-[260px] ${
+            {/* 3-Way Mode Switcher: Work, Break, Flow */}
+            <div className={`flex items-center p-1 rounded-xl border w-full max-w-[320px] ${
               isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-100 border-neutral-300"
             }`}>
               <button
-                onClick={() => switchTimerState("WORK")}
+                onClick={() => switchTimerModeAndState("POMODORO", "WORK")}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   state.timerState === "WORK"
                     ? isDark ? "bg-white text-black shadow-md" : "bg-black text-white shadow-md"
@@ -370,7 +927,7 @@ export function Popup() {
                 Work ({state.pomodoroSettings.work}m)
               </button>
               <button
-                onClick={() => switchTimerState("BREAK")}
+                onClick={() => switchTimerModeAndState("POMODORO", "BREAK")}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   state.timerState === "BREAK"
                     ? isDark ? "bg-white text-black shadow-md" : "bg-black text-white shadow-md"
@@ -379,56 +936,69 @@ export function Popup() {
               >
                 Break ({state.pomodoroSettings.break}m)
               </button>
+              <button
+                onClick={() => switchTimerModeAndState("FLOW", "FLOW")}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  state.timerState === "FLOW"
+                    ? isDark ? "bg-white text-black shadow-md" : "bg-black text-white shadow-md"
+                    : isDark ? "text-neutral-400 hover:text-white" : "text-neutral-500 hover:text-black"
+                }`}
+              >
+                Flow ⏱️
+              </button>
             </div>
 
             {/* Circular Timer Ring */}
-            <div className="relative w-44 h-44 my-3 flex items-center justify-center">
+            <div className="relative w-40 h-40 my-2 flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90">
                 <circle
-                  cx="88"
-                  cy="88"
-                  r="74"
+                  cx="80"
+                  cy="80"
+                  r="68"
                   className={isDark ? "stroke-neutral-800" : "stroke-neutral-200"}
                   strokeWidth="8"
                   fill="transparent"
                 />
                 <circle
-                  cx="88"
-                  cy="88"
-                  r="74"
+                  cx="80"
+                  cy="80"
+                  r="68"
                   className={`transition-all duration-1000 ease-linear ${
                     isDark ? "stroke-white" : "stroke-black"
                   }`}
                   strokeWidth="8"
-                  strokeDasharray={465}
-                  strokeDashoffset={465 - (465 * progressPercent) / 100}
+                  strokeDasharray={427}
+                  strokeDashoffset={427 - (427 * progressPercent) / 100}
                   strokeLinecap="square"
                   fill="transparent"
                 />
               </svg>
 
               <div className="absolute flex flex-col items-center justify-center text-center">
-                <span className="text-4xl font-black font-mono tracking-tighter">
+                <span className="text-3xl font-black font-mono tracking-tighter">
                   {timeFormatted}
                 </span>
-                <span className={`text-[10px] font-mono uppercase tracking-widest mt-1 px-2 py-0.5 rounded border ${
+                <span className={`text-[9px] font-mono uppercase tracking-widest mt-1 px-2 py-0.5 rounded border ${
                   isDark
                     ? "bg-neutral-900 text-neutral-300 border-neutral-700"
                     : "bg-neutral-100 text-neutral-800 border-neutral-300"
                 }`}>
-                  {state.isActive ? (state.timerState === "WORK" ? "WORK IN PROGRESS" : "ON BREAK") : "PAUSED"}
+                  {state.isActive
+                    ? (state.timerState === "FLOW" ? "STOPWATCH FLOW" : state.timerState === "WORK" ? "WORK IN PROGRESS" : "ON BREAK")
+                    : "PAUSED"}
                 </span>
               </div>
             </div>
 
-            {/* Goal Input */}
-            <div className="w-full max-w-[280px] mb-3">
+            {/* Goal Input (Pressing Enter creates task) */}
+            <div className="w-full max-w-[280px] mb-2">
               <input
                 type="text"
                 value={state.sessionName}
                 onChange={(e) => updateState({ sessionName: e.target.value })}
-                placeholder="Session Goal / Objective..."
-                className={`w-full px-3 py-2 rounded-xl text-xs text-center font-medium border focus:outline-none ${
+                onKeyDown={handleGoalKeyDown}
+                placeholder="Session Goal (Press Enter to create task)..."
+                className={`w-full px-3 py-1.5 rounded-xl text-xs text-center font-medium border focus:outline-none ${
                   isDark
                     ? "bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-white"
                     : "bg-neutral-100 border-neutral-300 text-black placeholder-neutral-400 focus:border-black"
@@ -436,11 +1006,52 @@ export function Popup() {
               />
             </div>
 
-            {/* Controls */}
-            <div className="flex items-center gap-3">
+            {/* Selected Task & Subtasks Checklist in Timer */}
+            {selectedTask && (
+              <div className={`w-full max-w-[320px] p-2.5 mb-2 rounded-xl border flex flex-col gap-1.5 ${
+                isDark ? "bg-neutral-900/90 border-neutral-800" : "bg-neutral-100/90 border-neutral-300"
+              }`}>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-bold truncate text-[11px] font-mono">🎯 {selectedTask.text}</span>
+                  <button onClick={() => updateState({ selectedTodoId: null })} className="text-[10px] opacity-60 hover:opacity-100">
+                    Clear
+                  </button>
+                </div>
+
+                {(selectedTask.subtasks || []).length > 0 && (
+                  <div className="space-y-1 max-h-20 overflow-y-auto pt-1 border-t border-current text-[11px]">
+                    {selectedTask.subtasks!.map(s => (
+                      <div key={s.id} className="flex items-center gap-1.5">
+                        <button onClick={() => toggleSubtask(selectedTask.id, s.id)}>
+                          {s.completed ? <CheckCircle2 className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
+                        </button>
+                        <span className={s.completed ? "line-through opacity-50" : ""}>{s.text}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Control Buttons Grid (Play/Pause, Distraction, Settings, Complete, Reset) */}
+            <div className="flex items-center gap-2">
+              {/* I got distracted button */}
+              <button
+                onClick={logDistraction}
+                className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
+                  isDark
+                    ? "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-amber-400"
+                    : "bg-neutral-100 border-neutral-300 hover:bg-neutral-200 text-amber-600"
+                }`}
+                title="Log Distraction ('I got distracted')"
+              >
+                <AlertTriangle className="w-4 h-4" />
+              </button>
+
+              {/* Reset Timer button */}
               <button
                 onClick={resetTimer}
-                className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-all ${
+                className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
                   isDark
                     ? "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
                     : "bg-neutral-100 border-neutral-300 hover:bg-neutral-200 text-neutral-700"
@@ -450,27 +1061,42 @@ export function Popup() {
                 <RotateCcw className="w-4 h-4" />
               </button>
 
+              {/* Main Play / Pause Button */}
               <button
                 onClick={toggleTimer}
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center font-bold transition-all shadow-lg active:scale-95 ${
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold transition-all shadow-lg active:scale-95 ${
                   isDark
                     ? "bg-white text-black hover:bg-neutral-200"
                     : "bg-black text-white hover:bg-neutral-800"
                 }`}
               >
-                {state.isActive ? <Pause className="w-6 h-6 fill-current" /> : <Play className="w-6 h-6 fill-current ml-0.5" />}
+                {state.isActive ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
               </button>
 
+              {/* Complete Session Button */}
               <button
-                onClick={() => switchTimerState(state.timerState === "WORK" ? "BREAK" : "WORK")}
-                className={`w-10 h-10 rounded-xl border flex items-center justify-center transition-all ${
+                onClick={completeSession}
+                className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
+                  isDark
+                    ? "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-emerald-400"
+                    : "bg-neutral-100 border-neutral-300 hover:bg-neutral-200 text-emerald-600"
+                }`}
+                title="Complete Session"
+              >
+                <CheckCircle className="w-4 h-4" />
+              </button>
+
+              {/* Timer Settings Button */}
+              <button
+                onClick={() => setShowSettingsModal(true)}
+                className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
                   isDark
                     ? "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
                     : "bg-neutral-100 border-neutral-300 hover:bg-neutral-200 text-neutral-700"
                 }`}
-                title="Skip Session"
+                title="Timer Settings"
               >
-                <SkipForward className="w-4 h-4" />
+                <Settings className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -478,7 +1104,57 @@ export function Popup() {
 
         {/* TASKS TAB */}
         {activeTab === "tasks" && (
-          <div className="flex flex-col h-full gap-3">
+          <div className="flex flex-col h-full gap-2.5">
+            {/* Task Group Filter Tabs & Add Group Button */}
+            <div className="flex items-center justify-between gap-1 overflow-x-auto pb-1">
+              <div className="flex items-center gap-1 overflow-x-auto">
+                {state.groups.map((group) => (
+                  <button
+                    key={group.id}
+                    onClick={() => setActiveGroupId(group.id)}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold transition-all whitespace-nowrap ${
+                      activeGroupId === group.id
+                        ? isDark ? "bg-white text-black" : "bg-black text-white"
+                        : isDark ? "bg-neutral-900 text-neutral-400 border border-neutral-800" : "bg-neutral-100 text-neutral-600 border border-neutral-300"
+                    }`}
+                  >
+                    {group.name}
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setShowAddGroupInput(!showAddGroupInput)}
+                className={`p-1 rounded-lg border text-xs font-mono font-bold flex-shrink-0 ${
+                  isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                }`}
+                title="Add Custom Group"
+              >
+                <FolderPlus className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Custom Group Input */}
+            {showAddGroupInput && (
+              <form onSubmit={addCustomGroup} className="flex gap-2">
+                <input
+                  type="text"
+                  value={newGroupName}
+                  onChange={(e) => setNewGroupName(e.target.value)}
+                  placeholder="New group name..."
+                  className={`flex-1 px-3 py-1.5 rounded-xl text-xs font-mono border focus:outline-none ${
+                    isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                  }`}
+                />
+                <button type="submit" className={`px-3 py-1.5 rounded-xl font-bold text-xs border ${
+                  isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
+                }`}>
+                  Create
+                </button>
+              </form>
+            )}
+
+            {/* Add Task Input Form */}
             <form onSubmit={addTodo} className="flex gap-2">
               <input
                 type="text"
@@ -493,7 +1169,7 @@ export function Popup() {
               />
               <select
                 value={newTaskPriority}
-                onChange={(e) => setNewTaskPriority(e.target.value as typeof newTaskPriority)}
+                onChange={(e) => setNewTaskPriority(e.target.value as PriorityType)}
                 className={`px-2 py-2 rounded-xl text-xs border focus:outline-none ${
                   isDark ? "bg-neutral-900 border-neutral-800 text-neutral-300" : "bg-neutral-100 border-neutral-300 text-neutral-700"
                 }`}
@@ -513,46 +1189,59 @@ export function Popup() {
               </button>
             </form>
 
+            {/* Filtered Task List */}
             <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-              {state.todos.length === 0 ? (
+              {state.todos.filter(t => (t.groupId || "current") === activeGroupId).length === 0 ? (
                 <div className={`text-center py-12 text-xs font-mono ${isDark ? "text-neutral-600" : "text-neutral-400"}`}>
-                  NO TASKS LISTED. ADD ONE ABOVE.
+                  NO TASKS IN THIS GROUP. ADD ONE ABOVE.
                 </div>
               ) : (
-                state.todos.map((todo) => (
-                  <div
-                    key={todo.id}
-                    className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 transition-all ${
-                      todo.completed
-                        ? isDark ? "bg-neutral-950 border-neutral-900 opacity-50 line-through text-neutral-500" : "bg-neutral-100 border-neutral-200 opacity-50 line-through text-neutral-400"
-                        : isDark ? "bg-neutral-900 border-neutral-800 hover:border-neutral-700" : "bg-neutral-50 border-neutral-300 hover:border-neutral-400"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                      <button onClick={() => toggleTodo(todo.id)} className="flex-shrink-0">
-                        {todo.completed ? (
-                          <CheckCircle2 className={`w-4 h-4 ${isDark ? "text-white" : "text-black"}`} />
-                        ) : (
-                          <Circle className={`w-4 h-4 ${isDark ? "text-neutral-500" : "text-neutral-400"}`} />
-                        )}
-                      </button>
-                      <span className="text-xs font-medium truncate">{todo.text}</span>
-                    </div>
-
-                    <div className="flex items-center gap-1.5 flex-shrink-0">
-                      {todo.priority && (
-                        <span className={`text-[9px] px-1.5 py-0.5 rounded font-mono font-bold uppercase border ${
-                          isDark ? "bg-neutral-800 text-neutral-300 border-neutral-700" : "bg-neutral-200 text-neutral-800 border-neutral-300"
-                        }`}>
-                          {todo.priority}
+                state.todos
+                  .filter(t => (t.groupId || "current") === activeGroupId)
+                  .map((todo) => (
+                    <div
+                      key={todo.id}
+                      className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 transition-all ${
+                        todo.completed
+                          ? isDark ? "bg-neutral-950 border-neutral-900 opacity-50 line-through text-neutral-500" : "bg-neutral-100 border-neutral-200 opacity-50 line-through text-neutral-400"
+                          : isDark ? "bg-neutral-900 border-neutral-800 hover:border-neutral-700" : "bg-neutral-50 border-neutral-300 hover:border-neutral-400"
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                        <button onClick={() => toggleTodo(todo.id)} className="flex-shrink-0">
+                          {todo.completed ? (
+                            <CheckCircle2 className={`w-4 h-4 ${isDark ? "text-white" : "text-black"}`} />
+                          ) : (
+                            <Circle className={`w-4 h-4 ${isDark ? "text-neutral-500" : "text-neutral-400"}`} />
+                          )}
+                        </button>
+                        <span
+                          onClick={() => setSelectedTaskDetail(todo)}
+                          className="text-xs font-medium truncate cursor-pointer hover:underline"
+                        >
+                          {todo.text}
                         </span>
-                      )}
-                      <button onClick={() => deleteTodo(todo.id)} className={`p-1 ${isDark ? "text-neutral-500 hover:text-white" : "text-neutral-400 hover:text-black"}`}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      </div>
+
+                      <div className="flex items-center gap-1.5 flex-shrink-0">
+                        <button
+                          onClick={() => focusOnTask(todo)}
+                          className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold flex items-center gap-1 border ${
+                            state.selectedTodoId === todo.id
+                              ? isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
+                              : isDark ? "bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700" : "bg-neutral-200 text-neutral-800 border-neutral-300 hover:bg-neutral-300"
+                          }`}
+                        >
+                          <span>Focus</span>
+                          <ArrowRight className="w-2.5 h-2.5" />
+                        </button>
+
+                        <button onClick={() => setSelectedTaskDetail(todo)} className={`p-1 ${isDark ? "text-neutral-500 hover:text-white" : "text-neutral-400 hover:text-black"}`}>
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))
+                  ))
               )}
             </div>
           </div>
@@ -561,7 +1250,6 @@ export function Popup() {
         {/* SHIELD TAB */}
         {activeTab === "shield" && (
           <div className="flex flex-col gap-3 h-full">
-            {/* Master Toggle */}
             <div className={`p-3 rounded-xl border flex items-center justify-between ${
               state.shield.enabled
                 ? isDark ? "bg-neutral-900 border-white text-white" : "bg-neutral-100 border-black text-black"
@@ -572,7 +1260,7 @@ export function Popup() {
                 <div>
                   <h3 className="text-xs font-bold font-mono">SITE BLOCKER SHIELD</h3>
                   <p className="text-[10px] opacity-70">
-                    {state.shield.enabled ? "Active during Pomodoro work sessions" : "Shield currently OFF"}
+                    {state.shield.enabled ? "Active during Work & Flow sessions" : "Shield currently OFF"}
                   </p>
                 </div>
               </div>
@@ -589,7 +1277,6 @@ export function Popup() {
               </button>
             </div>
 
-            {/* Add Site */}
             <form onSubmit={addBlockedSite} className="flex gap-2">
               <input
                 type="text"
@@ -612,7 +1299,6 @@ export function Popup() {
               </button>
             </form>
 
-            {/* Blocked List */}
             <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
               <div className={`text-[10px] font-mono uppercase tracking-wider mb-1 ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
                 Blacklisted Domains ({state.shield.blockedSites.length})
@@ -637,14 +1323,13 @@ export function Popup() {
         {/* MOOD NOTES TAB */}
         {activeTab === "notes" && (
           <div className="flex flex-col gap-3 h-full">
-            {/* New Reflection Form */}
             <form onSubmit={addMoodNote} className={`p-3 rounded-xl border flex flex-col gap-2 ${
               isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
             }`}>
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold font-mono flex items-center gap-1.5">
                   <MessageSquarePlus className="w-3.5 h-3.5" />
-                  LOG DAILY MOOD & REFLECTION
+                  LOG MOOD REFLECTION
                 </span>
                 <select
                   value={selectedMood}
@@ -653,7 +1338,7 @@ export function Popup() {
                     isDark ? "bg-neutral-800 border-neutral-700 text-white" : "bg-white border-neutral-300 text-black"
                   }`}
                 >
-                  {MOOD_OPTIONS.map((m) => (
+                  {MOOD_EMOJIS.map((m) => (
                     <option key={m} value={m}>{m}</option>
                   ))}
                 </select>
@@ -662,7 +1347,7 @@ export function Popup() {
               <textarea
                 value={newMoodText}
                 onChange={(e) => setNewMoodText(e.target.value)}
-                placeholder="How did your focus session go? Write a reflection..."
+                placeholder="How did your session go? Write a reflection..."
                 rows={2}
                 className={`w-full p-2 rounded-lg text-xs border focus:outline-none ${
                   isDark
@@ -680,7 +1365,6 @@ export function Popup() {
               </button>
             </form>
 
-            {/* List of Mood Notes */}
             <div className="flex-1 overflow-y-auto space-y-2 pr-1">
               <div className={`text-[10px] font-mono uppercase tracking-wider ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
                 Saved Reflections ({state.moodNotes.length})
@@ -722,46 +1406,77 @@ export function Popup() {
         {/* STATS TAB */}
         {activeTab === "stats" && (
           <div className="flex flex-col gap-3 h-full overflow-y-auto pr-1">
+            {/* Day Progress Meter */}
+            <div className={`p-3 rounded-xl border ${
+              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+            }`}>
+              <div className="flex items-center justify-between text-xs font-mono mb-1.5">
+                <span className="font-bold">DAY PROGRESS</span>
+                <span className="font-bold">{dayProgressPercent}%</span>
+              </div>
+              <div className={`w-full h-2 rounded-full border overflow-hidden ${
+                isDark ? "bg-neutral-950 border-neutral-800" : "bg-neutral-200 border-neutral-300"
+              }`}>
+                <div
+                  className={`h-full transition-all duration-500 ${isDark ? "bg-white" : "bg-black"}`}
+                  style={{ width: `${dayProgressPercent}%` }}
+                />
+              </div>
+            </div>
+
+            {/* Core Metrics Grid */}
             <div className="grid grid-cols-3 gap-2">
               <div className={`p-2.5 rounded-xl border flex flex-col items-center text-center ${
                 isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
               }`}>
                 <Clock className="w-4 h-4 mb-1" />
-                <span className="text-base font-extrabold font-mono">{state.stats.todayMinutes}m</span>
+                <span className="text-sm font-extrabold font-mono">{state.stats.todayMinutes}m</span>
                 <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">Focused Today</span>
               </div>
+
               <div className={`p-2.5 rounded-xl border flex flex-col items-center text-center ${
                 isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
               }`}>
                 <Flame className="w-4 h-4 mb-1" />
-                <span className="text-base font-extrabold font-mono">{state.stats.streakDays}d</span>
-                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">Streak</span>
+                <span className="text-sm font-extrabold font-mono">{state.stats.longestStreak}d</span>
+                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">Longest Streak</span>
               </div>
+
               <div className={`p-2.5 rounded-xl border flex flex-col items-center text-center ${
                 isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
               }`}>
                 <CheckSquare className="w-4 h-4 mb-1" />
-                <span className="text-base font-extrabold font-mono">{state.stats.completedTasksCount}</span>
-                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">Completed</span>
+                <span className="text-sm font-extrabold font-mono">
+                  {state.todos.length > 0 ? Math.round((state.stats.completedTasksCount / state.todos.length) * 100) : 100}%
+                </span>
+                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">Task Done Rate</span>
               </div>
             </div>
 
-            <div className="space-y-1.5">
-              <span className={`text-[10px] font-mono uppercase tracking-wider ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>Completed Sessions Log ({state.sessions.length})</span>
-              {state.sessions.length === 0 ? (
-                <div className={`p-3 rounded-xl border text-xs font-mono text-center ${isDark ? "bg-neutral-900/30 border-neutral-800 text-neutral-500" : "bg-neutral-50 border-neutral-200 text-neutral-400"}`}>
-                  No completed sessions today yet.
-                </div>
-              ) : (
-                state.sessions.map((s) => (
-                  <div key={s.id} className={`p-2.5 rounded-xl border flex items-center justify-between text-xs font-mono ${
-                    isDark ? "bg-neutral-900/40 border-neutral-800 text-neutral-300" : "bg-neutral-50 border-neutral-200 text-neutral-700"
-                  }`}>
-                    <span>{s.sessionName || "Work Session"}</span>
-                    <span className="opacity-60">{Math.round(s.duration / 60)}m</span>
-                  </div>
-                ))
-              )}
+            {/* Weekly Focus Trend (Mon - Sun Bar Chart) */}
+            <div className={`p-3 rounded-xl border ${
+              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+            }`}>
+              <div className="text-[10px] font-mono uppercase tracking-wider font-bold mb-3">WEEKLY FOCUS TREND (MINS)</div>
+              <div className="flex items-end justify-between gap-2 h-24 pt-2 border-b border-current">
+                {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => {
+                  const minsLogged = state.stats.weeklyMinutes[day] || 0;
+                  const maxMins = 120;
+                  const heightPercent = Math.min(100, Math.max(10, Math.round((minsLogged / maxMins) * 100)));
+                  return (
+                    <div key={day} className="flex-1 flex flex-col items-center gap-1 h-full justify-end">
+                      <span className="text-[8px] font-mono opacity-60">{minsLogged}m</span>
+                      <div
+                        className={`w-full rounded-t transition-all duration-500 ${
+                          isDark ? "bg-white" : "bg-black"
+                        }`}
+                        style={{ height: `${heightPercent}%` }}
+                      />
+                      <span className="text-[9px] font-mono font-bold">{day}</span>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         )}
