@@ -1,7 +1,7 @@
 export type TimerMode = "POMODORO" | "STOPWATCH";
 export type TimerState = "WORK" | "BREAK";
-export type BackgroundType = "dark" | "gradient" | "mountain" | "library" | "cafe" | "anime-room";
 export type PriorityType = "low" | "medium" | "high" | "urgent";
+export type ThemeMode = "dark" | "light";
 
 export interface TodoItem {
   id: string;
@@ -19,7 +19,7 @@ export interface TodoItem {
 export interface MoodNote {
   id: string;
   date: string;
-  mood: string; // e.g., '🔥 Energetic', '🎯 Focused', '☕ Calm', '😴 Tired', '⚡ Productive'
+  mood: string;
   text: string;
 }
 
@@ -41,18 +41,11 @@ export interface Distraction {
 export interface ShieldConfig {
   enabled: boolean;
   blockedSites: string[]; // e.g., ['facebook.com', 'twitter.com', 'x.com', 'reddit.com', 'instagram.com', 'tiktok.com', 'youtube.com']
-  blockMode: "ALWAYS_WHEN_ACTIVE" | "ALWAYS"; // block during active timer, or always
-}
-
-export interface AmbientTrack {
-  id: string;
-  title: string;
-  category: "rain" | "waves" | "piano" | "lofi" | "whitenoise";
-  url?: string;
-  iconName: string;
 }
 
 export interface AppStateData {
+  themeMode: ThemeMode; // 'dark' | 'light'
+  
   timerMode: TimerMode;
   timerState: TimerState;
   timeLeft: number; // seconds
@@ -74,9 +67,6 @@ export interface AppStateData {
   
   ambientPlaying: string | null; // ambient track id or null
   ambientVolume: number; // 0 to 1
-  
-  background: BackgroundType;
-  deepFocusMode: boolean;
   
   stats: {
     todayMinutes: number;

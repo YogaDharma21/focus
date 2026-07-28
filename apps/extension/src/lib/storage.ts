@@ -1,8 +1,9 @@
 import { AppStateData } from "../types";
 
-const STORAGE_KEY = "focus_extension_state_v1";
+const STORAGE_KEY = "focus_extension_state_v2";
 
 export const DEFAULT_STATE: AppStateData = {
+  themeMode: "dark",
   timerMode: "POMODORO",
   timerState: "WORK",
   timeLeft: 25 * 60,
@@ -38,7 +39,7 @@ export const DEFAULT_STATE: AppStateData = {
     {
       id: "note-1",
       date: new Date().toISOString().split("T")[0],
-      mood: "🎯 Focused",
+      mood: "Focused",
       text: "Started the morning with zero distractions and completed primary tasks!"
     }
   ],
@@ -53,14 +54,11 @@ export const DEFAULT_STATE: AppStateData = {
       "instagram.com",
       "reddit.com",
       "tiktok.com",
-      "youtube.com/shorts"
-    ],
-    blockMode: "ALWAYS_WHEN_ACTIVE"
+      "youtube.com"
+    ]
   },
   ambientPlaying: null,
   ambientVolume: 0.5,
-  background: "dark",
-  deepFocusMode: false,
   stats: {
     todayMinutes: 45,
     completedTasksCount: 3,

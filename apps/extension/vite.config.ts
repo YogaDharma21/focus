@@ -4,12 +4,10 @@ import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import fs from "fs";
 
-// Custom plugin to copy manifest and copy background/content scripts if needed
 function copyExtensionAssets() {
   return {
     name: "copy-extension-assets",
     closeBundle() {
-      // Ensure manifest.json is in output
       if (fs.existsSync("public/manifest.json")) {
         fs.copyFileSync("public/manifest.json", "dist/manifest.json");
       }
@@ -30,7 +28,6 @@ export default defineConfig({
     rollupOptions: {
       input: {
         popup: path.resolve(__dirname, "popup.html"),
-        dashboard: path.resolve(__dirname, "dashboard.html"),
         blocked: path.resolve(__dirname, "blocked.html"),
         background: path.resolve(__dirname, "src/background/background.ts"),
         content: path.resolve(__dirname, "src/content/content.ts"),
