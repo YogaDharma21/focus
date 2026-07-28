@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-heading: 'Outfit', 'Inter', system-ui, sans-serif;
+  }
+
+  /* Default Dark Mode (Monochrome) */
+  body.dark {
+    background-color: #000000;
+    color: #ffffff;
+  }
+
+  /* Light Mode (Monochrome) */
+  body.light {
+    background-color: #ffffff;
+    color: #000000;
+  }
+
+  h1, h2, h3, h4, .font-heading {
+    font-family: var(--font-heading);
+  }
+}
+
+/* Dark Mode Panels & Cards */
+.dark .mono-panel {
+  background-color: #0a0a0a;
+  border-color: #262626;
+  color: #ffffff;
+}
+
+.dark .mono-card {
+  background-color: #121212;
+  border-color: #262626;
+  color: #ffffff;
+}
+
+.dark .mono-input {
+  background-color: #171717;
+  border-color: #262626;
+  color: #ffffff;
+}
+
+.dark .mono-input:focus {
+  border-color: #ffffff;
+}
+
+/* Light Mode Panels & Cards */
+.light .mono-panel {
+  background-color: #fafafa;
+  border-color: #e5e5e5;
+  color: #000000;
+}
+
+.light .mono-card {
+  background-color: #f5f5f5;
+  border-color: #e5e5e5;
+  color: #000000;
+}
+
+.light .mono-input {
+  background-color: #ffffff;
+  border-color: #d4d4d4;
+  color: #000000;
+}
+
+.light .mono-input:focus {
+  border-color: #000000;
+}
+
+/* Custom Scrollbar Monochrome */
+::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #404040;
+  border-radius: 3px;
+}
+
+.light ::-webkit-scrollbar-track {
+  background: #f5f5f5;
+}
+.light ::-webkit-scrollbar-thumb {
+  background: #a3a3a3;
+  border-radius: 3px;
+}

@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Focus - Monochrome Distraction Shield",
+  "version": "1.0.0",
+  "description": "Black & white browser extension for Pomodoro focus timers, site blocking, task tracking, and ambient audio.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "notifications",
+    "alarms",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Focus Extension"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["blocked.html", "assets/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
