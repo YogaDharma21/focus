@@ -3,6 +3,7 @@ export type TimerState = "WORK" | "BREAK" | "FLOW";
 export type PriorityType = "low" | "medium" | "high" | "urgent";
 export type RecurringType = "none" | "daily" | "weekly" | "monthly";
 export type ThemeMode = "dark" | "light";
+export type BackgroundTheme = "default" | "gradient" | "mountain" | "library" | "cafe" | "anime-room";
 
 export interface SubTask {
   id: string;
@@ -37,7 +38,7 @@ export interface TodoItem {
 export interface MoodNote {
   id: string;
   date: string;
-  mood: string; // Emoji: 😄 Happy, 😊 Calm, 😐 Normal, 😔 Sad, 😤 Frustrated, 😴 Exhausted, 🤯 Overwhelmed
+  mood: string;
   text: string;
 }
 
@@ -64,10 +65,11 @@ export interface ShieldConfig {
 
 export interface AppStateData {
   themeMode: ThemeMode;
+  background: BackgroundTheme; // "default" | "gradient" | "mountain" | "library" | "cafe" | "anime-room"
   
   timerMode: TimerMode;
   timerState: TimerState;
-  previousMode: "POMODORO" | "FLOW"; // Stores mode before break to return to
+  previousMode: "POMODORO" | "FLOW";
   timeLeft: number; // seconds
   isActive: boolean;
   sessionStartTime: string | null;

@@ -108,7 +108,6 @@ async function startBackgroundTimer() {
       } else {
         // Session complete
         if (timerInterval) clearInterval(timerInterval);
-        const isWorkOrFlow = state.timerState === "WORK";
         
         let nextState: "WORK" | "BREAK" | "FLOW" = "BREAK";
         let nextTime = 0;
@@ -131,24 +130,20 @@ async function startBackgroundTimer() {
 
         const dayName = new Date().toLocaleDateString("en-US", { weekday: "short" });
         const updatedWeekly = { ...state.stats.weeklyMinutes };
-        updatedWeekly[dayName] = (updatedWeekly[dayName] || 0) + (isWorkOrFlow ? Math.round(state.timeLeft / 60) : 0);
+        updatedWeekly[dayName] = (updatedWeekly[dayName] || 0) + Math.round(state.timeLeft / 60);
 
-        const newSessionList = isWorkOrFlow
-          ? [
-              ...state.sessions,
-              {
-                id: crypto.randomUUID(),
-                date: new Date().toISOString(),
-                duration: state.timeLeft,
-                mode: state.timerMode,
-                sessionName: state.sessionName || "Focus Session",
-              },
-            ]
-          : state.sessions;
+        const newSessionList = [
+          ...state.sessions,
+          {
+            id: crypto.randomUUID(),
+            date: new Date().toISOString(),
+            duration: state.timeLeft,
+            mode: state.timerMode,
+            sessionName: state.sessionName || "Focus Session",
+          },
+        ];
 
-        const updatedTodayMins = isWorkOrFlow
-          ? state.stats.todayMinutes + Math.round(state.timeLeft / 60)
-          : state.stats.todayMinutes;
+        const updatedTodayMins = state.stats.todayMinutes + Math.round(state.timeLeft / 60);
 
         await saveStoredState({
           isActive: false,
@@ -169,10 +164,8 @@ async function startBackgroundTimer() {
           chrome.notifications.create({
             type: "basic",
             iconUrl: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2'><circle cx='12' cy='12' r='10'/><path d='M12 6v6l4 2'/></svg>",
-            title: isWorkOrFlow ? "Session Completed!" : "Break Finished!",
-            message: isWorkOrFlow
-              ? `Session complete. Taking a ${Math.round(nextTime / 60)}-minute break.`
-              : `Break finished! Returning to ${prevMode} mode.`,
+            title: "Session Completed!",
+            message: `Break finished! Returning to ${prevMode} mode.`,
             priority: 2,
           });
         }
@@ -216,8 +209,8 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
 // Storage Listener
 if (typeof chrome !== "undefined" && chrome.storage) {
   chrome.storage.onChanged.addListener(async (changes, areaName) => {
-    if (areaName === "local" && changes.focus_extension_state_v5) {
-      const newState: AppStateData = changes.focus_extension_state_v5.newValue;
+    if (areaName === "local" && changes.focus_extension_state_v6) {
+      const newState: AppStateData = changes.focus_extension_state_v6.newValue;
       if (newState?.isActive) {
         startBackgroundTimer();
       } else {
