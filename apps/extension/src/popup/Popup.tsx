@@ -33,7 +33,7 @@ import {
   Paintbrush
 } from "lucide-react";
 import { AppStateData, TodoItem, PriorityType, RecurringType, BackgroundTheme } from "../types";
-import { getStoredState, saveStoredState, subscribeToStateChanges } from "../lib/storage";
+import { getStoredState, saveStoredState, subscribeToStateChanges, DEFAULT_STATE } from "../lib/storage";
 import "../index.css";
 
 const MOOD_EMOJIS = [
@@ -258,6 +258,16 @@ export function Popup() {
       distractions: [...state.distractions, entry]
     });
     setShowDistractionPicker(false);
+  };
+
+  // Reset All Extension Data to Factory Defaults
+  const resetAllData = () => {
+    if (window.confirm("Are you sure you want to reset all extension data to defaults? This will clear all tasks, sessions, mood notes, and stats.")) {
+      saveStoredState(DEFAULT_STATE).then((fresh) => {
+        setState(fresh);
+        setShowSettingsModal(false);
+      });
+    }
   };
 
   // Save Settings
@@ -729,6 +739,16 @@ export function Popup() {
             >
               Save Settings
             </button>
+
+            <div className="pt-3 border-t border-current mt-2">
+              <button
+                type="button"
+                onClick={resetAllData}
+                className="w-full py-2.5 rounded-xl font-mono font-bold text-xs border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-all"
+              >
+                Reset All Extension Data
+              </button>
+            </div>
           </form>
         </div>
       )}
@@ -1137,7 +1157,7 @@ export function Popup() {
                 isDark ? "bg-neutral-900/90 border-neutral-800" : "bg-neutral-100/90 border-neutral-300"
               }`}>
                 <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold truncate text-[11px] font-mono">🎯 {selectedTask.text}</span>
+                  <span className="font-bold truncate text-[11px] font-mono">{selectedTask.text}</span>
                   <button onClick={() => updateState({ selectedTodoId: null })} className="text-[10px] opacity-60 hover:opacity-100">
                     Clear
                   </button>
