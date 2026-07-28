@@ -3,7 +3,6 @@ import { AppStateData } from "../types";
 
 let timerInterval: ReturnType<typeof setInterval> | null = null;
 
-// Helper: check if a URL matches any blocked domain
 function isUrlBlocked(targetUrl: string, blockedSites: string[]): boolean {
   if (!targetUrl || targetUrl.startsWith("chrome://") || targetUrl.startsWith("chrome-extension://") || targetUrl.startsWith("about:")) {
     return false;
@@ -24,7 +23,6 @@ function isUrlBlocked(targetUrl: string, blockedSites: string[]): boolean {
   });
 }
 
-// Actively inspect all open tabs and redirect any tab visiting a blocked domain
 async function enforceTabBlocking(state?: AppStateData) {
   if (typeof chrome === "undefined" || !chrome.tabs) return;
 
@@ -32,7 +30,7 @@ async function enforceTabBlocking(state?: AppStateData) {
   const isBlockingRequired =
     currentState.shield.enabled &&
     currentState.isActive &&
-    currentState.timerState === "WORK";
+    (currentState.timerState === "WORK" || currentState.timerState === "FLOW");
 
   if (!isBlockingRequired) return;
 
@@ -45,7 +43,6 @@ async function enforceTabBlocking(state?: AppStateData) {
         );
         chrome.tabs.update(tab.id, { url: blockedPageUrl });
 
-        // Record distraction log
         saveStoredState({
           distractions: [
             ...currentState.distractions,
@@ -72,18 +69,17 @@ async function updateBadge(timeLeft: number, isActive: boolean, timerState: stri
 
   const mins = Math.floor(timeLeft / 60);
   const secs = timeLeft % 60;
-  const badgeText = mins > 0 ? `${mins}m` : `${secs}s`;
+  const badgeText = timerState === "FLOW" ? `${mins}m` : (mins > 0 ? `${mins}m` : `${secs}s`);
 
   chrome.action.setBadgeText({ text: badgeText });
   chrome.action.setBadgeBackgroundColor({
-    color: timerState === "WORK" ? "#000000" : "#525252",
+    color: timerState === "WORK" ? "#000000" : timerState === "FLOW" ? "#262626" : "#525252",
   });
 }
 
 async function startBackgroundTimer() {
   if (timerInterval) clearInterval(timerInterval);
 
-  // Enforce blocking immediately upon starting timer
   enforceTabBlocking();
 
   timerInterval = setInterval(async () => {
@@ -94,77 +90,88 @@ async function startBackgroundTimer() {
       return;
     }
 
-    // Periodically re-check open tabs every second while timer is active
-    if (state.timerState === "WORK" && state.shield.enabled) {
+    if ((state.timerState === "WORK" || state.timerState === "FLOW") && state.shield.enabled) {
       enforceTabBlocking(state);
     }
 
-    if (state.timeLeft > 1) {
-      const nextTime = state.timeLeft - 1;
+    if (state.timerState === "FLOW") {
+      // Stopwatch mode: count up
+      const nextTime = state.timeLeft + 1;
       await saveStoredState({ timeLeft: nextTime });
-      updateBadge(nextTime, true, state.timerState);
+      updateBadge(nextTime, true, "FLOW");
     } else {
-      // Session completed!
-      if (timerInterval) clearInterval(timerInterval);
-      const isWork = state.timerState === "WORK";
-      const nextState = isWork ? "BREAK" : "WORK";
-      const nextTime = isWork
-        ? state.pomodoroSettings.break * 60
-        : state.pomodoroSettings.work * 60;
+      // Countdown mode: WORK or BREAK
+      if (state.timeLeft > 1) {
+        const nextTime = state.timeLeft - 1;
+        await saveStoredState({ timeLeft: nextTime });
+        updateBadge(nextTime, true, state.timerState);
+      } else {
+        // Session complete
+        if (timerInterval) clearInterval(timerInterval);
+        const isWork = state.timerState === "WORK";
+        const nextState = isWork ? "BREAK" : "WORK";
+        const nextTime = isWork
+          ? state.pomodoroSettings.break * 60
+          : state.pomodoroSettings.work * 60;
 
-      const newSessionList = isWork
-        ? [
-            ...state.sessions,
-            {
-              id: crypto.randomUUID(),
-              date: new Date().toISOString(),
-              duration: state.pomodoroSettings.work * 60,
-              mode: state.timerMode,
-              sessionName: state.sessionName || "Focus Session",
-            },
-          ]
-        : state.sessions;
+        const dayName = new Date().toLocaleDateString("en-US", { weekday: "short" });
+        const updatedWeekly = { ...state.stats.weeklyMinutes };
+        updatedWeekly[dayName] = (updatedWeekly[dayName] || 0) + (isWork ? state.pomodoroSettings.work : 0);
 
-      const updatedTodayMins = isWork
-        ? state.stats.todayMinutes + state.pomodoroSettings.work
-        : state.stats.todayMinutes;
+        const newSessionList = isWork
+          ? [
+              ...state.sessions,
+              {
+                id: crypto.randomUUID(),
+                date: new Date().toISOString(),
+                duration: state.pomodoroSettings.work * 60,
+                mode: state.timerMode,
+                sessionName: state.sessionName || "Focus Session",
+              },
+            ]
+          : state.sessions;
 
-      await saveStoredState({
-        isActive: false,
-        timerState: nextState,
-        timeLeft: nextTime,
-        sessions: newSessionList,
-        stats: {
-          ...state.stats,
-          todayMinutes: updatedTodayMins,
-        },
-      });
+        const updatedTodayMins = isWork
+          ? state.stats.todayMinutes + state.pomodoroSettings.work
+          : state.stats.todayMinutes;
 
-      updateBadge(nextTime, false, nextState);
-
-      // Desktop notification
-      if (typeof chrome !== "undefined" && chrome.notifications) {
-        chrome.notifications.create({
-          type: "basic",
-          iconUrl: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2'><circle cx='12' cy='12' r='10'/><path d='M12 6v6l4 2'/></svg>",
-          title: isWork ? "Focus Session Completed!" : "Break Finished!",
-          message: isWork
-            ? "Session complete. Take a short break."
-            : "Break is over. Ready to start focusing?",
-          priority: 2,
+        await saveStoredState({
+          isActive: false,
+          timerState: nextState,
+          timeLeft: nextTime,
+          sessions: newSessionList,
+          stats: {
+            ...state.stats,
+            todayMinutes: updatedTodayMins,
+            weeklyMinutes: updatedWeekly,
+          },
         });
+
+        updateBadge(nextTime, false, nextState);
+
+        if (typeof chrome !== "undefined" && chrome.notifications) {
+          chrome.notifications.create({
+            type: "basic",
+            iconUrl: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2'><circle cx='12' cy='12' r='10'/><path d='M12 6v6l4 2'/></svg>",
+            title: isWork ? "Focus Session Completed!" : "Break Finished!",
+            message: isWork
+              ? "Great session! Time for a break."
+              : "Break is over. Ready to focus?",
+            priority: 2,
+          });
+        }
       }
     }
   }, 1000);
 }
 
-// Tab navigation listener
+// Tab listeners
 if (typeof chrome !== "undefined" && chrome.tabs) {
   chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     const url = changeInfo.url || tab.url;
     if (url) {
       const state = await getStoredState();
-      if (state.shield.enabled && state.isActive && state.timerState === "WORK") {
+      if (state.shield.enabled && state.isActive && (state.timerState === "WORK" || state.timerState === "FLOW")) {
         if (isUrlBlocked(url, state.shield.blockedSites)) {
           const blockedPageUrl = chrome.runtime.getURL(
             `blocked.html?target=${encodeURIComponent(url)}`
@@ -177,7 +184,7 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
 
   chrome.tabs.onActivated.addListener(async (activeInfo) => {
     const state = await getStoredState();
-    if (state.shield.enabled && state.isActive && state.timerState === "WORK") {
+    if (state.shield.enabled && state.isActive && (state.timerState === "WORK" || state.timerState === "FLOW")) {
       chrome.tabs.get(activeInfo.tabId, (tab) => {
         if (tab?.id && tab.url && isUrlBlocked(tab.url, state.shield.blockedSites)) {
           const blockedPageUrl = chrome.runtime.getURL(
@@ -193,8 +200,8 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
 // Storage Listener
 if (typeof chrome !== "undefined" && chrome.storage) {
   chrome.storage.onChanged.addListener(async (changes, areaName) => {
-    if (areaName === "local" && changes.focus_extension_state_v2) {
-      const newState: AppStateData = changes.focus_extension_state_v2.newValue;
+    if (areaName === "local" && changes.focus_extension_state_v4) {
+      const newState: AppStateData = changes.focus_extension_state_v4.newValue;
       if (newState?.isActive) {
         startBackgroundTimer();
       } else {

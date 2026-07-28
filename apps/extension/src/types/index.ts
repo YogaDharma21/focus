@@ -1,7 +1,20 @@
-export type TimerMode = "POMODORO" | "STOPWATCH";
-export type TimerState = "WORK" | "BREAK";
+export type TimerMode = "POMODORO" | "STOPWATCH" | "FLOW";
+export type TimerState = "WORK" | "BREAK" | "FLOW";
 export type PriorityType = "low" | "medium" | "high" | "urgent";
+export type RecurringType = "none" | "daily" | "weekly" | "monthly";
 export type ThemeMode = "dark" | "light";
+
+export interface SubTask {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
+export interface Group {
+  id: string;
+  name: string;
+  type: "system" | "custom";
+}
 
 export interface TodoItem {
   id: string;
@@ -10,16 +23,21 @@ export interface TodoItem {
   completed: boolean;
   priority?: PriorityType;
   category?: string;
-  dueDate?: string;
-  subtasks?: { id: string; text: string; completed: boolean }[];
+  dueDate?: string; // ISO format or date string
+  dueTime?: string;
+  notes?: string;
+  recurring?: RecurringType;
+  estimatedPomodoros?: number;
+  completedPomodoros?: number;
+  groupId?: string; // group ID
+  subtasks?: SubTask[];
   completedAt?: string;
-  groupId?: string;
 }
 
 export interface MoodNote {
   id: string;
   date: string;
-  mood: string;
+  mood: string; // Emoji: 😄 Happy, 😊 Calm, 😐 Normal, 😔 Sad, 😤 Frustrated, 😴 Exhausted, 🤯 Overwhelmed
   text: string;
 }
 
@@ -29,6 +47,7 @@ export interface Session {
   duration: number; // in seconds
   mode: TimerMode;
   sessionName?: string;
+  todoId?: string;
 }
 
 export interface Distraction {
@@ -40,18 +59,20 @@ export interface Distraction {
 
 export interface ShieldConfig {
   enabled: boolean;
-  blockedSites: string[]; // e.g., ['facebook.com', 'twitter.com', 'x.com', 'reddit.com', 'instagram.com', 'tiktok.com', 'youtube.com']
+  blockedSites: string[];
 }
 
 export interface AppStateData {
-  themeMode: ThemeMode; // 'dark' | 'light'
+  themeMode: ThemeMode;
   
-  timerMode: TimerMode;
-  timerState: TimerState;
-  timeLeft: number; // seconds
+  timerMode: TimerMode; // "POMODORO" | "STOPWATCH" | "FLOW"
+  timerState: TimerState; // "WORK" | "BREAK" | "FLOW"
+  timeLeft: number; // seconds remaining for Pomodoro, or seconds elapsed for FLOW
   isActive: boolean;
   sessionStartTime: string | null;
   sessionName: string;
+  selectedTodoId: string | null;
+
   pomodoroSettings: {
     work: number; // minutes
     break: number; // minutes
@@ -59,6 +80,7 @@ export interface AppStateData {
   };
   
   todos: TodoItem[];
+  groups: Group[];
   moodNotes: MoodNote[];
   sessions: Session[];
   distractions: Distraction[];
@@ -69,5 +91,7 @@ export interface AppStateData {
     todayMinutes: number;
     completedTasksCount: number;
     streakDays: number;
+    longestStreak: number;
+    weeklyMinutes: { [day: string]: number }; // e.g. { "Mon": 45, "Tue": 60, ... }
   };
 }
