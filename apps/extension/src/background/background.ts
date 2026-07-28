@@ -193,8 +193,8 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
 // Storage Listener
 if (typeof chrome !== "undefined" && chrome.storage) {
   chrome.storage.onChanged.addListener(async (changes, areaName) => {
-    if (areaName === "local" && changes.focus_extension_state_v2) {
-      const newState: AppStateData = changes.focus_extension_state_v2.newValue;
+    if (areaName === "local" && changes.focus_extension_state_v3) {
+      const newState: AppStateData = changes.focus_extension_state_v3.newValue;
       if (newState?.isActive) {
         startBackgroundTimer();
       } else {

@@ -3,7 +3,6 @@ import {
   Timer,
   CheckSquare,
   Shield,
-  Volume2,
   BarChart3,
   Play,
   Pause,
@@ -18,42 +17,67 @@ import {
   Circle,
   ShieldAlert,
   ShieldCheck,
-  Music,
-  CloudRain,
-  Waves,
-  Wind,
   Sun,
   Moon,
   Info,
-  Github
+  Github,
+  Smile,
+  Wifi,
+  WifiOff,
+  X,
+  Zap,
+  Sparkles
 } from "lucide-react";
-import { AppStateData, TodoItem } from "../types";
+import { AppStateData, MoodEntry, MoodType, TodoItem } from "../types";
 import { getStoredState, saveStoredState, subscribeToStateChanges } from "../lib/storage";
-import { AMBIENT_TRACKS, playAmbientTrack, setAmbientVolume, stopAmbientTrack } from "../lib/audio";
+import { checkOnlineStatus, subscribeOnlineStatus } from "../lib/convex";
 import "../index.css";
+
+const MOOD_OPTIONS: { type: MoodType; label: string }[] = [
+  { type: "🎯 Focused", label: "Focused" },
+  { type: "🔥 Energetic", label: "Energetic" },
+  { type: "☕ Calm", label: "Calm" },
+  { type: "⚡ Productive", label: "Productive" },
+  { type: "😴 Tired", label: "Tired" },
+  { type: "🧘 Mindful", label: "Mindful" },
+];
 
 export function Popup() {
   const [state, setState] = useState<AppStateData | null>(null);
-  const [activeTab, setActiveTab] = useState<"timer" | "tasks" | "shield" | "ambient" | "stats" | "info">("timer");
+  const [activeTab, setActiveTab] = useState<"timer" | "tasks" | "shield" | "mood" | "stats">("timer");
+  const [showInfoModal, setShowInfoModal] = useState(false);
 
   // Local inputs
   const [newTaskText, setNewTaskText] = useState("");
   const [newTaskPriority, setNewTaskPriority] = useState<"low" | "medium" | "high" | "urgent">("medium");
   const [newSiteUrl, setNewSiteUrl] = useState("");
-  const [newMoodText, setNewMoodText] = useState("");
+  
+  // Mood Mode inputs
+  const [selectedMood, setSelectedMood] = useState<MoodType>("🎯 Focused");
+  const [moodNoteText, setMoodNoteText] = useState("");
+  const [energyLevel, setEnergyLevel] = useState<number>(4);
 
   useEffect(() => {
     getStoredState().then((initial) => {
-      setState(initial);
+      const online = checkOnlineStatus();
+      const next = { ...initial, isOnline: online };
+      setState(next);
       document.body.className = initial.themeMode || "dark";
     });
 
-    const unsubscribe = subscribeToStateChanges((updated) => {
+    const unsubscribeState = subscribeToStateChanges((updated) => {
       setState(updated);
       document.body.className = updated.themeMode || "dark";
     });
 
-    return () => unsubscribe();
+    const unsubscribeOnline = subscribeOnlineStatus((online) => {
+      setState((prev) => (prev ? { ...prev, isOnline: online } : null));
+    });
+
+    return () => {
+      unsubscribeState();
+      unsubscribeOnline();
+    };
   }, []);
 
   if (!state) {
@@ -76,11 +100,10 @@ export function Popup() {
   };
 
   const toggleThemeMode = () => {
-    const nextMode = isDark ? "light" : "dark";
-    updateState({ themeMode: nextMode });
+    updateState({ themeMode: isDark ? "light" : "dark" });
   };
 
-  // Timer controls
+  // Timer Handlers
   const toggleTimer = () => {
     updateState({ isActive: !state.isActive });
   };
@@ -149,34 +172,23 @@ export function Popup() {
     });
   };
 
-  // Ambient Handlers
-  const toggleAmbient = (trackId: string) => {
-    if (state.ambientPlaying === trackId) {
-      stopAmbientTrack();
-      updateState({ ambientPlaying: null });
-    } else {
-      playAmbientTrack(trackId, state.ambientVolume);
-      updateState({ ambientPlaying: trackId });
-    }
-  };
-
-  const handleVolumeChange = (v: number) => {
-    setAmbientVolume(v);
-    updateState({ ambientVolume: v });
-  };
-
-  // Reflection / Distraction
-  const addMoodNote = (e: React.FormEvent) => {
+  // Mood Mode Handlers
+  const addMoodEntry = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newMoodText.trim()) return;
-    const note = {
+    if (!moodNoteText.trim()) return;
+    const entry: MoodEntry = {
       id: crypto.randomUUID(),
       date: new Date().toISOString().split("T")[0],
-      mood: "Focused",
-      text: newMoodText.trim()
+      mood: selectedMood,
+      text: moodNoteText.trim(),
+      energyLevel
     };
-    updateState({ moodNotes: [note, ...state.moodNotes] });
-    setNewMoodText("");
+    updateState({ moodEntries: [entry, ...state.moodEntries] });
+    setMoodNoteText("");
+  };
+
+  const deleteMoodEntry = (id: string) => {
+    updateState({ moodEntries: state.moodEntries.filter(m => m.id !== id) });
   };
 
   const openGithubLink = () => {
@@ -196,10 +208,10 @@ export function Popup() {
   const progressPercent = totalDuration > 0 ? Math.min(100, Math.max(0, ((totalDuration - state.timeLeft) / totalDuration) * 100)) : 0;
 
   return (
-    <div className={`w-[420px] h-[580px] flex flex-col overflow-hidden select-none font-sans ${
+    <div className={`w-[420px] h-[580px] flex flex-col overflow-hidden select-none font-sans relative ${
       isDark ? "bg-black text-white" : "bg-white text-black"
     }`}>
-      {/* Header */}
+      {/* Top Header */}
       <header className={`px-4 py-3 border-b flex items-center justify-between z-10 ${
         isDark ? "bg-neutral-950 border-neutral-800" : "bg-neutral-100 border-neutral-200"
       }`}>
@@ -213,14 +225,36 @@ export function Popup() {
             <h1 className="text-sm font-extrabold tracking-wider uppercase font-heading">
               FOCUS
             </h1>
-            <p className={`text-[10px] font-mono -mt-0.5 ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
-              Monochrome Extension
+            <p className={`text-[10px] font-mono -mt-0.5 flex items-center gap-1 ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
+              {state.isOnline ? (
+                <span className="flex items-center gap-1 text-emerald-400 font-bold">
+                  <Wifi className="w-3 h-3" /> Convex & Clerk
+                </span>
+              ) : (
+                <span className="flex items-center gap-1 text-red-400 font-bold">
+                  <WifiOff className="w-3 h-3" /> Offline
+                </span>
+              )}
             </p>
           </div>
         </div>
 
+        {/* Controls: Mode Toggle beside Info Button */}
         <div className="flex items-center gap-2">
-          {/* Black & White Mode Toggle Button */}
+          {/* Info Button beside Mode Toggle */}
+          <button
+            onClick={() => setShowInfoModal(true)}
+            className={`p-2 rounded-lg border transition-all flex items-center justify-center ${
+              isDark
+                ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800"
+                : "bg-white border-neutral-300 text-black hover:bg-neutral-100"
+            }`}
+            title="Extension Information & GitHub"
+          >
+            <Info className="w-4 h-4" />
+          </button>
+
+          {/* Dark and Light Mode Toggle */}
           <button
             onClick={toggleThemeMode}
             className={`p-2 rounded-lg border transition-all flex items-center justify-center ${
@@ -235,17 +269,36 @@ export function Popup() {
         </div>
       </header>
 
+      {/* Internet Requirement Fallback Banner when Offline */}
+      {!state.isOnline && (
+        <div className={`px-4 py-2 border-b text-xs font-mono flex items-center justify-between z-10 ${
+          isDark ? "bg-neutral-900 border-neutral-800 text-neutral-200" : "bg-neutral-100 border-neutral-300 text-neutral-800"
+        }`}>
+          <div className="flex items-center gap-2">
+            <WifiOff className="w-4 h-4 text-amber-400 flex-shrink-0" />
+            <span>Internet required for Convex & Clerk sync.</span>
+          </div>
+          <button
+            onClick={() => updateState({ isOnline: checkOnlineStatus() })}
+            className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+              isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
+            }`}
+          >
+            Retry
+          </button>
+        </div>
+      )}
+
       {/* Navigation Tabs */}
-      <nav className={`flex items-center justify-between px-2 py-1.5 border-b z-10 ${
+      <nav className={`flex items-center justify-between px-3 py-1.5 border-b z-10 ${
         isDark ? "bg-neutral-900/60 border-neutral-800" : "bg-neutral-50 border-neutral-200"
       }`}>
         {[
           { id: "timer", label: "Timer", icon: Timer },
           { id: "tasks", label: "Tasks", icon: CheckSquare, badge: state.todos.filter(t => !t.completed).length },
           { id: "shield", label: "Shield", icon: Shield, activeIndicator: state.shield.enabled && state.isActive },
-          { id: "ambient", label: "Audio", icon: Volume2, activeIndicator: !!state.ambientPlaying },
-          { id: "stats", label: "Stats", icon: BarChart3 },
-          { id: "info", label: "Info", icon: Info }
+          { id: "mood", label: "Mood Mode", icon: Smile },
+          { id: "stats", label: "Stats", icon: BarChart3 }
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -253,7 +306,7 @@ export function Popup() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`flex flex-col items-center gap-0.5 py-1 px-2.5 rounded-lg transition-all relative text-[10px] font-bold ${
+              className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-lg transition-all relative text-[10px] font-bold ${
                 isActive
                   ? isDark
                     ? "bg-white text-black font-extrabold shadow-sm"
@@ -284,12 +337,11 @@ export function Popup() {
         })}
       </nav>
 
-      {/* Main Content Body */}
+      {/* Main Tab Content */}
       <div className="flex-1 overflow-y-auto p-4 z-10 relative">
         {/* TIMER TAB */}
         {activeTab === "timer" && (
           <div className="flex flex-col items-center justify-between h-full py-1">
-            {/* Work / Break Switcher */}
             <div className={`flex items-center p-1 rounded-xl border w-full max-w-[260px] ${
               isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-100 border-neutral-300"
             }`}>
@@ -315,7 +367,6 @@ export function Popup() {
               </button>
             </div>
 
-            {/* Monochrome Circular Timer */}
             <div className="relative w-44 h-44 my-3 flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90">
                 <circle
@@ -355,7 +406,6 @@ export function Popup() {
               </div>
             </div>
 
-            {/* Session Objective Input */}
             <div className="w-full max-w-[280px] mb-3">
               <input
                 type="text"
@@ -370,7 +420,6 @@ export function Popup() {
               />
             </div>
 
-            {/* Controls */}
             <div className="flex items-center gap-3">
               <button
                 onClick={resetTimer}
@@ -495,7 +544,6 @@ export function Popup() {
         {/* SHIELD TAB */}
         {activeTab === "shield" && (
           <div className="flex flex-col gap-3 h-full">
-            {/* Master Toggle */}
             <div className={`p-3 rounded-xl border flex items-center justify-between ${
               state.shield.enabled
                 ? isDark ? "bg-neutral-900 border-white text-white" : "bg-neutral-100 border-black text-black"
@@ -523,7 +571,6 @@ export function Popup() {
               </button>
             </div>
 
-            {/* Add Site */}
             <form onSubmit={addBlockedSite} className="flex gap-2">
               <input
                 type="text"
@@ -546,7 +593,6 @@ export function Popup() {
               </button>
             </form>
 
-            {/* Blocked List */}
             <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
               <div className={`text-[10px] font-mono uppercase tracking-wider mb-1 ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
                 Blacklisted Domains ({state.shield.blockedSites.length})
@@ -568,65 +614,112 @@ export function Popup() {
           </div>
         )}
 
-        {/* AMBIENT SOUNDS TAB */}
-        {activeTab === "ambient" && (
-          <div className="flex flex-col gap-4 h-full">
-            <div className={`p-3 rounded-xl border flex items-center gap-3 ${
-              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-100 border-neutral-300"
-            }`}>
-              <Volume2 className="w-4 h-4" />
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
-                value={state.ambientVolume}
-                onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
-                className={`flex-1 h-1.5 rounded-lg cursor-pointer ${
-                  isDark ? "accent-white bg-neutral-800" : "accent-black bg-neutral-300"
-                }`}
-              />
-              <span className="text-xs font-mono w-8 text-right font-bold">
-                {Math.round(state.ambientVolume * 100)}%
+        {/* MOOD MODE TAB (NEW) */}
+        {activeTab === "mood" && (
+          <div className="flex flex-col gap-3 h-full overflow-y-auto pr-1">
+            {/* Mood Selector Pills */}
+            <div className="space-y-1">
+              <span className={`text-[10px] font-mono uppercase tracking-wider ${isDark ? "text-neutral-400" : "text-neutral-600"}`}>
+                CURRENT MOOD STATE
               </span>
+              <div className="grid grid-cols-3 gap-1.5">
+                {MOOD_OPTIONS.map((item) => {
+                  const isSelected = selectedMood === item.type;
+                  return (
+                    <button
+                      key={item.type}
+                      onClick={() => setSelectedMood(item.type)}
+                      className={`p-2 rounded-xl border text-xs font-bold transition-all text-center ${
+                        isSelected
+                          ? isDark ? "bg-white text-black border-white shadow-md" : "bg-black text-white border-black shadow-md"
+                          : isDark ? "bg-neutral-900 border-neutral-800 text-neutral-300 hover:bg-neutral-800" : "bg-neutral-50 border-neutral-200 text-neutral-700 hover:bg-neutral-100"
+                      }`}
+                    >
+                      {item.type}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2.5">
-              {AMBIENT_TRACKS.map((track) => {
-                const isPlaying = state.ambientPlaying === track.id;
-                const IconComponent =
-                  track.id === "rain" ? CloudRain :
-                  track.id === "waves" ? Waves :
-                  track.id === "whitenoise" ? Wind : Music;
-
-                return (
+            {/* Energy Level Selector */}
+            <div className={`p-2.5 rounded-xl border flex items-center justify-between ${
+              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+            }`}>
+              <span className="text-xs font-mono font-bold flex items-center gap-1.5">
+                <Zap className="w-3.5 h-3.5" /> Energy Rating:
+              </span>
+              <div className="flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((lvl) => (
                   <button
-                    key={track.id}
-                    onClick={() => toggleAmbient(track.id)}
-                    className={`p-3 rounded-xl border text-left flex flex-col justify-between gap-2 transition-all ${
-                      isPlaying
-                        ? isDark ? "bg-white text-black border-white shadow-md font-bold" : "bg-black text-white border-black shadow-md font-bold"
-                        : isDark ? "bg-neutral-900 border-neutral-800 text-neutral-300 hover:bg-neutral-800" : "bg-neutral-50 border-neutral-200 text-neutral-700 hover:bg-neutral-100"
+                    key={lvl}
+                    onClick={() => setEnergyLevel(lvl)}
+                    className={`w-6 h-6 rounded-lg text-xs font-mono font-bold border ${
+                      energyLevel >= lvl
+                        ? isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
+                        : isDark ? "bg-neutral-950 text-neutral-600 border-neutral-800" : "bg-neutral-200 text-neutral-400 border-neutral-300"
                     }`}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className={`p-1.5 rounded-lg ${
-                        isPlaying
-                          ? isDark ? "bg-black text-white" : "bg-white text-black"
-                          : isDark ? "bg-neutral-800 text-neutral-400" : "bg-neutral-200 text-neutral-600"
-                      }`}>
-                        <IconComponent className="w-3.5 h-3.5" />
-                      </div>
-                      {isPlaying ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 opacity-50" />}
-                    </div>
-
-                    <div>
-                      <h4 className="text-xs font-bold font-mono">{track.title}</h4>
-                      <p className="text-[10px] opacity-70 line-clamp-1">{track.desc}</p>
-                    </div>
+                    {lvl}
                   </button>
-                );
-              })}
+                ))}
+              </div>
+            </div>
+
+            {/* Reflection Note Form */}
+            <form onSubmit={addMoodEntry} className={`p-3 rounded-xl border flex flex-col gap-2 ${
+              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+            }`}>
+              <span className="text-xs font-bold font-mono">MOOD REFLECTION LOG</span>
+              <textarea
+                value={moodNoteText}
+                onChange={(e) => setMoodNoteText(e.target.value)}
+                placeholder="Log your mindset, win of the day, or focus note..."
+                rows={2}
+                className={`w-full p-2 rounded-lg text-xs border focus:outline-none ${
+                  isDark
+                    ? "bg-black border-neutral-800 text-white placeholder-neutral-600 focus:border-white"
+                    : "bg-white border-neutral-300 text-black placeholder-neutral-400 focus:border-black"
+                }`}
+              />
+              <button
+                type="submit"
+                className={`py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                  isDark ? "bg-white text-black border-white hover:bg-neutral-200" : "bg-black text-white border-black hover:bg-neutral-800"
+                }`}
+              >
+                Log Mood Entry
+              </button>
+            </form>
+
+            {/* Mood History Timeline */}
+            <div className="space-y-1.5">
+              <span className={`text-[10px] font-mono uppercase tracking-wider ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
+                Mood History ({state.moodEntries.length})
+              </span>
+              {state.moodEntries.length === 0 ? (
+                <div className={`text-center py-6 text-xs font-mono ${isDark ? "text-neutral-600" : "text-neutral-400"}`}>
+                  NO MOOD LOGS RECORDED YET.
+                </div>
+              ) : (
+                state.moodEntries.map((entry) => (
+                  <div key={entry.id} className={`p-3 rounded-xl border text-xs relative ${
+                    isDark ? "bg-neutral-900/60 border-neutral-800 text-neutral-200" : "bg-neutral-50 border-neutral-200 text-neutral-800"
+                  }`}>
+                    <div className="flex items-center justify-between text-[10px] font-mono mb-1">
+                      <span className="font-bold border px-1.5 py-0.5 rounded border-current">{entry.mood}</span>
+                      <div className="flex items-center gap-2">
+                        <span>Energy: {"⚡".repeat(entry.energyLevel || 3)}</span>
+                        <span>{entry.date}</span>
+                        <button onClick={() => deleteMoodEntry(entry.id)} className="text-neutral-500 hover:text-red-400">
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-xs leading-relaxed mt-1">{entry.text}</p>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
@@ -658,99 +751,84 @@ export function Popup() {
               </div>
             </div>
 
-            {/* Quick Mood Note Form */}
-            <form onSubmit={addMoodNote} className={`p-3 rounded-xl border flex flex-col gap-2 ${
-              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
-            }`}>
-              <span className="text-xs font-bold font-mono">DAILY REFLECTION NOTE</span>
-              <textarea
-                value={newMoodText}
-                onChange={(e) => setNewMoodText(e.target.value)}
-                placeholder="Log a quick daily thought..."
-                rows={2}
-                className={`w-full p-2 rounded-lg text-xs border focus:outline-none ${
-                  isDark
-                    ? "bg-black border-neutral-800 text-white placeholder-neutral-600 focus:border-white"
-                    : "bg-white border-neutral-300 text-black placeholder-neutral-400 focus:border-black"
-                }`}
-              />
-              <button
-                type="submit"
-                className={`py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                  isDark ? "bg-white text-black border-white hover:bg-neutral-200" : "bg-black text-white border-black hover:bg-neutral-800"
-                }`}
-              >
-                Save Reflection
-              </button>
-            </form>
-
             <div className="space-y-1.5">
-              <span className={`text-[10px] font-mono uppercase tracking-wider ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>Recent Reflections</span>
-              {state.moodNotes.slice(0, 3).map((note) => (
-                <div key={note.id} className={`p-2.5 rounded-xl border text-xs ${
-                  isDark ? "bg-neutral-900/40 border-neutral-800 text-neutral-300" : "bg-neutral-50 border-neutral-200 text-neutral-700"
-                }`}>
-                  <div className="text-[9px] font-mono opacity-60 mb-1">{note.date}</div>
-                  <p className="text-xs leading-relaxed">{note.text}</p>
+              <span className={`text-[10px] font-mono uppercase tracking-wider ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
+                Session History ({state.sessions.length})
+              </span>
+              {state.sessions.length === 0 ? (
+                <div className={`text-center py-8 text-xs font-mono ${isDark ? "text-neutral-600" : "text-neutral-400"}`}>
+                  NO COMPLETED SESSIONS YET.
                 </div>
-              ))}
+              ) : (
+                state.sessions.map((session) => (
+                  <div key={session.id} className={`p-2.5 rounded-xl border flex items-center justify-between text-xs font-mono ${
+                    isDark ? "bg-neutral-900/40 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+                  }`}>
+                    <span className="font-bold">{session.sessionName || "Focus Session"}</span>
+                    <span className="opacity-70">{Math.round(session.duration / 60)}m • {new Date(session.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                ))
+              )}
             </div>
           </div>
         )}
+      </div>
 
-        {/* INFO TAB (REPLACED DASHBOARD SECTION) */}
-        {activeTab === "info" && (
-          <div className="flex flex-col gap-4 h-full overflow-y-auto pr-1">
-            <div className={`p-4 rounded-xl border flex flex-col gap-2 ${
-              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
-            }`}>
-              <div className="flex items-center gap-2">
-                <div className={`w-6 h-6 rounded border flex items-center justify-center font-bold text-xs font-mono ${
-                  isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
-                }`}>
-                  F
-                </div>
+      {/* INFO MODAL DIALOG (Triggered from header Info button beside Theme toggle) */}
+      {showInfoModal && (
+        <div className="absolute inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className={`w-full max-w-sm p-5 rounded-2xl border flex flex-col gap-3 shadow-2xl relative ${
+            isDark ? "bg-neutral-950 border-neutral-800 text-white" : "bg-white border-neutral-300 text-black"
+          }`}>
+            <button
+              onClick={() => setShowInfoModal(false)}
+              className={`absolute top-3 right-3 p-1 rounded-lg ${isDark ? "hover:bg-neutral-800 text-neutral-400" : "hover:bg-neutral-200 text-neutral-600"}`}
+            >
+              <X className="w-4 h-4" />
+            </button>
+
+            <div className="flex items-center gap-2.5">
+              <div className={`w-7 h-7 rounded-lg border flex items-center justify-center font-bold text-xs font-mono ${
+                isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
+              }`}>
+                F
+              </div>
+              <div>
                 <h3 className="text-sm font-extrabold font-heading tracking-wider">FOCUS EXTENSION</h3>
+                <span className="text-[10px] font-mono opacity-60">Version 1.0.0</span>
               </div>
-              <p className="text-xs leading-relaxed opacity-80 font-sans">
-                A high-contrast, black & white productivity companion designed for distraction-free deep work.
-              </p>
             </div>
 
-            {/* Key Features Overview */}
-            <div className={`p-3 rounded-xl border space-y-2 text-xs font-mono ${
-              isDark ? "bg-neutral-950 border-neutral-800" : "bg-neutral-100 border-neutral-200"
+            <p className="text-xs leading-relaxed opacity-80">
+              A black & white productivity extension built for deep work, Pomodoro sessions, site blocking, and daily mood tracking.
+            </p>
+
+            <div className={`p-3 rounded-xl border space-y-1.5 text-xs font-mono ${
+              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-100 border-neutral-200"
             }`}>
-              <div className="font-bold border-b pb-1 opacity-70 border-current">CORE FEATURES</div>
-              <div className="space-y-1 text-[11px] opacity-90">
-                <div>• ⏱️ <b>Pomodoro & Stopwatch</b> timer with background worker.</div>
+              <div className="font-bold border-b pb-1 opacity-70 border-current">FEATURE OVERVIEW</div>
+              <div className="space-y-1 text-[11px]">
+                <div>• ⏱️ <b>Pomodoro Timer</b> with badge status.</div>
                 <div>• 🛡️ <b>Distraction Shield</b> auto-blocks sites during work.</div>
-                <div>• 📋 <b>Task Manager</b> with priority tagging & check-offs.</div>
-                <div>• 🎵 <b>Ambient Audio Synthesizer</b> (Rain, Waves, Noise).</div>
-                <div>• 🌗 <b>Black & White Monochrome</b> mode toggle.</div>
+                <div>• 📋 <b>Task Checklist</b> with priority levels.</div>
+                <div>• 😊 <b>Mood Mode</b> daily reflection & energy tracking.</div>
+                <div>• 🌐 <b>Convex & Clerk Integration</b> with offline fallback.</div>
               </div>
             </div>
 
-            {/* Link to GitHub Repository / Pages */}
             <button
               onClick={openGithubLink}
-              className={`w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border transition-all ${
-                isDark
-                  ? "bg-white text-black border-white hover:bg-neutral-200"
-                  : "bg-black text-white border-black hover:bg-neutral-800"
+              className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border transition-all ${
+                isDark ? "bg-white text-black border-white hover:bg-neutral-200" : "bg-black text-white border-black hover:bg-neutral-800"
               }`}
             >
               <Github className="w-4 h-4" />
               <span>View Source on GitHub Pages</span>
               <ExternalLink className="w-3.5 h-3.5 ml-1" />
             </button>
-
-            <div className={`text-[10px] font-mono text-center opacity-50 ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
-              Focus Extension v1.0.0 • Manifest V3
-            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 }

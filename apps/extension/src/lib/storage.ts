@@ -1,6 +1,6 @@
 import { AppStateData } from "../types";
 
-const STORAGE_KEY = "focus_extension_state_v2";
+const STORAGE_KEY = "focus_extension_state_v3";
 
 export const DEFAULT_STATE: AppStateData = {
   themeMode: "dark",
@@ -35,12 +35,13 @@ export const DEFAULT_STATE: AppStateData = {
       category: "Work"
     }
   ],
-  moodNotes: [
+  moodEntries: [
     {
       id: "note-1",
       date: new Date().toISOString().split("T")[0],
-      mood: "Focused",
-      text: "Started the morning with zero distractions and completed primary tasks!"
+      mood: "🎯 Focused",
+      text: "Started the morning with zero distractions and completed primary tasks!",
+      energyLevel: 5
     }
   ],
   sessions: [],
@@ -57,8 +58,7 @@ export const DEFAULT_STATE: AppStateData = {
       "youtube.com"
     ]
   },
-  ambientPlaying: null,
-  ambientVolume: 0.5,
+  isOnline: typeof navigator !== "undefined" ? navigator.onLine : true,
   stats: {
     todayMinutes: 45,
     completedTasksCount: 3,
