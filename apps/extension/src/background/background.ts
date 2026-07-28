@@ -108,36 +108,52 @@ async function startBackgroundTimer() {
       } else {
         // Session complete
         if (timerInterval) clearInterval(timerInterval);
-        const isWork = state.timerState === "WORK";
-        const nextState = isWork ? "BREAK" : "WORK";
-        const nextTime = isWork
-          ? state.pomodoroSettings.break * 60
-          : state.pomodoroSettings.work * 60;
+        const isWorkOrFlow = state.timerState === "WORK";
+        
+        let nextState: "WORK" | "BREAK" | "FLOW" = "BREAK";
+        let nextTime = 0;
+        let prevMode = state.previousMode;
+
+        if (state.timerState === "WORK") {
+          prevMode = "POMODORO";
+          nextState = "BREAK";
+          nextTime = state.pomodoroSettings.break * 60;
+        } else {
+          // Returning from BREAK back to previous mode (FLOW or POMODORO)
+          if (state.previousMode === "FLOW") {
+            nextState = "FLOW";
+            nextTime = 0;
+          } else {
+            nextState = "WORK";
+            nextTime = state.pomodoroSettings.work * 60;
+          }
+        }
 
         const dayName = new Date().toLocaleDateString("en-US", { weekday: "short" });
         const updatedWeekly = { ...state.stats.weeklyMinutes };
-        updatedWeekly[dayName] = (updatedWeekly[dayName] || 0) + (isWork ? state.pomodoroSettings.work : 0);
+        updatedWeekly[dayName] = (updatedWeekly[dayName] || 0) + (isWorkOrFlow ? Math.round(state.timeLeft / 60) : 0);
 
-        const newSessionList = isWork
+        const newSessionList = isWorkOrFlow
           ? [
               ...state.sessions,
               {
                 id: crypto.randomUUID(),
                 date: new Date().toISOString(),
-                duration: state.pomodoroSettings.work * 60,
+                duration: state.timeLeft,
                 mode: state.timerMode,
                 sessionName: state.sessionName || "Focus Session",
               },
             ]
           : state.sessions;
 
-        const updatedTodayMins = isWork
-          ? state.stats.todayMinutes + state.pomodoroSettings.work
+        const updatedTodayMins = isWorkOrFlow
+          ? state.stats.todayMinutes + Math.round(state.timeLeft / 60)
           : state.stats.todayMinutes;
 
         await saveStoredState({
           isActive: false,
           timerState: nextState,
+          previousMode: prevMode,
           timeLeft: nextTime,
           sessions: newSessionList,
           stats: {
@@ -153,10 +169,10 @@ async function startBackgroundTimer() {
           chrome.notifications.create({
             type: "basic",
             iconUrl: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2'><circle cx='12' cy='12' r='10'/><path d='M12 6v6l4 2'/></svg>",
-            title: isWork ? "Focus Session Completed!" : "Break Finished!",
-            message: isWork
-              ? "Great session! Time for a break."
-              : "Break is over. Ready to focus?",
+            title: isWorkOrFlow ? "Session Completed!" : "Break Finished!",
+            message: isWorkOrFlow
+              ? `Session complete. Taking a ${Math.round(nextTime / 60)}-minute break.`
+              : `Break finished! Returning to ${prevMode} mode.`,
             priority: 2,
           });
         }
@@ -200,8 +216,8 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
 // Storage Listener
 if (typeof chrome !== "undefined" && chrome.storage) {
   chrome.storage.onChanged.addListener(async (changes, areaName) => {
-    if (areaName === "local" && changes.focus_extension_state_v4) {
-      const newState: AppStateData = changes.focus_extension_state_v4.newValue;
+    if (areaName === "local" && changes.focus_extension_state_v5) {
+      const newState: AppStateData = changes.focus_extension_state_v5.newValue;
       if (newState?.isActive) {
         startBackgroundTimer();
       } else {

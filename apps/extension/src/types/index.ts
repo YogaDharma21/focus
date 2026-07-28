@@ -23,13 +23,13 @@ export interface TodoItem {
   completed: boolean;
   priority?: PriorityType;
   category?: string;
-  dueDate?: string; // ISO format or date string
+  dueDate?: string;
   dueTime?: string;
   notes?: string;
   recurring?: RecurringType;
   estimatedPomodoros?: number;
   completedPomodoros?: number;
-  groupId?: string; // group ID
+  groupId?: string;
   subtasks?: SubTask[];
   completedAt?: string;
 }
@@ -53,7 +53,7 @@ export interface Session {
 export interface Distraction {
   id: string;
   timestamp: string;
-  category: string;
+  category: "Phone" | "Social Media" | "Bathroom" | "Meeting" | "Other" | string;
   website?: string;
 }
 
@@ -65,9 +65,10 @@ export interface ShieldConfig {
 export interface AppStateData {
   themeMode: ThemeMode;
   
-  timerMode: TimerMode; // "POMODORO" | "STOPWATCH" | "FLOW"
-  timerState: TimerState; // "WORK" | "BREAK" | "FLOW"
-  timeLeft: number; // seconds remaining for Pomodoro, or seconds elapsed for FLOW
+  timerMode: TimerMode;
+  timerState: TimerState;
+  previousMode: "POMODORO" | "FLOW"; // Stores mode before break to return to
+  timeLeft: number; // seconds
   isActive: boolean;
   sessionStartTime: string | null;
   sessionName: string;
@@ -92,6 +93,6 @@ export interface AppStateData {
     completedTasksCount: number;
     streakDays: number;
     longestStreak: number;
-    weeklyMinutes: { [day: string]: number }; // e.g. { "Mon": 45, "Tue": 60, ... }
+    weeklyMinutes: { [day: string]: number };
   };
 }
