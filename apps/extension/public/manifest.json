@@ -1,0 +1,37 @@
+{
+  "manifest_version": 3,
+  "name": "Focus - Productivity & Distraction Shield",
+  "version": "1.0.0",
+  "description": "Stay focused with Pomodoro timers, distraction shields, task management, ambient sounds, and daily reflections.",
+  "permissions": [
+    "storage",
+    "tabs",
+    "notifications",
+    "alarms",
+    "activeTab"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Focus Extension"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_start"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["blocked.html", "dashboard.html", "assets/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}
