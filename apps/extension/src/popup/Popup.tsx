@@ -1537,6 +1537,49 @@ export function Popup() {
         {/* STATS TAB */}
         {activeTab === "stats" && (
           <div className="flex flex-col gap-3 h-full overflow-y-auto pr-1">
+            {/* Day Progress Card (First Card in Stats) */}
+            {(() => {
+              const now = new Date();
+              const secsPassed = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+              const dayPercent = Math.min(100, Math.max(0, Math.round((secsPassed / 86400) * 100)));
+              const remSecs = 86400 - secsPassed;
+              const remH = Math.floor(remSecs / 3600);
+              const remM = Math.floor((remSecs % 3600) / 60);
+
+              return (
+                <div className={`p-3 rounded-xl border flex flex-col gap-2.5 ${
+                  isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className={`p-1.5 rounded-lg border flex items-center justify-center ${
+                        isDark ? "bg-neutral-800 border-neutral-700 text-white" : "bg-neutral-200 border-neutral-300 text-black"
+                      }`}>
+                        <Clock className="w-3.5 h-3.5" />
+                      </div>
+                      <span className="text-xs font-bold font-sans">Day Progress</span>
+                    </div>
+                    <span className="text-xs font-extrabold font-mono">{dayPercent}%</span>
+                  </div>
+
+                  <div className={`w-full h-2 rounded-full overflow-hidden ${
+                    isDark ? "bg-neutral-800" : "bg-neutral-200"
+                  }`}>
+                    <div
+                      className={`h-full rounded-full transition-all duration-500 ${
+                        isDark ? "bg-white" : "bg-black"
+                      }`}
+                      style={{ width: `${dayPercent}%` }}
+                    />
+                  </div>
+
+                  <div className="text-[10px] font-mono opacity-60">
+                    {remH}h {remM}m remaining today
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Top 3 Cards Side-by-Side: Focused Today, Finished Tasks, Pending Tasks */}
             <div className="grid grid-cols-3 gap-2">
               <div className={`p-2.5 rounded-xl border flex flex-col items-center text-center ${
