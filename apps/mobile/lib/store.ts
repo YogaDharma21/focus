@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { safeStorage } from './storage';
 
 export type ViewType = 'FOCUS' | 'TODO' | 'JOURNAL' | 'NOTES';
 export type BackgroundType = 'dark' | 'gradient' | 'mountain' | 'library' | 'cafe' | 'anime-room';
@@ -339,7 +339,7 @@ export const useAppStore = create<AppState>()(
     }),
     {
       name: 'focus-mobile-storage-v1',
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => safeStorage),
     }
   )
 );
