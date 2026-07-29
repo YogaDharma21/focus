@@ -243,9 +243,16 @@ export const useAppStore = create<AppState>()(
           groups: [...(state.groups || []), { id: generateId(), name, type: 'custom' }],
         })),
       deleteGroup: (id) =>
-        set((state) => ({
-          groups: (state.groups || []).filter((g) => g.id !== id),
-        })),
+        set((state) => {
+          const targetGroup = state.groups.find((g) => g.id === id);
+          if (!targetGroup || targetGroup.type === 'system' || id === 'current' || id === 'finished') {
+            return state;
+          }
+          return {
+            groups: state.groups.filter((g) => g.id !== id),
+            todos: state.todos.map((t) => (t.groupId === id ? { ...t, groupId: 'current' } : t)),
+          };
+        }),
 
       moodNotes: [],
       addMoodNote: (note) => set((state) => ({ moodNotes: [...(state.moodNotes || []), note] })),
