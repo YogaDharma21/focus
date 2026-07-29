@@ -101,6 +101,7 @@ interface AppState {
   toggleTodo: (id: string) => void;
   updateTodo: (id: string, updates: Partial<TodoItem>) => void;
   deleteTodo: (id: string) => void;
+  incrementTodoSession: (todoId: string) => void;
   groups: Group[];
   addGroup: (name: string) => void;
   deleteGroup: (id: string) => void;
@@ -232,6 +233,23 @@ export const useAppStore = create<AppState>()(
       deleteTodo: (id) =>
         set((state) => ({
           todos: state.todos.filter((t) => t.id !== id),
+        })),
+      incrementTodoSession: (todoId) =>
+        set((state) => ({
+          todos: state.todos.map((t) => {
+            if (t.id !== todoId) return t;
+            const currentCompleted = t.completedPomodoros || 0;
+            const newCompleted = currentCompleted + 1;
+            const est = t.estimatedPomodoros || 1;
+            const isFinished = newCompleted >= est;
+            return {
+              ...t,
+              completedPomodoros: newCompleted,
+              completed: isFinished ? true : t.completed,
+              completedAt: isFinished ? new Date().toISOString() : t.completedAt,
+              groupId: isFinished ? 'finished' : t.groupId,
+            };
+          }),
         })),
 
       groups: [

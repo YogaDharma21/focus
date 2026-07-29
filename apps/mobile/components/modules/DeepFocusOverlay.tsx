@@ -33,6 +33,8 @@ export function DeepFocusOverlay() {
     addSession,
     addDistraction,
     pomodoroSettings,
+    selectedTodoId,
+    incrementTodoSession,
   } = useAppStore();
 
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
@@ -57,6 +59,9 @@ export function DeepFocusOverlay() {
           duration: flowDuration,
           mode: 'STOPWATCH',
         });
+        if (selectedTodoId) {
+          incrementTodoSession(selectedTodoId);
+        }
         const breakSeconds = Math.max(Math.floor(flowDuration / 5), 1);
         setPreviousMode('STOPWATCH');
         setTimerMode('POMODORO');
@@ -78,6 +83,9 @@ export function DeepFocusOverlay() {
         duration: sessionDuration,
         mode: 'POMODORO',
       });
+      if (selectedTodoId) {
+        incrementTodoSession(selectedTodoId);
+      }
       setPreviousMode('POMODORO');
       setTimerState('BREAK');
       setTimeLeft(pomodoroSettings.break * 60);
