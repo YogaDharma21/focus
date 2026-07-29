@@ -84,7 +84,7 @@ const styles = StyleSheet.create({
   toggleBtn: {
     width: 28,
     height: 28,
-    borderRadius: 14,
+    borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
   },
