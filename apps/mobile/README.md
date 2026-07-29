@@ -1,50 +1,89 @@
-# Welcome to your Expo app 👋
+# 📱 Focus Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+[![Expo](https://img.shields.io/badge/Expo-v52.0.0-000000?style=for-the-badge&logo=expo&logoColor=white)](https://expo.dev/)
+[![React Native](https://img.shields.io/badge/React_Native-v0.76.7-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactnative.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-## Get started
+**Focus Mobile** is the React Native / Expo companion app for the Focus productivity suite. Built with cross-platform performance and mobile UX best practices, it provides seamless focus tracking, task management, flow state break calculations, ambient audio playback, and productivity stats on iOS and Android.
 
-1. Install dependencies
+---
+
+## 📸 Screenshots
+
+<div align="center">
+
+| ⏱️ Focus & Flow Mode | ✅ Task Management |
+| :---: | :---: |
+| ![Focus Mode](./assets/images/screenshot-focus.jpeg) | ![Task Management](./assets/images/screenshot-tasks.jpeg) |
+
+| 📊 Stats & Analytics | 💭 Mood Notes |
+| :---: | :---: |
+| ![Stats & Analytics](./assets/images/screenshot-stats.jpeg) | ![Mood Notes](./assets/images/screenshot-mood.jpeg) |
+
+</div>
+
+---
+
+## ✨ Features
+
+- **⏱️ Focus & Flow Timers** — Switch between Pomodoro (Work/Break) and Flow (Stopwatch) modes.
+- **🧮 Dynamic Flow Break Math** — Elapsed Flow session duration is dynamically divided by 5 to calculate break time. Automatically remembers previous mode to seamlessly return to Flow after breaks.
+- **🎯 Task Session Estimation & Auto-Finish** — Track estimated vs. completed sessions per task. Tasks automatically mark as finished when completed sessions reach the estimate.
+- **🚀 "Focus on this task" Redirection** — One-tap redirection from task list or detail view straight into an active focus session linked to the task.
+- **🧘 Deep Focus Mode Overlay** — Immersive full-screen focus view with Log Distraction and Complete Session controls.
+- **🎵 Sound Player** — Native audio player for local ambient focus sounds with backdrop tap-to-close behavior.
+- **📊 Stats Dashboard** — Comprehensive stats with Day Progress percentage & remaining time, 3-card grid (Minutes Today, Tasks Today, Pending Tasks), and 2-card grid (Streak Metrics & Completion Rate).
+- **🎨 Squircle Design System** — Modern squircle (rounded square) border radiuses for buttons and cards across light and dark themes.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Framework**: [Expo SDK 52](https://expo.dev/) (Expo Router file-based routing)
+- **Core Library**: [React Native](https://reactnative.dev/)
+- **Language**: [TypeScript](https://www.typescriptlang.org/)
+- **Icons**: [Lucide React Native](https://lucide.dev/)
+- **State Management**: [Zustand](https://zustand-demo.pmnd.rs/) with `react-native-mmkv` / Async storage persistence
+- **Safe Area & UI**: `react-native-safe-area-context`
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js (v18+ recommended)
+- npm / yarn / pnpm
+- [Expo Go](https://expo.dev/go) app on your mobile device OR Android Studio / Xcode for emulators.
+
+### Development Setup
+
+1. **Navigate to the mobile app directory:**
+
+   ```bash
+   cd apps/mobile
+   ```
+
+2. **Install dependencies:**
 
    ```bash
    npm install
    ```
 
-2. Start the app
+3. **Start the Expo development server:**
 
    ```bash
    npx expo start
    ```
 
-In the output, you'll find options to open the app in a
+4. **Run on target platform:**
+   - Scan the QR code with **Expo Go** (Android/iOS).
+   - Press `a` to launch on **Android Emulator**.
+   - Press `i` to launch on **iOS Simulator**.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+---
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 📄 License
 
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
-```
-
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Distributed under the MIT License. See [`LICENSE`](../../LICENSE) for more details.
