@@ -125,6 +125,8 @@ interface AppState {
     settings: Partial<{ work: number; break: number; autoStartBreak: boolean }>
   ) => void;
 
+  resetAllData: () => void;
+
   addSubtask: (todoId: string, text: string) => void;
   toggleSubtask: (todoId: string, subtaskId: string) => void;
   deleteSubtask: (todoId: string, subtaskId: string) => void;
@@ -336,6 +338,27 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           pomodoroSettings: { ...state.pomodoroSettings, ...updates },
         })),
+
+      resetAllData: () =>
+        set({
+          todos: [],
+          groups: [
+            { id: 'current', name: 'Current Tasks', type: 'system' },
+            { id: 'finished', name: 'Finished', type: 'system' },
+          ],
+          moodNotes: [],
+          sessions: [],
+          distractions: [],
+          sessionName: '',
+          selectedTodoId: null,
+          selectedSubtaskId: null,
+          timerMode: 'POMODORO',
+          timerState: 'WORK',
+          timeLeft: 25 * 60,
+          isActive: false,
+          pomodoroSettings: { work: 25, break: 5, autoStartBreak: false },
+          background: 'dark',
+        }),
     }),
     {
       name: 'focus-mobile-storage-v1',
