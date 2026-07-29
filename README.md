@@ -29,7 +29,7 @@
 ## 📸 Gallery
 
 <details open>
-<summary>Click to toggle screenshots</summary>
+<summary>💻 Web Application Screenshots</summary>
 
 ### ⏱️ Focus Session
 ![Main Dashboard](./apps/website/public/screenshots/screenshot-main.png)
@@ -45,6 +45,15 @@
 
 </details>
 
+<details open>
+<summary>📱 Mobile Application Screenshots</summary>
+
+| ⏱️ Focus & Flow Mode | ✅ Task Management | 📊 Stats & Analytics | 💭 Mood Notes |
+| :---: | :---: | :---: | :---: |
+| ![Mobile Focus](./apps/mobile/assets/images/screenshot-focus.jpeg) | ![Mobile Tasks](./apps/mobile/assets/images/screenshot-tasks.jpeg) | ![Mobile Stats](./apps/mobile/assets/images/screenshot-stats.jpeg) | ![Mobile Mood](./apps/mobile/assets/images/screenshot-mood.jpeg) |
+
+</details>
+
 ---
 
 ## 📂 Project Structure
@@ -55,11 +64,11 @@ This is a **polyglot monorepo** — each app is fully independent with its own d
 focus/
 ├── apps/
 │   ├── website/       ✅ Next.js productivity web app (active)
+│   ├── mobile/        ✅ Expo / React Native mobile app (active)
+│   ├── extension/     🚧 Browser extension (in development - same feature parity as mobile)
 │   ├── backend/       📦 Backend services (planned)
 │   ├── cli/           📦 Command-line tools (planned)
-│   ├── desktop/       📦 Desktop application (planned)
-│   ├── extension/     📦 Browser extension (planned)
-│   └── mobile/        📦 Mobile application (planned)
+│   └── desktop/       📦 Desktop application (planned)
 │
 ├── docker/            🐳 Docker configurations
 ├── docs/              📖 Architecture documentation
@@ -74,11 +83,11 @@ focus/
 | App | Path | Status | Tech Stack |
 |-----|------|--------|------------|
 | **Website** | `apps/website/` | ✅ Active | Next.js, React, TypeScript, Tailwind CSS, Zustand, shadcn/ui |
+| **Mobile** | `apps/mobile/` | ✅ Active | Expo SDK 52, React Native, TypeScript, Zustand |
+| **Extension** | `apps/extension/` | 🚧 In Development | TypeScript, React, WebExtensions (Mobile Feature Parity) |
 | **Backend** | `apps/backend/` | 📦 Planned | TBD |
 | **CLI** | `apps/cli/` | 📦 Planned | TBD |
 | **Desktop** | `apps/desktop/` | 📦 Planned | TBD |
-| **Extension** | `apps/extension/` | 📦 Planned | TBD |
-| **Mobile** | `apps/mobile/` | 📦 Planned | TBD |
 
 ---
 
