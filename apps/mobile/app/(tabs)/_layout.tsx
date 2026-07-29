@@ -1,35 +1,93 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
-
-import { HapticTab } from '@/components/haptic-tab';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import React, { useState } from 'react';
+import { View, StyleSheet } from 'react-native';
+import { useTheme } from '@/context/ThemeContext';
+import { Header } from '@/components/Header';
+import { BackgroundDisplay } from '@/components/modules/BackgroundDisplay';
+import { BackgroundSelector } from '@/components/modules/BackgroundSelector';
+import { InfoModal } from '@/components/modules/InfoModal';
+import { MediaPlayer } from '@/components/modules/MediaPlayer';
+import { DeepFocusOverlay } from '@/components/modules/DeepFocusOverlay';
+import { DynamicIslandTimer } from '@/components/modules/DynamicIslandTimer';
+import { Clock, ListCheck, BarChart2, Smile } from 'lucide-react-native';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
+  const { colors } = useTheme();
+  const [bgModalOpen, setBgModalOpen] = useState(false);
+  const [infoModalOpen, setInfoModalOpen] = useState(false);
 
   return (
-    <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-      }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-        }}
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <BackgroundDisplay />
+      <Header
+        onOpenBackgrounds={() => setBgModalOpen(true)}
+        onOpenInfo={() => setInfoModalOpen(true)}
       />
-      <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
-        }}
-      />
-    </Tabs>
+      <DynamicIslandTimer />
+
+      <View style={styles.content}>
+        <Tabs
+          screenOptions={{
+            headerShown: false,
+            tabBarStyle: {
+              backgroundColor: colors.background,
+              borderTopColor: colors.border,
+              height: 56,
+              paddingBottom: 6,
+              paddingTop: 6,
+            },
+            tabBarActiveTintColor: colors.tint,
+            tabBarInactiveTintColor: colors.tabIconDefault,
+            tabBarLabelStyle: {
+              fontSize: 11,
+              fontWeight: '600',
+            },
+          }}
+        >
+          <Tabs.Screen
+            name="index"
+            options={{
+              title: 'Focus',
+              tabBarIcon: ({ color }) => <Clock size={22} color={color} />,
+            }}
+          />
+          <Tabs.Screen
+            name="tasks"
+            options={{
+              title: 'Tasks',
+              tabBarIcon: ({ color }) => <ListCheck size={22} color={color} />,
+            }}
+          />
+          <Tabs.Screen
+            name="journal"
+            options={{
+              title: 'Journal',
+              tabBarIcon: ({ color }) => <BarChart2 size={22} color={color} />,
+            }}
+          />
+          <Tabs.Screen
+            name="notes"
+            options={{
+              title: 'Notes',
+              tabBarIcon: ({ color }) => <Smile size={22} color={color} />,
+            }}
+          />
+        </Tabs>
+      </View>
+
+      <MediaPlayer />
+      <DeepFocusOverlay />
+      <BackgroundSelector visible={bgModalOpen} onClose={() => setBgModalOpen(false)} />
+      <InfoModal visible={infoModalOpen} onClose={() => setInfoModalOpen(false)} />
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+  },
+});

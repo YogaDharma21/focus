@@ -1,0 +1,465 @@
+import React, { useEffect, useState, useRef } from 'react';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+  Modal,
+  ScrollView,
+} from 'react-native';
+import { useAppStore } from '@/lib/store';
+import { useTheme } from '@/context/ThemeContext';
+import { Play, Pause, RotateCcw, AlertTriangle, Check, Plus, Tag } from 'lucide-react-native';
+
+const DISTRACTION_CATEGORIES = [
+  'Social Media',
+  'Notification',
+  'Thought',
+  'Break',
+  'Other',
+];
+
+export function FocusTimer() {
+  const { colors } = useTheme();
+  const {
+    timerMode,
+    setTimerMode,
+    timerState,
+    setTimerState,
+    timeLeft,
+    setTimeLeft,
+    isActive,
+    setIsActive,
+    sessionName,
+    setSessionName,
+    todos,
+    selectedTodoId,
+    setSelectedTodoId,
+    addSession,
+    addDistraction,
+    pomodoroSettings,
+  } = useAppStore();
+
+  const [distractionModalOpen, setDistractionModalOpen] = useState(false);
+  const [todoPickerOpen, setTodoPickerOpen] = useState(false);
+
+  const initialTime =
+    timerMode === 'POMODORO'
+      ? timerState === 'WORK'
+        ? pomodoroSettings.work * 60
+        : pomodoroSettings.break * 60
+      : 0;
+
+  useEffect(() => {
+    let interval: any = null;
+
+    if (isActive) {
+      interval = setInterval(() => {
+        if (timerMode === 'POMODORO') {
+          setTimeLeft(timeLeft > 0 ? timeLeft - 1 : 0);
+          if (timeLeft <= 1) {
+            setIsActive(false);
+            if (timerState === 'WORK') {
+              addSession({
+                id: Date.now().toString(),
+                date: new Date().toISOString(),
+                duration: pomodoroSettings.work * 60,
+                mode: 'POMODORO',
+              });
+              setTimerState('BREAK');
+              setTimeLeft(pomodoroSettings.break * 60);
+              if (pomodoroSettings.autoStartBreak) {
+                setIsActive(true);
+              }
+            } else {
+              setTimerState('WORK');
+              setTimeLeft(pomodoroSettings.work * 60);
+            }
+          }
+        } else {
+          // STOPWATCH
+          setTimeLeft(timeLeft + 1);
+        }
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isActive, timeLeft, timerMode, timerState, pomodoroSettings]);
+
+  const toggleTimer = () => {
+    setIsActive(!isActive);
+  };
+
+  const resetTimer = () => {
+    setIsActive(false);
+    if (timerMode === 'POMODORO') {
+      const time =
+        timerState === 'WORK'
+          ? pomodoroSettings.work * 60
+          : pomodoroSettings.break * 60;
+      setTimeLeft(time);
+    } else {
+      if (timeLeft > 0) {
+        addSession({
+          id: Date.now().toString(),
+          date: new Date().toISOString(),
+          duration: timeLeft,
+          mode: 'STOPWATCH',
+        });
+      }
+      setTimeLeft(0);
+    }
+  };
+
+  const handleModeSwitch = (mode: 'POMODORO' | 'STOPWATCH') => {
+    if (mode === timerMode) return;
+    setIsActive(false);
+    setTimerMode(mode);
+    if (mode === 'POMODORO') {
+      setTimerState('WORK');
+      setTimeLeft(pomodoroSettings.work * 60);
+    } else {
+      setTimeLeft(0);
+    }
+  };
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const selectedTodo = todos.find((t) => t.id === selectedTodoId);
+
+  return (
+    <View style={styles.container}>
+      {/* Mode Switcher */}
+      <View style={[styles.modeBar, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <TouchableOpacity
+          style={[
+            styles.modeBtn,
+            timerMode === 'POMODORO' && { backgroundColor: colors.primary },
+          ]}
+          onPress={() => handleModeSwitch('POMODORO')}
+          activeOpacity={0.8}
+        >
+          <Text
+            style={[
+              styles.modeText,
+              { color: timerMode === 'POMODORO' ? colors.primaryForeground : colors.text },
+            ]}
+          >
+            Pomodoro
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.modeBtn,
+            timerMode === 'STOPWATCH' && { backgroundColor: colors.primary },
+          ]}
+          onPress={() => handleModeSwitch('STOPWATCH')}
+          activeOpacity={0.8}
+        >
+          <Text
+            style={[
+              styles.modeText,
+              { color: timerMode === 'STOPWATCH' ? colors.primaryForeground : colors.text },
+            ]}
+          >
+            Stopwatch
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Timer Circle Card */}
+      <View
+        style={[
+          styles.timerCard,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        {timerMode === 'POMODORO' && (
+          <View style={[styles.badge, { backgroundColor: colors.border }]}>
+            <Text style={[styles.badgeText, { color: colors.text }]}>
+              {timerState === 'WORK' ? 'Work Session' : 'Break Time'}
+            </Text>
+          </View>
+        )}
+
+        <Text style={[styles.timeDisplay, { color: colors.text }]}>
+          {formatTime(timeLeft)}
+        </Text>
+
+        {/* Input for session name */}
+        <TextInput
+          style={[
+            styles.sessionInput,
+            { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg },
+          ]}
+          placeholder="What are you focusing on?"
+          placeholderTextColor={colors.textMuted}
+          value={sessionName}
+          onChangeText={setSessionName}
+        />
+
+        {/* Task Tag Button */}
+        <TouchableOpacity
+          style={[styles.taskTagBtn, { borderColor: colors.border, backgroundColor: colors.inputBg }]}
+          onPress={() => setTodoPickerOpen(true)}
+        >
+          <Tag size={14} color={colors.textMuted} />
+          <Text style={[styles.taskTagText, { color: selectedTodo ? colors.text : colors.textMuted }]} numberOfLines={1}>
+            {selectedTodo ? selectedTodo.text : 'Link to a task'}
+          </Text>
+        </TouchableOpacity>
+
+        {/* Controls */}
+        <View style={styles.controlsRow}>
+          <TouchableOpacity
+            style={[
+              styles.mainActionBtn,
+              { backgroundColor: colors.primary },
+            ]}
+            onPress={toggleTimer}
+            activeOpacity={0.8}
+          >
+            {isActive ? (
+              <Pause size={24} color={colors.primaryForeground} />
+            ) : (
+              <Play size={24} color={colors.primaryForeground} style={{ marginLeft: 3 }} />
+            )}
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={resetTimer}
+            activeOpacity={0.7}
+          >
+            <RotateCcw size={20} color={colors.text} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => setDistractionModalOpen(true)}
+            activeOpacity={0.7}
+          >
+            <AlertTriangle size={20} color={colors.text} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Todo Selector Modal */}
+      <Modal visible={todoPickerOpen} transparent animationType="fade">
+        <View style={styles.modalBackdrop}>
+          <View style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Select Task for Session</Text>
+            <ScrollView style={{ maxHeight: 300 }}>
+              <TouchableOpacity
+                style={[styles.todoOption, !selectedTodoId && { backgroundColor: colors.border }]}
+                onPress={() => {
+                  setSelectedTodoId(null);
+                  setTodoPickerOpen(false);
+                }}
+              >
+                <Text style={{ color: colors.text }}>None (Standalone Session)</Text>
+              </TouchableOpacity>
+              {todos.map((todo) => (
+                <TouchableOpacity
+                  key={todo.id}
+                  style={[styles.todoOption, selectedTodoId === todo.id && { backgroundColor: colors.border }]}
+                  onPress={() => {
+                    setSelectedTodoId(todo.id);
+                    setSessionName(todo.text);
+                    setTodoPickerOpen(false);
+                  }}
+                >
+                  <Text style={{ color: colors.text, fontWeight: '500' }}>{todo.text}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <TouchableOpacity
+              style={[styles.closeModalBtn, { backgroundColor: colors.border }]}
+              onPress={() => setTodoPickerOpen(false)}
+            >
+              <Text style={{ color: colors.text, fontWeight: '600' }}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Distraction Logger Modal */}
+      <Modal visible={distractionModalOpen} transparent animationType="fade">
+        <View style={styles.modalBackdrop}>
+          <View style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Log Distraction</Text>
+            <Text style={[styles.modalSub, { color: colors.textMuted }]}>
+              What got you off track? Stay conscious of interruption patterns.
+            </Text>
+            <View style={{ gap: 8, marginVertical: 12 }}>
+              {DISTRACTION_CATEGORIES.map((cat) => (
+                <TouchableOpacity
+                  key={cat}
+                  style={[styles.distractionItem, { backgroundColor: colors.inputBg, borderColor: colors.border }]}
+                  onPress={() => {
+                    addDistraction(cat);
+                    setDistractionModalOpen(false);
+                  }}
+                >
+                  <Text style={{ color: colors.text, fontWeight: '500' }}>{cat}</Text>
+                  <Plus size={16} color={colors.textMuted} />
+                </TouchableOpacity>
+              ))}
+            </View>
+            <TouchableOpacity
+              style={[styles.closeModalBtn, { backgroundColor: colors.border }]}
+              onPress={() => setDistractionModalOpen(false)}
+            >
+              <Text style={{ color: colors.text, fontWeight: '600' }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    width: '100%',
+    alignItems: 'center',
+    paddingVertical: 16,
+  },
+  modeBar: {
+    flexDirection: 'row',
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 4,
+    marginBottom: 20,
+  },
+  modeBtn: {
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  modeText: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  timerCard: {
+    width: '100%',
+    maxWidth: 360,
+    borderRadius: 24,
+    borderWidth: 1,
+    padding: 24,
+    alignItems: 'center',
+  },
+  badge: {
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    letterSpacing: 0.5,
+  },
+  timeDisplay: {
+    fontSize: 54,
+    fontWeight: '800',
+    letterSpacing: -2,
+    marginVertical: 12,
+  },
+  sessionInput: {
+    width: '100%',
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    fontSize: 14,
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  taskTagBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    width: '100%',
+    marginBottom: 20,
+  },
+  taskTagText: {
+    fontSize: 13,
+    flex: 1,
+  },
+  controlsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  mainActionBtn: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+  },
+  secondaryActionBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    borderWidth: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalBox: {
+    width: '100%',
+    maxWidth: 360,
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 20,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  modalSub: {
+    fontSize: 13,
+    marginBottom: 10,
+  },
+  todoOption: {
+    padding: 12,
+    borderRadius: 8,
+    marginVertical: 4,
+  },
+  distractionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  closeModalBtn: {
+    padding: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+});

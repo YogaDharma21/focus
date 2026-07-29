@@ -1,0 +1,124 @@
+import React from 'react';
+import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { useAppStore, BackgroundType } from '@/lib/store';
+import { useTheme } from '@/context/ThemeContext';
+import { X, Check } from 'lucide-react-native';
+
+interface BackgroundSelectorProps {
+  visible: boolean;
+  onClose: () => void;
+}
+
+const BACKGROUND_OPTIONS: { id: BackgroundType; name: string; desc: string }[] = [
+  { id: 'dark', name: 'Monochrome Dark', desc: 'Minimalist clean theme' },
+  { id: 'gradient', name: 'Soft Gradient', desc: 'Subtle ambient contrast' },
+  { id: 'mountain', name: 'Mountain Mist', desc: 'Serene nature view' },
+  { id: 'library', name: 'Quiet Library', desc: 'Warm study atmosphere' },
+  { id: 'cafe', name: 'Cozy Cafe', desc: 'Relaxed focus aesthetic' },
+  { id: 'anime-room', name: 'Lo-Fi Room', desc: 'Chill ambient vibe' },
+];
+
+export function BackgroundSelector({ visible, onClose }: BackgroundSelectorProps) {
+  const { background, setBackground } = useAppStore();
+  const { colors } = useTheme();
+
+  return (
+    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+      <View style={styles.backdrop}>
+        <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.header, { borderColor: colors.border }]}>
+            <Text style={[styles.title, { color: colors.text }]}>Choose Background</Text>
+            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
+              <X size={20} color={colors.text} />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView contentContainerStyle={styles.list}>
+            {BACKGROUND_OPTIONS.map((item) => {
+              const selected = background === item.id;
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[
+                    styles.item,
+                    {
+                      backgroundColor: selected ? colors.border : colors.inputBg,
+                      borderColor: colors.border,
+                    },
+                  ]}
+                  onPress={() => {
+                    setBackground(item.id);
+                    onClose();
+                  }}
+                  activeOpacity={0.7}
+                >
+                  <View style={styles.itemTextCol}>
+                    <Text style={[styles.itemName, { color: colors.text }]}>{item.name}</Text>
+                    <Text style={[styles.itemDesc, { color: colors.textMuted }]}>{item.desc}</Text>
+                  </View>
+                  {selected && <Check size={18} color={colors.text} />}
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+const styles = StyleSheet.create({
+  backdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 400,
+    borderRadius: 16,
+    borderWidth: 1,
+    overflow: 'hidden',
+    maxHeight: '80%',
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+  },
+  title: {
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  closeBtn: {
+    padding: 4,
+  },
+  list: {
+    padding: 16,
+    gap: 10,
+  },
+  item: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  itemTextCol: {
+    flex: 1,
+  },
+  itemName: {
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  itemDesc: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+});
