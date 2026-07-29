@@ -1,57 +1,55 @@
 import React from 'react';
-import { View, StyleSheet, Image } from 'react-native';
-import { useAppStore } from '@/lib/store';
+import { View, StyleSheet } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import { useAppStore, BackgroundType } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
 
 export function BackgroundDisplay() {
   const { background } = useAppStore();
   const { colors, activeScheme } = useTheme();
 
-  const getBackgroundImage = () => {
-    switch (background) {
+  const getGradientColors = (bg: BackgroundType): [string, string, ...string[]] => {
+    const isDark = activeScheme === 'dark';
+
+    switch (bg) {
+      case 'gradient':
+        return isDark
+          ? ['#09090b', '#1c1917', '#09090b']
+          : ['#ffffff', '#f4f4f5', '#e4e4e7'];
       case 'mountain':
-        return 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1200&q=80';
+        return isDark
+          ? ['#0f172a', '#1e293b', '#09090b']
+          : ['#f8fafc', '#e2e8f0', '#cbd5e1'];
       case 'library':
-        return 'https://images.unsplash.com/photo-1507842217343-583bb7270b66?auto=format&fit=crop&w=1200&q=80';
+        return isDark
+          ? ['#1c1917', '#292524', '#09090b']
+          : ['#fafaf9', '#f5f5f4', '#e7e5e4'];
       case 'cafe':
-        return 'https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1200&q=80';
+        return isDark
+          ? ['#181512', '#26221d', '#09090b']
+          : ['#fdfbf7', '#f7f2ea', '#eae0d5'];
       case 'anime-room':
-        return 'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?auto=format&fit=crop&w=1200&q=80';
+        return isDark
+          ? ['#130f1e', '#211936', '#09090b']
+          : ['#faf7fd', '#f0e8fa', '#e1d4f5'];
+      case 'dark':
       default:
-        return null;
+        return isDark
+          ? ['#09090b', '#09090b']
+          : ['#ffffff', '#ffffff'];
     }
   };
 
-  const bgUrl = getBackgroundImage();
+  const gradientColors = getGradientColors(background);
 
   return (
-    <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]} pointerEvents="none">
-      {background === 'gradient' && (
-        <View
-          style={[
-            StyleSheet.absoluteFill,
-            {
-              backgroundColor: activeScheme === 'dark' ? '#18181b' : '#e4e4e7',
-              opacity: 0.8,
-            },
-          ]}
-        />
-      )}
-
-      {bgUrl && (
-        <>
-          <Image source={{ uri: bgUrl }} style={StyleSheet.absoluteFill} resizeMode="cover" />
-          <View
-            style={[
-              StyleSheet.absoluteFill,
-              {
-                backgroundColor: activeScheme === 'dark' ? '#09090b' : '#ffffff',
-                opacity: activeScheme === 'dark' ? 0.75 : 0.85,
-              },
-            ]}
-          />
-        </>
-      )}
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      <LinearGradient
+        colors={gradientColors}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={StyleSheet.absoluteFill}
+      />
     </View>
   );
 }
