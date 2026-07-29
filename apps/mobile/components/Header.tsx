@@ -1,8 +1,9 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { usePathname } from 'expo-router';
 import { useTheme } from '@/context/ThemeContext';
-import { useAppStore, ViewType } from '@/lib/store';
+import { useAppStore } from '@/lib/store';
 import { Focus, Sun, Moon, Image as ImageIcon, Info } from 'lucide-react-native';
 
 interface HeaderProps {
@@ -11,23 +12,25 @@ interface HeaderProps {
 }
 
 export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
+  const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { colors, themeMode, toggleTheme } = useTheme();
-  const { currentView, deepFocusMode, setDeepFocusMode } = useAppStore();
+  const { deepFocusMode, setDeepFocusMode } = useAppStore();
 
-  const getTitle = (view: ViewType) => {
-    switch (view) {
-      case 'FOCUS':
-        return 'Focus Session';
-      case 'TODO':
-        return 'Tasks';
-      case 'JOURNAL':
-        return 'Journal & Stats';
-      case 'NOTES':
-        return 'Mood Notes';
-      default:
-        return 'Focus';
+  const getTitle = () => {
+    if (!pathname || pathname === '/' || pathname.includes('index')) {
+      return 'Focus';
     }
+    if (pathname.includes('tasks')) {
+      return 'Tasks';
+    }
+    if (pathname.includes('journal')) {
+      return 'Journal & Stats';
+    }
+    if (pathname.includes('notes')) {
+      return 'Mood Notes';
+    }
+    return 'Focus';
   };
 
   return (
@@ -42,7 +45,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
       ]}
     >
       <View style={styles.titleRow}>
-        <Text style={[styles.title, { color: colors.text }]}>{getTitle(currentView)}</Text>
+        <Text style={[styles.title, { color: colors.text }]}>{getTitle()}</Text>
       </View>
 
       <View style={styles.actionsRow}>
