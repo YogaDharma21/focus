@@ -369,6 +369,21 @@ export function TodoList() {
                   value={detailTitle}
                   onChangeText={setDetailTitle}
                 />
+                {activeDetailTodo && !activeDetailTodo.completed && (
+                  <TouchableOpacity
+                    style={[styles.fullFocusBtn, { backgroundColor: colors.primary }]}
+                    onPress={() => {
+                      handleSaveDetail();
+                      handleFocusOnTask(activeDetailTodo);
+                    }}
+                    activeOpacity={0.8}
+                  >
+                    <Play size={16} color={colors.primaryForeground} style={{ marginRight: 6 }} />
+                    <Text style={[styles.fullFocusBtnText, { color: colors.primaryForeground }]}>
+                      Focus on this task
+                    </Text>
+                  </TouchableOpacity>
+                )}
               </View>
 
               {/* Description */}
@@ -594,19 +609,6 @@ export function TodoList() {
                 <Text style={{ color: '#ef4444', fontWeight: '600', fontSize: 13 }}>Delete</Text>
               </TouchableOpacity>
 
-              {activeDetailTodo && !activeDetailTodo.completed && (
-                <TouchableOpacity
-                  style={[styles.modalActionBtn, { backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }]}
-                  onPress={() => {
-                    handleSaveDetail();
-                    handleFocusOnTask(activeDetailTodo);
-                  }}
-                >
-                  <Play size={14} color={colors.text} />
-                  <Text style={{ color: colors.text, fontWeight: '600', fontSize: 13 }}>Focus</Text>
-                </TouchableOpacity>
-              )}
-
               <TouchableOpacity
                 style={[styles.modalActionBtn, { backgroundColor: colors.primary, flex: 1 }]}
                 onPress={handleSaveDetail}
@@ -765,6 +767,19 @@ const styles = StyleSheet.create({
   focusTaskBtnText: {
     fontSize: 11,
     fontWeight: '600',
+  },
+  fullFocusBtn: {
+    width: '100%',
+    height: 42,
+    borderRadius: 10,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
+  fullFocusBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   modalBackdrop: {
     flex: 1,
