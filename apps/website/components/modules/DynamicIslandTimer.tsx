@@ -107,25 +107,7 @@ export function DynamicIslandTimer() {
         }
     }, [isActive, setSessionStartTime]);
 
-    useEffect(() => {
-        if (!isActive) return;
-        if (timerState !== "WORK" && timerState !== "BREAK") return;
 
-        const interval = setInterval(() => {
-            if (timerMode === "POMODORO") {
-                setTimeLeft(Math.max(0, timeLeft - 1));
-                // Auto-complete when timer reaches 0
-                if (timeLeft <= 1) {
-                    setIsActive(false);
-                    completeSession();
-                }
-            } else {
-                setTimeLeft(timeLeft + 1);
-            }
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [isActive, timerState, timerMode, timeLeft, setTimeLeft, setIsActive]);
 
     const toggleTimer = () => setIsActive(!isActive);
 

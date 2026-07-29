@@ -28,7 +28,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
       return 'Stats';
     }
     if (pathname.includes('notes')) {
-      return 'Mood Notes';
+      return 'Notes';
     }
     return 'Focus';
   };

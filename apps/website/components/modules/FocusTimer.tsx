@@ -250,33 +250,7 @@ export function FocusTimer() {
         }
     }, [pomodoroSettings.work, pomodoroSettings.break, timerMode, timerState, setTimeLeft]);
 
-    useEffect(() => {
-        let interval: NodeJS.Timeout;
 
-        if (isActive && (timerState === "WORK" || timerState === "BREAK")) {
-            interval = setInterval(() => {
-                if (timerMode === "POMODORO") {
-                    setTimeLeft(timeLeft - 1);
-                    if (timeLeft <= 1) {
-                        setIsActive(false);
-                        handleCompleteSession();
-                    }
-                } else if (timerMode === "STOPWATCH") {
-                    setTimeLeft(timeLeft + 1);
-                }
-            }, 1000);
-        }
-
-        return () => clearInterval(interval);
-    }, [
-        isActive,
-        timerState,
-        timeLeft,
-        timerMode,
-        setTimeLeft,
-        setIsActive,
-        handleCompleteSession,
-    ]);
 
     const toggleTimer = () => setIsActive(!isActive);
 

@@ -71,55 +71,7 @@ export function FocusTimer() {
   const [breakInput, setBreakInput] = useState(pomodoroSettings.break.toString());
   const [autoBreak, setAutoBreak] = useState(pomodoroSettings.autoStartBreak);
 
-  useEffect(() => {
-    let interval: any = null;
 
-    if (isActive) {
-      interval = setInterval(() => {
-        if (timerMode === 'POMODORO') {
-          setTimeLeft(timeLeft > 0 ? timeLeft - 1 : 0);
-          if (timeLeft <= 1) {
-            setIsActive(false);
-            if (timerState === 'WORK') {
-              addSession({
-                id: Date.now().toString(),
-                date: new Date().toISOString(),
-                duration: pomodoroSettings.work * 60,
-                mode: 'POMODORO',
-              });
-              if (selectedTodoId) {
-                incrementTodoSession(selectedTodoId);
-              }
-              setPreviousMode('POMODORO');
-              setTimerState('BREAK');
-              setTimeLeft(pomodoroSettings.break * 60);
-              if (pomodoroSettings.autoStartBreak) {
-                setIsActive(true);
-              }
-            } else {
-              // Break finished -> return to previous mode (Flow or Pomodoro Work)
-              if (previousMode === 'STOPWATCH') {
-                setTimerMode('STOPWATCH');
-                setTimerState('WORK');
-                setTimeLeft(0);
-              } else {
-                setTimerMode('POMODORO');
-                setTimerState('WORK');
-                setTimeLeft(pomodoroSettings.work * 60);
-              }
-            }
-          }
-        } else {
-          // Flow Mode (Stopwatch)
-          setTimeLeft(timeLeft + 1);
-        }
-      }, 1000);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isActive, timeLeft, timerMode, timerState, previousMode, pomodoroSettings, addSession, setIsActive, setTimeLeft, setTimerMode, setTimerState, setPreviousMode]);
 
   const toggleTimer = () => {
     setIsActive(!isActive);

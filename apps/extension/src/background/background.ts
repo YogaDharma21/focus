@@ -99,7 +99,9 @@ async function stopKeepalive() {
 
 function stopBackgroundTimer() {
   if (timerInterval !== null) {
-    clearInterval(timerInterval);
+    if (timerInterval !== (-1 as any)) {
+      clearInterval(timerInterval);
+    }
     timerInterval = null;
   }
   stopKeepalive();
@@ -108,14 +110,29 @@ function stopBackgroundTimer() {
 // ─── Background Timer ──────────────────────────────────────────────────
 
 async function startBackgroundTimer() {
-  stopBackgroundTimer();
+  if (timerInterval !== null) {
+    return;
+  }
+  timerInterval = -1 as any;
 
-  await startKeepalive();
-  const initialState = await getStoredState();
-  enforceTabBlocking(initialState);
-  updateBadge(initialState.timeLeft, true, initialState.timerState);
+  try {
+    await startKeepalive();
+    const initialState = await getStoredState();
+    if (!initialState.isActive) {
+      stopBackgroundTimer();
+      return;
+    }
 
-  timerInterval = setInterval(async () => {
+    enforceTabBlocking(initialState);
+    updateBadge(initialState.timeLeft, true, initialState.timerState);
+
+    if (timerInterval !== (-1 as any)) {
+      if (timerInterval !== null) {
+        clearInterval(timerInterval);
+      }
+    }
+
+    timerInterval = setInterval(async () => {
     const state = await getStoredState();
     if (!state.isActive) {
       stopBackgroundTimer();
@@ -221,6 +238,9 @@ async function startBackgroundTimer() {
       }
     }
   }, 1000);
+  } catch (err) {
+    stopBackgroundTimer();
+  }
 }
 
 // ─── Tab Listeners ─────────────────────────────────────────────────────

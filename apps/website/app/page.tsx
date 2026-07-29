@@ -13,10 +13,12 @@ import { BackgroundDisplay } from "@/components/modules/BackgroundDisplay";
 import { BackgroundSelector } from "@/components/modules/BackgroundSelector";
 import { MoodNotes } from "@/components/modules/MoodNotes";
 import { useAppStore } from "@/lib/store";
+import { useTimerEngine } from "@/lib/hooks";
 import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 export default function Page() {
+    useTimerEngine();
     const { currentView, mediaPlayerOpen, isActive, deepFocusMode, setDeepFocusMode } = useAppStore();
     const [mounted, setMounted] = useState(false);
     const prevActiveRef = useRef(isActive);

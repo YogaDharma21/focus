@@ -12,11 +12,77 @@ import { DeepFocusOverlay } from '@/components/modules/DeepFocusOverlay';
 import { DynamicIslandTimer } from '@/components/modules/DynamicIslandTimer';
 import { Clock, ListCheck, BarChart2, Smile } from 'lucide-react-native';
 
+import { useAppStore } from '@/lib/store';
+
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const [bgModalOpen, setBgModalOpen] = useState(false);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
+
+  const {
+    isActive,
+    setTimeLeft,
+    setIsActive,
+    setTimerState,
+    setTimerMode,
+    setPreviousMode,
+    addSession,
+    incrementTodoSession,
+  } = useAppStore();
+
+  React.useEffect(() => {
+    let interval: any = null;
+
+    if (isActive) {
+      interval = setInterval(() => {
+        const state = useAppStore.getState();
+        if (state.timerMode === 'POMODORO') {
+          setTimeLeft((prev) => {
+            if (prev <= 1) {
+              setIsActive(false);
+              if (state.timerState === 'WORK') {
+                addSession({
+                  id: Date.now().toString(),
+                  date: new Date().toISOString(),
+                  duration: state.pomodoroSettings.work * 60,
+                  mode: 'POMODORO',
+                });
+                if (state.selectedTodoId) {
+                  incrementTodoSession(state.selectedTodoId);
+                }
+                setPreviousMode('POMODORO');
+                setTimerState('BREAK');
+                setTimeLeft(state.pomodoroSettings.break * 60);
+                if (state.pomodoroSettings.autoStartBreak) {
+                  setIsActive(true);
+                }
+              } else {
+                if (state.previousMode === 'STOPWATCH') {
+                  setTimerMode('STOPWATCH');
+                  setTimerState('WORK');
+                  setTimeLeft(0);
+                } else {
+                  setTimerMode('POMODORO');
+                  setTimerState('WORK');
+                  setTimeLeft(state.pomodoroSettings.work * 60);
+                }
+              }
+              return 0;
+            }
+            return prev - 1;
+          });
+        } else {
+          // Flow Mode (Stopwatch)
+          setTimeLeft((prev) => prev + 1);
+        }
+      }, 1000);
+    }
+
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isActive, setIsActive, setTimeLeft, setTimerMode, setTimerState, setPreviousMode, addSession, incrementTodoSession]);
 
   const bottomInset = Math.max(insets.bottom, 0);
 
