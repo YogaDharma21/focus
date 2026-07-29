@@ -15,15 +15,18 @@ import {
   Square,
   Plus,
   Trash2,
-  ChevronDown,
-  ChevronRight,
   FolderPlus,
-  AlertCircle,
-  Clock,
   ListCheck,
+  X,
+  Clock,
+  Calendar,
+  Repeat,
+  Tag,
+  AlignLeft,
 } from 'lucide-react-native';
 
 const PRIORITIES: ('low' | 'medium' | 'high' | 'urgent')[] = ['low', 'medium', 'high', 'urgent'];
+const RECURRING_OPTIONS: ('none' | 'daily' | 'weekly' | 'monthly')[] = ['none', 'daily', 'weekly', 'monthly'];
 
 export function TodoList() {
   const { colors } = useTheme();
@@ -31,6 +34,7 @@ export function TodoList() {
     todos,
     addTodo,
     toggleTodo,
+    updateTodo,
     deleteTodo,
     groups,
     addGroup,
@@ -41,22 +45,29 @@ export function TodoList() {
 
   const [activeGroupId, setActiveGroupId] = useState<string>('current');
   const [newTodoText, setNewTodoText] = useState('');
-  const [newPriority, setNewPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
-  const [newEstPomodoros, setNewEstPomodoros] = useState('1');
-  const [expandedTodoIds, setExpandedTodoIds] = useState<string[]>([]);
-  const [subtaskInputMap, setSubtaskInputMap] = useState<Record<string, string>>({});
   const [addGroupModalOpen, setAddGroupModalOpen] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
 
+  // Task Detail Modal State
+  const [detailTodo, setDetailTodo] = useState<TodoItem | null>(null);
+  const [detailTitle, setDetailTitle] = useState('');
+  const [detailDesc, setDetailDesc] = useState('');
+  const [detailNotes, setDetailNotes] = useState('');
+  const [detailPriority, setDetailPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
+  const [detailPomoEst, setDetailPomoEst] = useState('1');
+  const [detailRecurring, setDetailRecurring] = useState<'none' | 'daily' | 'weekly' | 'monthly'>('none');
+  const [detailDeadline, setDetailDeadline] = useState('');
+  const [detailGroupId, setDetailGroupId] = useState('current');
+  const [newSubtaskText, setNewSubtaskText] = useState('');
+
   const handleAddTodo = () => {
     if (!newTodoText.trim()) return;
-    const est = parseInt(newEstPomodoros, 10) || 1;
     const todo: TodoItem = {
       id: Date.now().toString(),
       text: newTodoText.trim(),
       completed: false,
-      priority: newPriority,
-      estimatedPomodoros: est,
+      priority: 'medium',
+      estimatedPomodoros: 1,
       completedPomodoros: 0,
       groupId: activeGroupId === 'finished' ? 'current' : activeGroupId,
       subtasks: [],
@@ -65,11 +76,41 @@ export function TodoList() {
     setNewTodoText('');
   };
 
-  const handleAddSubtask = (todoId: string) => {
-    const text = subtaskInputMap[todoId];
-    if (!text || !text.trim()) return;
-    addSubtask(todoId, text.trim());
-    setSubtaskInputMap({ ...subtaskInputMap, [todoId]: '' });
+  const handleOpenDetail = (todo: TodoItem) => {
+    setDetailTodo(todo);
+    setDetailTitle(todo.text);
+    setDetailDesc(todo.description || '');
+    setDetailNotes(todo.notes || '');
+    setDetailPriority(todo.priority || 'medium');
+    setDetailPomoEst((todo.estimatedPomodoros || 1).toString());
+    setDetailRecurring(todo.recurring || 'none');
+    setDetailDeadline(todo.deadline || new Date().toISOString().slice(0, 16).replace('T', ' '));
+    setDetailGroupId(todo.groupId || 'current');
+    setNewSubtaskText('');
+  };
+
+  const handleSaveDetail = () => {
+    if (!detailTodo) return;
+    updateTodo(detailTodo.id, {
+      text: detailTitle.trim() || detailTodo.text,
+      description: detailDesc.trim(),
+      notes: detailNotes.trim(),
+      priority: detailPriority,
+      estimatedPomodoros: parseInt(detailPomoEst, 10) || 1,
+      recurring: detailRecurring,
+      deadline: detailDeadline.trim(),
+      groupId: detailGroupId,
+    });
+    setDetailTodo(null);
+  };
+
+  const handleAddDetailSubtask = () => {
+    if (!detailTodo || !newSubtaskText.trim()) return;
+    addSubtask(detailTodo.id, newSubtaskText.trim());
+    setNewSubtaskText('');
+    // refresh detailTodo ref
+    const updated = todos.find((t) => t.id === detailTodo.id);
+    if (updated) setDetailTodo(updated);
   };
 
   const handleCreateGroup = () => {
@@ -77,14 +118,6 @@ export function TodoList() {
     addGroup(newGroupName.trim());
     setNewGroupName('');
     setAddGroupModalOpen(false);
-  };
-
-  const toggleExpand = (id: string) => {
-    if (expandedTodoIds.includes(id)) {
-      setExpandedTodoIds(expandedTodoIds.filter((item) => item !== id));
-    } else {
-      setExpandedTodoIds([...expandedTodoIds, id]);
-    }
   };
 
   const filteredTodos = todos.filter((todo) => {
@@ -96,6 +129,9 @@ export function TodoList() {
     }
     return todo.groupId === activeGroupId && !todo.completed;
   });
+
+  // Active detail todo from store
+  const activeDetailTodo = detailTodo ? todos.find((t) => t.id === detailTodo.id) || detailTodo : null;
 
   return (
     <View style={styles.container}>
@@ -137,7 +173,7 @@ export function TodoList() {
         </ScrollView>
       </View>
 
-      {/* Quick Add Todo Input Card */}
+      {/* Simplified Quick Add Todo Bar (No Priority / Pomo requirement) */}
       {activeGroupId !== 'finished' && (
         <View style={[styles.addCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.addInputRow}>
@@ -157,43 +193,6 @@ export function TodoList() {
               <Plus size={20} color={colors.primaryForeground} />
             </TouchableOpacity>
           </View>
-
-          {/* Priority & Pomodoro Selector */}
-          <View style={styles.optionsRow}>
-            <View style={styles.prioritySelector}>
-              {PRIORITIES.map((p) => (
-                <TouchableOpacity
-                  key={p}
-                  style={[
-                    styles.priorityChip,
-                    newPriority === p && { backgroundColor: colors.border },
-                  ]}
-                  onPress={() => setNewPriority(p)}
-                >
-                  <Text
-                    style={[
-                      styles.priorityChipText,
-                      { color: newPriority === p ? colors.text : colors.textMuted },
-                    ]}
-                  >
-                    {p}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            <View style={styles.pomodoroEstimate}>
-              <Clock size={14} color={colors.textMuted} />
-              <TextInput
-                style={[styles.pomoInput, { color: colors.text, borderColor: colors.border }]}
-                keyboardType="numeric"
-                value={newEstPomodoros}
-                onChangeText={setNewEstPomodoros}
-                maxLength={2}
-              />
-              <Text style={{ fontSize: 12, color: colors.textMuted }}>pomo</Text>
-            </View>
-          </View>
         </View>
       )}
 
@@ -208,14 +207,18 @@ export function TodoList() {
           </View>
         ) : (
           filteredTodos.map((todo) => {
-            const isExpanded = expandedTodoIds.includes(todo.id);
+            const subtaskCount = todo.subtasks?.length || 0;
+            const completedSubtasks = todo.subtasks?.filter((s) => s.completed).length || 0;
+
             return (
-              <View
+              <TouchableOpacity
                 key={todo.id}
                 style={[
                   styles.todoCard,
                   { backgroundColor: colors.card, borderColor: colors.border },
                 ]}
+                onPress={() => handleOpenDetail(todo)}
+                activeOpacity={0.7}
               >
                 <View style={styles.todoMainRow}>
                   <TouchableOpacity onPress={() => toggleTodo(todo.id)} style={styles.checkBtn}>
@@ -226,11 +229,7 @@ export function TodoList() {
                     )}
                   </TouchableOpacity>
 
-                  <TouchableOpacity
-                    style={{ flex: 1 }}
-                    onPress={() => toggleExpand(todo.id)}
-                    activeOpacity={0.7}
-                  >
+                  <View style={{ flex: 1 }}>
                     <Text
                       style={[
                         styles.todoTitle,
@@ -249,90 +248,274 @@ export function TodoList() {
                           </Text>
                         </View>
                       )}
-                      {todo.estimatedPomodoros && (
+                      {subtaskCount > 0 && (
                         <View style={[styles.badge, { backgroundColor: colors.border }]}>
                           <Text style={[styles.badgeText, { color: colors.text }]}>
-                            ⏱ {todo.estimatedPomodoros} pomo
+                            {completedSubtasks}/{subtaskCount} subtasks
                           </Text>
                         </View>
                       )}
-                      {todo.subtasks && todo.subtasks.length > 0 && (
+                      {todo.deadline ? (
                         <View style={[styles.badge, { backgroundColor: colors.border }]}>
-                          <Text style={[styles.badgeText, { color: colors.text }]}>
-                            {todo.subtasks.filter((s) => s.completed).length}/{todo.subtasks.length} subtasks
+                          <Text style={[styles.badgeText, { color: colors.textMuted }]}>
+                            📅 {todo.deadline}
                           </Text>
                         </View>
-                      )}
+                      ) : null}
                     </View>
-                  </TouchableOpacity>
+                  </View>
 
-                  <TouchableOpacity onPress={() => toggleExpand(todo.id)} style={{ padding: 4 }}>
-                    {isExpanded ? (
-                      <ChevronDown size={18} color={colors.textMuted} />
-                    ) : (
-                      <ChevronRight size={18} color={colors.textMuted} />
-                    )}
-                  </TouchableOpacity>
-
-                  <TouchableOpacity onPress={() => deleteTodo(todo.id)} style={{ padding: 4, marginLeft: 4 }}>
+                  <TouchableOpacity
+                    onPress={() => deleteTodo(todo.id)}
+                    style={{ padding: 6 }}
+                  >
                     <Trash2 size={18} color={colors.textMuted} />
                   </TouchableOpacity>
                 </View>
-
-                {/* Subtasks Section */}
-                {isExpanded && (
-                  <View style={[styles.subtaskContainer, { borderColor: colors.border }]}>
-                    <Text style={[styles.subtaskHeader, { color: colors.textMuted }]}>Subtasks</Text>
-
-                    {todo.subtasks?.map((subtask) => (
-                      <View key={subtask.id} style={styles.subtaskRow}>
-                        <TouchableOpacity onPress={() => toggleSubtask(todo.id, subtask.id)}>
-                          {subtask.completed ? (
-                            <CheckSquare size={16} color={colors.text} />
-                          ) : (
-                            <Square size={16} color={colors.textMuted} />
-                          )}
-                        </TouchableOpacity>
-                        <Text
-                          style={[
-                            styles.subtaskText,
-                            { color: colors.text },
-                            subtask.completed && styles.todoTitleDone,
-                          ]}
-                        >
-                          {subtask.text}
-                        </Text>
-                        <TouchableOpacity onPress={() => deleteSubtask(todo.id, subtask.id)}>
-                          <Trash2 size={14} color={colors.textMuted} />
-                        </TouchableOpacity>
-                      </View>
-                    ))}
-
-                    <View style={styles.subtaskAddRow}>
-                      <TextInput
-                        style={[styles.subtaskInput, { color: colors.text, borderColor: colors.border }]}
-                        placeholder="Add subtask..."
-                        placeholderTextColor={colors.textMuted}
-                        value={subtaskInputMap[todo.id] || ''}
-                        onChangeText={(val) =>
-                          setSubtaskInputMap({ ...subtaskInputMap, [todo.id]: val })
-                        }
-                        onSubmitEditing={() => handleAddSubtask(todo.id)}
-                      />
-                      <TouchableOpacity
-                        style={[styles.subtaskAddBtn, { backgroundColor: colors.border }]}
-                        onPress={() => handleAddSubtask(todo.id)}
-                      >
-                        <Plus size={14} color={colors.text} />
-                      </TouchableOpacity>
-                    </View>
-                  </View>
-                )}
-              </View>
+              </TouchableOpacity>
             );
           })
         )}
       </ScrollView>
+
+      {/* Task Detail Modal */}
+      <Modal visible={!!activeDetailTodo} transparent animationType="fade">
+        <View style={styles.modalBackdrop}>
+          <View style={[styles.detailModalCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            {/* Modal Header */}
+            <View style={[styles.modalHeader, { borderColor: colors.border }]}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Task Details</Text>
+              <TouchableOpacity onPress={() => setDetailTodo(null)} style={styles.closeBtn}>
+                <X size={20} color={colors.text} />
+              </TouchableOpacity>
+            </View>
+
+            <ScrollView contentContainerStyle={styles.detailContent}>
+              {/* Task Title */}
+              <View style={styles.fieldBlock}>
+                <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Task Name</Text>
+                <TextInput
+                  style={[styles.titleInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg }]}
+                  value={detailTitle}
+                  onChangeText={setDetailTitle}
+                />
+              </View>
+
+              {/* Description */}
+              <View style={styles.fieldBlock}>
+                <View style={styles.labelRow}>
+                  <AlignLeft size={14} color={colors.textMuted} />
+                  <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Description</Text>
+                </View>
+                <TextInput
+                  style={[styles.multilineInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg }]}
+                  multiline
+                  numberOfLines={2}
+                  placeholder="Add a detailed description..."
+                  placeholderTextColor={colors.textMuted}
+                  value={detailDesc}
+                  onChangeText={setDetailDesc}
+                />
+              </View>
+
+              {/* Group Selector */}
+              <View style={styles.fieldBlock}>
+                <View style={styles.labelRow}>
+                  <Tag size={14} color={colors.textMuted} />
+                  <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Group</Text>
+                </View>
+                <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 6 }}>
+                  {groups.map((g) => (
+                    <TouchableOpacity
+                      key={g.id}
+                      style={[
+                        styles.chipBtn,
+                        {
+                          backgroundColor: detailGroupId === g.id ? colors.primary : colors.inputBg,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                      onPress={() => setDetailGroupId(g.id)}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: '600',
+                          color: detailGroupId === g.id ? colors.primaryForeground : colors.text,
+                        }}
+                      >
+                        {g.name}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </ScrollView>
+              </View>
+
+              {/* Priority Selector */}
+              <View style={styles.fieldBlock}>
+                <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Priority</Text>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  {PRIORITIES.map((p) => (
+                    <TouchableOpacity
+                      key={p}
+                      style={[
+                        styles.chipBtn,
+                        {
+                          backgroundColor: detailPriority === p ? colors.primary : colors.inputBg,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                      onPress={() => setDetailPriority(p)}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: '600',
+                          textTransform: 'capitalize',
+                          color: detailPriority === p ? colors.primaryForeground : colors.text,
+                        }}
+                      >
+                        {p}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Deadline & Recurring Row */}
+              <View style={styles.fieldBlock}>
+                <View style={styles.labelRow}>
+                  <Calendar size={14} color={colors.textMuted} />
+                  <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Deadline (Date & Time)</Text>
+                </View>
+                <TextInput
+                  style={[styles.singleInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg }]}
+                  placeholder="YYYY-MM-DD HH:mm"
+                  placeholderTextColor={colors.textMuted}
+                  value={detailDeadline}
+                  onChangeText={setDetailDeadline}
+                />
+              </View>
+
+              {/* Recurring */}
+              <View style={styles.fieldBlock}>
+                <View style={styles.labelRow}>
+                  <Repeat size={14} color={colors.textMuted} />
+                  <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Recurring</Text>
+                </View>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  {RECURRING_OPTIONS.map((rec) => (
+                    <TouchableOpacity
+                      key={rec}
+                      style={[
+                        styles.chipBtn,
+                        {
+                          backgroundColor: detailRecurring === rec ? colors.primary : colors.inputBg,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                      onPress={() => setDetailRecurring(rec)}
+                    >
+                      <Text
+                        style={{
+                          fontSize: 12,
+                          fontWeight: '600',
+                          textTransform: 'capitalize',
+                          color: detailRecurring === rec ? colors.primaryForeground : colors.text,
+                        }}
+                      >
+                        {rec}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </View>
+
+              {/* Notes */}
+              <View style={styles.fieldBlock}>
+                <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Notes</Text>
+                <TextInput
+                  style={[styles.multilineInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg }]}
+                  multiline
+                  numberOfLines={2}
+                  placeholder="Additional notes or references..."
+                  placeholderTextColor={colors.textMuted}
+                  value={detailNotes}
+                  onChangeText={setDetailNotes}
+                />
+              </View>
+
+              {/* Subtasks Section */}
+              <View style={styles.fieldBlock}>
+                <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Subtasks</Text>
+                <View style={{ gap: 6 }}>
+                  {activeDetailTodo?.subtasks?.map((subtask) => (
+                    <View key={subtask.id} style={styles.subtaskRow}>
+                      <TouchableOpacity onPress={() => toggleSubtask(activeDetailTodo.id, subtask.id)}>
+                        {subtask.completed ? (
+                          <CheckSquare size={16} color={colors.text} />
+                        ) : (
+                          <Square size={16} color={colors.textMuted} />
+                        )}
+                      </TouchableOpacity>
+                      <Text
+                        style={[
+                          styles.subtaskText,
+                          { color: colors.text },
+                          subtask.completed && styles.todoTitleDone,
+                        ]}
+                      >
+                        {subtask.text}
+                      </Text>
+                      <TouchableOpacity onPress={() => deleteSubtask(activeDetailTodo.id, subtask.id)}>
+                        <Trash2 size={14} color={colors.textMuted} />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+
+                <View style={styles.subtaskAddRow}>
+                  <TextInput
+                    style={[styles.subtaskInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg }]}
+                    placeholder="Add new subtask..."
+                    placeholderTextColor={colors.textMuted}
+                    value={newSubtaskText}
+                    onChangeText={setNewSubtaskText}
+                    onSubmitEditing={handleAddDetailSubtask}
+                  />
+                  <TouchableOpacity
+                    style={[styles.subtaskAddBtn, { backgroundColor: colors.primary }]}
+                    onPress={handleAddDetailSubtask}
+                  >
+                    <Plus size={14} color={colors.primaryForeground} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </ScrollView>
+
+            {/* Modal Actions */}
+            <View style={[styles.modalActions, { borderColor: colors.border }]}>
+              <TouchableOpacity
+                style={[styles.modalActionBtn, { backgroundColor: colors.border }]}
+                onPress={() => {
+                  if (activeDetailTodo) deleteTodo(activeDetailTodo.id);
+                  setDetailTodo(null);
+                }}
+              >
+                <Trash2 size={16} color="#ef4444" />
+                <Text style={{ color: '#ef4444', fontWeight: '600', fontSize: 13 }}>Delete</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.modalActionBtn, { backgroundColor: colors.primary, flex: 1 }]}
+                onPress={handleSaveDetail}
+              >
+                <Text style={{ color: colors.primaryForeground, fontWeight: '700', fontSize: 14 }}>Save Changes</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Add Group Modal */}
       <Modal visible={addGroupModalOpen} transparent animationType="fade">
@@ -395,13 +578,12 @@ const styles = StyleSheet.create({
   addCard: {
     borderRadius: 16,
     borderWidth: 1,
-    padding: 12,
-    marginBottom: 16,
+    padding: 10,
+    marginBottom: 14,
   },
   addInputRow: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 8,
   },
   addInput: {
     flex: 1,
@@ -417,38 +599,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  optionsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  prioritySelector: {
-    flexDirection: 'row',
-    gap: 4,
-  },
-  priorityChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-  },
-  priorityChipText: {
-    fontSize: 11,
-    fontWeight: '600',
-    textTransform: 'capitalize',
-  },
-  pomodoroEstimate: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  pomoInput: {
-    width: 28,
-    height: 28,
-    borderRadius: 6,
-    borderWidth: 1,
-    textAlign: 'center',
-    fontSize: 12,
   },
   todosList: {
     gap: 10,
@@ -500,54 +650,12 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '500',
   },
-  subtaskContainer: {
-    marginTop: 12,
-    paddingTop: 10,
-    borderTopWidth: 1,
-    gap: 8,
-  },
-  subtaskHeader: {
-    fontSize: 12,
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  subtaskRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingVertical: 2,
-  },
-  subtaskText: {
-    flex: 1,
-    fontSize: 13,
-  },
-  subtaskAddRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginTop: 4,
-  },
-  subtaskInput: {
-    flex: 1,
-    height: 32,
-    borderRadius: 6,
-    borderWidth: 1,
-    paddingHorizontal: 8,
-    fontSize: 12,
-  },
-  subtaskAddBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 6,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   modalBackdrop: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: 16,
   },
   modalBox: {
     width: '100%',
@@ -556,9 +664,120 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 16,
   },
+  detailModalCard: {
+    width: '100%',
+    maxWidth: 420,
+    maxHeight: '85%',
+    borderRadius: 20,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 18,
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+  },
   modalTitle: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: '700',
+  },
+  closeBtn: {
+    padding: 4,
+  },
+  detailContent: {
+    padding: 18,
+    gap: 14,
+  },
+  fieldBlock: {
+    gap: 6,
+  },
+  labelRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  fieldLabel: {
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  titleInput: {
+    height: 42,
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  singleInput: {
+    height: 40,
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    fontSize: 13,
+  },
+  multilineInput: {
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    fontSize: 13,
+    textAlignVertical: 'top',
+  },
+  chipBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  subtaskRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 4,
+  },
+  subtaskText: {
+    flex: 1,
+    fontSize: 13,
+  },
+  subtaskAddRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 6,
+  },
+  subtaskInput: {
+    flex: 1,
+    height: 36,
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    fontSize: 13,
+  },
+  subtaskAddBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalActions: {
+    flexDirection: 'row',
+    gap: 10,
+    padding: 16,
+    borderTopWidth: 1,
+  },
+  modalActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 12,
   },
   modalBtn: {
     paddingHorizontal: 16,
