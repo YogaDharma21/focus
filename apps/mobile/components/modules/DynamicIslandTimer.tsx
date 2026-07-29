@@ -33,7 +33,7 @@ export function DynamicIslandTimer() {
       >
         <Clock size={16} color={colors.primaryForeground} />
         <Text style={[styles.bannerTitle, { color: colors.primaryForeground }]}>
-          {timerMode === 'POMODORO' ? (timerState === 'WORK' ? 'Work' : 'Break') : 'Stopwatch'}
+          {timerMode === 'POMODORO' ? (timerState === 'WORK' ? 'Work' : 'Break') : 'Flow Mode'}
         </Text>
         <Text style={[styles.bannerTime, { color: colors.primaryForeground }]}>
           {formatTime(timeLeft)}

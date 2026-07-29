@@ -92,7 +92,7 @@ export function StatsJournal() {
                     {formatDate(session.date)}
                   </Text>
                   <Text style={[styles.historyMode, { color: colors.textMuted }]}>
-                    {session.mode}
+                    {session.mode === 'STOPWATCH' ? 'Flow Mode' : 'Pomodoro'}
                   </Text>
                 </View>
                 <Text style={[styles.historyDuration, { color: colors.text }]}>

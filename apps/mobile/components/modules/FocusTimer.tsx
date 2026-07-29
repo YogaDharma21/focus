@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
-import { Play, Pause, RotateCcw, AlertTriangle, Check, Plus, Tag } from 'lucide-react-native';
+import { Play, Pause, RotateCcw, AlertTriangle, Plus, Tag, Flame } from 'lucide-react-native';
 
 const DISTRACTION_CATEGORIES = [
   'Social Media',
@@ -44,13 +44,6 @@ export function FocusTimer() {
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
   const [todoPickerOpen, setTodoPickerOpen] = useState(false);
 
-  const initialTime =
-    timerMode === 'POMODORO'
-      ? timerState === 'WORK'
-        ? pomodoroSettings.work * 60
-        : pomodoroSettings.break * 60
-      : 0;
-
   useEffect(() => {
     let interval: any = null;
 
@@ -78,7 +71,7 @@ export function FocusTimer() {
             }
           }
         } else {
-          // STOPWATCH
+          // Flow Mode (Stopwatch)
           setTimeLeft(timeLeft + 1);
         }
       }, 1000);
@@ -87,7 +80,7 @@ export function FocusTimer() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, timeLeft, timerMode, timerState, pomodoroSettings]);
+  }, [isActive, timeLeft, timerMode, timerState, pomodoroSettings, addSession, setIsActive, setTimeLeft, setTimerState]);
 
   const toggleTimer = () => {
     setIsActive(!isActive);
@@ -170,7 +163,7 @@ export function FocusTimer() {
               { color: timerMode === 'STOPWATCH' ? colors.primaryForeground : colors.text },
             ]}
           >
-            Stopwatch
+            Flow Mode
           </Text>
         </TouchableOpacity>
       </View>
@@ -182,13 +175,20 @@ export function FocusTimer() {
           { backgroundColor: colors.card, borderColor: colors.border },
         ]}
       >
-        {timerMode === 'POMODORO' && (
-          <View style={[styles.badge, { backgroundColor: colors.border }]}>
+        <View style={[styles.badge, { backgroundColor: colors.border }]}>
+          {timerMode === 'POMODORO' ? (
             <Text style={[styles.badgeText, { color: colors.text }]}>
               {timerState === 'WORK' ? 'Work Session' : 'Break Time'}
             </Text>
-          </View>
-        )}
+          ) : (
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+              <Flame size={14} color={colors.text} />
+              <Text style={[styles.badgeText, { color: colors.text }]}>
+                Flow Mode (Stopwatch)
+              </Text>
+            </View>
+          )}
+        </View>
 
         <Text style={[styles.timeDisplay, { color: colors.text }]}>
           {formatTime(timeLeft)}
