@@ -7,10 +7,23 @@ import {
   StyleSheet,
   Modal,
   ScrollView,
+  Alert,
+  Switch,
 } from 'react-native';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
-import { Play, Pause, RotateCcw, AlertTriangle, Plus, Tag, Flame } from 'lucide-react-native';
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  AlertTriangle,
+  Plus,
+  Tag,
+  Flame,
+  CheckCircle2,
+  Settings,
+  Trash2,
+} from 'lucide-react-native';
 
 const DISTRACTION_CATEGORIES = [
   'Social Media',
@@ -39,10 +52,18 @@ export function FocusTimer() {
     addSession,
     addDistraction,
     pomodoroSettings,
+    setPomodoroSettings,
+    resetAllData,
   } = useAppStore();
 
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
   const [todoPickerOpen, setTodoPickerOpen] = useState(false);
+  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+
+  // Settings inputs
+  const [workInput, setWorkInput] = useState(pomodoroSettings.work.toString());
+  const [breakInput, setBreakInput] = useState(pomodoroSettings.break.toString());
+  const [autoBreak, setAutoBreak] = useState(pomodoroSettings.autoStartBreak);
 
   useEffect(() => {
     let interval: any = null;
@@ -105,6 +126,61 @@ export function FocusTimer() {
       }
       setTimeLeft(0);
     }
+  };
+
+  const handleCompleteSession = () => {
+    setIsActive(false);
+    let sessionDuration = 0;
+    if (timerMode === 'POMODORO') {
+      sessionDuration = (pomodoroSettings.work * 60) - timeLeft;
+      if (sessionDuration <= 0) sessionDuration = pomodoroSettings.work * 60;
+    } else {
+      sessionDuration = timeLeft;
+    }
+
+    if (sessionDuration > 0) {
+      addSession({
+        id: Date.now().toString(),
+        date: new Date().toISOString(),
+        duration: sessionDuration,
+        mode: timerMode,
+      });
+    }
+
+    if (timerMode === 'POMODORO') {
+      setTimerState('WORK');
+      setTimeLeft(pomodoroSettings.work * 60);
+    } else {
+      setTimeLeft(0);
+    }
+  };
+
+  const handleSaveSettings = () => {
+    const w = parseInt(workInput, 10) || 25;
+    const b = parseInt(breakInput, 10) || 5;
+    setPomodoroSettings({ work: w, break: b, autoStartBreak: autoBreak });
+    if (!isActive && timerMode === 'POMODORO') {
+      setTimeLeft(timerState === 'WORK' ? w * 60 : b * 60);
+    }
+    setSettingsModalOpen(false);
+  };
+
+  const handleConfirmResetData = () => {
+    Alert.alert(
+      'Reset All Data',
+      'Are you sure you want to reset all tasks, history, mood notes, and app settings? This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Reset Everything',
+          style: 'destructive',
+          onPress: () => {
+            resetAllData();
+            setSettingsModalOpen(false);
+          },
+        },
+      ]
+    );
   };
 
   const handleModeSwitch = (mode: 'POMODORO' | 'STOPWATCH') => {
@@ -217,8 +293,24 @@ export function FocusTimer() {
           </Text>
         </TouchableOpacity>
 
-        {/* Controls */}
+        {/* 5 Control Buttons Row */}
         <View style={styles.controlsRow}>
+          <TouchableOpacity
+            style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={handleCompleteSession}
+            activeOpacity={0.7}
+          >
+            <CheckCircle2 size={20} color={colors.text} />
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={resetTimer}
+            activeOpacity={0.7}
+          >
+            <RotateCcw size={20} color={colors.text} />
+          </TouchableOpacity>
+
           <TouchableOpacity
             style={[
               styles.mainActionBtn,
@@ -236,21 +328,90 @@ export function FocusTimer() {
 
           <TouchableOpacity
             style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={resetTimer}
-            activeOpacity={0.7}
-          >
-            <RotateCcw size={20} color={colors.text} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={() => setDistractionModalOpen(true)}
             activeOpacity={0.7}
           >
             <AlertTriangle size={20} color={colors.text} />
           </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => {
+              setWorkInput(pomodoroSettings.work.toString());
+              setBreakInput(pomodoroSettings.break.toString());
+              setAutoBreak(pomodoroSettings.autoStartBreak);
+              setSettingsModalOpen(true);
+            }}
+            activeOpacity={0.7}
+          >
+            <Settings size={20} color={colors.text} />
+          </TouchableOpacity>
         </View>
       </View>
+
+      {/* Settings Modal */}
+      <Modal visible={settingsModalOpen} transparent animationType="fade">
+        <View style={styles.modalBackdrop}>
+          <View style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <Text style={[styles.modalTitle, { color: colors.text }]}>Timer & App Settings</Text>
+
+            {/* Pomodoro Duration Controls */}
+            <View style={styles.settingGroup}>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>Pomodoro Work Time (mins)</Text>
+              <TextInput
+                style={[styles.settingInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg }]}
+                keyboardType="numeric"
+                value={workInput}
+                onChangeText={setWorkInput}
+              />
+            </View>
+
+            <View style={styles.settingGroup}>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>Break Time (mins)</Text>
+              <TextInput
+                style={[styles.settingInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg }]}
+                keyboardType="numeric"
+                value={breakInput}
+                onChangeText={setBreakInput}
+              />
+            </View>
+
+            <View style={styles.switchRow}>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>Auto-start Break</Text>
+              <Switch
+                value={autoBreak}
+                onValueChange={setAutoBreak}
+                trackColor={{ false: colors.border, true: colors.primary }}
+              />
+            </View>
+
+            <TouchableOpacity
+              style={[styles.saveSettingsBtn, { backgroundColor: colors.primary }]}
+              onPress={handleSaveSettings}
+            >
+              <Text style={{ color: colors.primaryForeground, fontWeight: '600' }}>Save Timer Settings</Text>
+            </TouchableOpacity>
+
+            {/* Reset App Data Section */}
+            <View style={[styles.resetSection, { borderColor: colors.border }]}>
+              <TouchableOpacity
+                style={styles.dangerResetBtn}
+                onPress={handleConfirmResetData}
+              >
+                <Trash2 size={16} color="#ef4444" />
+                <Text style={styles.dangerResetText}>Reset All App Data</Text>
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.closeModalBtn, { backgroundColor: colors.border, marginTop: 12 }]}
+              onPress={() => setSettingsModalOpen(false)}
+            >
+              <Text style={{ color: colors.text, fontWeight: '600' }}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
 
       {/* Todo Selector Modal */}
       <Modal visible={todoPickerOpen} transparent animationType="fade">
@@ -402,20 +563,22 @@ const styles = StyleSheet.create({
   controlsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 16,
+    justifyContent: 'center',
+    gap: 10,
+    width: '100%',
   },
   mainActionBtn: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
   },
   secondaryActionBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
+    width: 42,
+    height: 42,
+    borderRadius: 21,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -437,11 +600,55 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    marginBottom: 4,
+    marginBottom: 12,
   },
   modalSub: {
     fontSize: 13,
     marginBottom: 10,
+  },
+  settingGroup: {
+    marginBottom: 10,
+  },
+  settingLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  settingInput: {
+    height: 40,
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    fontSize: 14,
+  },
+  switchRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginVertical: 10,
+  },
+  saveSettingsBtn: {
+    paddingVertical: 12,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  resetSection: {
+    borderTopWidth: 1,
+    marginTop: 14,
+    paddingTop: 14,
+    alignItems: 'center',
+  },
+  dangerResetBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 8,
+  },
+  dangerResetText: {
+    color: '#ef4444',
+    fontSize: 14,
+    fontWeight: '600',
   },
   todoOption: {
     padding: 12,
@@ -460,6 +667,5 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     alignItems: 'center',
-    marginTop: 8,
   },
 });
