@@ -992,7 +992,7 @@ export function Popup() {
           { id: "timer", label: "Timer", icon: TimerIcon },
           { id: "tasks", label: "Tasks", icon: CheckSquare, badge: state.todos.filter(t => !t.completed).length },
           { id: "shield", label: "Shield", icon: Shield, activeIndicator: state.shield.enabled && state.isActive },
-          { id: "notes", label: "Mood Notes", icon: BookOpen, badge: state.moodNotes.length },
+          { id: "notes", label: "Notes", icon: BookOpen, badge: state.moodNotes.length },
           { id: "stats", label: "Stats", icon: BarChart3 }
         ].map((tab) => {
           const Icon = tab.icon;

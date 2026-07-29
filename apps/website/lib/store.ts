@@ -30,7 +30,7 @@ interface AppState {
     setTimerMode: (mode: "POMODORO" | "STOPWATCH") => void;
     setTimerState: (state: "WORK" | "BREAK") => void;
     setPreviousMode: (mode: "POMODORO" | "STOPWATCH") => void;
-    setTimeLeft: (time: number) => void;
+    setTimeLeft: (time: number | ((prev: number) => number)) => void;
     setIsActive: (active: boolean) => void;
     setSessionStartTime: (time: string | null) => void;
     sessionName: string;
@@ -205,7 +205,10 @@ export const useAppStore = create<AppState>()(
             setTimerMode: (mode) => set({ timerMode: mode }),
             setTimerState: (state) => set({ timerState: state }),
             setPreviousMode: (mode) => set({ previousMode: mode }),
-            setTimeLeft: (time) => set({ timeLeft: time }),
+            setTimeLeft: (timeOrFn) =>
+                set((state) => ({
+                    timeLeft: typeof timeOrFn === "function" ? timeOrFn(state.timeLeft) : timeOrFn,
+                })),
             setIsActive: (active) => set({ isActive: active }),
             setSessionStartTime: (time) => set({ sessionStartTime: time }),
             sessionName: "",
