@@ -31,8 +31,8 @@ export function BackgroundDisplay() {
           style={[
             StyleSheet.absoluteFill,
             {
-              backgroundColor: activeScheme === 'dark' ? '#09090b' : '#fafafa',
-              opacity: 0.9,
+              backgroundColor: activeScheme === 'dark' ? '#18181b' : '#e4e4e7',
+              opacity: 0.8,
             },
           ]}
         />
@@ -45,8 +45,8 @@ export function BackgroundDisplay() {
             style={[
               StyleSheet.absoluteFill,
               {
-                backgroundColor: activeScheme === 'dark' ? '#000000' : '#ffffff',
-                opacity: activeScheme === 'dark' ? 0.85 : 0.9,
+                backgroundColor: activeScheme === 'dark' ? '#09090b' : '#ffffff',
+                opacity: activeScheme === 'dark' ? 0.75 : 0.85,
               },
             ]}
           />
