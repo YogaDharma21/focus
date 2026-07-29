@@ -155,8 +155,8 @@ export function FocusTimer() {
           duration: flowDuration,
           mode: 'STOPWATCH',
         });
-        // Divide elapsed Flow duration by 5 for break (min 60 seconds)
-        const breakSeconds = Math.max(Math.floor(flowDuration / 5), 60);
+        // Divide elapsed Flow duration by 5 for break (min 1 second)
+        const breakSeconds = Math.max(Math.floor(flowDuration / 5), 1);
         setPreviousMode('STOPWATCH');
         setTimerMode('POMODORO');
         setTimerState('BREAK');
