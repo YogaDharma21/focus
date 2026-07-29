@@ -603,7 +603,7 @@ export function Popup() {
             </button>
 
             <div className="text-[10px] font-mono text-center opacity-50">
-              Focus Extension v1.0.0
+              Focus Extension v1.2.0
             </div>
           </div>
         </div>

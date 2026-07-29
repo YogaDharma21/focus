@@ -37,6 +37,10 @@ export function InfoModal({ visible, onClose }: InfoModalProps) {
           </View>
 
           <View style={styles.content}>
+            <Text style={[styles.versionText, { color: colors.textMuted }]}>
+              Version 1.2.0
+            </Text>
+
             <Text style={[styles.desc, { color: colors.textMuted }]}>
               Focus is a clean, distraction-free productivity app designed to keep you in the flow with focus timers, task management, analytics, and mood reflections.
             </Text>
@@ -91,7 +95,11 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 20,
-    gap: 18,
+    gap: 14,
+  },
+  versionText: {
+    fontSize: 13,
+    fontWeight: '500',
   },
   desc: {
     fontSize: 14,
