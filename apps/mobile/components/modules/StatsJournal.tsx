@@ -8,9 +8,9 @@ import {
   AlertTriangle,
   Calendar,
   Flame,
-  PieChart,
-  ListCheck,
-  CheckSquare,
+  Activity,
+  ListFilter,
+  Target,
 } from 'lucide-react-native';
 
 export function StatsJournal() {
@@ -18,12 +18,19 @@ export function StatsJournal() {
   const { sessions, distractions, todos } = useAppStore();
 
   const [dayProgressPercent, setDayProgressPercent] = useState(0);
+  const [remainingTimeStr, setRemainingTimeStr] = useState('');
 
   useEffect(() => {
     const updateDayProgress = () => {
       const now = new Date();
       const secondsElapsed = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
-      setDayProgressPercent(Math.round((secondsElapsed / 86400) * 100));
+      const percent = Math.round((secondsElapsed / 86400) * 100);
+      setDayProgressPercent(percent);
+
+      const secondsRemaining = 86400 - secondsElapsed;
+      const hours = Math.floor(secondsRemaining / 3600);
+      const mins = Math.floor((secondsRemaining % 3600) / 60);
+      setRemainingTimeStr(`${hours}h ${mins}m remaining today`);
     };
 
     updateDayProgress();
@@ -31,11 +38,18 @@ export function StatsJournal() {
     return () => clearInterval(interval);
   }, []);
 
-  // Stats Calculations
+  // Calculations
   const todayStr = new Date().toISOString().slice(0, 10);
+  const minutesToday = Math.round(
+    sessions
+      .filter((s) => s.date.slice(0, 10) === todayStr)
+      .reduce((acc, s) => acc + s.duration, 0) / 60
+  );
+
   const tasksTodayFinished = todos.filter(
     (t) => t.completed && (t.completedAt ? t.completedAt.slice(0, 10) === todayStr : true)
   ).length;
+
   const pendingTasksCount = todos.filter((t) => !t.completed).length;
 
   const totalTasksCount = todos.length;
@@ -98,61 +112,89 @@ export function StatsJournal() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {/* Top 3 Stat Cards */}
-      <View style={styles.statsGrid}>
-        {/* 1. Day Progress */}
-        <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Clock size={20} color={colors.text} />
-          <Text style={[styles.statValue, { color: colors.text }]}>{dayProgressPercent}%</Text>
-          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Day Progress</Text>
+      {/* 1. Day Progress Card (Full Width) */}
+      <View style={[styles.fullCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={styles.cardHeaderBetween}>
+          <View style={styles.iconTitleRow}>
+            <View style={[styles.iconBadge, { backgroundColor: colors.border }]}>
+              <Clock size={16} color={colors.text} />
+            </View>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Day Progress</Text>
+          </View>
+          <Text style={[styles.headerPercentText, { color: colors.text }]}>{dayProgressPercent}%</Text>
         </View>
 
-        {/* 2. Tasks Today Finished */}
-        <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <CheckCircle2 size={20} color={colors.text} />
-          <Text style={[styles.statValue, { color: colors.text }]}>{tasksTodayFinished}</Text>
-          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Tasks Today (Done)</Text>
+        <View style={[styles.progressBarTrack, { backgroundColor: colors.border }]}>
+          <View style={[styles.progressBarFill, { backgroundColor: colors.text, width: `${dayProgressPercent}%` }]} />
         </View>
 
-        {/* 3. Pending Tasks */}
-        <View style={[styles.statCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <ListCheck size={20} color={colors.text} />
-          <Text style={[styles.statValue, { color: colors.text }]}>{pendingTasksCount}</Text>
-          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Pending Tasks</Text>
+        <Text style={[styles.subtext, { color: colors.textMuted }]}>{remainingTimeStr}</Text>
+      </View>
+
+      {/* 2. 3-Grid Cards Row */}
+      <View style={styles.grid3Row}>
+        {/* Minutes Today */}
+        <View style={[styles.grid3Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.iconBadgeSquare, { backgroundColor: colors.border }]}>
+            <Activity size={18} color={colors.text} />
+          </View>
+          <Text style={[styles.largeNumValue, { color: colors.text }]}>{minutesToday}</Text>
+          <Text style={[styles.grid3Label, { color: colors.textMuted }]}>MINUTES TODAY</Text>
+        </View>
+
+        {/* Tasks Today */}
+        <View style={[styles.grid3Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.iconBadgeSquare, { backgroundColor: 'rgba(34, 197, 94, 0.15)' }]}>
+            <CheckCircle2 size={18} color="#22c55e" />
+          </View>
+          <Text style={[styles.largeNumValue, { color: colors.text }]}>{tasksTodayFinished}</Text>
+          <Text style={[styles.grid3Label, { color: colors.textMuted }]}>TASKS TODAY</Text>
+        </View>
+
+        {/* Pending Tasks */}
+        <View style={[styles.grid3Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.iconBadgeSquare, { backgroundColor: 'rgba(59, 130, 246, 0.15)' }]}>
+            <ListFilter size={18} color="#3b82f6" />
+          </View>
+          <Text style={[styles.largeNumValue, { color: colors.text }]}>{pendingTasksCount}</Text>
+          <Text style={[styles.grid3Label, { color: colors.textMuted }]}>PENDING TASKS</Text>
         </View>
       </View>
 
-      {/* Row 2: Longest Streak & Completion Rate */}
-      <View style={styles.secondaryGrid}>
-        {/* Streak Card */}
-        <View style={[styles.bigStatCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={styles.cardHeaderRow}>
-            <Flame size={18} color={colors.text} />
-            <Text style={[styles.cardHeaderTitle, { color: colors.text }]}>Streak</Text>
+      {/* 3. 2-Grid Cards Row */}
+      <View style={styles.grid2Row}>
+        {/* Longest Streak Card */}
+        <View style={[styles.grid2Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.iconTitleRow}>
+            <Flame size={18} color="#f97316" />
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Longest Streak</Text>
           </View>
-          <View style={styles.streakValuesRow}>
-            <View style={styles.streakSubCol}>
-              <Text style={[styles.streakNum, { color: colors.text }]}>{streak.current}d</Text>
-              <Text style={[styles.streakSubLabel, { color: colors.textMuted }]}>Current</Text>
+
+          <View style={styles.streakRowsContainer}>
+            <View style={styles.streakRow}>
+              <Text style={[styles.streakLabel, { color: colors.textMuted }]}>Current</Text>
+              <Text style={[styles.streakValue, { color: colors.text }]}>{streak.current} Days</Text>
             </View>
-            <View style={[styles.divider, { backgroundColor: colors.border }]} />
-            <View style={styles.streakSubCol}>
-              <Text style={[styles.streakNum, { color: colors.text }]}>{streak.best}d</Text>
-              <Text style={[styles.streakSubLabel, { color: colors.textMuted }]}>Best</Text>
+            <View style={styles.streakRow}>
+              <Text style={[styles.streakLabel, { color: colors.textMuted }]}>Best</Text>
+              <Text style={[styles.streakValue, { color: colors.text }]}>{streak.best} Days</Text>
             </View>
           </View>
         </View>
 
         {/* Completion Rate Card */}
-        <View style={[styles.bigStatCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={styles.cardHeaderRow}>
-            <PieChart size={18} color={colors.text} />
-            <Text style={[styles.cardHeaderTitle, { color: colors.text }]}>Completion Rate</Text>
+        <View style={[styles.grid2Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.iconTitleRow}>
+            <Target size={18} color="#22c55e" />
+            <Text style={[styles.cardTitle, { color: colors.text }]}>Completion Rate</Text>
           </View>
-          <Text style={[styles.rateValue, { color: colors.text }]}>{completionRate}%</Text>
-          <Text style={[styles.rateSub, { color: colors.textMuted }]}>
-            {completedTasksCount} of {totalTasksCount} tasks complete
-          </Text>
+
+          <Text style={[styles.bigPercentText, { color: colors.text }]}>{completionRate}%</Text>
+
+          <View style={styles.iconSubtextRow}>
+            <CheckCircle2 size={13} color={colors.textMuted} />
+            <Text style={[styles.subtext, { color: colors.textMuted }]}>Tasks Finished</Text>
+          </View>
         </View>
       </View>
 
@@ -180,7 +222,7 @@ export function StatsJournal() {
         )}
       </View>
 
-      {/* Session History */}
+      {/* Focus History */}
       <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.sectionHeaderRow}>
           <Calendar size={18} color={colors.text} />
@@ -221,80 +263,122 @@ const styles = StyleSheet.create({
     gap: 14,
     paddingBottom: 30,
   },
-  statsGrid: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  statCard: {
-    flex: 1,
+  fullCard: {
     borderRadius: 16,
     borderWidth: 1,
-    padding: 12,
+    padding: 16,
+    gap: 14,
+  },
+  cardHeaderBetween: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  statValue: {
-    fontSize: 22,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  statLabel: {
-    fontSize: 11,
-    fontWeight: '500',
-    textAlign: 'center',
-  },
-  secondaryGrid: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  bigStatCard: {
-    flex: 1,
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 14,
     justifyContent: 'space-between',
   },
-  cardHeaderRow: {
+  iconTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: 8,
+    gap: 8,
   },
-  cardHeaderTitle: {
-    fontSize: 13,
+  iconBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cardTitle: {
+    fontSize: 15,
     fontWeight: '700',
   },
-  streakValuesRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-    marginTop: 4,
-  },
-  streakSubCol: {
-    alignItems: 'center',
-  },
-  streakNum: {
-    fontSize: 20,
+  headerPercentText: {
+    fontSize: 16,
     fontWeight: '800',
   },
-  streakSubLabel: {
-    fontSize: 11,
-    marginTop: 2,
+  progressBarTrack: {
+    width: '100%',
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
   },
-  divider: {
-    width: 1,
-    height: 28,
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 3,
   },
-  rateValue: {
+  subtext: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  grid3Row: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  grid3Card: {
+    flex: 1,
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingVertical: 16,
+    paddingHorizontal: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+  },
+  iconBadgeSquare: {
+    width: 34,
+    height: 34,
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  largeNumValue: {
     fontSize: 26,
     fontWeight: '800',
     letterSpacing: -0.5,
-    marginTop: 2,
   },
-  rateSub: {
-    fontSize: 11,
-    marginTop: 4,
+  grid3Label: {
+    fontSize: 10,
+    fontWeight: '700',
+    textAlign: 'center',
+    letterSpacing: 0.2,
+  },
+  grid2Row: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  grid2Card: {
+    flex: 1,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+    justifyContent: 'space-between',
+    minHeight: 120,
+  },
+  streakRowsContainer: {
+    gap: 8,
+    marginTop: 10,
+  },
+  streakRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  streakLabel: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  streakValue: {
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  bigPercentText: {
+    fontSize: 28,
+    fontWeight: '800',
+    letterSpacing: -0.5,
+    marginVertical: 4,
+  },
+  iconSubtextRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
   },
   sectionCard: {
     borderRadius: 16,
