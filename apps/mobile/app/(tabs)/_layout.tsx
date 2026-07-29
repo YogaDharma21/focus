@@ -66,7 +66,7 @@ export default function TabLayout() {
           <Tabs.Screen
             name="journal"
             options={{
-              title: 'Journal',
+              title: 'Stats',
               tabBarIcon: ({ color }) => <BarChart2 size={22} color={color} />,
             }}
           />

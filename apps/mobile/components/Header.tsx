@@ -25,7 +25,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
       return 'Tasks';
     }
     if (pathname.includes('journal')) {
-      return 'Journal & Stats';
+      return 'Stats';
     }
     if (pathname.includes('notes')) {
       return 'Mood Notes';
