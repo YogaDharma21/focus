@@ -30,8 +30,16 @@ export function BackgroundSelector({ visible, onClose }: BackgroundSelectorProps
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <TouchableOpacity
+        style={styles.backdrop}
+        activeOpacity={1}
+        onPress={onClose}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={() => {}}
+        >
           <View style={[styles.header, { borderColor: colors.border }]}>
             <Text style={[styles.title, { color: colors.text }]}>Choose Background Theme</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -73,8 +81,8 @@ export function BackgroundSelector({ visible, onClose }: BackgroundSelectorProps
               );
             })}
           </ScrollView>
-        </View>
-      </View>
+        </TouchableOpacity>
+      </TouchableOpacity>
     </Modal>
   );
 }

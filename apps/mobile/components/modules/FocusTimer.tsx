@@ -405,9 +405,9 @@ export function FocusTimer() {
       </View>
 
       {/* Settings Modal */}
-      <Modal visible={settingsModalOpen} transparent animationType="fade">
-        <View style={styles.modalBackdrop}>
-          <View style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <Modal visible={settingsModalOpen} transparent animationType="fade" onRequestClose={() => setSettingsModalOpen(false)}>
+        <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setSettingsModalOpen(false)}>
+          <TouchableOpacity activeOpacity={1} style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => {}}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>Timer & App Settings</Text>
 
             {/* Pomodoro Duration Controls */}
@@ -464,14 +464,14 @@ export function FocusTimer() {
             >
               <Text style={{ color: colors.text, fontWeight: '600' }}>Close</Text>
             </TouchableOpacity>
-          </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
 
       {/* Todo Selector Modal */}
-      <Modal visible={todoPickerOpen} transparent animationType="fade">
-        <View style={styles.modalBackdrop}>
-          <View style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <Modal visible={todoPickerOpen} transparent animationType="fade" onRequestClose={() => setTodoPickerOpen(false)}>
+        <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setTodoPickerOpen(false)}>
+          <TouchableOpacity activeOpacity={1} style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => {}}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>Select Task for Session</Text>
             <ScrollView style={{ maxHeight: 300 }}>
               <TouchableOpacity
@@ -503,14 +503,14 @@ export function FocusTimer() {
             >
               <Text style={{ color: colors.text, fontWeight: '600' }}>Close</Text>
             </TouchableOpacity>
-          </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
 
       {/* Distraction Logger Modal */}
-      <Modal visible={distractionModalOpen} transparent animationType="fade">
-        <View style={styles.modalBackdrop}>
-          <View style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <Modal visible={distractionModalOpen} transparent animationType="fade" onRequestClose={() => setDistractionModalOpen(false)}>
+        <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setDistractionModalOpen(false)}>
+          <TouchableOpacity activeOpacity={1} style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => {}}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>Log Distraction</Text>
             <Text style={[styles.modalSub, { color: colors.textMuted }]}>
               What got you off track? Stay conscious of interruption patterns.
@@ -536,8 +536,8 @@ export function FocusTimer() {
             >
               <Text style={{ color: colors.text, fontWeight: '600' }}>Cancel</Text>
             </TouchableOpacity>
-          </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
     </View>
   );

@@ -19,8 +19,16 @@ export function InfoModal({ visible, onClose }: InfoModalProps) {
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <TouchableOpacity
+        style={styles.backdrop}
+        activeOpacity={1}
+        onPress={onClose}
+      >
+        <TouchableOpacity
+          activeOpacity={1}
+          style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+          onPress={() => {}}
+        >
           <View style={[styles.header, { borderColor: colors.border }]}>
             <Text style={[styles.title, { color: colors.text }]}>About Focus App</Text>
             <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
@@ -45,8 +53,8 @@ export function InfoModal({ visible, onClose }: InfoModalProps) {
               <ExternalLink size={14} color={colors.primaryForeground} />
             </TouchableOpacity>
           </View>
-        </View>
-      </View>
+        </TouchableOpacity>
+      </TouchableOpacity>
     </Modal>
   );
 }

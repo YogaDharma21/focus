@@ -18,7 +18,6 @@ import {
   FolderPlus,
   ListCheck,
   X,
-  Clock,
   Calendar,
   Repeat,
   Tag,
@@ -173,7 +172,7 @@ export function TodoList() {
         </ScrollView>
       </View>
 
-      {/* Simplified Quick Add Todo Bar (No Priority / Pomo requirement) */}
+      {/* Simplified Quick Add Todo Bar */}
       {activeGroupId !== 'finished' && (
         <View style={[styles.addCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.addInputRow}>
@@ -279,9 +278,9 @@ export function TodoList() {
       </ScrollView>
 
       {/* Task Detail Modal */}
-      <Modal visible={!!activeDetailTodo} transparent animationType="fade">
-        <View style={styles.modalBackdrop}>
-          <View style={[styles.detailModalCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <Modal visible={!!activeDetailTodo} transparent animationType="fade" onRequestClose={() => setDetailTodo(null)}>
+        <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setDetailTodo(null)}>
+          <TouchableOpacity activeOpacity={1} style={[styles.detailModalCard, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => {}}>
             {/* Modal Header */}
             <View style={[styles.modalHeader, { borderColor: colors.border }]}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>Task Details</Text>
@@ -513,14 +512,14 @@ export function TodoList() {
                 <Text style={{ color: colors.primaryForeground, fontWeight: '700', fontSize: 14 }}>Save Changes</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
 
       {/* Add Group Modal */}
-      <Modal visible={addGroupModalOpen} transparent animationType="fade">
-        <View style={styles.modalBackdrop}>
-          <View style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <Modal visible={addGroupModalOpen} transparent animationType="fade" onRequestClose={() => setAddGroupModalOpen(false)}>
+        <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setAddGroupModalOpen(false)}>
+          <TouchableOpacity activeOpacity={1} style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => {}}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>Add Task Group</Text>
             <TextInput
               style={[styles.addInput, { color: colors.text, backgroundColor: colors.inputBg, borderColor: colors.border, marginVertical: 12 }]}
@@ -543,8 +542,8 @@ export function TodoList() {
                 <Text style={{ color: colors.primaryForeground, fontWeight: '600' }}>Save</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
     </View>
   );
