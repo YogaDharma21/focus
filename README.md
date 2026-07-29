@@ -52,6 +52,15 @@
 
 </details>
 
+<details>
+<summary>View Browser Extension Screenshots</summary>
+
+| Timer | Tasks | Site Blocking | Stats | Notes |
+| :---: | :---: | :---: | :---: | :---: |
+| ![Timer](./apps/extension/public/Screenshot-timer.png) | ![Tasks](./apps/extension/public/Screenshot-tasks.png) | ![Block](./apps/extension/public/Screenshot-block.png) | ![Stats](./apps/extension/public/Screenshot-stats.png) | ![Notes](./apps/extension/public/Screenshot-notes.png) |
+
+</details>
+
 ---
 
 ## Project Structure
@@ -82,7 +91,7 @@ focus/
 |-----|------|--------|------------|
 | **Website** | `apps/website/` | 🚧 In Development | Next.js, React, TypeScript, Tailwind CSS, Zustand |
 | **Mobile** | `apps/mobile/` | 🚧 In Development | Expo SDK 52, React Native, TypeScript, Zustand |
-| **Extension** | `apps/extension/` | 🚧 In Development | TypeScript, React, WebExtensions |
+| **Extension** | `apps/extension/` | 🚧 In Development | Vite, React, TypeScript, Tailwind CSS, Zustand, MV3 |
 | **Backend** | `apps/backend/` | 📦 Planned | TBD |
 | **CLI** | `apps/cli/` | 📦 Planned | TBD |
 | **Desktop** | `apps/desktop/` | 📦 Planned | TBD |
@@ -115,6 +124,16 @@ npx expo start
 ```
 
 Scan the QR code with Expo Go or run on Android Emulator / iOS Simulator.
+
+### Extension Development Setup
+
+```bash
+cd apps/extension
+npm install
+npm run build
+```
+
+Then load the `apps/extension/dist` folder as an unpacked extension in `chrome://extensions/` (Developer mode enabled).
 
 ---
 
