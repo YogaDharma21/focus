@@ -13,7 +13,10 @@ import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
 import { Play, Pause, Music, Volume2, ExternalLink, X, ChevronUp, ChevronDown } from 'lucide-react-native';
 
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
 export function MediaPlayer() {
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const {
     mediaPlayerOpen,
@@ -30,6 +33,8 @@ export function MediaPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const soundRef = useRef<Audio.Sound | null>(null);
+
+  const bottomOffset = 56 + Math.max(insets.bottom, 0) + 12;
 
   useEffect(() => {
     return () => {
@@ -98,7 +103,7 @@ export function MediaPlayer() {
       <View
         style={[
           styles.miniBar,
-          { backgroundColor: colors.card, borderColor: colors.border },
+          { backgroundColor: colors.card, borderColor: colors.border, bottom: bottomOffset },
         ]}
       >
         <TouchableOpacity

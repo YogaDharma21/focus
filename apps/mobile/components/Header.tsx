@@ -1,5 +1,6 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
 import { useAppStore, ViewType } from '@/lib/store';
 import { Focus, Sun, Moon, Image as ImageIcon, Info } from 'lucide-react-native';
@@ -10,6 +11,7 @@ interface HeaderProps {
 }
 
 export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
+  const insets = useSafeAreaInsets();
   const { colors, themeMode, toggleTheme } = useTheme();
   const { currentView, deepFocusMode, setDeepFocusMode } = useAppStore();
 
@@ -29,7 +31,16 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background, borderColor: colors.border }]}>
+    <View
+      style={[
+        styles.container,
+        {
+          backgroundColor: colors.background,
+          borderColor: colors.border,
+          paddingTop: Math.max(insets.top + 8, 16),
+        },
+      ]}
+    >
       <View style={styles.titleRow}>
         <Text style={[styles.title, { color: colors.text }]}>{getTitle(currentView)}</Text>
       </View>
@@ -87,7 +98,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingBottom: 12,
     borderBottomWidth: 1,
   },
   titleRow: {

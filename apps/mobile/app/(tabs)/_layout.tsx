@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
 import { Header } from '@/components/Header';
 import { BackgroundDisplay } from '@/components/modules/BackgroundDisplay';
@@ -12,9 +13,12 @@ import { DynamicIslandTimer } from '@/components/modules/DynamicIslandTimer';
 import { Clock, ListCheck, BarChart2, Smile } from 'lucide-react-native';
 
 export default function TabLayout() {
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const [bgModalOpen, setBgModalOpen] = useState(false);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
+
+  const bottomInset = Math.max(insets.bottom, 0);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -32,8 +36,8 @@ export default function TabLayout() {
             tabBarStyle: {
               backgroundColor: colors.background,
               borderTopColor: colors.border,
-              height: 56,
-              paddingBottom: 6,
+              height: 56 + bottomInset,
+              paddingBottom: 6 + bottomInset,
               paddingTop: 6,
             },
             tabBarActiveTintColor: colors.tint,

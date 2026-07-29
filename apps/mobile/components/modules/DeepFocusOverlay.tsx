@@ -1,10 +1,12 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
 import { Play, Pause, X, Focus } from 'lucide-react-native';
 
 export function DeepFocusOverlay() {
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const {
     deepFocusMode,
@@ -27,9 +29,25 @@ export function DeepFocusOverlay() {
 
   return (
     <Modal visible={deepFocusMode} animationType="fade" transparent={false}>
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View
+        style={[
+          styles.container,
+          {
+            backgroundColor: colors.background,
+            paddingTop: insets.top,
+            paddingBottom: insets.bottom,
+          },
+        ]}
+      >
         <TouchableOpacity
-          style={[styles.exitBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+          style={[
+            styles.exitBtn,
+            {
+              backgroundColor: colors.card,
+              borderColor: colors.border,
+              top: Math.max(insets.top + 12, 40),
+            },
+          ]}
           onPress={() => setDeepFocusMode(false)}
         >
           <X size={20} color={colors.text} />
@@ -74,7 +92,6 @@ const styles = StyleSheet.create({
   },
   exitBtn: {
     position: 'absolute',
-    top: 50,
     right: 24,
     width: 44,
     height: 44,
