@@ -7,6 +7,7 @@ import {
   StyleSheet,
   ScrollView,
   Modal,
+  Alert,
 } from 'react-native';
 import { useAppStore, TodoItem } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
@@ -37,6 +38,7 @@ export function TodoList() {
     deleteTodo,
     groups,
     addGroup,
+    deleteGroup,
     addSubtask,
     toggleSubtask,
     deleteSubtask,
@@ -119,6 +121,26 @@ export function TodoList() {
     setAddGroupModalOpen(false);
   };
 
+  const handleDeleteGroup = (groupId: string, groupName: string) => {
+    Alert.alert(
+      'Delete Group',
+      `Are you sure you want to delete "${groupName}"? Tasks in this group will be moved to Current Tasks.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete',
+          style: 'destructive',
+          onPress: () => {
+            if (activeGroupId === groupId) {
+              setActiveGroupId('current');
+            }
+            deleteGroup(groupId);
+          },
+        },
+      ]
+    );
+  };
+
   const filteredTodos = todos.filter((todo) => {
     if (activeGroupId === 'finished') {
       return todo.completed;
@@ -139,28 +161,44 @@ export function TodoList() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.groupBar}>
           {groups.map((group) => {
             const active = activeGroupId === group.id;
+            const isCustom = group.type === 'custom' && group.id !== 'current' && group.id !== 'finished';
             return (
-              <TouchableOpacity
+              <View
                 key={group.id}
                 style={[
                   styles.groupChip,
                   {
                     backgroundColor: active ? colors.primary : colors.card,
                     borderColor: colors.border,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    gap: 6,
                   },
                 ]}
-                onPress={() => setActiveGroupId(group.id)}
-                activeOpacity={0.8}
               >
-                <Text
-                  style={[
-                    styles.groupChipText,
-                    { color: active ? colors.primaryForeground : colors.text },
-                  ]}
+                <TouchableOpacity
+                  onPress={() => setActiveGroupId(group.id)}
+                  activeOpacity={0.8}
                 >
-                  {group.name}
-                </Text>
-              </TouchableOpacity>
+                  <Text
+                    style={[
+                      styles.groupChipText,
+                      { color: active ? colors.primaryForeground : colors.text },
+                    ]}
+                  >
+                    {group.name}
+                  </Text>
+                </TouchableOpacity>
+
+                {isCustom && (
+                  <TouchableOpacity
+                    onPress={() => handleDeleteGroup(group.id, group.name)}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                  >
+                    <X size={12} color={active ? colors.primaryForeground : colors.textMuted} />
+                  </TouchableOpacity>
+                )}
+              </View>
             );
           })}
           <TouchableOpacity
