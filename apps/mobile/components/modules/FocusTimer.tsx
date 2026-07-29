@@ -393,14 +393,7 @@ export function FocusTimer() {
 
         {/* 5 Control Buttons Row */}
         <View style={styles.controlsRow}>
-          <TouchableOpacity
-            style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={handleCompleteSession}
-            activeOpacity={0.7}
-          >
-            <CheckCircle2 size={20} color={colors.text} />
-          </TouchableOpacity>
-
+          {/* 1. Reset Button */}
           <TouchableOpacity
             style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={resetTimer}
@@ -409,6 +402,16 @@ export function FocusTimer() {
             <RotateCcw size={20} color={colors.text} />
           </TouchableOpacity>
 
+          {/* 2. Log Distraction Button */}
+          <TouchableOpacity
+            style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => setDistractionModalOpen(true)}
+            activeOpacity={0.7}
+          >
+            <AlertTriangle size={20} color={colors.text} />
+          </TouchableOpacity>
+
+          {/* 3. Play / Pause Button (CENTER) */}
           <TouchableOpacity
             style={[
               styles.mainActionBtn,
@@ -424,14 +427,7 @@ export function FocusTimer() {
             )}
           </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => setDistractionModalOpen(true)}
-            activeOpacity={0.7}
-          >
-            <AlertTriangle size={20} color={colors.text} />
-          </TouchableOpacity>
-
+          {/* 4. Settings Button */}
           <TouchableOpacity
             style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={() => {
@@ -443,6 +439,15 @@ export function FocusTimer() {
             activeOpacity={0.7}
           >
             <Settings size={20} color={colors.text} />
+          </TouchableOpacity>
+
+          {/* 5. Complete Session Button */}
+          <TouchableOpacity
+            style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={handleCompleteSession}
+            activeOpacity={0.7}
+          >
+            <CheckCircle2 size={20} color={colors.text} />
           </TouchableOpacity>
         </View>
       </View>
