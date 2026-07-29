@@ -5,14 +5,12 @@ import {
   TouchableOpacity,
   StyleSheet,
   Modal,
-  Linking,
   ScrollView,
 } from 'react-native';
 import { Audio } from 'expo-av';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
-import { Play, Pause, Music, Volume2, ExternalLink, X, ChevronUp, ChevronDown } from 'lucide-react-native';
-
+import { Play, Pause, Music, Volume2, X, ChevronUp, ChevronDown } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export function MediaPlayer() {
@@ -21,12 +19,7 @@ export function MediaPlayer() {
   const {
     mediaPlayerOpen,
     setMediaPlayerOpen,
-    mediaType,
-    setMediaType,
-    youtubeUrl,
-    spotifyUrl,
     localPlaylist,
-    localUrl,
     setMediaUrl,
   } = useAppStore();
 
@@ -61,14 +54,6 @@ export function MediaPlayer() {
   };
 
   const togglePlay = async () => {
-    if (mediaType !== 'LOCAL') {
-      const targetUrl = mediaType === 'YOUTUBE' ? youtubeUrl : spotifyUrl;
-      if (targetUrl) {
-        Linking.openURL(targetUrl).catch(() => {});
-      }
-      return;
-    }
-
     if (!soundRef.current) {
       const track = localPlaylist[currentTrackIndex] || localPlaylist[0];
       if (track) {
@@ -114,14 +99,10 @@ export function MediaPlayer() {
           <Music size={18} color={colors.text} />
           <View style={{ flex: 1 }}>
             <Text style={[styles.miniTitle, { color: colors.text }]} numberOfLines={1}>
-              {mediaType === 'LOCAL'
-                ? currentTrack?.title || 'Ambient Music'
-                : mediaType === 'YOUTUBE'
-                ? 'YouTube Focus Stream'
-                : 'Spotify Focus Playlist'}
+              {currentTrack?.title || 'Ambient Music'}
             </Text>
             <Text style={[styles.miniSub, { color: colors.textMuted }]}>
-              {mediaType === 'LOCAL' ? currentTrack?.artist || 'Focus App' : mediaType}
+              {currentTrack?.artist || 'Focus App'}
             </Text>
           </View>
         </TouchableOpacity>
@@ -150,10 +131,18 @@ export function MediaPlayer() {
         </TouchableOpacity>
       </View>
 
-      {/* Full Modal Player */}
-      <Modal visible={mediaPlayerOpen} transparent animationType="slide">
-        <View style={styles.modalBackdrop}>
-          <View style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      {/* Full Modal Drawer Player */}
+      <Modal visible={mediaPlayerOpen} transparent animationType="slide" onRequestClose={() => setMediaPlayerOpen(false)}>
+        <TouchableOpacity
+          style={styles.modalBackdrop}
+          activeOpacity={1}
+          onPress={() => setMediaPlayerOpen(false)}
+        >
+          <TouchableOpacity
+            activeOpacity={1}
+            style={[styles.modalCard, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => {}}
+          >
             <View style={[styles.modalHeader, { borderColor: colors.border }]}>
               <View style={styles.modalTitleRow}>
                 <Volume2 size={20} color={colors.text} />
@@ -165,121 +154,39 @@ export function MediaPlayer() {
             </View>
 
             <ScrollView contentContainerStyle={styles.modalContent}>
-              {/* Service Tabs */}
-              <View style={styles.tabRow}>
-                <TouchableOpacity
-                  style={[
-                    styles.tabBtn,
-                    {
-                      backgroundColor: mediaType === 'LOCAL' ? colors.primary : colors.inputBg,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                  onPress={() => setMediaType('LOCAL')}
-                >
-                  <Text
-                    style={[
-                      styles.tabText,
-                      { color: mediaType === 'LOCAL' ? colors.primaryForeground : colors.text },
-                    ]}
-                  >
-                    Local Audio
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.tabBtn,
-                    {
-                      backgroundColor: mediaType === 'YOUTUBE' ? colors.primary : colors.inputBg,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                  onPress={() => setMediaType('YOUTUBE')}
-                >
-                  <Text
-                    style={[
-                      styles.tabText,
-                      { color: mediaType === 'YOUTUBE' ? colors.primaryForeground : colors.text },
-                    ]}
-                  >
-                    YouTube
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.tabBtn,
-                    {
-                      backgroundColor: mediaType === 'SPOTIFY' ? colors.primary : colors.inputBg,
-                      borderColor: colors.border,
-                    },
-                  ]}
-                  onPress={() => setMediaType('SPOTIFY')}
-                >
-                  <Text
-                    style={[
-                      styles.tabText,
-                      { color: mediaType === 'SPOTIFY' ? colors.primaryForeground : colors.text },
-                    ]}
-                  >
-                    Spotify
-                  </Text>
-                </TouchableOpacity>
+              <View style={styles.trackList}>
+                {localPlaylist.map((track, i) => {
+                  const active = currentTrackIndex === i;
+                  return (
+                    <TouchableOpacity
+                      key={track.id}
+                      style={[
+                        styles.trackRow,
+                        {
+                          backgroundColor: active ? colors.border : colors.inputBg,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                      onPress={() => selectTrack(i)}
+                      activeOpacity={0.7}
+                    >
+                      <Music size={18} color={active ? colors.text : colors.textMuted} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={[styles.trackName, { color: colors.text }]}>
+                          {track.title}
+                        </Text>
+                        <Text style={[styles.trackArtist, { color: colors.textMuted }]}>
+                          {track.artist}
+                        </Text>
+                      </View>
+                      {active && isPlaying && <Volume2 size={16} color={colors.text} />}
+                    </TouchableOpacity>
+                  );
+                })}
               </View>
-
-              {mediaType === 'LOCAL' ? (
-                <View style={styles.trackList}>
-                  {localPlaylist.map((track, i) => {
-                    const active = currentTrackIndex === i;
-                    return (
-                      <TouchableOpacity
-                        key={track.id}
-                        style={[
-                          styles.trackRow,
-                          {
-                            backgroundColor: active ? colors.border : colors.inputBg,
-                            borderColor: colors.border,
-                          },
-                        ]}
-                        onPress={() => selectTrack(i)}
-                      >
-                        <Music size={18} color={active ? colors.text : colors.textMuted} />
-                        <View style={{ flex: 1 }}>
-                          <Text style={[styles.trackName, { color: colors.text }]}>
-                            {track.title}
-                          </Text>
-                          <Text style={[styles.trackArtist, { color: colors.textMuted }]}>
-                            {track.artist}
-                          </Text>
-                        </View>
-                        {active && isPlaying && <Volume2 size={16} color={colors.text} />}
-                      </TouchableOpacity>
-                    );
-                  })}
-                </View>
-              ) : (
-                <View style={styles.externalBox}>
-                  <Text style={[styles.externalTitle, { color: colors.text }]}>
-                    External {mediaType} Stream
-                  </Text>
-                  <Text style={[styles.externalSub, { color: colors.textMuted }]}>
-                    Tap below to open your preferred {mediaType} focus playlist.
-                  </Text>
-                  <TouchableOpacity
-                    style={[styles.openLinkBtn, { backgroundColor: colors.primary }]}
-                    onPress={togglePlay}
-                  >
-                    <ExternalLink size={16} color={colors.primaryForeground} />
-                    <Text style={{ color: colors.primaryForeground, fontWeight: '600' }}>
-                      Open {mediaType}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              )}
             </ScrollView>
-          </View>
-        </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
       </Modal>
     </>
   );
@@ -359,21 +266,6 @@ const styles = StyleSheet.create({
     padding: 20,
     gap: 16,
   },
-  tabRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  tabBtn: {
-    flex: 1,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-  },
-  tabText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
   trackList: {
     gap: 10,
   },
@@ -392,28 +284,5 @@ const styles = StyleSheet.create({
   trackArtist: {
     fontSize: 12,
     marginTop: 2,
-  },
-  externalBox: {
-    padding: 24,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 12,
-  },
-  externalTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  externalSub: {
-    fontSize: 13,
-    textAlign: 'center',
-  },
-  openLinkBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 12,
-    marginTop: 8,
   },
 });
