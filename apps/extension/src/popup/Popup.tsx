@@ -104,29 +104,8 @@ export function Popup() {
     return () => unsubscribe();
   }, []);
 
-  // Real-time timer tick & Auto-completion when timer finishes
-  useEffect(() => {
-    if (!state || !state.isActive) return;
-
-    const interval = setInterval(() => {
-      setState((prev) => {
-        if (!prev || !prev.isActive) return prev;
-
-        if (prev.timerState === "FLOW") {
-          return { ...prev, timeLeft: prev.timeLeft + 1 };
-        } else {
-          if (prev.timeLeft <= 1) {
-            // Auto-complete session instantly when timer hits 00:00
-            setTimeout(() => completeSession(), 0);
-            return { ...prev, timeLeft: 0 };
-          }
-          return { ...prev, timeLeft: prev.timeLeft - 1 };
-        }
-      });
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [state?.isActive, state?.timerState, state?.timeLeft]);
+  // No local timer tick — the background service worker is the single source
+  // of truth. Timer state updates arrive via subscribeToStateChanges above.
 
   if (!state) {
     return (
@@ -152,7 +131,8 @@ export function Popup() {
     updateState({ themeMode: nextMode });
   };
 
-  // Timer controls
+  // Timer controls — write to storage directly, the background's
+  // chrome.storage.onChanged listener reacts to start/stop the timer.
   const toggleTimer = () => {
     updateState({ isActive: !state.isActive });
   };
