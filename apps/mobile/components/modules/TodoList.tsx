@@ -560,11 +560,13 @@ export function TodoList() {
           <TouchableOpacity activeOpacity={1} style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => {}}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>Add Task Group</Text>
             <TextInput
-              style={[styles.addInput, { color: colors.text, backgroundColor: colors.inputBg, borderColor: colors.border, marginVertical: 12 }]}
+              style={[styles.groupModalInput, { color: colors.text, backgroundColor: colors.inputBg, borderColor: colors.border }]}
               placeholder="Group name (e.g., Work, Personal)"
               placeholderTextColor={colors.textMuted}
               value={newGroupName}
               onChangeText={setNewGroupName}
+              onSubmitEditing={handleCreateGroup}
+              autoFocus
             />
             <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end' }}>
               <TouchableOpacity
@@ -820,5 +822,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 8,
+  },
+  groupModalInput: {
+    width: '100%',
+    height: 46,
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    marginVertical: 14,
   },
 });
