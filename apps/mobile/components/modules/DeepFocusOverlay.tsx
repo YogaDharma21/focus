@@ -221,7 +221,7 @@ const styles = StyleSheet.create({
     right: 24,
     width: 44,
     height: 44,
-    borderRadius: 22,
+    borderRadius: 12,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
   playBtn: {
     width: 80,
     height: 80,
-    borderRadius: 40,
+    borderRadius: 22,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   secondaryActionBtn: {
     width: 52,
     height: 52,
-    borderRadius: 26,
+    borderRadius: 14,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',

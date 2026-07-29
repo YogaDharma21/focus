@@ -699,7 +699,7 @@ const styles = StyleSheet.create({
   mainActionBtn: {
     width: 60,
     height: 60,
-    borderRadius: 30,
+    borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
@@ -707,7 +707,7 @@ const styles = StyleSheet.create({
   secondaryActionBtn: {
     width: 42,
     height: 42,
-    borderRadius: 21,
+    borderRadius: 12,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',

@@ -224,7 +224,7 @@ const styles = StyleSheet.create({
   playBtn: {
     width: 34,
     height: 34,
-    borderRadius: 17,
+    borderRadius: 10,
     justifyContent: 'center',
     alignItems: 'center',
     marginHorizontal: 8,
