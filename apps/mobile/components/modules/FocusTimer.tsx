@@ -42,6 +42,8 @@ export function FocusTimer() {
     setTimerMode,
     timerState,
     setTimerState,
+    previousMode,
+    setPreviousMode,
     timeLeft,
     setTimeLeft,
     isActive,
@@ -84,14 +86,23 @@ export function FocusTimer() {
                 duration: pomodoroSettings.work * 60,
                 mode: 'POMODORO',
               });
+              setPreviousMode('POMODORO');
               setTimerState('BREAK');
               setTimeLeft(pomodoroSettings.break * 60);
               if (pomodoroSettings.autoStartBreak) {
                 setIsActive(true);
               }
             } else {
-              setTimerState('WORK');
-              setTimeLeft(pomodoroSettings.work * 60);
+              // Break finished -> return to previous mode (Flow or Pomodoro Work)
+              if (previousMode === 'STOPWATCH') {
+                setTimerMode('STOPWATCH');
+                setTimerState('WORK');
+                setTimeLeft(0);
+              } else {
+                setTimerMode('POMODORO');
+                setTimerState('WORK');
+                setTimeLeft(pomodoroSettings.work * 60);
+              }
             }
           }
         } else {
@@ -104,7 +115,7 @@ export function FocusTimer() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, timeLeft, timerMode, timerState, pomodoroSettings, addSession, setIsActive, setTimeLeft, setTimerState]);
+  }, [isActive, timeLeft, timerMode, timerState, previousMode, pomodoroSettings, addSession, setIsActive, setTimeLeft, setTimerMode, setTimerState, setPreviousMode]);
 
   const toggleTimer = () => {
     setIsActive(!isActive);
@@ -133,28 +144,57 @@ export function FocusTimer() {
 
   const handleCompleteSession = () => {
     setIsActive(false);
-    let sessionDuration = 0;
-    if (timerMode === 'POMODORO') {
-      sessionDuration = (pomodoroSettings.work * 60) - timeLeft;
-      if (sessionDuration <= 0) sessionDuration = pomodoroSettings.work * 60;
-    } else {
-      sessionDuration = timeLeft;
-    }
 
-    if (sessionDuration > 0) {
+    if (timerMode === 'STOPWATCH') {
+      // Flow Mode Session Completed
+      const flowDuration = timeLeft;
+      if (flowDuration > 0) {
+        addSession({
+          id: Date.now().toString(),
+          date: new Date().toISOString(),
+          duration: flowDuration,
+          mode: 'STOPWATCH',
+        });
+        // Divide elapsed Flow duration by 5 for break (min 60 seconds)
+        const breakSeconds = Math.max(Math.floor(flowDuration / 5), 60);
+        setPreviousMode('STOPWATCH');
+        setTimerMode('POMODORO');
+        setTimerState('BREAK');
+        setTimeLeft(breakSeconds);
+        if (pomodoroSettings.autoStartBreak) {
+          setIsActive(true);
+        }
+      } else {
+        setTimeLeft(0);
+      }
+    } else if (timerMode === 'POMODORO' && timerState === 'WORK') {
+      // Pomodoro Work Session Completed
+      let sessionDuration = (pomodoroSettings.work * 60) - timeLeft;
+      if (sessionDuration <= 0) sessionDuration = pomodoroSettings.work * 60;
+
       addSession({
         id: Date.now().toString(),
         date: new Date().toISOString(),
         duration: sessionDuration,
-        mode: timerMode,
+        mode: 'POMODORO',
       });
-    }
-
-    if (timerMode === 'POMODORO') {
-      setTimerState('WORK');
-      setTimeLeft(pomodoroSettings.work * 60);
-    } else {
-      setTimeLeft(0);
+      setPreviousMode('POMODORO');
+      setTimerState('BREAK');
+      setTimeLeft(pomodoroSettings.break * 60);
+      if (pomodoroSettings.autoStartBreak) {
+        setIsActive(true);
+      }
+    } else if (timerMode === 'POMODORO' && timerState === 'BREAK') {
+      // Break Completed -> return to previous mode (Flow or Pomodoro Work)
+      if (previousMode === 'STOPWATCH') {
+        setTimerMode('STOPWATCH');
+        setTimerState('WORK');
+        setTimeLeft(0);
+      } else {
+        setTimerMode('POMODORO');
+        setTimerState('WORK');
+        setTimeLeft(pomodoroSettings.work * 60);
+      }
     }
   };
 
@@ -190,6 +230,7 @@ export function FocusTimer() {
     setIsActive(false);
     setTimerMode('POMODORO');
     setTimerState('WORK');
+    setPreviousMode('POMODORO');
     setTimeLeft(pomodoroSettings.work * 60);
   };
 
@@ -203,6 +244,8 @@ export function FocusTimer() {
   const selectFlow = () => {
     setIsActive(false);
     setTimerMode('STOPWATCH');
+    setTimerState('WORK');
+    setPreviousMode('STOPWATCH');
     setTimeLeft(0);
   };
 
