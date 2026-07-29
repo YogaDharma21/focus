@@ -1,15 +1,21 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, Modal, TouchableOpacity, StyleSheet, Linking } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
-import { X, ShieldCheck, Zap, Clock, ListCheck, BarChart2, Smile } from 'lucide-react-native';
+import { X, Code2, ExternalLink } from 'lucide-react-native';
 
 interface InfoModalProps {
   visible: boolean;
   onClose: () => void;
 }
 
+const GITHUB_REPO_URL = 'https://github.com/YogaDharma21/focus';
+
 export function InfoModal({ visible, onClose }: InfoModalProps) {
   const { colors } = useTheme();
+
+  const handleOpenGithub = () => {
+    Linking.openURL(GITHUB_REPO_URL).catch(() => {});
+  };
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -22,60 +28,23 @@ export function InfoModal({ visible, onClose }: InfoModalProps) {
             </TouchableOpacity>
           </View>
 
-          <ScrollView contentContainerStyle={styles.content}>
+          <View style={styles.content}>
             <Text style={[styles.desc, { color: colors.textMuted }]}>
-              Focus is a clean, distraction-free productivity app designed to keep you in the flow.
+              Focus is a clean, distraction-free productivity app designed to keep you in the flow with focus timers, task management, analytics, and mood reflections.
             </Text>
 
-            <View style={styles.featureList}>
-              <View style={styles.featureItem}>
-                <Clock size={20} color={colors.text} />
-                <View style={styles.featureText}>
-                  <Text style={[styles.featureTitle, { color: colors.text }]}>Focus Timer</Text>
-                  <Text style={[styles.featureSub, { color: colors.textMuted }]}>
-                    Pomodoro & Stopwatch modes with session tags and distraction logging.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.featureItem}>
-                <ListCheck size={20} color={colors.text} />
-                <View style={styles.featureText}>
-                  <Text style={[styles.featureTitle, { color: colors.text }]}>Tasks & Subtasks</Text>
-                  <Text style={[styles.featureSub, { color: colors.textMuted }]}>
-                    Organize your workflow with priority badges, groups, and subtasks.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.featureItem}>
-                <BarChart2 size={20} color={colors.text} />
-                <View style={styles.featureText}>
-                  <Text style={[styles.featureTitle, { color: colors.text }]}>Stats & Journal</Text>
-                  <Text style={[styles.featureSub, { color: colors.textMuted }]}>
-                    Track your total focus hours, completed sessions, and distraction history.
-                  </Text>
-                </View>
-              </View>
-
-              <View style={styles.featureItem}>
-                <Smile size={20} color={colors.text} />
-                <View style={styles.featureText}>
-                  <Text style={[styles.featureTitle, { color: colors.text }]}>Mood Notes</Text>
-                  <Text style={[styles.featureSub, { color: colors.textMuted }]}>
-                    Log your energy levels, mindset, and reflection notes during work.
-                  </Text>
-                </View>
-              </View>
-            </View>
-
-            <View style={[styles.versionBox, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
-              <ShieldCheck size={16} color={colors.textMuted} />
-              <Text style={[styles.versionText, { color: colors.textMuted }]}>
-                Version 1.0.0 • Offline Ready & Synchronized
+            <TouchableOpacity
+              style={[styles.githubBtn, { backgroundColor: colors.primary }]}
+              onPress={handleOpenGithub}
+              activeOpacity={0.8}
+            >
+              <Code2 size={18} color={colors.primaryForeground} />
+              <Text style={[styles.githubBtnText, { color: colors.primaryForeground }]}>
+                View Project on GitHub
               </Text>
-            </View>
-          </ScrollView>
+              <ExternalLink size={14} color={colors.primaryForeground} />
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </Modal>
@@ -92,11 +61,10 @@ const styles = StyleSheet.create({
   },
   modalCard: {
     width: '100%',
-    maxWidth: 420,
+    maxWidth: 380,
     borderRadius: 16,
     borderWidth: 1,
     overflow: 'hidden',
-    maxHeight: '80%',
   },
   header: {
     flexDirection: 'row',
@@ -114,45 +82,24 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   content: {
-    padding: 18,
-    gap: 16,
+    padding: 20,
+    gap: 18,
   },
   desc: {
     fontSize: 14,
-    lineHeight: 20,
+    lineHeight: 22,
   },
-  featureList: {
-    gap: 14,
-  },
-  featureItem: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  featureText: {
-    flex: 1,
-  },
-  featureTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-  },
-  featureSub: {
-    fontSize: 13,
-    marginTop: 2,
-    lineHeight: 18,
-  },
-  versionBox: {
+  githubBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    padding: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    marginTop: 8,
+    paddingVertical: 12,
+    borderRadius: 12,
+    marginTop: 4,
   },
-  versionText: {
-    fontSize: 12,
-    fontWeight: '500',
+  githubBtnText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
