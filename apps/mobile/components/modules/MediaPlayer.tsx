@@ -99,7 +99,7 @@ export function MediaPlayer() {
           <Music size={18} color={colors.text} />
           <View style={{ flex: 1 }}>
             <Text style={[styles.miniTitle, { color: colors.text }]} numberOfLines={1}>
-              {currentTrack?.title || 'Ambient Music'}
+              {currentTrack?.title || 'Sound Player'}
             </Text>
             <Text style={[styles.miniSub, { color: colors.textMuted }]}>
               {currentTrack?.artist || 'Focus App'}
@@ -146,7 +146,7 @@ export function MediaPlayer() {
             <View style={[styles.modalHeader, { borderColor: colors.border }]}>
               <View style={styles.modalTitleRow}>
                 <Volume2 size={20} color={colors.text} />
-                <Text style={[styles.modalTitle, { color: colors.text }]}>Ambient Sound Player</Text>
+                <Text style={[styles.modalTitle, { color: colors.text }]}>Sound Player</Text>
               </View>
               <TouchableOpacity onPress={() => setMediaPlayerOpen(false)}>
                 <X size={20} color={colors.text} />
