@@ -19,7 +19,6 @@ import {
   AlertTriangle,
   Plus,
   Tag,
-  Flame,
   CheckCircle2,
   Settings,
   Trash2,
@@ -183,16 +182,24 @@ export function FocusTimer() {
     );
   };
 
-  const handleModeSwitch = (mode: 'POMODORO' | 'STOPWATCH') => {
-    if (mode === timerMode) return;
+  const selectPomodoroWork = () => {
     setIsActive(false);
-    setTimerMode(mode);
-    if (mode === 'POMODORO') {
-      setTimerState('WORK');
-      setTimeLeft(pomodoroSettings.work * 60);
-    } else {
-      setTimeLeft(0);
-    }
+    setTimerMode('POMODORO');
+    setTimerState('WORK');
+    setTimeLeft(pomodoroSettings.work * 60);
+  };
+
+  const selectPomodoroBreak = () => {
+    setIsActive(false);
+    setTimerMode('POMODORO');
+    setTimerState('BREAK');
+    setTimeLeft(pomodoroSettings.break * 60);
+  };
+
+  const selectFlow = () => {
+    setIsActive(false);
+    setTimerMode('STOPWATCH');
+    setTimeLeft(0);
   };
 
   const formatTime = (seconds: number) => {
@@ -202,23 +209,26 @@ export function FocusTimer() {
   };
 
   const selectedTodo = todos.find((t) => t.id === selectedTodoId);
+  const isWorkActive = timerMode === 'POMODORO' && timerState === 'WORK';
+  const isBreakActive = timerMode === 'POMODORO' && timerState === 'BREAK';
+  const isFlowActive = timerMode === 'STOPWATCH';
 
   return (
     <View style={styles.container}>
-      {/* Mode Switcher */}
+      {/* 3-Option Mode Switcher */}
       <View style={[styles.modeBar, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <TouchableOpacity
           style={[
             styles.modeBtn,
-            timerMode === 'POMODORO' && { backgroundColor: colors.primary },
+            isWorkActive && { backgroundColor: colors.primary },
           ]}
-          onPress={() => handleModeSwitch('POMODORO')}
+          onPress={selectPomodoroWork}
           activeOpacity={0.8}
         >
           <Text
             style={[
               styles.modeText,
-              { color: timerMode === 'POMODORO' ? colors.primaryForeground : colors.text },
+              { color: isWorkActive ? colors.primaryForeground : colors.text },
             ]}
           >
             Pomodoro
@@ -228,18 +238,36 @@ export function FocusTimer() {
         <TouchableOpacity
           style={[
             styles.modeBtn,
-            timerMode === 'STOPWATCH' && { backgroundColor: colors.primary },
+            isBreakActive && { backgroundColor: colors.primary },
           ]}
-          onPress={() => handleModeSwitch('STOPWATCH')}
+          onPress={selectPomodoroBreak}
           activeOpacity={0.8}
         >
           <Text
             style={[
               styles.modeText,
-              { color: timerMode === 'STOPWATCH' ? colors.primaryForeground : colors.text },
+              { color: isBreakActive ? colors.primaryForeground : colors.text },
             ]}
           >
-            Flow Mode
+            Break
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[
+            styles.modeBtn,
+            isFlowActive && { backgroundColor: colors.primary },
+          ]}
+          onPress={selectFlow}
+          activeOpacity={0.8}
+        >
+          <Text
+            style={[
+              styles.modeText,
+              { color: isFlowActive ? colors.primaryForeground : colors.text },
+            ]}
+          >
+            Flow
           </Text>
         </TouchableOpacity>
       </View>
@@ -251,21 +279,6 @@ export function FocusTimer() {
           { backgroundColor: colors.card, borderColor: colors.border },
         ]}
       >
-        <View style={[styles.badge, { backgroundColor: colors.border }]}>
-          {timerMode === 'POMODORO' ? (
-            <Text style={[styles.badgeText, { color: colors.text }]}>
-              {timerState === 'WORK' ? 'Work Session' : 'Break Time'}
-            </Text>
-          ) : (
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <Flame size={14} color={colors.text} />
-              <Text style={[styles.badgeText, { color: colors.text }]}>
-                Flow Mode (Stopwatch)
-              </Text>
-            </View>
-          )}
-        </View>
-
         <Text style={[styles.timeDisplay, { color: colors.text }]}>
           {formatTime(timeLeft)}
         </Text>
@@ -502,7 +515,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   modeBtn: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
     paddingVertical: 8,
     borderRadius: 20,
   },
@@ -517,17 +530,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 24,
     alignItems: 'center',
-  },
-  badge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginBottom: 12,
-  },
-  badgeText: {
-    fontSize: 12,
-    fontWeight: '600',
-    letterSpacing: 0.5,
   },
   timeDisplay: {
     fontSize: 54,
