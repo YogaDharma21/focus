@@ -22,6 +22,9 @@ import {
   CheckCircle2,
   Settings,
   Trash2,
+  CheckSquare,
+  Square,
+  ListCheck,
 } from 'lucide-react-native';
 
 const DISTRACTION_CATEGORIES = [
@@ -53,6 +56,7 @@ export function FocusTimer() {
     pomodoroSettings,
     setPomodoroSettings,
     resetAllData,
+    toggleSubtask,
   } = useAppStore();
 
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
@@ -306,6 +310,44 @@ export function FocusTimer() {
           </Text>
         </TouchableOpacity>
 
+        {/* Selected Task Subtasks Checklist */}
+        {selectedTodo && selectedTodo.subtasks && selectedTodo.subtasks.length > 0 && (
+          <View style={[styles.subtaskFocusCard, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+            <View style={styles.subtaskFocusHeader}>
+              <ListCheck size={14} color={colors.textMuted} />
+              <Text style={[styles.subtaskFocusTitle, { color: colors.text }]}>
+                Subtasks ({selectedTodo.subtasks.filter((s) => s.completed).length}/{selectedTodo.subtasks.length})
+              </Text>
+            </View>
+
+            <View style={styles.subtaskFocusList}>
+              {selectedTodo.subtasks.map((subtask) => (
+                <TouchableOpacity
+                  key={subtask.id}
+                  style={styles.subtaskFocusItem}
+                  onPress={() => toggleSubtask(selectedTodo.id, subtask.id)}
+                  activeOpacity={0.7}
+                >
+                  {subtask.completed ? (
+                    <CheckSquare size={16} color={colors.text} />
+                  ) : (
+                    <Square size={16} color={colors.textMuted} />
+                  )}
+                  <Text
+                    style={[
+                      styles.subtaskFocusText,
+                      { color: colors.text },
+                      subtask.completed && styles.subtaskCompletedText,
+                    ]}
+                  >
+                    {subtask.text}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </View>
+        )}
+
         {/* 5 Control Buttons Row */}
         <View style={styles.controlsRow}>
           <TouchableOpacity
@@ -556,11 +598,48 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     width: '100%',
-    marginBottom: 20,
+    marginBottom: 12,
   },
   taskTagText: {
     fontSize: 13,
     flex: 1,
+  },
+  subtaskFocusCard: {
+    width: '100%',
+    borderRadius: 12,
+    borderWidth: 1,
+    padding: 12,
+    marginBottom: 20,
+    gap: 8,
+  },
+  subtaskFocusHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  subtaskFocusTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  subtaskFocusList: {
+    gap: 6,
+  },
+  subtaskFocusItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 2,
+  },
+  subtaskFocusText: {
+    fontSize: 13,
+    flex: 1,
+  },
+  subtaskCompletedText: {
+    textDecorationLine: 'line-through',
+    opacity: 0.5,
   },
   controlsRow: {
     flexDirection: 'row',
