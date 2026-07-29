@@ -59,6 +59,7 @@ export function FocusTimer() {
     setPomodoroSettings,
     resetAllData,
     toggleSubtask,
+    incrementTodoSession,
   } = useAppStore();
 
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
@@ -86,6 +87,9 @@ export function FocusTimer() {
                 duration: pomodoroSettings.work * 60,
                 mode: 'POMODORO',
               });
+              if (selectedTodoId) {
+                incrementTodoSession(selectedTodoId);
+              }
               setPreviousMode('POMODORO');
               setTimerState('BREAK');
               setTimeLeft(pomodoroSettings.break * 60);
@@ -155,6 +159,9 @@ export function FocusTimer() {
           duration: flowDuration,
           mode: 'STOPWATCH',
         });
+        if (selectedTodoId) {
+          incrementTodoSession(selectedTodoId);
+        }
         // Divide elapsed Flow duration by 5 for break (min 1 second)
         const breakSeconds = Math.max(Math.floor(flowDuration / 5), 1);
         setPreviousMode('STOPWATCH');
@@ -178,6 +185,9 @@ export function FocusTimer() {
         duration: sessionDuration,
         mode: 'POMODORO',
       });
+      if (selectedTodoId) {
+        incrementTodoSession(selectedTodoId);
+      }
       setPreviousMode('POMODORO');
       setTimerState('BREAK');
       setTimeLeft(pomodoroSettings.break * 60);

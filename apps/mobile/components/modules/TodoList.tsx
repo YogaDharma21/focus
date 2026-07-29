@@ -9,6 +9,7 @@ import {
   Modal,
   Alert,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { useAppStore, TodoItem } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
 import {
@@ -23,12 +24,15 @@ import {
   Repeat,
   Tag,
   AlignLeft,
+  Target,
+  Play,
 } from 'lucide-react-native';
 
 const PRIORITIES: ('low' | 'medium' | 'high' | 'urgent')[] = ['low', 'medium', 'high', 'urgent'];
 const RECURRING_OPTIONS: ('none' | 'daily' | 'weekly' | 'monthly')[] = ['none', 'daily', 'weekly', 'monthly'];
 
 export function TodoList() {
+  const router = useRouter();
   const { colors } = useTheme();
   const {
     todos,
@@ -42,6 +46,9 @@ export function TodoList() {
     addSubtask,
     toggleSubtask,
     deleteSubtask,
+    setSelectedTodoId,
+    setSessionName,
+    setView,
   } = useAppStore();
 
   const [activeGroupId, setActiveGroupId] = useState<string>('current');
@@ -60,6 +67,14 @@ export function TodoList() {
   const [detailDeadline, setDetailDeadline] = useState('');
   const [detailGroupId, setDetailGroupId] = useState('current');
   const [newSubtaskText, setNewSubtaskText] = useState('');
+
+  const handleFocusOnTask = (todo: TodoItem) => {
+    setSelectedTodoId(todo.id);
+    setSessionName(todo.text);
+    setView('FOCUS');
+    if (detailTodo) setDetailTodo(null);
+    router.push('/');
+  };
 
   const handleAddTodo = () => {
     if (!newTodoText.trim()) return;
@@ -278,6 +293,11 @@ export function TodoList() {
                     </Text>
 
                     <View style={styles.badgeRow}>
+                      <View style={[styles.badge, { backgroundColor: colors.border }]}>
+                        <Text style={[styles.badgeText, { color: colors.text }]}>
+                          🎯 {todo.completedPomodoros || 0}/{todo.estimatedPomodoros || 1} sessions
+                        </Text>
+                      </View>
                       {todo.priority && (
                         <View style={[styles.badge, { backgroundColor: colors.border }]}>
                           <Text style={[styles.badgeText, { color: colors.text }]}>
@@ -300,6 +320,19 @@ export function TodoList() {
                         </View>
                       ) : null}
                     </View>
+
+                    {!todo.completed && (
+                      <TouchableOpacity
+                        style={[styles.focusTaskBtn, { backgroundColor: colors.primary }]}
+                        onPress={() => handleFocusOnTask(todo)}
+                        activeOpacity={0.8}
+                      >
+                        <Play size={12} color={colors.primaryForeground} style={{ marginRight: 4 }} />
+                        <Text style={[styles.focusTaskBtnText, { color: colors.primaryForeground }]}>
+                          Focus on this task
+                        </Text>
+                      </TouchableOpacity>
+                    )}
                   </View>
 
                   <TouchableOpacity
@@ -386,6 +419,24 @@ export function TodoList() {
                     </TouchableOpacity>
                   ))}
                 </ScrollView>
+              </View>
+
+              {/* Estimated Sessions */}
+              <View style={styles.fieldBlock}>
+                <View style={styles.labelRow}>
+                  <Target size={14} color={colors.textMuted} />
+                  <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>
+                    Session Estimated (Completed: {activeDetailTodo?.completedPomodoros || 0})
+                  </Text>
+                </View>
+                <TextInput
+                  style={[styles.singleInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg }]}
+                  keyboardType="numeric"
+                  placeholder="Estimated sessions..."
+                  placeholderTextColor={colors.textMuted}
+                  value={detailPomoEst}
+                  onChangeText={setDetailPomoEst}
+                />
               </View>
 
               {/* Priority Selector */}
@@ -543,6 +594,19 @@ export function TodoList() {
                 <Text style={{ color: '#ef4444', fontWeight: '600', fontSize: 13 }}>Delete</Text>
               </TouchableOpacity>
 
+              {activeDetailTodo && !activeDetailTodo.completed && (
+                <TouchableOpacity
+                  style={[styles.modalActionBtn, { backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 }]}
+                  onPress={() => {
+                    handleSaveDetail();
+                    handleFocusOnTask(activeDetailTodo);
+                  }}
+                >
+                  <Play size={14} color={colors.text} />
+                  <Text style={{ color: colors.text, fontWeight: '600', fontSize: 13 }}>Focus</Text>
+                </TouchableOpacity>
+              )}
+
               <TouchableOpacity
                 style={[styles.modalActionBtn, { backgroundColor: colors.primary, flex: 1 }]}
                 onPress={handleSaveDetail}
@@ -688,6 +752,19 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 11,
     fontWeight: '500',
+  },
+  focusTaskBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 8,
+    marginTop: 8,
+    alignSelf: 'flex-start',
+  },
+  focusTaskBtnText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
   modalBackdrop: {
     flex: 1,
