@@ -55,13 +55,30 @@ export const DEFAULT_STATE: AppStateData = {
   }
 };
 
+let cachedState: AppStateData | null = null;
+
+if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.onChanged) {
+  chrome.storage.onChanged.addListener((changes, areaName) => {
+    if (areaName === "local" && changes[STORAGE_KEY] && changes[STORAGE_KEY].newValue) {
+      cachedState = { ...DEFAULT_STATE, ...changes[STORAGE_KEY].newValue };
+    }
+  });
+}
+
 export async function getStoredState(): Promise<AppStateData> {
+  if (cachedState) {
+    return cachedState;
+  }
+
   if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
     return new Promise((resolve) => {
       chrome.storage.local.get([STORAGE_KEY], (result) => {
         if (result[STORAGE_KEY]) {
-          resolve({ ...DEFAULT_STATE, ...result[STORAGE_KEY] });
+          const fresh = { ...DEFAULT_STATE, ...result[STORAGE_KEY] };
+          cachedState = fresh;
+          resolve(fresh);
         } else {
+          cachedState = DEFAULT_STATE;
           resolve(DEFAULT_STATE);
         }
       });
@@ -71,17 +88,21 @@ export async function getStoredState(): Promise<AppStateData> {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      return { ...DEFAULT_STATE, ...JSON.parse(raw) };
+      const fresh = { ...DEFAULT_STATE, ...JSON.parse(raw) };
+      cachedState = fresh;
+      return fresh;
     }
   } catch (e) {
     console.error("Failed reading localStorage", e);
   }
+  cachedState = DEFAULT_STATE;
   return DEFAULT_STATE;
 }
 
 export async function saveStoredState(state: Partial<AppStateData>): Promise<AppStateData> {
-  const current = await getStoredState();
+  const current = cachedState || (await getStoredState());
   const nextState = { ...current, ...state };
+  cachedState = nextState;
 
   if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
     return new Promise((resolve) => {
@@ -102,8 +123,10 @@ export async function saveStoredState(state: Partial<AppStateData>): Promise<App
 export function subscribeToStateChanges(callback: (newState: AppStateData) => void): () => void {
   if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.onChanged) {
     const listener = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
-      if (areaName === "local" && changes[STORAGE_KEY]) {
-        callback(changes[STORAGE_KEY].newValue);
+      if (areaName === "local" && changes[STORAGE_KEY] && changes[STORAGE_KEY].newValue) {
+        const fresh = { ...DEFAULT_STATE, ...changes[STORAGE_KEY].newValue };
+        cachedState = fresh;
+        callback(fresh);
       }
     };
     chrome.storage.onChanged.addListener(listener);

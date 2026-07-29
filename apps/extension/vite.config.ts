@@ -16,6 +16,7 @@ function copyExtensionAssets() {
 }
 
 export default defineConfig({
+  base: './',
   plugins: [react(), tailwindcss(), copyExtensionAssets()],
   resolve: {
     alias: {

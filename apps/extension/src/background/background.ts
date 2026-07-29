@@ -3,6 +3,10 @@ import { AppStateData } from "../types";
 
 let timerInterval: ReturnType<typeof setInterval> | null = null;
 
+const KEEPALIVE_ALARM = "focus-keepalive";
+
+// ─── URL Blocking Helpers ──────────────────────────────────────────────
+
 function isUrlBlocked(targetUrl: string, blockedSites: string[]): boolean {
   if (!targetUrl || targetUrl.startsWith("chrome://") || targetUrl.startsWith("chrome-extension://") || targetUrl.startsWith("about:")) {
     return false;
@@ -59,6 +63,8 @@ async function enforceTabBlocking(state?: AppStateData) {
   });
 }
 
+// ─── Badge ─────────────────────────────────────────────────────────────
+
 async function updateBadge(timeLeft: number, isActive: boolean, timerState: string) {
   if (typeof chrome === "undefined" || !chrome.action) return;
 
@@ -77,15 +83,42 @@ async function updateBadge(timeLeft: number, isActive: boolean, timerState: stri
   });
 }
 
-async function startBackgroundTimer() {
-  if (timerInterval) clearInterval(timerInterval);
+// ─── Keepalive Alarm ───────────────────────────────────────────────────
 
-  enforceTabBlocking();
+async function startKeepalive() {
+  if (typeof chrome !== "undefined" && chrome.alarms) {
+    await chrome.alarms.create(KEEPALIVE_ALARM, { periodInMinutes: 0.4 }); // ~24s
+  }
+}
+
+async function stopKeepalive() {
+  if (typeof chrome !== "undefined" && chrome.alarms) {
+    await chrome.alarms.clear(KEEPALIVE_ALARM);
+  }
+}
+
+function stopBackgroundTimer() {
+  if (timerInterval !== null) {
+    clearInterval(timerInterval);
+    timerInterval = null;
+  }
+  stopKeepalive();
+}
+
+// ─── Background Timer ──────────────────────────────────────────────────
+
+async function startBackgroundTimer() {
+  stopBackgroundTimer();
+
+  await startKeepalive();
+  const initialState = await getStoredState();
+  enforceTabBlocking(initialState);
+  updateBadge(initialState.timeLeft, true, initialState.timerState);
 
   timerInterval = setInterval(async () => {
     const state = await getStoredState();
     if (!state.isActive) {
-      if (timerInterval) clearInterval(timerInterval);
+      stopBackgroundTimer();
       updateBadge(state.timeLeft, false, state.timerState);
       return;
     }
@@ -101,14 +134,14 @@ async function startBackgroundTimer() {
       updateBadge(nextTime, true, "FLOW");
     } else {
       // Countdown mode: WORK or BREAK
-      if (state.timeLeft > 1) {
+      if (state.timeLeft > 0) {
         const nextTime = state.timeLeft - 1;
         await saveStoredState({ timeLeft: nextTime });
         updateBadge(nextTime, true, state.timerState);
       } else {
         // Session complete automatically when countdown finishes (00:00)
-        if (timerInterval) clearInterval(timerInterval);
-        
+        stopBackgroundTimer();
+
         let nextState: "WORK" | "BREAK" | "FLOW" = "BREAK";
         let nextTime = 0;
         let prevMode = state.previousMode;
@@ -168,6 +201,10 @@ async function startBackgroundTimer() {
           },
         });
 
+        if (autoStart) {
+          startBackgroundTimer();
+        }
+
         updateBadge(nextTime, autoStart, nextState);
 
         if (typeof chrome !== "undefined" && chrome.notifications) {
@@ -186,7 +223,8 @@ async function startBackgroundTimer() {
   }, 1000);
 }
 
-// Tab listeners
+// ─── Tab Listeners ─────────────────────────────────────────────────────
+
 if (typeof chrome !== "undefined" && chrome.tabs) {
   chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     const url = changeInfo.url || tab.url;
@@ -218,22 +256,41 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
   });
 }
 
-// Storage Listener
+// ─── Alarm Listener (keepalive wakeup) ─────────────────────────────────
+
+if (typeof chrome !== "undefined" && chrome.alarms) {
+  chrome.alarms.onAlarm.addListener(async (alarm) => {
+    if (alarm.name === KEEPALIVE_ALARM) {
+      const state = await getStoredState();
+      if (state.isActive && timerInterval === null) {
+        startBackgroundTimer();
+      } else if (!state.isActive) {
+        stopBackgroundTimer();
+      }
+    }
+  });
+}
+
+// ─── Storage Listener ──────────────────────────────────────────────────
+
 if (typeof chrome !== "undefined" && chrome.storage) {
   chrome.storage.onChanged.addListener(async (changes, areaName) => {
     if (areaName === "local" && changes.focus_extension_state_v6) {
       const newState: AppStateData = changes.focus_extension_state_v6.newValue;
       if (newState?.isActive) {
-        startBackgroundTimer();
+        if (timerInterval === null) {
+          startBackgroundTimer();
+        }
       } else {
-        if (timerInterval) clearInterval(timerInterval);
+        stopBackgroundTimer();
         updateBadge(newState?.timeLeft || 0, false, newState?.timerState || "WORK");
       }
     }
   });
 }
 
-// Init
+// ─── Init ──────────────────────────────────────────────────────────────
+
 getStoredState().then((state) => {
   if (state.isActive) {
     startBackgroundTimer();
