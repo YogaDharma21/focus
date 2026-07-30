@@ -4,6 +4,82 @@ import { AppStateData } from "../types";
 let timerInterval: ReturnType<typeof setInterval> | null = null;
 
 const KEEPALIVE_ALARM = "focus-keepalive";
+const OFFSCREEN_DOCUMENT_PATH = "offscreen.html";
+
+// ─── Offscreen Audio Helpers ───────────────────────────────────────────
+
+async function hasOffscreenDocument(): Promise<boolean> {
+  if (typeof chrome === "undefined" || !chrome.offscreen) return false;
+  if ("hasDocument" in chrome.offscreen) {
+    return await chrome.offscreen.hasDocument();
+  }
+  const contexts = await (chrome.runtime as any).getContexts({
+    contextTypes: ["OFFSCREEN_DOCUMENT"],
+    documentUrls: [chrome.runtime.getURL(OFFSCREEN_DOCUMENT_PATH)]
+  });
+  return contexts.length > 0;
+}
+
+async function ensureOffscreenDocument() {
+  if (typeof chrome === "undefined" || !chrome.offscreen) return;
+  const exists = await hasOffscreenDocument();
+  if (!exists) {
+    try {
+      await chrome.offscreen.createDocument({
+        url: OFFSCREEN_DOCUMENT_PATH,
+        reasons: [chrome.offscreen.Reason.AUDIO_PLAYBACK],
+        justification: "Background music playback and timer completion sound effects",
+      });
+    } catch (e) {
+      console.log("Offscreen document creation error:", e);
+    }
+  }
+}
+
+async function sendToOffscreen(action: string, payload: Record<string, any> = {}) {
+  await ensureOffscreenDocument();
+  try {
+    return await chrome.runtime.sendMessage({
+      target: "offscreen",
+      action,
+      ...payload
+    });
+  } catch (e) {
+    console.log("Error sending message to offscreen:", e);
+  }
+}
+
+// ─── Runtime Message Listener ───────────────────────────────────────────
+
+if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage) {
+  chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message.target === "background") {
+      if (message.action === "TOGGLE_MUSIC") {
+        getStoredState().then(async (state) => {
+          const nextPlaying = !state.isMusicPlaying;
+          await saveStoredState({ isMusicPlaying: nextPlaying });
+          if (nextPlaying) {
+            await sendToOffscreen("PLAY_MUSIC", { volume: state.musicVolume ?? 0.8 });
+          } else {
+            await sendToOffscreen("PAUSE_MUSIC");
+          }
+          sendResponse({ isMusicPlaying: nextPlaying });
+        });
+        return true;
+      } else if (message.action === "SET_MUSIC_VOLUME") {
+        saveStoredState({ musicVolume: message.volume }).then(() => {
+          sendToOffscreen("SET_MUSIC_VOLUME", { volume: message.volume });
+          sendResponse({ success: true });
+        });
+        return true;
+      } else if (message.action === "PLAY_SOUND_EFFECT") {
+        sendToOffscreen("PLAY_SOUND_EFFECT");
+        sendResponse({ success: true });
+        return true;
+      }
+    }
+  });
+}
 
 // ─── URL Blocking Helpers ──────────────────────────────────────────────
 
@@ -224,6 +300,8 @@ async function startBackgroundTimer() {
 
         updateBadge(nextTime, autoStart, nextState);
 
+        sendToOffscreen("PLAY_SOUND_EFFECT");
+
         if (typeof chrome !== "undefined" && chrome.notifications) {
           chrome.notifications.create({
             type: "basic",
@@ -316,5 +394,8 @@ getStoredState().then((state) => {
     startBackgroundTimer();
   } else {
     updateBadge(state.timeLeft, false, state.timerState);
+  }
+  if (state.isMusicPlaying) {
+    sendToOffscreen("PLAY_MUSIC", { volume: state.musicVolume ?? 0.8 });
   }
 });

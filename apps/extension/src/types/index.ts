@@ -97,4 +97,7 @@ export interface AppStateData {
     longestStreak: number;
     weeklyMinutes: { [day: string]: number };
   };
+
+  isMusicPlaying?: boolean;
+  musicVolume?: number;
 }

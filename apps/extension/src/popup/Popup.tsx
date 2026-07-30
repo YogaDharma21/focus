@@ -30,7 +30,11 @@ import {
   ArrowRight,
   ListTodo,
   Edit3,
-  Paintbrush
+  Paintbrush,
+  Music,
+  Volume2,
+  ChevronUp,
+  ChevronDown
 } from "lucide-react";
 import { AppStateData, TodoItem, PriorityType, RecurringType, BackgroundTheme } from "../types";
 import { getStoredState, saveStoredState, subscribeToStateChanges, DEFAULT_STATE } from "../lib/storage";
@@ -86,6 +90,48 @@ export function Popup() {
   const [workMinsInput, setWorkMinsInput] = useState(25);
   const [breakMinsInput, setBreakMinsInput] = useState(5);
   const [autoStartBreakInput, setAutoStartBreakInput] = useState(false);
+
+  // Music Player State & Controls
+  const [isMusicExpanded, setIsMusicExpanded] = useState(false);
+  const prevTimerStateRef = React.useRef<string | null>(null);
+
+  const isMusicPlaying = state?.isMusicPlaying ?? false;
+  const musicVolume = state?.musicVolume ?? 0.8;
+
+  const handleMusicVolumeChange = (v: number) => {
+    updateState({ musicVolume: v });
+    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({ target: "background", action: "SET_MUSIC_VOLUME", volume: v });
+    }
+  };
+
+  const playSoundEffect = () => {
+    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({ target: "background", action: "PLAY_SOUND_EFFECT" });
+    } else {
+      try {
+        const audio = new Audio("/soundeffect.mp3");
+        audio.play().catch(() => {});
+      } catch (err) {}
+    }
+  };
+
+  const toggleMusicPlay = () => {
+    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({ target: "background", action: "TOGGLE_MUSIC" });
+    } else {
+      updateState({ isMusicPlaying: !isMusicPlaying });
+    }
+  };
+
+  useEffect(() => {
+    if (state?.timerState) {
+      if (prevTimerStateRef.current && (prevTimerStateRef.current === "WORK" || prevTimerStateRef.current === "FLOW") && state.timerState === "BREAK") {
+        playSoundEffect();
+      }
+      prevTimerStateRef.current = state.timerState;
+    }
+  }, [state?.timerState]);
 
   useEffect(() => {
     getStoredState().then((initial) => {
@@ -165,6 +211,7 @@ export function Popup() {
 
   // Complete session: Flow break = elapsedFlowSeconds / 5
   const completeSession = () => {
+    playSoundEffect();
     const isWorkOrFlow = state.timerState === "WORK" || state.timerState === "FLOW";
     const durationLogged = state.timerState === "FLOW" ? state.timeLeft : (state.pomodoroSettings.work * 60 - state.timeLeft);
     const minsLogged = Math.max(1, Math.round(durationLogged / 60));
@@ -1031,6 +1078,111 @@ export function Popup() {
           );
         })}
       </nav>
+
+      {/* Floating Music Player Bar */}
+      <div className="px-3 pt-2 z-20">
+        <div className={`flex items-center justify-between p-2 px-3 rounded-2xl border shadow-md transition-all ${
+          isDark ? "bg-neutral-900/90 border-neutral-800 text-white" : "bg-white/90 border-neutral-200 text-black"
+        }`}>
+          <div
+            onClick={() => setIsMusicExpanded(!isMusicExpanded)}
+            className="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer"
+          >
+            <Music className="w-4 h-4 text-current shrink-0" />
+            <div className="flex-1 min-w-0">
+              <div className="text-xs font-semibold truncate">Lo-Fi</div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-1.5 shrink-0">
+            <button
+              onClick={toggleMusicPlay}
+              className={`w-7 h-7 rounded-lg flex items-center justify-center shadow hover:scale-105 active:scale-95 transition-all ${
+                isDark ? "bg-white text-black" : "bg-black text-white"
+              }`}
+              title={isMusicPlaying ? "Pause" : "Play"}
+            >
+              {isMusicPlaying ? (
+                <Pause className="w-3.5 h-3.5 fill-current" />
+              ) : (
+                <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+              )}
+            </button>
+
+            <button
+              onClick={() => setIsMusicExpanded(!isMusicExpanded)}
+              className="p-1 opacity-70 hover:opacity-100 transition-opacity"
+            >
+              {isMusicExpanded ? (
+                <ChevronDown className="w-4 h-4" />
+              ) : (
+                <ChevronUp className="w-4 h-4" />
+              )}
+            </button>
+          </div>
+        </div>
+
+        {/* Expanded Music Player Drawer */}
+        {isMusicExpanded && (
+          <div className={`mt-1.5 p-3 rounded-xl border shadow-xl transition-all ${
+            isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-white border-neutral-200 text-black"
+          }`}>
+            <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-current/10">
+              <div className="flex items-center gap-2 text-xs font-bold">
+                <Volume2 className="w-4 h-4" />
+                <span>Sound Player</span>
+              </div>
+              <button
+                onClick={() => setIsMusicExpanded(false)}
+                className="opacity-70 hover:opacity-100"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div
+              onClick={toggleMusicPlay}
+              className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-all ${
+                isMusicPlaying
+                  ? (isDark ? "bg-neutral-800 border-neutral-700" : "bg-neutral-100 border-neutral-300")
+                  : (isDark ? "bg-neutral-950/50 border-neutral-800/50" : "bg-neutral-50 border-neutral-200")
+              }`}
+            >
+              <div className="flex items-center gap-2.5">
+                <Music className={`w-4 h-4 ${isMusicPlaying ? "text-primary animate-pulse" : "opacity-50"}`} />
+                <div>
+                  <div className="text-xs font-bold">Lo-Fi</div>
+                </div>
+              </div>
+
+              {isMusicPlaying && (
+                <div className="flex items-end gap-0.5 h-3">
+                  <span className={`w-0.5 h-3 rounded-full animate-pulse ${isDark ? "bg-white" : "bg-black"}`} />
+                  <span className={`w-0.5 h-2 rounded-full animate-pulse delay-75 ${isDark ? "bg-white" : "bg-black"}`} />
+                  <span className={`w-0.5 h-3.5 rounded-full animate-pulse delay-150 ${isDark ? "bg-white" : "bg-black"}`} />
+                </div>
+              )}
+            </div>
+
+            {/* Volume Slider */}
+            <div className="mt-2 pt-2 border-t border-current/10 flex items-center gap-2">
+              <Volume2 className="w-3.5 h-3.5 opacity-60 shrink-0" />
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={musicVolume}
+                onChange={(e) => handleMusicVolumeChange(parseFloat(e.target.value))}
+                className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer"
+              />
+              <span className="text-[10px] font-mono opacity-60 w-7 text-right">
+                {Math.round(musicVolume * 100)}%
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Main Tab Content */}
       <div className="flex-1 overflow-y-auto p-4 z-10 relative">
