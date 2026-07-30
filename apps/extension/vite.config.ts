@@ -30,7 +30,7 @@ export default defineConfig({
       input: {
         popup: path.resolve(__dirname, "popup.html"),
         blocked: path.resolve(__dirname, "blocked.html"),
-        offscreen: path.resolve(__dirname, "src/offscreen/offscreen.html"),
+        offscreen: path.resolve(__dirname, "offscreen.html"),
         background: path.resolve(__dirname, "src/background/background.ts"),
         content: path.resolve(__dirname, "src/content/content.ts"),
       },
