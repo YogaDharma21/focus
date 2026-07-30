@@ -25,6 +25,7 @@ export function MediaPlayer() {
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const [volume, setVolume] = useState(0.8);
   const soundRef = useRef<Audio.Sound | null>(null);
 
   const bottomOffset = 56 + Math.max(insets.bottom, 0) + 12;
@@ -39,17 +40,33 @@ export function MediaPlayer() {
 
   const playSound = async (url: string) => {
     try {
+      await Audio.setAudioModeAsync({
+        playsInSilentModeIOS: true,
+        staysActiveInBackground: true,
+        shouldDuckAndroid: true,
+      });
       if (soundRef.current) {
         await soundRef.current.unloadAsync();
+        soundRef.current = null;
       }
+      const source = url && url.startsWith('http')
+        ? { uri: url }
+        : require('../../assets/music1.mp3');
       const { sound } = await Audio.Sound.createAsync(
-        { uri: url },
-        { shouldPlay: true, isLooping: true }
+        source,
+        { shouldPlay: true, isLooping: true, volume }
       );
       soundRef.current = sound;
       setIsPlaying(true);
     } catch (error) {
       console.log('Error loading audio:', error);
+    }
+  };
+
+  const changeVolume = async (newVol: number) => {
+    setVolume(newVol);
+    if (soundRef.current) {
+      await soundRef.current.setVolumeAsync(newVol);
     }
   };
 
@@ -101,9 +118,11 @@ export function MediaPlayer() {
             <Text style={[styles.miniTitle, { color: colors.text }]} numberOfLines={1}>
               {currentTrack?.title || 'Sound Player'}
             </Text>
-            <Text style={[styles.miniSub, { color: colors.textMuted }]}>
-              {currentTrack?.artist || 'Focus App'}
-            </Text>
+            {!!currentTrack?.artist && (
+              <Text style={[styles.miniSub, { color: colors.textMuted }]}>
+                {currentTrack.artist}
+              </Text>
+            )}
           </View>
         </TouchableOpacity>
 
@@ -175,14 +194,41 @@ export function MediaPlayer() {
                         <Text style={[styles.trackName, { color: colors.text }]}>
                           {track.title}
                         </Text>
-                        <Text style={[styles.trackArtist, { color: colors.textMuted }]}>
-                          {track.artist}
-                        </Text>
+                        {!!track.artist && (
+                          <Text style={[styles.trackArtist, { color: colors.textMuted }]}>
+                            {track.artist}
+                          </Text>
+                        )}
                       </View>
                       {active && isPlaying && <Volume2 size={16} color={colors.text} />}
                     </TouchableOpacity>
                   );
                 })}
+              </View>
+
+              {/* Volume Slider Section */}
+              <View style={[styles.volumeSection, { borderColor: colors.border }]}>
+                <View style={styles.volumeHeader}>
+                  <Volume2 size={16} color={colors.textMuted} />
+                  <Text style={[styles.volumeText, { color: colors.textMuted }]}>
+                    Volume ({Math.round(volume * 100)}%)
+                  </Text>
+                </View>
+                <View style={styles.volumeBarRow}>
+                  {[0.2, 0.4, 0.6, 0.8, 1.0].map((v) => (
+                    <TouchableOpacity
+                      key={v}
+                      style={[
+                        styles.volumeStepBtn,
+                        {
+                          backgroundColor: volume >= v ? colors.text : colors.inputBg,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                      onPress={() => changeVolume(v)}
+                    />
+                  ))}
+                </View>
               </View>
             </ScrollView>
           </TouchableOpacity>
@@ -284,5 +330,29 @@ const styles = StyleSheet.create({
   trackArtist: {
     fontSize: 12,
     marginTop: 2,
+  },
+  volumeSection: {
+    paddingTop: 12,
+    borderTopWidth: 1,
+    gap: 8,
+  },
+  volumeHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  volumeText: {
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  volumeBarRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  volumeStepBtn: {
+    flex: 1,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 1,
   },
 });
