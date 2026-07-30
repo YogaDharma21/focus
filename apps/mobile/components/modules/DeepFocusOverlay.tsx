@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
+import { playCompletionSound } from '@/lib/sound';
 import { Play, Pause, X, Focus, AlertTriangle, CheckCircle2, Plus } from 'lucide-react-native';
 
 const DISTRACTION_CATEGORIES = [
@@ -48,6 +49,7 @@ export function DeepFocusOverlay() {
   };
 
   const handleCompleteSession = () => {
+    playCompletionSound();
     setIsActive(false);
 
     if (timerMode === 'STOPWATCH') {

@@ -13,6 +13,7 @@ import { DynamicIslandTimer } from '@/components/modules/DynamicIslandTimer';
 import { Clock, ListCheck, BarChart2, Smile } from 'lucide-react-native';
 
 import { useAppStore } from '@/lib/store';
+import { playCompletionSound } from '@/lib/sound';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -40,6 +41,7 @@ export default function TabLayout() {
         if (state.timerMode === 'POMODORO') {
           setTimeLeft((prev) => {
             if (prev <= 1) {
+              playCompletionSound();
               setIsActive(false);
               if (state.timerState === 'WORK') {
                 addSession({

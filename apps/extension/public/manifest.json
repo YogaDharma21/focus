@@ -8,7 +8,8 @@
     "tabs",
     "notifications",
     "alarms",
-    "activeTab"
+    "activeTab",
+    "offscreen"
   ],
   "host_permissions": [
     "<all_urls>"
@@ -30,7 +31,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["blocked.html", "assets/*"],
+      "resources": ["blocked.html", "offscreen.html", "assets/*", "music1.mp3", "soundeffect.mp3"],
       "matches": ["<all_urls>"]
     }
   ]

@@ -144,25 +144,13 @@ export const useAppStore = create<AppState>()(
       youtubeUrl: 'https://www.youtube.com/watch?v=DEWzT1geuPU',
       youtubePlaylist: ['https://www.youtube.com/watch?v=DEWzT1geuPU'],
       spotifyUrl: 'https://open.spotify.com/playlist/37i9dQZF1DX8Uebhn9wzrS',
-      localUrl: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
+      localUrl: 'music1.mp3',
       localPlaylist: [
         {
           id: 'local-1',
-          title: 'Peaceful Piano',
-          artist: 'Focus Lo-Fi',
-          url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-        },
-        {
-          id: 'local-2',
-          title: 'Ambient Waves',
-          artist: 'Deep Focus',
-          url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3',
-        },
-        {
-          id: 'local-3',
-          title: 'Coding Beats',
-          artist: 'Dev Music',
-          url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3',
+          title: 'Lo-Fi',
+          artist: '',
+          url: 'music1.mp3',
         },
       ],
 

@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
+import { playCompletionSound } from '@/lib/sound';
 import {
   Play,
   Pause,
@@ -99,6 +100,7 @@ export function FocusTimer() {
   };
 
   const handleCompleteSession = () => {
+    playCompletionSound();
     setIsActive(false);
 
     if (timerMode === 'STOPWATCH') {
