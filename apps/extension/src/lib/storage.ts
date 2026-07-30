@@ -52,7 +52,9 @@ export const DEFAULT_STATE: AppStateData = {
       "Sat": 0,
       "Sun": 0
     }
-  }
+  },
+  isMusicPlaying: false,
+  musicVolume: 0.8
 };
 
 let cachedState: AppStateData | null = null;

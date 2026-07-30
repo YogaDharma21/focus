@@ -91,43 +91,36 @@ export function Popup() {
   const [breakMinsInput, setBreakMinsInput] = useState(5);
   const [autoStartBreakInput, setAutoStartBreakInput] = useState(false);
 
-  // Music Player State & Ref
-  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+  // Music Player State & Controls
   const [isMusicExpanded, setIsMusicExpanded] = useState(false);
-  const [musicVolume, setMusicVolume] = useState(0.8);
-  const musicAudioRef = React.useRef<HTMLAudioElement | null>(null);
   const prevTimerStateRef = React.useRef<string | null>(null);
 
+  const isMusicPlaying = state?.isMusicPlaying ?? false;
+  const musicVolume = state?.musicVolume ?? 0.8;
+
   const handleMusicVolumeChange = (v: number) => {
-    setMusicVolume(v);
-    if (musicAudioRef.current) {
-      musicAudioRef.current.volume = v;
+    updateState({ musicVolume: v });
+    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({ target: "background", action: "SET_MUSIC_VOLUME", volume: v });
     }
   };
 
   const playSoundEffect = () => {
-    try {
-      const soundUrl = typeof chrome !== "undefined" && chrome.runtime?.getURL
-        ? chrome.runtime.getURL("soundeffect.mp3")
-        : "/soundeffect.mp3";
-      const audio = new Audio(soundUrl);
-      audio.play().catch(e => console.log("Sound effect play error:", e));
-    } catch (err) {
-      console.error("Error playing sound effect:", err);
+    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({ target: "background", action: "PLAY_SOUND_EFFECT" });
+    } else {
+      try {
+        const audio = new Audio("/soundeffect.mp3");
+        audio.play().catch(() => {});
+      } catch (err) {}
     }
   };
 
   const toggleMusicPlay = () => {
-    if (!musicAudioRef.current) return;
-    if (isMusicPlaying) {
-      musicAudioRef.current.pause();
-      setIsMusicPlaying(false);
+    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({ target: "background", action: "TOGGLE_MUSIC" });
     } else {
-      musicAudioRef.current.play().then(() => {
-        setIsMusicPlaying(true);
-      }).catch(err => {
-        console.log("Audio play error:", err);
-      });
+      updateState({ isMusicPlaying: !isMusicPlaying });
     }
   };
 
@@ -1190,15 +1183,6 @@ export function Popup() {
           </div>
         )}
       </div>
-
-      <audio
-        ref={musicAudioRef}
-        src={typeof chrome !== "undefined" && chrome.runtime?.getURL ? chrome.runtime.getURL("music1.mp3") : "/music1.mp3"}
-        loop
-        onPlay={() => setIsMusicPlaying(true)}
-        onPause={() => setIsMusicPlaying(false)}
-        className="hidden"
-      />
 
       {/* Main Tab Content */}
       <div className="flex-1 overflow-y-auto p-4 z-10 relative">
