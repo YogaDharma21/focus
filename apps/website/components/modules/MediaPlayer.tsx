@@ -310,29 +310,24 @@ export function MediaPlayer() {
     const toggleLocalPlay = (
         track: { title: string; artist: string; url: string },
     ) => {
-        if (activeLocalTrack === track.url && audioRef.current) {
-            if (!audioRef.current.paused) {
+        const targetUrl = track.url || "/music1.mp3";
+        if (audioRef.current) {
+            audioRef.current.volume = volume / 100;
+            if (activeLocalTrack === targetUrl && !audioRef.current.paused) {
                 audioRef.current.pause();
                 setIsLocalPlaying(false);
             } else {
-                audioRef.current.volume = volume / 100;
-                audioRef.current.play().catch(() => {});
-                setIsLocalPlaying(true);
-            }
-        } else {
-            if (audioRef.current) {
-                audioRef.current.pause();
-            }
-            setActiveLocalTrack(track.url);
-            setMediaUrl("LOCAL", track.url);
-            setTimeout(() => {
-                if (audioRef.current) {
-                    audioRef.current.volume = volume / 100;
-                    audioRef.current.play().then(() => {
-                        setIsLocalPlaying(true);
-                    }).catch(() => {});
+                if (!audioRef.current.src || !audioRef.current.src.endsWith(targetUrl)) {
+                    audioRef.current.src = targetUrl;
                 }
-            }, 0);
+                setActiveLocalTrack(targetUrl);
+                setMediaUrl("LOCAL", targetUrl);
+                audioRef.current.play().then(() => {
+                    setIsLocalPlaying(true);
+                }).catch((err) => {
+                    console.log("Audio play error:", err);
+                });
+            }
         }
     };
 
@@ -697,6 +692,7 @@ export function MediaPlayer() {
 
                 <audio
                     ref={audioRef}
+                    src={activeLocalTrack || localUrl || "/music1.mp3"}
                     loop
                     onPlay={() => setIsLocalPlaying(true)}
                     onPause={() => setIsLocalPlaying(false)}
