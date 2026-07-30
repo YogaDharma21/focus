@@ -225,6 +225,9 @@ export function MediaPlayer() {
         (e: React.ChangeEvent<HTMLInputElement>) => {
             const newVolume = parseInt(e.target.value);
             setVolume(newVolume);
+            if (audioRef.current) {
+                audioRef.current.volume = newVolume / 100;
+            }
             if (playerRef.current && playerReady) {
                 if (newVolume > 0 && muted) {
                     playerRef.current.unMute();
@@ -240,6 +243,9 @@ export function MediaPlayer() {
         (value: number) => {
             const clampedValue = Math.max(0, Math.min(100, value));
             setVolume(clampedValue);
+            if (audioRef.current) {
+                audioRef.current.volume = clampedValue / 100;
+            }
             if (playerRef.current && playerReady) {
                 if (clampedValue > 0 && muted) {
                     playerRef.current.unMute();
@@ -281,17 +287,23 @@ export function MediaPlayer() {
     }, [volume]);
 
     const toggleMute = useCallback(() => {
-        if (!playerRef.current || !playerReady) return;
-        if (muted) {
-            playerRef.current.unMute();
-            const targetVolume = volume === 0 ? 50 : volume;
-            playerRef.current.setVolume(targetVolume);
-            if (volume === 0) setVolume(50);
-            playerRef.current.playVideo();
-            setMuted(false);
+        if (audioRef.current) {
+            audioRef.current.muted = !muted;
+        }
+        if (playerRef.current && playerReady) {
+            if (muted) {
+                playerRef.current.unMute();
+                const targetVolume = volume === 0 ? 50 : volume;
+                playerRef.current.setVolume(targetVolume);
+                if (volume === 0) setVolume(50);
+                playerRef.current.playVideo();
+                setMuted(false);
+            } else {
+                playerRef.current.mute();
+                setMuted(true);
+            }
         } else {
-            playerRef.current.mute();
-            setMuted(true);
+            setMuted(!muted);
         }
     }, [muted, playerReady, volume]);
 
@@ -303,6 +315,7 @@ export function MediaPlayer() {
                 audioRef.current.pause();
                 setIsLocalPlaying(false);
             } else {
+                audioRef.current.volume = volume / 100;
                 audioRef.current.play().catch(() => {});
                 setIsLocalPlaying(true);
             }
@@ -314,6 +327,7 @@ export function MediaPlayer() {
             setMediaUrl("LOCAL", track.url);
             setTimeout(() => {
                 if (audioRef.current) {
+                    audioRef.current.volume = volume / 100;
                     audioRef.current.play().then(() => {
                         setIsLocalPlaying(true);
                     }).catch(() => {});
@@ -323,6 +337,7 @@ export function MediaPlayer() {
     };
 
     const tabs: { key: MediaTab; label: string; icon: React.ReactNode }[] = [
+        { key: "LOCAL", label: "Local", icon: <Music className="w-3.5 h-3.5" /> },
         {
             key: "YOUTUBE",
             label: "YouTube",
@@ -333,7 +348,6 @@ export function MediaPlayer() {
             label: "Spotify",
             icon: <Music2 className="w-3.5 h-3.5" />,
         },
-        { key: "LOCAL", label: "Local", icon: <Music className="w-3.5 h-3.5" /> },
     ];
 
     return (
@@ -683,9 +697,15 @@ export function MediaPlayer() {
 
                 <audio
                     ref={audioRef}
+                    loop
                     onPlay={() => setIsLocalPlaying(true)}
                     onPause={() => setIsLocalPlaying(false)}
-                    onEnded={() => setIsLocalPlaying(false)}
+                    onEnded={() => {
+                        if (audioRef.current) {
+                            audioRef.current.currentTime = 0;
+                            audioRef.current.play().catch(() => {});
+                        }
+                    }}
                     className="hidden"
                 />
             </div>
