@@ -88,18 +88,9 @@ export const StatsJournal: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col p-4 md:p-6 max-w-4xl mx-auto w-full select-none overflow-y-auto space-y-6">
-      {/* Title & Top Floating Timer Widget */}
-      <div className="flex items-center justify-between">
+      {/* Title Header */}
+      <div>
         <h2 className="text-xl font-bold text-white tracking-tight">Journal & Stats</h2>
-        <div className="flex items-center gap-3">
-          <div className="bg-[#141414] border border-zinc-800/90 rounded-2xl px-4 py-2 flex items-center justify-between w-64 shadow-md text-xs font-semibold">
-            <span className="flex items-center gap-1.5 text-zinc-300">
-              <span className="text-sm">🍅</span>
-              <span>{timerLabel}</span>
-            </span>
-            <span className="font-mono text-white text-sm font-bold">{timeString}</span>
-          </div>
-        </div>
       </div>
 
       {/* 1. Day Progress Card */}
