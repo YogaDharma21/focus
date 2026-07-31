@@ -513,14 +513,17 @@ export const FocusTimer: React.FC = () => {
                 />
               </div>
 
-              <div className="flex items-center justify-between pt-1">
-                <span className="text-xs text-zinc-300">Auto-start Break</span>
-                <input
-                  type="checkbox"
-                  checked={pomodoroSettings.autoStartBreak}
-                  onChange={(e) => setPomodoroSettings({ autoStartBreak: e.target.checked })}
-                  className="accent-zinc-100 w-4 h-4 rounded"
-                />
+              <div 
+                className="flex items-center justify-between bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 mt-1 cursor-pointer"
+                onClick={() => setPomodoroSettings({ autoStartBreak: !pomodoroSettings.autoStartBreak })}
+              >
+                <div className="space-y-0.5">
+                  <span className="text-xs font-semibold text-white block">Auto-start Break</span>
+                  <span className="text-[10px] text-zinc-400">Launch break timer immediately after work</span>
+                </div>
+                <div className={`w-10 h-[22px] rounded-full p-[3px] transition-colors duration-200 shrink-0 ml-4 ${pomodoroSettings.autoStartBreak ? 'bg-zinc-200' : 'bg-zinc-600'}`}>
+                  <div className={`w-4 h-4 rounded-full transition-transform duration-200 ${pomodoroSettings.autoStartBreak ? 'translate-x-[18px] bg-zinc-900' : 'translate-x-0 bg-zinc-400'}`} />
+                </div>
               </div>
             </div>
 
