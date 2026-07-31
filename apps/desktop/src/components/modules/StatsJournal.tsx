@@ -1,11 +1,11 @@
 import React from 'react';
 import { 
-  Clock, Activity, CheckCircle2, ListTodo, Flame, Target, TrendingUp, Sparkles 
+  Clock, Activity, CheckCircle2, ListTodo, Flame, Target, TrendingUp, BarChart2 
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 
 export const StatsJournal: React.FC = () => {
-  const { sessions, todos, timeLeft, timerMode, timerState, flowTimeElapsed } = useDesktopStore();
+  const { sessions, todos, distractions, timeLeft, timerMode, timerState, flowTimeElapsed } = useDesktopStore();
 
   // 1. Current Timer status string for top floating capsule
   const activeSeconds = timerMode === 'POMODORO' ? timeLeft : flowTimeElapsed;
@@ -50,7 +50,6 @@ export const StatsJournal: React.FC = () => {
   // 5. Weekly Focus Trend Bar Chart (Sat -> Fri)
   const daysOfWeek = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
   const weekData = daysOfWeek.map((dayName, idx) => {
-    // Map day to recent dates
     const targetDate = new Date();
     const dayOffset = (targetDate.getDay() + 1 - (idx === 0 ? 6 : idx - 1) + 7) % 7;
     targetDate.setDate(targetDate.getDate() - dayOffset);
@@ -62,6 +61,30 @@ export const StatsJournal: React.FC = () => {
   });
 
   const maxMinutesInWeek = Math.max(...weekData.map(w => w.minutes), 60);
+
+  // 6. Distraction Analysis Calculation
+  const distractionCounts: Record<string, number> = {};
+  if (distractions.length > 0) {
+    distractions.forEach(item => {
+      const catName = item.category || "Social Media";
+      distractionCounts[catName] = (distractionCounts[catName] || 0) + 1;
+    });
+  } else {
+    // Default demonstration category if no distractions logged yet
+    distractionCounts["Social Media"] = 1;
+  }
+
+  const totalDistractions = Math.max(1, distractions.length);
+  const distractionCategories = Object.entries(distractionCounts)
+    .map(([name, count]) => ({
+      name,
+      count: distractions.length === 0 ? 1 : count,
+      percent: Math.round(((distractions.length === 0 ? 1 : count) / totalDistractions) * 100)
+    }))
+    .sort((a, b) => b.count - a.count);
+
+  const mostCommonCategory = distractionCategories[0]?.name || "Social Media";
+  const mostCommonPercent = distractionCategories[0]?.percent || 100;
 
   return (
     <div className="h-full flex flex-col p-4 md:p-6 max-w-4xl mx-auto w-full select-none overflow-y-auto space-y-6">
@@ -170,7 +193,38 @@ export const StatsJournal: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. Focus Trend Card */}
+      {/* 4. Distraction Analysis Card */}
+      <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-rose-950/60 border border-rose-800/60 flex items-center justify-center text-rose-400">
+            <BarChart2 className="w-4 h-4" />
+          </div>
+          <h3 className="text-sm font-bold text-white tracking-tight">Distraction Analysis</h3>
+        </div>
+
+        <p className="text-xs text-zinc-400 font-medium">
+          Most common: <strong className="text-white font-semibold">{mostCommonCategory}</strong> ({mostCommonPercent}%)
+        </p>
+
+        <div className="space-y-3 pt-1">
+          {distractionCategories.map((cat) => (
+            <div key={cat.name} className="space-y-1">
+              <div className="flex items-center justify-between text-xs font-semibold">
+                <span className="text-white">{cat.name}</span>
+                <span className="text-zinc-400 font-mono font-normal">{cat.count} ({cat.percent}%)</span>
+              </div>
+              <div className="w-full h-1.5 bg-zinc-800/80 rounded-full overflow-hidden">
+                <div 
+                  className="bg-purple-500 h-full rounded-full transition-all duration-500"
+                  style={{ width: `${cat.percent}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* 5. Focus Trend Card */}
       <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
