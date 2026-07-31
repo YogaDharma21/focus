@@ -103,7 +103,8 @@ export const DeepFocusOverlay: React.FC = () => {
         }
       }
     } else {
-      const durationWorked = Math.max(60, flowTimeElapsed);
+      const durationWorked = Math.max(1, flowTimeElapsed);
+      const calculatedBreakSeconds = Math.max(30, Math.floor(durationWorked / 5));
       
       addSession({
         id: crypto.randomUUID(),
@@ -121,12 +122,21 @@ export const DeepFocusOverlay: React.FC = () => {
         });
       }
 
-      electron.showNotification("Flow Session Complete! 🌊", `Finished ${Math.floor(durationWorked / 60)} minutes of focus.`);
+      const breakMins = Math.floor(calculatedBreakSeconds / 60);
+      const breakSecs = calculatedBreakSeconds % 60;
+      const breakStr = breakMins > 0 
+        ? `${breakMins}m${breakSecs > 0 ? ` ${breakSecs}s` : ''}` 
+        : `${breakSecs}s`;
+
+      electron.showNotification(
+        "Flow Session Complete! 🌊", 
+        `Focused for ${Math.floor(durationWorked / 60)}m. Earned ${breakStr} break!`
+      );
       
       setPreviousMode('STOPWATCH');
       setTimerMode('POMODORO');
       setTimerState('BREAK');
-      setTimeLeft(pomodoroSettings.break * 60);
+      setTimeLeft(calculatedBreakSeconds);
       setFlowTimeElapsed(0);
     }
 
