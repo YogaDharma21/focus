@@ -33,12 +33,21 @@ export const FocusTimer: React.FC = () => {
     distractions,
     soundEffectEnabled,
     sessionName,
-    setSessionName
+    setSessionName,
+    setDeepFocusMode
   } = useDesktopStore();
 
   const [showSettings, setShowSettings] = useState(false);
   const [showTaskDropdown, setShowTaskDropdown] = useState(false);
   const [showDistractionMenu, setShowDistractionMenu] = useState(false);
+
+  const toggleTimer = () => {
+    const nextActive = !isActive;
+    setIsActive(nextActive);
+    if (nextActive) {
+      setDeepFocusMode(true);
+    }
+  };
 
   const playCompletionSound = () => {
     if (!soundEffectEnabled) return;
@@ -146,8 +155,6 @@ export const FocusTimer: React.FC = () => {
     setTimeLeft(breakDurationSeconds);
     setFlowTimeElapsed(0);
   };
-
-  const toggleTimer = () => setIsActive(!isActive);
 
   const resetTimer = () => {
     setIsActive(false);

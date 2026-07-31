@@ -24,8 +24,17 @@ export const FloatingTimerCapsule: React.FC = () => {
     selectedTodoId,
     toggleTodo,
     addDistraction,
-    sessionName
+    sessionName,
+    setDeepFocusMode
   } = useDesktopStore();
+
+  const handleToggleTimer = () => {
+    const nextActive = !isActive;
+    setIsActive(nextActive);
+    if (nextActive) {
+      setDeepFocusMode(true);
+    }
+  };
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [showDistractionMenu, setShowDistractionMenu] = useState(false);
@@ -102,7 +111,7 @@ export const FloatingTimerCapsule: React.FC = () => {
             <div
               onClick={(e) => {
                 e.stopPropagation();
-                setIsActive(!isActive);
+                handleToggleTimer();
               }}
               className="w-5 h-5 rounded-full bg-zinc-100 text-zinc-950 hover:bg-zinc-200 transition-all flex items-center justify-center shrink-0 shadow-sm"
               title={isActive ? "Pause Timer" : "Start Timer"}
@@ -229,7 +238,7 @@ export const FloatingTimerCapsule: React.FC = () => {
 
             {/* Play/Pause Button */}
             <button
-              onClick={() => setIsActive(!isActive)}
+              onClick={handleToggleTimer}
               className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-zinc-100 text-zinc-950 font-semibold text-[11px] hover:bg-zinc-200 transition-colors shadow-sm"
             >
               {isActive ? (
