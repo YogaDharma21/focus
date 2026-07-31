@@ -3,6 +3,7 @@ import {
   Play, Pause, AlertTriangle, CheckCircle2, Coffee, Timer as TimerIcon 
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
+import { electron } from '../../lib/electron';
 
 const DISTRACTION_OPTIONS = ["Phone", "Social Media", "Bathroom", "Meeting", "Other"];
 
@@ -21,9 +22,10 @@ export const FloatingTimerCapsule: React.FC = () => {
     setIsActive,
     pomodoroSettings,
     todos,
+    updateTodo,
     selectedTodoId,
-    toggleTodo,
     addDistraction,
+    addSession,
     sessionName,
     setDeepFocusMode
   } = useDesktopStore();
@@ -34,6 +36,76 @@ export const FloatingTimerCapsule: React.FC = () => {
     if (nextActive) {
       setDeepFocusMode(true);
     }
+  };
+
+  const handleCompleteSession = () => {
+    setIsActive(false);
+
+    const activeTask = todos.find(t => t.id === selectedTodoId);
+    const title = activeTask?.text || sessionName || 'Focus Session';
+
+    if (timerMode === 'POMODORO') {
+      if (timerState === 'WORK') {
+        const durationWorked = Math.max(60, (pomodoroSettings.work * 60) - timeLeft);
+        
+        addSession({
+          id: crypto.randomUUID(),
+          date: new Date().toISOString(),
+          duration: durationWorked,
+          mode: 'POMODORO',
+          taskTitle: title
+        });
+
+        if (activeTask) {
+          updateTodo(activeTask.id, {
+            completedPomodoros: (activeTask.completedPomodoros || 0) + 1,
+            completed: true,
+            completedAt: new Date().toISOString(),
+            groupId: 'finished'
+          });
+        }
+
+        electron.showNotification("Session Complete! 🎉", `Great work finishing "${title}"! Time for a break.`);
+        
+        setTimerState('BREAK');
+        setTimeLeft(pomodoroSettings.break * 60);
+
+        if (pomodoroSettings.autoStartBreak) {
+          setIsActive(true);
+        }
+      } else {
+        electron.showNotification("Break Complete! ⚡", "Ready to start focusing again?");
+        setTimerState('WORK');
+        setTimeLeft(pomodoroSettings.work * 60);
+      }
+    } else {
+      const durationWorked = Math.max(60, flowTimeElapsed);
+      
+      addSession({
+        id: crypto.randomUUID(),
+        date: new Date().toISOString(),
+        duration: durationWorked,
+        mode: 'STOPWATCH',
+        taskTitle: title
+      });
+
+      if (activeTask) {
+        updateTodo(activeTask.id, {
+          completed: true,
+          completedAt: new Date().toISOString(),
+          groupId: 'finished'
+        });
+      }
+
+      electron.showNotification("Flow Session Complete! 🌊", `Finished ${Math.floor(durationWorked / 60)} minutes of focus.`);
+      
+      setTimerMode('POMODORO');
+      setTimerState('BREAK');
+      setTimeLeft(pomodoroSettings.break * 60);
+      setFlowTimeElapsed(0);
+    }
+
+    setIsExpanded(false);
   };
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -198,10 +270,7 @@ export const FloatingTimerCapsule: React.FC = () => {
           <div className="flex items-center justify-end gap-2 pt-1 relative">
             {/* Complete Button */}
             <button
-              onClick={() => {
-                if (activeTask) toggleTodo(activeTask.id);
-                else setIsActive(false);
-              }}
+              onClick={handleCompleteSession}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#181818] border border-zinc-800 text-[11px] font-medium text-zinc-200 hover:bg-zinc-800 transition-colors"
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
