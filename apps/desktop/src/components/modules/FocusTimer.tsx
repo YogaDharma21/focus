@@ -476,8 +476,19 @@ export const FocusTimer: React.FC = () => {
 
       {/* Settings Modal */}
       {showSettings && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="w-80 bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-2xl space-y-4">
+        <div 
+          onClick={() => {
+            setShowSettings(false);
+            if (!isActive) {
+              setTimeLeft(timerState === 'WORK' ? pomodoroSettings.work * 60 : pomodoroSettings.break * 60);
+            }
+          }}
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-150"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="w-80 bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150"
+          >
             <h3 className="text-sm font-semibold text-zinc-100">Pomodoro Settings</h3>
             
             <div className="space-y-3">
