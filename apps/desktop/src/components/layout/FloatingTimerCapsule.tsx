@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { playCompletionSound } from '../../lib/sound';
 import { 
   Play, Pause, AlertTriangle, CheckCircle2, Coffee, Timer as TimerIcon 
 } from 'lucide-react';
@@ -42,6 +43,7 @@ export const FloatingTimerCapsule: React.FC = () => {
 
   const handleCompleteSession = () => {
     setIsActive(false);
+    playCompletionSound();
 
     const activeTask = todos.find(t => t.id === selectedTodoId);
     const title = activeTask?.text || sessionName || 'Focus Session';
