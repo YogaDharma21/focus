@@ -138,6 +138,10 @@ export const DeepFocusOverlay: React.FC = () => {
       setTimerState('BREAK');
       setTimeLeft(calculatedBreakSeconds);
       setFlowTimeElapsed(0);
+
+      if (pomodoroSettings.autoStartBreak) {
+        setIsActive(true);
+      }
     }
 
     setDeepFocusMode(false);

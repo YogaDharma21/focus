@@ -160,6 +160,10 @@ export const FocusTimer: React.FC = () => {
       setTimerState('BREAK');
       setTimeLeft(calculatedBreakSeconds);
       setFlowTimeElapsed(0);
+
+      if (pomodoroSettings.autoStartBreak) {
+        setIsActive(true);
+      }
     }
   };
 
