@@ -373,11 +373,6 @@ export const FocusTimer: React.FC = () => {
             title="Log Distraction"
           >
             <AlertTriangle className="w-4 h-4" />
-            {distractions.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-rose-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                {distractions.length}
-              </span>
-            )}
           </button>
 
           {/* Distraction Reason Popover matching user mockup */}
