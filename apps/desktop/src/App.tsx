@@ -9,6 +9,7 @@ import { MediaPlayer } from './components/modules/MediaPlayer';
 import { BackgroundDisplay } from './components/modules/BackgroundDisplay';
 import { DeepFocusOverlay } from './components/modules/DeepFocusOverlay';
 import { MiniPlayerWidget } from './components/modules/MiniPlayerWidget';
+import { FloatingTimerCapsule } from './components/layout/FloatingTimerCapsule';
 import { useDesktopStore } from './lib/store';
 import { electron } from './lib/electron';
 
@@ -61,6 +62,9 @@ export const App: React.FC = () => {
       
       {/* Frameless Custom Window Titlebar */}
       <TitleBar />
+
+      {/* Floating Timer Capsule (visible on non-FOCUS views) */}
+      <FloatingTimerCapsule />
 
       {/* Main Workspace Body */}
       <div className="flex-1 flex overflow-hidden z-10">
