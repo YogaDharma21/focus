@@ -1,5 +1,8 @@
-import React, { useEffect, useRef } from 'react';
-import { Play, Pause, RotateCcw, CheckCircle2, AlertCircle, Settings } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { 
+  Play, Pause, RotateCcw, AlertTriangle, SlidersHorizontal, CheckCircle2, 
+  ChevronDown, Check
+} from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
 
@@ -24,10 +27,13 @@ export const FocusTimer: React.FC = () => {
     addSession,
     addDistraction,
     distractions,
-    soundEffectEnabled
+    soundEffectEnabled,
+    sessionName,
+    setSessionName
   } = useDesktopStore();
 
   const [showSettings, setShowSettings] = React.useState(false);
+  const [showTaskDropdown, setShowTaskDropdown] = React.useState(false);
 
   const playCompletionSound = () => {
     if (!soundEffectEnabled) return;
@@ -82,16 +88,17 @@ export const FocusTimer: React.FC = () => {
     playCompletionSound();
 
     const currentTask = todos.find(t => t.id === selectedTodoId);
+    const title = sessionName || currentTask?.text || 'Focus Session';
 
     if (timerState === 'WORK') {
-      electron.showNotification("Focus Session Complete! 🎉", "Great work! Time for a well-deserved break.");
+      electron.showNotification("Focus Session Complete! 🎉", "Great work! Time for a break.");
       
       addSession({
         id: crypto.randomUUID(),
         date: new Date().toISOString(),
         duration: pomodoroSettings.work * 60,
         mode: 'POMODORO',
-        taskTitle: currentTask?.text || 'Focus Session'
+        taskTitle: title
       });
 
       setTimerState('BREAK');
@@ -113,6 +120,7 @@ export const FocusTimer: React.FC = () => {
     playCompletionSound();
 
     const currentTask = todos.find(t => t.id === selectedTodoId);
+    const title = sessionName || currentTask?.text || 'Flow Session';
     const breakDurationSeconds = Math.max(60, Math.floor(flowTimeElapsed / 5));
 
     addSession({
@@ -120,7 +128,7 @@ export const FocusTimer: React.FC = () => {
       date: new Date().toISOString(),
       duration: flowTimeElapsed,
       mode: 'STOPWATCH',
-      taskTitle: currentTask?.text || 'Flow Session'
+      taskTitle: title
     });
 
     electron.showNotification(
@@ -160,51 +168,201 @@ export const FocusTimer: React.FC = () => {
     ? Math.min(100, Math.max(0, ((totalDurationSeconds - activeSeconds) / totalDurationSeconds) * 100))
     : Math.min(100, (flowTimeElapsed / 3600) * 100);
 
-  const strokeDashoffset = 565 - (565 * progressPercent) / 100;
   const activeTask = todos.find((t) => t.id === selectedTodoId);
 
+  // Tab switching logic
+  const handleSelectTab = (tab: 'POMODORO' | 'BREAK' | 'FLOW') => {
+    setIsActive(false);
+    if (tab === 'POMODORO') {
+      setTimerMode('POMODORO');
+      setTimerState('WORK');
+      setTimeLeft(pomodoroSettings.work * 60);
+    } else if (tab === 'BREAK') {
+      setTimerMode('POMODORO');
+      setTimerState('BREAK');
+      setTimeLeft(pomodoroSettings.break * 60);
+    } else {
+      setTimerMode('STOPWATCH');
+      setFlowTimeElapsed(0);
+    }
+  };
+
+  const activeTab = timerMode === 'STOPWATCH' 
+    ? 'FLOW' 
+    : (timerState === 'BREAK' ? 'BREAK' : 'POMODORO');
+
   return (
-    <div className="flex flex-col items-center justify-between h-full p-4 md:p-8 max-w-4xl mx-auto w-full select-none">
-      {/* Mode Switches */}
-      <div className="flex items-center gap-3">
-        <div className="flex bg-zinc-900 p-1 rounded-xl border border-zinc-800 shadow-sm">
-          <button
-            onClick={() => {
-              setIsActive(false);
-              setTimerMode('POMODORO');
-              setTimerState('WORK');
-              setTimeLeft(pomodoroSettings.work * 60);
-            }}
-            className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              timerMode === 'POMODORO'
-                ? 'bg-zinc-800 text-zinc-100 font-semibold border border-zinc-700 shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            Pomodoro Mode
-          </button>
-          <button
-            onClick={() => {
-              setIsActive(false);
-              setTimerMode('STOPWATCH');
-              setFlowTimeElapsed(0);
-            }}
-            className={`px-4 py-1.5 rounded-lg text-xs font-medium transition-all ${
-              timerMode === 'STOPWATCH'
-                ? 'bg-zinc-800 text-zinc-100 font-semibold border border-zinc-700 shadow-sm'
-                : 'text-zinc-400 hover:text-zinc-200'
-            }`}
-          >
-            Flow Stopwatch
-          </button>
-        </div>
+    <div className="flex flex-col items-center justify-center h-full p-4 md:p-8 max-w-2xl mx-auto w-full select-none space-y-6">
+      {/* 1. Top Segmented Capsule Tab Bar */}
+      <div className="bg-[#141414] border border-zinc-800/80 p-1 rounded-2xl flex items-center justify-between w-80 shadow-md">
+        <button
+          onClick={() => handleSelectTab('POMODORO')}
+          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all ${
+            activeTab === 'POMODORO'
+              ? 'bg-[#e6e6e6] text-zinc-950 shadow-sm'
+              : 'text-zinc-400 hover:text-zinc-200'
+          }`}
+        >
+          Pomodoro
+        </button>
 
         <button
+          onClick={() => handleSelectTab('BREAK')}
+          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all ${
+            activeTab === 'BREAK'
+              ? 'bg-[#e6e6e6] text-zinc-950 shadow-sm'
+              : 'text-zinc-400 hover:text-zinc-200'
+          }`}
+        >
+          Break
+        </button>
+
+        <button
+          onClick={() => handleSelectTab('FLOW')}
+          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all ${
+            activeTab === 'FLOW'
+              ? 'bg-[#e6e6e6] text-zinc-950 shadow-sm'
+              : 'text-zinc-400 hover:text-zinc-200'
+          }`}
+        >
+          Flow
+        </button>
+      </div>
+
+      {/* 2. Giant Digital Clock Display */}
+      <div className="my-2">
+        <h1 className="text-[100px] md:text-[120px] font-extrabold tracking-tighter text-white leading-none font-sans select-none">
+          {formatDisplayTime(activeSeconds)}
+        </h1>
+      </div>
+
+      {/* 3. Task & Custom Focus Input Container */}
+      <div className="w-full max-w-sm space-y-2 relative">
+        {/* Dashed Border Focus Button / Dropdown */}
+        <button
+          onClick={() => setShowTaskDropdown(!showTaskDropdown)}
+          className="w-full border border-dashed border-zinc-800 hover:border-zinc-700 bg-zinc-950/40 rounded-2xl px-4 py-3 text-xs text-zinc-300 flex items-center justify-between transition-colors shadow-sm"
+        >
+          <span className="truncate">
+            {activeTask ? `🎯 ${activeTask.text}` : "What are you focusing on?"}
+          </span>
+          <ChevronDown className="w-4 h-4 text-zinc-500 shrink-0 ml-2" />
+        </button>
+
+        {/* Task Selection Dropdown Popover */}
+        {showTaskDropdown && (
+          <div className="absolute top-12 left-0 w-full bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl z-50 p-2 space-y-1">
+            <p className="px-3 py-1.5 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Select Task</p>
+            <button
+              onClick={() => {
+                setSelectedTodoId(null);
+                setShowTaskDropdown(false);
+              }}
+              className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-colors ${
+                !selectedTodoId ? "bg-zinc-800 text-white font-medium" : "text-zinc-300 hover:bg-zinc-800/50"
+              }`}
+            >
+              None (General Focus)
+            </button>
+
+            {todos.filter(t => !t.completed).map((t) => (
+              <button
+                key={t.id}
+                onClick={() => {
+                  setSelectedTodoId(t.id);
+                  setShowTaskDropdown(false);
+                }}
+                className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-colors flex items-center justify-between ${
+                  selectedTodoId === t.id ? "bg-zinc-800 text-white font-medium" : "text-zinc-300 hover:bg-zinc-800/50"
+                }`}
+              >
+                <span className="truncate">{t.text}</span>
+                {selectedTodoId === t.id && <Check className="w-3.5 h-3.5 text-zinc-100 shrink-0 ml-1" />}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Custom Focus Title Textbox */}
+        <input
+          type="text"
+          placeholder="Or type a custom focus..."
+          value={sessionName}
+          onChange={(e) => setSessionName(e.target.value)}
+          className="w-full bg-[#181818] border border-zinc-800/80 rounded-2xl px-4 py-2.5 text-xs text-zinc-200 text-center focus:outline-none focus:border-zinc-700 placeholder:text-zinc-600 shadow-inner"
+        />
+      </div>
+
+      {/* 4. Horizontal Progress Bar */}
+      <div className="w-full max-w-sm h-1.5 bg-zinc-800/80 rounded-full overflow-hidden my-2">
+        <div 
+          className="bg-zinc-200 h-full rounded-full transition-all duration-300"
+          style={{ width: `${progressPercent}%` }}
+        />
+      </div>
+
+      {/* 5. Horizontal Control Bar with 5 Buttons */}
+      <div className="flex items-center justify-center gap-3 pt-2">
+        {/* Reset Button */}
+        <button
+          onClick={resetTimer}
+          className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-all flex items-center justify-center shadow-md active:scale-95"
+          title="Reset Timer"
+        >
+          <RotateCcw className="w-4 h-4" />
+        </button>
+
+        {/* Distraction Alert Button */}
+        <button
+          onClick={() => addDistraction('Distraction')}
+          className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-rose-400 transition-all flex items-center justify-center shadow-md active:scale-95 relative"
+          title="Log Distraction"
+        >
+          <AlertTriangle className="w-4 h-4" />
+          {distractions.length > 0 && (
+            <span className="absolute -top-1 -right-1 bg-rose-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+              {distractions.length}
+            </span>
+          )}
+        </button>
+
+        {/* Center Main Play/Pause Button */}
+        <button
+          onClick={toggleTimer}
+          className="w-16 h-16 rounded-2xl bg-[#e6e6e6] hover:bg-white text-zinc-950 shadow-xl transition-all active:scale-95 flex items-center justify-center"
+          title={isActive ? "Pause" : "Start"}
+        >
+          {isActive ? (
+            <Pause className="w-6 h-6 fill-zinc-950 text-zinc-950" />
+          ) : (
+            <Play className="w-6 h-6 fill-zinc-950 text-zinc-950 ml-0.5" />
+          )}
+        </button>
+
+        {/* Settings Button */}
+        <button
           onClick={() => setShowSettings(!showSettings)}
-          className="p-2 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors"
+          className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-all flex items-center justify-center shadow-md active:scale-95"
           title="Timer Settings"
         >
-          <Settings className="w-4 h-4" />
+          <SlidersHorizontal className="w-4 h-4" />
+        </button>
+
+        {/* Complete Session / Task Button */}
+        <button
+          onClick={() => {
+            if (activeTask) {
+              toggleTodo(activeTask.id);
+            } else if (timerMode === 'STOPWATCH' && isActive) {
+              handleFinishFlowSession();
+            } else {
+              handlePomodoroComplete();
+            }
+          }}
+          className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-emerald-400 transition-all flex items-center justify-center shadow-md active:scale-95"
+          title="Finish / Complete Session"
+        >
+          <CheckCircle2 className="w-4 h-4" />
         </button>
       </div>
 
@@ -264,115 +422,6 @@ export const FocusTimer: React.FC = () => {
           </div>
         </div>
       )}
-
-      {/* Main Ring Timer */}
-      <div className="relative flex items-center justify-center my-6">
-        <svg className="w-72 h-72 md:w-80 md:h-80 transform -rotate-90">
-          <circle
-            cx="50%"
-            cy="50%"
-            r="90"
-            className="stroke-zinc-800/80"
-            strokeWidth="10"
-            fill="transparent"
-          />
-          <circle
-            cx="50%"
-            cy="50%"
-            r="90"
-            className="stroke-zinc-100 transition-all duration-500 ease-out"
-            strokeWidth="10"
-            strokeDasharray="565"
-            strokeDashoffset={strokeDashoffset}
-            strokeLinecap="round"
-            fill="transparent"
-          />
-        </svg>
-
-        <div className="absolute inset-0 flex flex-col items-center justify-center space-y-2">
-          <span className="text-[10px] font-bold tracking-widest uppercase text-zinc-400 px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800">
-            {timerMode === 'POMODORO' ? (timerState === 'WORK' ? 'Work Session' : 'Break Time') : 'Flow Session'}
-          </span>
-          <h1 className="text-5xl md:text-6xl font-bold font-mono tracking-tight text-zinc-100">
-            {formatDisplayTime(activeSeconds)}
-          </h1>
-          {activeTask ? (
-            <p className="text-xs text-zinc-300 max-w-[200px] truncate text-center font-medium bg-zinc-900 px-3 py-1 rounded-full border border-zinc-800">
-              🎯 {activeTask.text}
-            </p>
-          ) : (
-            <p className="text-xs text-zinc-500">No active task selected</p>
-          )}
-        </div>
-      </div>
-
-      {/* Controls */}
-      <div className="w-full space-y-4 max-w-md">
-        <div className="flex items-center gap-2">
-          <select
-            value={selectedTodoId || ''}
-            onChange={(e) => setSelectedTodoId(e.target.value || null)}
-            className="w-full bg-zinc-900 border border-zinc-800 text-zinc-200 text-xs rounded-xl px-3.5 py-2.5 focus:outline-none focus:border-zinc-700"
-          >
-            <option value="">-- Select Task to Focus On --</option>
-            {todos.filter(t => !t.completed).map((t) => (
-              <option key={t.id} value={t.id}>
-                {t.text} {t.priority ? `(${t.priority.toUpperCase()})` : ''}
-              </option>
-            ))}
-          </select>
-
-          {activeTask && (
-            <button
-              onClick={() => toggleTodo(activeTask.id)}
-              className="p-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-emerald-400 hover:bg-zinc-800 transition-colors"
-              title="Mark Task Completed"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-            </button>
-          )}
-        </div>
-
-        <div className="flex items-center justify-center gap-4">
-          <button
-            onClick={resetTimer}
-            className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors"
-            title="Reset Timer"
-          >
-            <RotateCcw className="w-5 h-5" />
-          </button>
-
-          <button
-            onClick={toggleTimer}
-            className="px-8 py-4 rounded-xl bg-zinc-100 text-zinc-950 font-bold text-sm hover:bg-zinc-200 transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
-          >
-            {isActive ? <Pause className="w-5 h-5 fill-zinc-950" /> : <Play className="w-5 h-5 fill-zinc-950 ml-0.5" />}
-            <span>{isActive ? 'Pause' : 'Start Focus'}</span>
-          </button>
-
-          {timerMode === 'STOPWATCH' && isActive && (
-            <button
-              onClick={handleFinishFlowSession}
-              className="px-4 py-4 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-zinc-950 font-bold text-xs transition-all shadow-md active:scale-95"
-            >
-              Finish Flow
-            </button>
-          )}
-
-          <button
-            onClick={() => addDistraction('Quick Distraction')}
-            className="p-4 rounded-xl bg-zinc-900 border border-zinc-800 hover:bg-zinc-800 text-zinc-400 hover:text-rose-400 transition-colors relative"
-            title="Log Distraction"
-          >
-            <AlertCircle className="w-5 h-5" />
-            {distractions.length > 0 && (
-              <span className="absolute -top-1 -right-1 bg-zinc-700 text-zinc-100 text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                {distractions.length}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
     </div>
   );
 };
