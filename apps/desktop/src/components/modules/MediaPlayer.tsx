@@ -1,0 +1,122 @@
+import React, { useRef, useEffect, useState } from 'react';
+import { Music, Play, Pause, Volume2, VolumeX, BellRing, ChevronDown, Disc } from 'lucide-react';
+import { useDesktopStore } from '../../lib/store';
+
+export const MediaPlayer: React.FC = () => {
+  const {
+    mediaPlayerOpen,
+    setMediaPlayerOpen,
+    soundEffectEnabled,
+    setSoundEffectEnabled,
+    volume,
+    setVolume
+  } = useDesktopStore();
+
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume;
+    }
+  }, [volume]);
+
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play().then(() => setIsPlaying(true)).catch((err) => console.warn("Audio play failed", err));
+    }
+  };
+
+  return (
+    <div className="fixed bottom-3 right-3 z-30 select-none">
+      <audio
+        ref={audioRef}
+        src="./music1.mp3"
+        loop
+        onPlay={() => setIsPlaying(true)}
+        onPause={() => setIsPlaying(false)}
+      />
+
+      {mediaPlayerOpen ? (
+        <div className="w-72 bg-zinc-900 border border-zinc-800 p-4 rounded-2xl shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Music className="w-4 h-4 text-zinc-300" />
+              <span className="text-xs font-semibold text-zinc-200">Ambient Music</span>
+            </div>
+            <button
+              onClick={() => setMediaPlayerOpen(false)}
+              className="p-1 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors"
+            >
+              <ChevronDown className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Currently Playing Track */}
+          <div className="flex items-center justify-between bg-zinc-950 p-3 rounded-xl border border-zinc-800 shadow-inner">
+            <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
+              <div 
+                className={`w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 shrink-0 ${
+                  isPlaying ? 'animate-spin' : ''
+                }`}
+                style={{ animationDuration: '4s' }}
+              >
+                <Disc className="w-4 h-4 text-zinc-300" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-xs font-semibold text-zinc-100 truncate">Lo-Fi</p>
+                <p className="text-[10px] text-zinc-500 truncate">Focus Ambient Music</p>
+              </div>
+            </div>
+            <button
+              onClick={togglePlay}
+              className="p-2.5 rounded-xl bg-zinc-100 text-zinc-950 hover:bg-zinc-200 transition-all shadow-md active:scale-95 shrink-0"
+              title={isPlaying ? "Pause Music" : "Play Music"}
+            >
+              {isPlaying ? <Pause className="w-4 h-4 fill-zinc-950" /> : <Play className="w-4 h-4 fill-zinc-950 ml-0.5" />}
+            </button>
+          </div>
+
+          {/* Volume & Completion Chime Controls */}
+          <div className="flex items-center justify-between gap-3 px-1 pt-1">
+            <div className="flex items-center gap-2 flex-1">
+              {volume === 0 ? <VolumeX className="w-3.5 h-3.5 text-zinc-500 shrink-0" /> : <Volume2 className="w-3.5 h-3.5 text-zinc-400 shrink-0" />}
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={volume}
+                onChange={(e) => setVolume(Number(e.target.value))}
+                className="w-full h-1 bg-zinc-800 rounded-lg accent-zinc-100 cursor-pointer"
+              />
+            </div>
+
+            <button
+              onClick={() => setSoundEffectEnabled(!soundEffectEnabled)}
+              title={soundEffectEnabled ? "Completion Chime Enabled" : "Completion Chime Muted"}
+              className={`p-1.5 rounded-lg text-xs transition-colors ${
+                soundEffectEnabled ? "bg-zinc-800 text-zinc-100 border border-zinc-700" : "bg-zinc-950 text-zinc-500 border border-zinc-800"
+              }`}
+            >
+              <BellRing className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          onClick={() => setMediaPlayerOpen(true)}
+          className="p-3 rounded-2xl bg-zinc-900 border border-zinc-800 text-zinc-200 hover:text-white shadow-xl transition-all flex items-center gap-2 hover:scale-105"
+        >
+          <Music className={`w-4 h-4 ${isPlaying ? "text-emerald-400 animate-pulse" : "text-zinc-300"}`} />
+          <span className="text-xs font-semibold">Lo-Fi</span>
+        </button>
+      )}
+    </div>
+  );
+};
