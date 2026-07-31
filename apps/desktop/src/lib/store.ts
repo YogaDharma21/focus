@@ -62,8 +62,6 @@ export interface DesktopState {
   // Navigation & View
   currentView: ViewType;
   setView: (view: ViewType) => void;
-  isMiniWidget: boolean;
-  setMiniWidget: (mini: boolean) => void;
   isAlwaysOnTop: boolean;
   setAlwaysOnTop: (onTop: boolean) => void;
 
@@ -150,8 +148,6 @@ export const useDesktopStore = create<DesktopState>()(
       // Navigation
       currentView: "FOCUS",
       setView: (view) => set({ currentView: view }),
-      isMiniWidget: false,
-      setMiniWidget: (mini) => set({ isMiniWidget: mini }),
       isAlwaysOnTop: false,
       setAlwaysOnTop: (onTop) => set({ isAlwaysOnTop: onTop }),
 

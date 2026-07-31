@@ -1,5 +1,5 @@
 import React from 'react';
-import { Minus, Square, Copy, X, Pin, Sparkles, MonitorSmartphone } from 'lucide-react';
+import { Minus, Square, Copy, X, Pin, Sparkles } from 'lucide-react';
 import { electron } from '../../lib/electron';
 import { useDesktopStore } from '../../lib/store';
 
@@ -7,8 +7,6 @@ export const TitleBar: React.FC = () => {
   const { 
     isAlwaysOnTop, 
     setAlwaysOnTop, 
-    isMiniWidget, 
-    setMiniWidget, 
     timeLeft, 
     isActive, 
     timerState 
@@ -25,16 +23,6 @@ export const TitleBar: React.FC = () => {
     const nextState = !isAlwaysOnTop;
     electron.setAlwaysOnTop(nextState);
     setAlwaysOnTop(nextState);
-  };
-
-  const handleToggleMini = () => {
-    const nextMini = !isMiniWidget;
-    setMiniWidget(nextMini);
-    if (nextMini) {
-      electron.setWindowSize(380, 560);
-    } else {
-      electron.setWindowSize(1200, 800);
-    }
   };
 
   const handleMaximize = () => {
@@ -73,18 +61,6 @@ export const TitleBar: React.FC = () => {
           }`}
         >
           <Pin className="w-3.5 h-3.5" />
-        </button>
-
-        <button
-          onClick={handleToggleMini}
-          title={isMiniWidget ? "Expand Window" : "Mini Player Mode"}
-          className={`p-1.5 rounded-md transition-colors ${
-            isMiniWidget 
-              ? 'bg-zinc-700 text-white border border-zinc-600' 
-              : 'hover:bg-zinc-800 text-zinc-400 hover:text-zinc-100'
-          }`}
-        >
-          <MonitorSmartphone className="w-3.5 h-3.5" />
         </button>
 
         <div className="h-4 w-px bg-zinc-800 mx-1" />
