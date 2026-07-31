@@ -193,38 +193,7 @@ export const StatsJournal: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. Distraction Analysis Card */}
-      <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
-        <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-rose-950/60 border border-rose-800/60 flex items-center justify-center text-rose-400">
-            <BarChart2 className="w-4 h-4" />
-          </div>
-          <h3 className="text-sm font-bold text-white tracking-tight">Distraction Analysis</h3>
-        </div>
-
-        <p className="text-xs text-zinc-400 font-medium">
-          Most common: <strong className="text-white font-semibold">{mostCommonCategory}</strong> ({mostCommonPercent}%)
-        </p>
-
-        <div className="space-y-3 pt-1">
-          {distractionCategories.map((cat) => (
-            <div key={cat.name} className="space-y-1">
-              <div className="flex items-center justify-between text-xs font-semibold">
-                <span className="text-white">{cat.name}</span>
-                <span className="text-zinc-400 font-mono font-normal">{cat.count} ({cat.percent}%)</span>
-              </div>
-              <div className="w-full h-1.5 bg-zinc-800/80 rounded-full overflow-hidden">
-                <div 
-                  className="bg-purple-500 h-full rounded-full transition-all duration-500"
-                  style={{ width: `${cat.percent}%` }}
-                />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* 5. Focus Trend Card */}
+      {/* 4. Focus Trend Card */}
       <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
@@ -261,6 +230,37 @@ export const StatsJournal: React.FC = () => {
               <span key={day} className="flex-1 text-center">{day}</span>
             ))}
           </div>
+        </div>
+      </div>
+
+      {/* 5. Distraction Analysis Card (Placed under Focus Trend) */}
+      <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-rose-950/60 border border-rose-800/60 flex items-center justify-center text-rose-400">
+            <BarChart2 className="w-4 h-4" />
+          </div>
+          <h3 className="text-sm font-bold text-white tracking-tight">Distraction Analysis</h3>
+        </div>
+
+        <p className="text-xs text-zinc-400 font-medium">
+          Most common: <strong className="text-white font-semibold">{mostCommonCategory}</strong> ({mostCommonPercent}%)
+        </p>
+
+        <div className="space-y-3 pt-1">
+          {distractionCategories.map((cat) => (
+            <div key={cat.name} className="space-y-1">
+              <div className="flex items-center justify-between text-xs font-semibold">
+                <span className="text-white">{cat.name}</span>
+                <span className="text-zinc-400 font-mono font-normal">{cat.count} ({cat.percent}%)</span>
+              </div>
+              <div className="w-full h-1.5 bg-zinc-800/80 rounded-full overflow-hidden">
+                <div 
+                  className="bg-purple-500 h-full rounded-full transition-all duration-500"
+                  style={{ width: `${cat.percent}%` }}
+                />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
