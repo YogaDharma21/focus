@@ -1,5 +1,5 @@
 import React from 'react';
-import { Timer, CheckSquare, BarChart3, HeartHandshake, Maximize2, Palette } from 'lucide-react';
+import { Timer, CheckSquare, BarChart3, NotebookPen, Maximize2, Palette } from 'lucide-react';
 import { useDesktopStore, ViewType, BackgroundType } from '../../lib/store';
 import { ProjectInfoModal } from './ProjectInfoModal';
 
@@ -11,7 +11,7 @@ export const SidebarNav: React.FC = () => {
     { id: "FOCUS", label: "Timer", icon: Timer },
     { id: "TODO", label: "Tasks", icon: CheckSquare },
     { id: "JOURNAL", label: "Stats", icon: BarChart3 },
-    { id: "NOTES", label: "Mood Notes", icon: HeartHandshake },
+    { id: "NOTES", label: "Mood Notes", icon: NotebookPen },
   ];
 
   const backgrounds: { id: BackgroundType; label: string }[] = [

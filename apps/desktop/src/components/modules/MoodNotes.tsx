@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { HeartHandshake, Trash2, Plus } from 'lucide-react';
+import { NotebookPen, Trash2, Plus } from 'lucide-react';
 import { useDesktopStore, MoodNote } from '../../lib/store';
 
 export const MoodNotes: React.FC = () => {
@@ -36,7 +36,7 @@ export const MoodNotes: React.FC = () => {
       {/* Mood Entry Form */}
       <form onSubmit={handleSubmit} className="w-full md:w-80 shadcn-card p-5 space-y-4 shrink-0">
         <div className="flex items-center gap-2 pb-2 border-b border-zinc-800">
-          <HeartHandshake className="w-4 h-4 text-zinc-300" />
+          <NotebookPen className="w-4 h-4 text-zinc-300" />
           <h3 className="text-xs font-semibold text-zinc-200">Daily Focus Reflection</h3>
         </div>
 
