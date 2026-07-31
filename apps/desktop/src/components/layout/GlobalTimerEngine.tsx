@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { playCompletionSound } from '../../lib/sound';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
 
@@ -25,29 +26,7 @@ export const GlobalTimerEngine: React.FC = () => {
     setPreviousMode
   } = useDesktopStore();
 
-  const playCompletionSound = () => {
-    if (!soundEffectEnabled) return;
-    try {
-      const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
 
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(587.33, audioCtx.currentTime);
-      osc.frequency.exponentialRampToValueAtTime(880, audioCtx.currentTime + 0.3);
-
-      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.2);
-
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-
-      osc.start();
-      osc.stop(audioCtx.currentTime + 1.2);
-    } catch (e) {
-      console.warn("Audio chime failed", e);
-    }
-  };
 
   const handleCompleteSession = () => {
     setIsActive(false);

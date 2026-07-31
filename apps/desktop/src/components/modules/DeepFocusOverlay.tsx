@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { playCompletionSound } from '../../lib/sound';
 import { X, Play, Pause, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
@@ -58,6 +59,7 @@ export const DeepFocusOverlay: React.FC = () => {
 
   const handleCompleteSession = () => {
     setIsActive(false);
+    playCompletionSound();
 
     const title = activeTask?.text || sessionName || 'Focus Session';
 
