@@ -15,7 +15,6 @@ export const SidebarNav: React.FC = () => {
 
   const backgrounds: { id: BackgroundType; label: string }[] = [
     { id: "dark", label: "Dark Modern" },
-    { id: "gradient", label: "Aurora Gradient" },
     { id: "mountain", label: "Mountain Mist" },
     { id: "library", label: "Cozy Library" },
     { id: "cafe", label: "Lo-Fi Cafe" },
