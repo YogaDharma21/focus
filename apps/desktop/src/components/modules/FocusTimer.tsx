@@ -306,15 +306,17 @@ export const FocusTimer: React.FC = () => {
           </div>
         )}
 
-        {/* Custom Focus Title Textbox (Creates Task on Enter) */}
-        <input
-          type="text"
-          placeholder="Or type a custom focus... (Press Enter)"
-          value={sessionName}
-          onChange={(e) => setSessionName(e.target.value)}
-          onKeyDown={handleCustomFocusSubmit}
-          className="w-full bg-[#181818] border border-zinc-800/80 rounded-2xl px-4 py-2.5 text-xs text-zinc-200 text-center focus:outline-none focus:border-zinc-700 placeholder:text-zinc-600 shadow-inner"
-        />
+        {/* Custom Focus Title Textbox (Shown only when no task is selected) */}
+        {!activeTask && (
+          <input
+            type="text"
+            placeholder="Or type a custom focus... (Press Enter)"
+            value={sessionName}
+            onChange={(e) => setSessionName(e.target.value)}
+            onKeyDown={handleCustomFocusSubmit}
+            className="w-full bg-[#181818] border border-zinc-800/80 rounded-2xl px-4 py-2.5 text-xs text-zinc-200 text-center focus:outline-none focus:border-zinc-700 placeholder:text-zinc-600 shadow-inner"
+          />
+        )}
 
         {/* Subtasks checklist for selected active task */}
         {activeTask && activeTask.subtasks && activeTask.subtasks.length > 0 && (
