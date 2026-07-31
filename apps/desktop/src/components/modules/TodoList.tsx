@@ -255,7 +255,7 @@ export const TodoList: React.FC = () => {
                 type="text"
                 value={activeTodoDetails.text}
                 onChange={(e) => updateTodo(activeTodoDetails.id, { text: e.target.value })}
-                className="w-full shadcn-input px-3 py-1.5 text-xs font-semibold text-zinc-100"
+                className="w-full h-9 shadcn-input px-3 text-xs font-semibold text-zinc-100"
               />
             </div>
 
@@ -267,7 +267,7 @@ export const TodoList: React.FC = () => {
                 placeholder="Add task description..."
                 value={activeTodoDetails.description || ''}
                 onChange={(e) => updateTodo(activeTodoDetails.id, { description: e.target.value })}
-                className="w-full shadcn-input p-2.5 text-xs text-zinc-300 resize-none"
+                className="w-full shadcn-input p-3 text-xs text-zinc-300 resize-none"
               />
             </div>
 
@@ -281,7 +281,7 @@ export const TodoList: React.FC = () => {
                   max={100}
                   value={activeTodoDetails.estimatedPomodoros || 1}
                   onChange={(e) => updateTodo(activeTodoDetails.id, { estimatedPomodoros: Number(e.target.value) || 1 })}
-                  className="w-full shadcn-input px-3 py-1 text-xs text-center font-mono"
+                  className="w-full h-9 shadcn-input px-3 text-xs text-center font-mono"
                 />
               </div>
 
@@ -293,7 +293,7 @@ export const TodoList: React.FC = () => {
                   max={100}
                   value={activeTodoDetails.completedPomodoros || 0}
                   onChange={(e) => updateTodo(activeTodoDetails.id, { completedPomodoros: Number(e.target.value) || 0 })}
-                  className="w-full shadcn-input px-3 py-1 text-xs text-center font-mono"
+                  className="w-full h-9 shadcn-input px-3 text-xs text-center font-mono"
                 />
               </div>
             </div>
@@ -305,7 +305,7 @@ export const TodoList: React.FC = () => {
                 type="datetime-local"
                 value={activeTodoDetails.deadline || ''}
                 onChange={(e) => updateTodo(activeTodoDetails.id, { deadline: e.target.value })}
-                className="w-full shadcn-input px-3 py-1 text-xs text-zinc-300 font-mono"
+                className="w-full h-9 shadcn-input px-3 text-xs text-zinc-300 font-mono"
               />
             </div>
 
@@ -317,7 +317,7 @@ export const TodoList: React.FC = () => {
                 placeholder="Add task notes or reflections..."
                 value={activeTodoDetails.notes || ''}
                 onChange={(e) => updateTodo(activeTodoDetails.id, { notes: e.target.value })}
-                className="w-full shadcn-input p-2.5 text-xs text-zinc-300 resize-none"
+                className="w-full shadcn-input p-3 text-xs text-zinc-300 resize-none"
               />
             </div>
 
@@ -326,7 +326,7 @@ export const TodoList: React.FC = () => {
               <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block">Subtasks</span>
               <div className="space-y-1.5">
                 {activeTodoDetails.subtasks?.map((sub) => (
-                  <div key={sub.id} className="flex items-center gap-2 text-xs bg-zinc-900 p-2 rounded-lg border border-zinc-800">
+                  <div key={sub.id} className="flex items-center gap-2 text-xs bg-zinc-900 p-2.5 rounded-xl border border-zinc-800">
                     <button
                       onClick={() => toggleSubtask(activeTodoDetails.id, sub.id)}
                       className="text-zinc-400 hover:text-zinc-100 shrink-0"
@@ -343,19 +343,19 @@ export const TodoList: React.FC = () => {
                       onClick={() => deleteSubtask(activeTodoDetails.id, sub.id)}
                       className="text-zinc-500 hover:text-rose-400 transition-colors shrink-0"
                     >
-                      <Trash2 className="w-3 h-3" />
+                      <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   </div>
                 ))}
               </div>
 
-              <div className="flex gap-1.5 pt-1">
+              <div className="flex items-center gap-2 pt-1">
                 <input
                   type="text"
                   placeholder="Add subtask..."
                   value={newSubtaskInput}
                   onChange={(e) => setNewSubtaskInput(e.target.value)}
-                  className="flex-1 shadcn-input px-2.5 py-1 text-xs"
+                  className="flex-1 h-9 shadcn-input px-3 text-xs"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && newSubtaskInput.trim()) {
                       e.preventDefault();
@@ -371,7 +371,7 @@ export const TodoList: React.FC = () => {
                       setNewSubtaskInput("");
                     }
                   }}
-                  className="px-3 py-1 rounded-lg bg-zinc-100 text-zinc-950 font-semibold text-xs hover:bg-zinc-200 transition-colors"
+                  className="h-9 px-4 rounded-xl bg-zinc-100 text-zinc-950 font-semibold text-xs hover:bg-zinc-200 transition-colors shrink-0 flex items-center justify-center"
                 >
                   Add
                 </button>
