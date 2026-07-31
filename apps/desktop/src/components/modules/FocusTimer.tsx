@@ -21,6 +21,7 @@ export const FocusTimer: React.FC = () => {
     pomodoroSettings,
     setPomodoroSettings,
     todos,
+    addTodo,
     selectedTodoId,
     setSelectedTodoId,
     toggleTodo,
@@ -88,7 +89,7 @@ export const FocusTimer: React.FC = () => {
     playCompletionSound();
 
     const currentTask = todos.find(t => t.id === selectedTodoId);
-    const title = sessionName || currentTask?.text || 'Focus Session';
+    const title = currentTask?.text || sessionName || 'Focus Session';
 
     if (timerState === 'WORK') {
       electron.showNotification("Focus Session Complete! 🎉", "Great work! Time for a break.");
@@ -120,7 +121,7 @@ export const FocusTimer: React.FC = () => {
     playCompletionSound();
 
     const currentTask = todos.find(t => t.id === selectedTodoId);
-    const title = sessionName || currentTask?.text || 'Flow Session';
+    const title = currentTask?.text || sessionName || 'Flow Session';
     const breakDurationSeconds = Math.max(60, Math.floor(flowTimeElapsed / 5));
 
     addSession({
@@ -159,6 +160,28 @@ export const FocusTimer: React.FC = () => {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
+  const handleCustomFocusSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && sessionName.trim()) {
+      e.preventDefault();
+      const taskText = sessionName.trim();
+      const newTaskId = crypto.randomUUID();
+
+      addTodo({
+        id: newTaskId,
+        text: taskText,
+        completed: false,
+        priority: "medium",
+        groupId: "current",
+        estimatedPomodoros: 1,
+        completedPomodoros: 0,
+        subtasks: []
+      });
+
+      setSelectedTodoId(newTaskId);
+      setSessionName("");
+    }
+  };
+
   const activeSeconds = timerMode === 'POMODORO' ? timeLeft : flowTimeElapsed;
   const totalDurationSeconds = timerMode === 'POMODORO' 
     ? (timerState === 'WORK' ? pomodoroSettings.work * 60 : pomodoroSettings.break * 60)
@@ -170,7 +193,6 @@ export const FocusTimer: React.FC = () => {
 
   const activeTask = todos.find((t) => t.id === selectedTodoId);
 
-  // Tab switching logic
   const handleSelectTab = (tab: 'POMODORO' | 'BREAK' | 'FLOW') => {
     setIsActive(false);
     if (tab === 'POMODORO') {
@@ -283,12 +305,13 @@ export const FocusTimer: React.FC = () => {
           </div>
         )}
 
-        {/* Custom Focus Title Textbox */}
+        {/* Custom Focus Title Textbox (Creates Task on Enter) */}
         <input
           type="text"
-          placeholder="Or type a custom focus..."
+          placeholder="Or type a custom focus... (Press Enter)"
           value={sessionName}
           onChange={(e) => setSessionName(e.target.value)}
+          onKeyDown={handleCustomFocusSubmit}
           className="w-full bg-[#181818] border border-zinc-800/80 rounded-2xl px-4 py-2.5 text-xs text-zinc-200 text-center focus:outline-none focus:border-zinc-700 placeholder:text-zinc-600 shadow-inner"
         />
       </div>
@@ -301,9 +324,8 @@ export const FocusTimer: React.FC = () => {
         />
       </div>
 
-      {/* 5. Horizontal Control Bar with 5 Buttons */}
+      {/* 5. Horizontal Control Bar */}
       <div className="flex items-center justify-center gap-3 pt-2">
-        {/* Reset Button */}
         <button
           onClick={resetTimer}
           className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-all flex items-center justify-center shadow-md active:scale-95"
@@ -312,7 +334,6 @@ export const FocusTimer: React.FC = () => {
           <RotateCcw className="w-4 h-4" />
         </button>
 
-        {/* Distraction Alert Button */}
         <button
           onClick={() => addDistraction('Distraction')}
           className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-rose-400 transition-all flex items-center justify-center shadow-md active:scale-95 relative"
@@ -326,7 +347,6 @@ export const FocusTimer: React.FC = () => {
           )}
         </button>
 
-        {/* Center Main Play/Pause Button */}
         <button
           onClick={toggleTimer}
           className="w-16 h-16 rounded-2xl bg-[#e6e6e6] hover:bg-white text-zinc-950 shadow-xl transition-all active:scale-95 flex items-center justify-center"
@@ -339,7 +359,6 @@ export const FocusTimer: React.FC = () => {
           )}
         </button>
 
-        {/* Settings Button */}
         <button
           onClick={() => setShowSettings(!showSettings)}
           className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-all flex items-center justify-center shadow-md active:scale-95"
@@ -348,7 +367,6 @@ export const FocusTimer: React.FC = () => {
           <SlidersHorizontal className="w-4 h-4" />
         </button>
 
-        {/* Complete Session / Task Button */}
         <button
           onClick={() => {
             if (activeTask) {
