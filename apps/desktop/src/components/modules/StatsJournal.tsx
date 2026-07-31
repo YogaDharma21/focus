@@ -137,9 +137,11 @@ export const StatsJournal: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Longest Streak Card */}
         <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
-          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
-            <Flame className="w-4 h-4 text-amber-500" />
-            <span>Longest Streak</span>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-amber-950/60 border border-amber-800/60 flex items-center justify-center text-amber-400">
+              <Flame className="w-4 h-4" />
+            </div>
+            <span className="text-sm font-bold text-white tracking-tight">Longest Streak</span>
           </div>
 
           <div className="space-y-2">
@@ -156,9 +158,11 @@ export const StatsJournal: React.FC = () => {
 
         {/* Completion Rate Card */}
         <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
-          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
-            <Target className="w-4 h-4 text-emerald-400" />
-            <span>Completion Rate</span>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-emerald-950/60 border border-emerald-800/60 flex items-center justify-center text-emerald-400">
+              <Target className="w-4 h-4" />
+            </div>
+            <span className="text-sm font-bold text-white tracking-tight">Completion Rate</span>
           </div>
 
           <div className="space-y-1">
