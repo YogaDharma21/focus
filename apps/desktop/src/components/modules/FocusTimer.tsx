@@ -267,7 +267,7 @@ export const FocusTimer: React.FC = () => {
           className="w-full border border-dashed border-zinc-800 hover:border-zinc-700 bg-zinc-950/40 rounded-2xl px-4 py-3 text-xs text-zinc-300 flex items-center justify-between transition-colors shadow-sm"
         >
           <span className="truncate">
-            {activeTask ? `🎯 ${activeTask.text}` : "What are you focusing on?"}
+            {activeTask ? activeTask.text : "What are you focusing on?"}
           </span>
           <ChevronDown className="w-4 h-4 text-zinc-500 shrink-0 ml-2" />
         </button>
