@@ -1,20 +1,43 @@
-import React from 'react';
-import { Play, Pause } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { 
+  Play, Pause, AlertTriangle, CheckCircle2, Coffee, Timer as TimerIcon 
+} from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 
 export const FloatingTimerCapsule: React.FC = () => {
   const { 
     currentView, 
-    setView, 
     timerMode, 
+    setTimerMode,
     timerState, 
+    setTimerState,
     timeLeft, 
+    setTimeLeft,
     flowTimeElapsed, 
+    setFlowTimeElapsed,
     isActive, 
     setIsActive,
+    pomodoroSettings,
     todos,
-    selectedTodoId 
+    selectedTodoId,
+    toggleTodo,
+    addDistraction,
+    sessionName
   } = useDesktopStore();
+
+  const [isExpanded, setIsExpanded] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Close popover on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        setIsExpanded(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Only show when user is NOT on the main FOCUS view
   if (currentView === 'FOCUS') return null;
@@ -30,45 +53,173 @@ export const FloatingTimerCapsule: React.FC = () => {
 
   const activeTask = todos.find(t => t.id === selectedTodoId);
 
+  const activeTab = timerMode === 'STOPWATCH' 
+    ? 'FLOW' 
+    : (timerState === 'BREAK' ? 'BREAK' : 'POMODORO');
+
+  const handleSelectTab = (tab: 'POMODORO' | 'BREAK' | 'FLOW') => {
+    setIsActive(false);
+    if (tab === 'POMODORO') {
+      setTimerMode('POMODORO');
+      setTimerState('WORK');
+      setTimeLeft(pomodoroSettings.work * 60);
+    } else if (tab === 'BREAK') {
+      setTimerMode('POMODORO');
+      setTimerState('BREAK');
+      setTimeLeft(pomodoroSettings.break * 60);
+    } else {
+      setTimerMode('STOPWATCH');
+      setFlowTimeElapsed(0);
+    }
+  };
+
   return (
-    <div className="fixed top-12 left-1/2 -translate-x-1/2 z-40 bg-[#141414] border border-zinc-800/90 rounded-2xl px-4 py-2 flex items-center justify-between w-80 shadow-2xl animate-in slide-in-from-top-2 duration-300 select-none">
-      {/* Click label to navigate back to Timer view */}
-      <button 
-        onClick={() => setView('FOCUS')}
-        className="flex items-center gap-2 flex-1 min-w-0 text-left hover:opacity-80 transition-opacity"
-        title="Open Timer"
-      >
-        <span className="text-sm">🍅</span>
-        <span className="text-xs font-semibold text-white tracking-tight">{timerLabel}</span>
-        {activeTask && (
-          <span className="text-[10px] text-zinc-400 truncate max-w-[80px]">
-            · {activeTask.text}
-          </span>
-        )}
-      </button>
-
-      {/* Time & Play/Pause Controls */}
-      <div className="flex items-center gap-3 shrink-0">
+    <div ref={containerRef} className="fixed top-12 left-1/2 -translate-x-1/2 z-40 select-none">
+      {/* 1. Compact Pill (When not expanded) */}
+      {!isExpanded ? (
         <button
-          onClick={() => setView('FOCUS')}
-          className="text-xs font-mono font-bold text-white tracking-wider hover:text-zinc-300 transition-colors"
-          title="Open Timer"
+          onClick={() => setIsExpanded(true)}
+          className="bg-[#141414] border border-zinc-800/90 rounded-2xl px-4 py-2 flex items-center justify-between w-80 shadow-2xl hover:bg-zinc-900 transition-all active:scale-98"
         >
-          {timeString}
-        </button>
+          <div className="flex items-center gap-2 flex-1 min-w-0 text-left">
+            <span className="text-sm">🍅</span>
+            <span className="text-xs font-semibold text-white tracking-tight">{timerLabel}</span>
+            {activeTask && (
+              <span className="text-[10px] text-zinc-400 truncate max-w-[80px]">
+                · {activeTask.text}
+              </span>
+            )}
+          </div>
 
-        <button
-          onClick={() => setIsActive(!isActive)}
-          className="w-7 h-7 rounded-xl bg-zinc-100 text-zinc-950 hover:bg-zinc-200 transition-all flex items-center justify-center shrink-0 shadow-sm active:scale-95"
-          title={isActive ? "Pause Timer" : "Start Timer"}
-        >
-          {isActive ? (
-            <Pause className="w-3.5 h-3.5 fill-zinc-950" />
-          ) : (
-            <Play className="w-3.5 h-3.5 fill-zinc-950 ml-0.5" />
-          )}
+          <div className="flex items-center gap-3 shrink-0">
+            <span className="text-xs font-mono font-bold text-white tracking-wider">
+              {timeString}
+            </span>
+            <div
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsActive(!isActive);
+              }}
+              className="w-7 h-7 rounded-xl bg-zinc-100 text-zinc-950 hover:bg-zinc-200 transition-all flex items-center justify-center shrink-0 shadow-sm"
+              title={isActive ? "Pause Timer" : "Start Timer"}
+            >
+              {isActive ? (
+                <Pause className="w-3.5 h-3.5 fill-zinc-950" />
+              ) : (
+                <Play className="w-3.5 h-3.5 fill-zinc-950 ml-0.5" />
+              )}
+            </div>
+          </div>
         </button>
-      </div>
+      ) : (
+        /* 2. Expanded Card Popup matching user image mockup */
+        <div className="w-[420px] bg-[#121214] border border-zinc-800/90 rounded-2xl p-5 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
+          {/* Header Row */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🍅</span>
+              <span className="text-sm font-bold text-white tracking-tight">{timerLabel}</span>
+            </div>
+            <span className="text-2xl font-extrabold font-mono text-white tracking-tight">
+              {timeString}
+            </span>
+          </div>
+
+          {/* Mode Selector Capsule Tabs */}
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => handleSelectTab('POMODORO')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                activeTab === 'POMODORO'
+                  ? 'bg-zinc-100 text-zinc-950 shadow-sm'
+                  : 'bg-[#1a1a1c] text-zinc-400 border border-zinc-800/80 hover:text-zinc-200'
+              }`}
+            >
+              <span>🍅</span>
+              <span>Pomodoro</span>
+            </button>
+
+            <button
+              onClick={() => handleSelectTab('BREAK')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                activeTab === 'BREAK'
+                  ? 'bg-zinc-100 text-zinc-950 shadow-sm'
+                  : 'bg-[#1a1a1c] text-zinc-400 border border-zinc-800/80 hover:text-zinc-200'
+              }`}
+            >
+              <Coffee className="w-3.5 h-3.5" />
+              <span>Break</span>
+            </button>
+
+            <button
+              onClick={() => handleSelectTab('FLOW')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+                activeTab === 'FLOW'
+                  ? 'bg-zinc-100 text-zinc-950 shadow-sm'
+                  : 'bg-[#1a1a1c] text-zinc-400 border border-zinc-800/80 hover:text-zinc-200'
+              }`}
+            >
+              <TimerIcon className="w-3.5 h-3.5" />
+              <span>Flow</span>
+            </button>
+          </div>
+
+          {/* Horizontal Line Divider */}
+          <div className="border-t border-zinc-800/80 pt-2" />
+
+          {/* Focus Item Text & Work Category Badge */}
+          <div className="space-y-2">
+            <p className="text-sm font-semibold text-zinc-200 truncate">
+              {activeTask ? activeTask.text : (sessionName || "General Focus")}
+            </p>
+            <span className="inline-block px-3 py-1 rounded-full bg-zinc-800/80 border border-zinc-700/80 text-[11px] font-medium text-zinc-300">
+              Work
+            </span>
+          </div>
+
+          {/* Bottom Controls Bar */}
+          <div className="flex items-center justify-end gap-2.5 pt-2">
+            {/* Complete Button */}
+            <button
+              onClick={() => {
+                if (activeTask) toggleTodo(activeTask.id);
+                else setIsActive(false);
+              }}
+              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#181818] border border-zinc-800 text-xs font-medium text-zinc-200 hover:bg-zinc-800 transition-colors"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Complete</span>
+            </button>
+
+            {/* Distraction Alert Button */}
+            <button
+              onClick={() => addDistraction('Distraction')}
+              className="w-9 h-9 rounded-xl bg-[#181818] border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-rose-400 transition-colors"
+              title="Log Distraction"
+            >
+              <AlertTriangle className="w-4 h-4" />
+            </button>
+
+            {/* Play/Pause Button */}
+            <button
+              onClick={() => setIsActive(!isActive)}
+              className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-zinc-100 text-zinc-950 font-semibold text-xs hover:bg-zinc-200 transition-colors shadow-sm"
+            >
+              {isActive ? (
+                <>
+                  <Pause className="w-3.5 h-3.5 fill-zinc-950" />
+                  <span>Pause</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-3.5 h-3.5 fill-zinc-950 ml-0.5" />
+                  <span>Start</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
