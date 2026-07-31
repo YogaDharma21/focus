@@ -118,8 +118,12 @@ export const FloatingTimerCapsule: React.FC = () => {
       ) : (
         /* 2. Expanded Card Popup matching user image mockup */
         <div className="w-[420px] bg-[#121214] border border-zinc-800/90 rounded-2xl p-5 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200 relative">
-          {/* Header Row */}
-          <div className="flex items-center justify-between">
+          {/* Header Row (Clicking collapses back to default compact pill) */}
+          <div 
+            onClick={() => setIsExpanded(false)}
+            className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity"
+            title="Click to collapse widget"
+          >
             <div className="flex items-center gap-2">
               <span className="text-lg">🍅</span>
               <span className="text-sm font-bold text-white tracking-tight">{timerLabel}</span>
