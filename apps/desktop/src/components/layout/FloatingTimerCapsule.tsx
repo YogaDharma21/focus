@@ -78,25 +78,25 @@ export const FloatingTimerCapsule: React.FC = () => {
   };
 
   return (
-    <div ref={containerRef} className="fixed top-12 left-1/2 -translate-x-1/2 z-40 select-none">
-      {/* 1. Compact Pill (When not expanded) */}
+    <div ref={containerRef} className="fixed top-1 left-1/2 -translate-x-1/2 z-50 select-none no-drag">
+      {/* 1. Compact Pill inside TitleBar (When not expanded) */}
       {!isExpanded ? (
         <button
           onClick={() => setIsExpanded(true)}
-          className="bg-[#141414] border border-zinc-800/90 rounded-2xl px-4 py-2 flex items-center justify-between w-80 shadow-2xl hover:bg-zinc-900 transition-all active:scale-98"
+          className="bg-zinc-900 border border-zinc-800 rounded-full px-3 py-1 flex items-center justify-between gap-3 shadow-md hover:bg-zinc-800 hover:border-zinc-700 transition-all active:scale-98 text-xs"
         >
-          <div className="flex items-center gap-2 flex-1 min-w-0 text-left">
-            <span className="text-sm">🍅</span>
-            <span className="text-xs font-semibold text-white tracking-tight">{timerLabel}</span>
+          <div className="flex items-center gap-1.5 min-w-0 text-left">
+            <span className="text-xs">🍅</span>
+            <span className="text-[11px] font-semibold text-zinc-200 tracking-tight">{timerLabel}</span>
             {activeTask && (
-              <span className="text-[10px] text-zinc-400 truncate max-w-[80px]">
+              <span className="text-[10px] text-zinc-400 truncate max-w-[70px]">
                 · {activeTask.text}
               </span>
             )}
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
-            <span className="text-xs font-mono font-bold text-white tracking-wider">
+          <div className="flex items-center gap-2 shrink-0">
+            <span className="text-[11px] font-mono font-bold text-white tracking-wider">
               {timeString}
             </span>
             <div
@@ -104,20 +104,20 @@ export const FloatingTimerCapsule: React.FC = () => {
                 e.stopPropagation();
                 setIsActive(!isActive);
               }}
-              className="w-7 h-7 rounded-xl bg-zinc-100 text-zinc-950 hover:bg-zinc-200 transition-all flex items-center justify-center shrink-0 shadow-sm"
+              className="w-5 h-5 rounded-full bg-zinc-100 text-zinc-950 hover:bg-zinc-200 transition-all flex items-center justify-center shrink-0 shadow-sm"
               title={isActive ? "Pause Timer" : "Start Timer"}
             >
               {isActive ? (
-                <Pause className="w-3.5 h-3.5 fill-zinc-950" />
+                <Pause className="w-3 h-3 fill-zinc-950" />
               ) : (
-                <Play className="w-3.5 h-3.5 fill-zinc-950 ml-0.5" />
+                <Play className="w-3 h-3 fill-zinc-950 ml-0.5" />
               )}
             </div>
           </div>
         </button>
       ) : (
-        /* 2. Expanded Card Popup matching user image mockup */
-        <div className="w-[420px] bg-[#121214] border border-zinc-800/90 rounded-2xl p-5 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200 relative">
+        /* 2. Expanded Card Popup dropdown matching user image mockup */
+        <div className="w-[380px] bg-[#121214] border border-zinc-800 rounded-2xl p-4 shadow-2xl space-y-3.5 animate-in zoom-in-95 duration-200 relative mt-1">
           {/* Header Row (Clicking collapses back to default compact pill) */}
           <div 
             onClick={() => setIsExpanded(false)}
@@ -125,10 +125,10 @@ export const FloatingTimerCapsule: React.FC = () => {
             title="Click to collapse widget"
           >
             <div className="flex items-center gap-2">
-              <span className="text-lg">🍅</span>
-              <span className="text-sm font-bold text-white tracking-tight">{timerLabel}</span>
+              <span className="text-base">🍅</span>
+              <span className="text-xs font-bold text-white tracking-tight">{timerLabel}</span>
             </div>
-            <span className="text-2xl font-extrabold font-mono text-white tracking-tight">
+            <span className="text-xl font-extrabold font-mono text-white tracking-tight">
               {timeString}
             </span>
           </div>
@@ -137,7 +137,7 @@ export const FloatingTimerCapsule: React.FC = () => {
           <div className="flex items-center gap-2">
             <button
               onClick={() => handleSelectTab('POMODORO')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-1 rounded-xl text-[11px] font-semibold flex items-center gap-1.5 transition-all ${
                 activeTab === 'POMODORO'
                   ? 'bg-zinc-100 text-zinc-950 shadow-sm'
                   : 'bg-[#1a1a1c] text-zinc-400 border border-zinc-800/80 hover:text-zinc-200'
@@ -149,51 +149,51 @@ export const FloatingTimerCapsule: React.FC = () => {
 
             <button
               onClick={() => handleSelectTab('BREAK')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-1 rounded-xl text-[11px] font-semibold flex items-center gap-1.5 transition-all ${
                 activeTab === 'BREAK'
                   ? 'bg-zinc-100 text-zinc-950 shadow-sm'
                   : 'bg-[#1a1a1c] text-zinc-400 border border-zinc-800/80 hover:text-zinc-200'
               }`}
             >
-              <Coffee className="w-3.5 h-3.5" />
+              <Coffee className="w-3 h-3" />
               <span>Break</span>
             </button>
 
             <button
               onClick={() => handleSelectTab('FLOW')}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
+              className={`px-3 py-1 rounded-xl text-[11px] font-semibold flex items-center gap-1.5 transition-all ${
                 activeTab === 'FLOW'
                   ? 'bg-zinc-100 text-zinc-950 shadow-sm'
                   : 'bg-[#1a1a1c] text-zinc-400 border border-zinc-800/80 hover:text-zinc-200'
               }`}
             >
-              <TimerIcon className="w-3.5 h-3.5" />
+              <TimerIcon className="w-3 h-3" />
               <span>Flow</span>
             </button>
           </div>
 
           {/* Horizontal Line Divider */}
-          <div className="border-t border-zinc-800/80 pt-2" />
+          <div className="border-t border-zinc-800/80 pt-1" />
 
           {/* Focus Item Text & Work Category Badge */}
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-zinc-200 truncate">
+          <div className="space-y-1.5">
+            <p className="text-xs font-semibold text-zinc-200 truncate">
               {activeTask ? activeTask.text : (sessionName || "General Focus")}
             </p>
-            <span className="inline-block px-3 py-1 rounded-full bg-zinc-800/80 border border-zinc-700/80 text-[11px] font-medium text-zinc-300">
+            <span className="inline-block px-2.5 py-0.5 rounded-full bg-zinc-800/80 border border-zinc-700/80 text-[10px] font-medium text-zinc-300">
               Work
             </span>
           </div>
 
           {/* Bottom Controls Bar */}
-          <div className="flex items-center justify-end gap-2.5 pt-2 relative">
+          <div className="flex items-center justify-end gap-2 pt-1 relative">
             {/* Complete Button */}
             <button
               onClick={() => {
                 if (activeTask) toggleTodo(activeTask.id);
                 else setIsActive(false);
               }}
-              className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#181818] border border-zinc-800 text-xs font-medium text-zinc-200 hover:bg-zinc-800 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#181818] border border-zinc-800 text-[11px] font-medium text-zinc-200 hover:bg-zinc-800 transition-colors"
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>Complete</span>
@@ -203,14 +203,14 @@ export const FloatingTimerCapsule: React.FC = () => {
             <div className="relative">
               <button
                 onClick={() => setShowDistractionMenu(!showDistractionMenu)}
-                className="w-9 h-9 rounded-xl bg-[#181818] border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-rose-400 transition-colors"
+                className="w-8 h-8 rounded-xl bg-[#181818] border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-rose-400 transition-colors"
                 title="Log Distraction"
               >
-                <AlertTriangle className="w-4 h-4" />
+                <AlertTriangle className="w-3.5 h-3.5" />
               </button>
 
               {showDistractionMenu && (
-                <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-44 bg-[#181818] border border-zinc-800/90 rounded-2xl shadow-2xl z-50 p-2 space-y-1 animate-in zoom-in-95 duration-150">
+                <div className="absolute bottom-11 left-1/2 -translate-x-1/2 w-40 bg-[#181818] border border-zinc-800/90 rounded-2xl shadow-2xl z-50 p-2 space-y-1 animate-in zoom-in-95 duration-150">
                   {DISTRACTION_OPTIONS.map((opt) => (
                     <button
                       key={opt}
@@ -218,7 +218,7 @@ export const FloatingTimerCapsule: React.FC = () => {
                         addDistraction(opt);
                         setShowDistractionMenu(false);
                       }}
-                      className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-100 hover:bg-zinc-800 transition-colors"
+                      className="w-full text-left px-3 py-1.5 rounded-xl text-[11px] font-semibold text-zinc-100 hover:bg-zinc-800 transition-colors"
                     >
                       {opt}
                     </button>
@@ -230,16 +230,16 @@ export const FloatingTimerCapsule: React.FC = () => {
             {/* Play/Pause Button */}
             <button
               onClick={() => setIsActive(!isActive)}
-              className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-zinc-100 text-zinc-950 font-semibold text-xs hover:bg-zinc-200 transition-colors shadow-sm"
+              className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-zinc-100 text-zinc-950 font-semibold text-[11px] hover:bg-zinc-200 transition-colors shadow-sm"
             >
               {isActive ? (
                 <>
-                  <Pause className="w-3.5 h-3.5 fill-zinc-950" />
+                  <Pause className="w-3 h-3 fill-zinc-950" />
                   <span>Pause</span>
                 </>
               ) : (
                 <>
-                  <Play className="w-3.5 h-3.5 fill-zinc-950 ml-0.5" />
+                  <Play className="w-3 h-3 fill-zinc-950 ml-0.5" />
                   <span>Start</span>
                 </>
               )}
