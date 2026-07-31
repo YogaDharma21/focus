@@ -10,6 +10,7 @@ import { BackgroundDisplay } from './components/modules/BackgroundDisplay';
 import { DeepFocusOverlay } from './components/modules/DeepFocusOverlay';
 import { MiniPlayerWidget } from './components/modules/MiniPlayerWidget';
 import { FloatingTimerCapsule } from './components/layout/FloatingTimerCapsule';
+import { GlobalTimerEngine } from './components/layout/GlobalTimerEngine';
 import { useDesktopStore } from './lib/store';
 import { electron } from './lib/electron';
 
@@ -48,6 +49,7 @@ export const App: React.FC = () => {
   if (isMiniWidget) {
     return (
       <div className="w-screen h-screen bg-zinc-950 font-sans overflow-hidden">
+        <GlobalTimerEngine />
         <TitleBar />
         <div className="h-[calc(100vh-40px)]">
           <MiniPlayerWidget />
@@ -58,6 +60,9 @@ export const App: React.FC = () => {
 
   return (
     <div className="w-screen h-screen bg-zinc-950 font-sans overflow-hidden flex flex-col relative select-none">
+      {/* Global Background Timer Ticker Engine */}
+      <GlobalTimerEngine />
+
       <BackgroundDisplay />
       
       {/* Frameless Custom Window Titlebar */}
