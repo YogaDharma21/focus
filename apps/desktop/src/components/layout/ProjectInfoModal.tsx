@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { Info, Github, ExternalLink, X, Code2, Sparkles } from 'lucide-react';
+import { Info, Github, ExternalLink, X, Sparkles } from 'lucide-react';
 
 const PROJECT_INFO = {
   name: "Focus Desktop",
   version: "v1.2.0",
   description: "A minimalist, high-performance desktop productivity suite designed to keep you in flow state. Features flexible Pomodoro & Flow timers, smart break calculation, task management with subtasks, streak & distraction analytics, mood reflections, and ambient music.",
   github: "https://github.com/YogaDharma21/focus",
-  issues: "https://github.com/YogaDharma21/focus/issues",
-  techStack: ["Electron", "Vite", "React 19", "TypeScript", "Tailwind CSS", "Zustand"]
+  issues: "https://github.com/YogaDharma21/focus/issues"
 };
 
 export const ProjectInfoModal: React.FC = () => {
@@ -57,24 +56,6 @@ export const ProjectInfoModal: React.FC = () => {
             <p className="text-xs text-zinc-300 leading-relaxed bg-zinc-950/60 p-3.5 rounded-xl border border-zinc-800/80">
               {PROJECT_INFO.description}
             </p>
-
-            {/* Tech Stack */}
-            <div className="space-y-2">
-              <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-400">
-                <Code2 className="w-3.5 h-3.5" />
-                <span>Built With</span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {PROJECT_INFO.techStack.map((tech) => (
-                  <span
-                    key={tech}
-                    className="px-2.5 py-1 rounded-lg bg-zinc-800 border border-zinc-700 text-[11px] font-medium text-zinc-200"
-                  >
-                    {tech}
-                  </span>
-                ))}
-              </div>
-            </div>
 
             {/* GitHub Links */}
             <div className="space-y-2 pt-2 border-t border-zinc-800">
