@@ -81,7 +81,6 @@ export const FocusTimer: React.FC = () => {
         if (timerMode === 'POMODORO') {
           setTimeLeft((prev) => {
             if (prev <= 1) {
-              handlePomodoroComplete();
               return 0;
             }
             return prev - 1;
@@ -96,6 +95,12 @@ export const FocusTimer: React.FC = () => {
       if (interval) clearInterval(interval);
     };
   }, [isActive, timerMode]);
+
+  useEffect(() => {
+    if (isActive && timerMode === 'POMODORO' && timeLeft === 0) {
+      handlePomodoroComplete();
+    }
+  }, [timeLeft, isActive, timerMode]);
 
   const handlePomodoroComplete = () => {
     setIsActive(false);
