@@ -1,6 +1,8 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, Play, Pause, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
+
+const DISTRACTION_OPTIONS = ["Phone", "Social Media", "Bathroom", "Meeting", "Other"];
 
 export const DeepFocusOverlay: React.FC = () => {
   const { 
@@ -16,6 +18,8 @@ export const DeepFocusOverlay: React.FC = () => {
     selectedTodoId,
     toggleTodo
   } = useDesktopStore();
+
+  const [showDistractionMenu, setShowDistractionMenu] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -62,15 +66,34 @@ export const DeepFocusOverlay: React.FC = () => {
         </h1>
 
         {/* Minimal Control Row */}
-        <div className="flex items-center gap-6">
-          {/* Distraction Alert */}
-          <button
-            onClick={() => addDistraction('Distraction')}
-            className="w-11 h-11 rounded-xl bg-[#141414] border border-zinc-800/80 flex items-center justify-center text-zinc-400 hover:text-rose-400 transition-colors shadow-sm"
-            title="Log Distraction"
-          >
-            <AlertTriangle className="w-4 h-4" />
-          </button>
+        <div className="flex items-center gap-6 relative">
+          {/* Distraction Alert Popover Button */}
+          <div className="relative">
+            <button
+              onClick={() => setShowDistractionMenu(!showDistractionMenu)}
+              className="w-11 h-11 rounded-xl bg-[#141414] border border-zinc-800/80 flex items-center justify-center text-zinc-400 hover:text-rose-400 transition-colors shadow-sm"
+              title="Log Distraction"
+            >
+              <AlertTriangle className="w-4 h-4" />
+            </button>
+
+            {showDistractionMenu && (
+              <div className="absolute bottom-14 left-1/2 -translate-x-1/2 w-48 bg-[#181818] border border-zinc-800/90 rounded-2xl shadow-2xl z-50 p-2 space-y-1 animate-in zoom-in-95 duration-150">
+                {DISTRACTION_OPTIONS.map((opt) => (
+                  <button
+                    key={opt}
+                    onClick={() => {
+                      addDistraction(opt);
+                      setShowDistractionMenu(false);
+                    }}
+                    className="w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-100 hover:bg-zinc-800 transition-colors"
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
           {/* Play/Pause */}
           <button
