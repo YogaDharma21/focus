@@ -5,8 +5,7 @@ const PROJECT_INFO = {
   name: "Focus Desktop",
   version: "v1.2.0",
   description: "A minimalist, high-performance desktop productivity suite designed to keep you in flow state. Features flexible Pomodoro & Flow timers, smart break calculation, task management with subtasks, streak & distraction analytics, mood reflections, and ambient music.",
-  github: "https://github.com/YogaDharma21/focus",
-  issues: "https://github.com/YogaDharma21/focus/issues"
+  github: "https://github.com/YogaDharma21/focus"
 };
 
 export const ProjectInfoModal: React.FC = () => {
@@ -26,8 +25,14 @@ export const ProjectInfoModal: React.FC = () => {
 
       {/* Info Dialog Modal */}
       {open && (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
-          <div className="w-96 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6 space-y-5 relative text-zinc-100 select-none">
+        <div 
+          onClick={() => setOpen(false)}
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200"
+        >
+          <div 
+            onClick={(e) => e.stopPropagation()}
+            className="w-96 bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6 space-y-5 relative text-zinc-100 select-none animate-in zoom-in-95 duration-150"
+          >
             {/* Close Button */}
             <button
               onClick={() => setOpen(false)}
@@ -69,17 +74,6 @@ export const ProjectInfoModal: React.FC = () => {
                 >
                   <Github className="w-4 h-4 text-zinc-300" />
                   <span className="font-medium">GitHub Repository</span>
-                  <ExternalLink className="w-3.5 h-3.5 ml-auto text-zinc-500" />
-                </a>
-
-                <a
-                  href={PROJECT_INFO.issues}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2.5 p-2.5 rounded-xl bg-zinc-950 border border-zinc-800 hover:bg-zinc-800 text-xs text-zinc-200 hover:text-white transition-colors"
-                >
-                  <ExternalLink className="w-4 h-4 text-zinc-400" />
-                  <span className="font-medium">Report an Issue</span>
                   <ExternalLink className="w-3.5 h-3.5 ml-auto text-zinc-500" />
                 </a>
               </div>
