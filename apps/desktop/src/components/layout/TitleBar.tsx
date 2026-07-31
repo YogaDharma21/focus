@@ -41,9 +41,7 @@ export const TitleBar: React.FC = () => {
     <header className="h-10 w-full bg-zinc-900 border-b border-zinc-800 flex items-center justify-between px-3 select-none drag-region text-xs text-zinc-300 relative z-50 shrink-0">
       {/* Left: App Branding & Live Status */}
       <div className="flex items-center gap-2.5 no-drag">
-        <div className="w-5 h-5 rounded-md bg-zinc-100 text-zinc-950 flex items-center justify-center font-bold text-[10px] shadow-sm">
-          <Sparkles className="w-3 h-3 stroke-[2.5]" />
-        </div>
+        <img src="/icon.png" className="w-5 h-5 rounded-md object-contain shadow-sm" alt="Focus Desktop" />
         <span className="font-bold text-zinc-100 tracking-tight text-xs">Focus Desktop</span>
         
         {isActive && (

@@ -532,11 +532,7 @@ export function Popup() {
         isDark ? "bg-neutral-950/80 border-neutral-800" : "bg-neutral-100/80 border-neutral-200"
       } backdrop-blur-sm`}>
         <div className="flex items-center gap-2.5">
-          <div className={`w-7 h-7 rounded-lg border flex items-center justify-center font-bold text-xs font-mono ${
-            isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
-          }`}>
-            F
-          </div>
+          <img src="/icons/icon32.png" className="w-7 h-7 rounded-lg object-contain border border-neutral-700 shadow-sm" alt="Focus Logo" />
           <div>
             <h1 className="text-sm font-extrabold tracking-wider uppercase font-heading">
               FOCUS
