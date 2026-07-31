@@ -25,7 +25,9 @@ export const DeepFocusOverlay: React.FC = () => {
     todos,
     updateTodo,
     selectedTodoId,
-    sessionName
+    sessionName,
+    previousMode,
+    setPreviousMode
   } = useDesktopStore();
 
   const [showDistractionMenu, setShowDistractionMenu] = useState(false);
@@ -82,6 +84,7 @@ export const DeepFocusOverlay: React.FC = () => {
 
         electron.showNotification("Session Complete! 🎉", `Great work finishing "${title}"! Time for a break.`);
         
+        setPreviousMode('POMODORO');
         setTimerState('BREAK');
         setTimeLeft(pomodoroSettings.break * 60);
 
@@ -89,9 +92,15 @@ export const DeepFocusOverlay: React.FC = () => {
           setIsActive(true);
         }
       } else {
-        electron.showNotification("Break Complete! ⚡", "Ready to start focusing again?");
-        setTimerState('WORK');
-        setTimeLeft(pomodoroSettings.work * 60);
+        if (previousMode === 'STOPWATCH') {
+          electron.showNotification("Break Complete! ⚡", "Ready to jump back into Flow state?");
+          setTimerMode('STOPWATCH');
+          setFlowTimeElapsed(0);
+        } else {
+          electron.showNotification("Break Complete! ⚡", "Ready to start focusing again?");
+          setTimerState('WORK');
+          setTimeLeft(pomodoroSettings.work * 60);
+        }
       }
     } else {
       const durationWorked = Math.max(60, flowTimeElapsed);
@@ -114,6 +123,7 @@ export const DeepFocusOverlay: React.FC = () => {
 
       electron.showNotification("Flow Session Complete! 🌊", `Finished ${Math.floor(durationWorked / 60)} minutes of focus.`);
       
+      setPreviousMode('STOPWATCH');
       setTimerMode('POMODORO');
       setTimerState('BREAK');
       setTimeLeft(pomodoroSettings.break * 60);
