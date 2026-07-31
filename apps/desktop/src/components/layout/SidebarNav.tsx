@@ -1,6 +1,7 @@
 import React from 'react';
 import { Timer, CheckSquare, BarChart3, HeartHandshake, Maximize2, Palette } from 'lucide-react';
 import { useDesktopStore, ViewType, BackgroundType } from '../../lib/store';
+import { ProjectInfoModal } from './ProjectInfoModal';
 
 export const SidebarNav: React.FC = () => {
   const { currentView, setView, setDeepFocusMode, background, setBackground } = useDesktopStore();
@@ -51,7 +52,7 @@ export const SidebarNav: React.FC = () => {
         </nav>
       </div>
 
-      {/* Bottom: Zen Deep Focus & Theme picker */}
+      {/* Bottom: Zen Deep Focus, Theme picker & Project Info */}
       <div className="space-y-1.5 pt-3 border-t border-zinc-800">
         {/* Background Selector Popover */}
         <div className="relative">
@@ -94,6 +95,9 @@ export const SidebarNav: React.FC = () => {
           <Maximize2 className="w-4 h-4" />
           <span className="hidden md:inline">Deep Focus</span>
         </button>
+
+        {/* Project Info Button & Dialog */}
+        <ProjectInfoModal />
       </div>
     </aside>
   );
