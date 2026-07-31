@@ -76,35 +76,6 @@ export const FocusTimer: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-
-    if (isActive) {
-      interval = setInterval(() => {
-        if (timerMode === 'POMODORO') {
-          setTimeLeft((prev) => {
-            if (prev <= 1) {
-              return 0;
-            }
-            return prev - 1;
-          });
-        } else {
-          setFlowTimeElapsed((prev) => prev + 1);
-        }
-      }, 1000);
-    }
-
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [isActive, timerMode]);
-
-  useEffect(() => {
-    if (isActive && timerMode === 'POMODORO' && timeLeft === 0) {
-      handleCompleteSession();
-    }
-  }, [timeLeft, isActive, timerMode]);
-
   const handleCompleteSession = () => {
     setIsActive(false);
     playCompletionSound();
