@@ -73,9 +73,9 @@ focus/
 │   ├── website/       🚧 Next.js web application (in development)
 │   ├── mobile/        🚧 Expo / React Native mobile application (in development)
 │   ├── extension/     🚧 Browser extension (in development)
+│   ├── desktop/       🚧 Desktop application (in development)
 │   ├── backend/       📦 Backend services (planned)
-│   ├── cli/           📦 Command-line tools (planned)
-│   └── desktop/       📦 Desktop application (planned)
+│   └── cli/           📦 Command-line tools (planned)
 │
 ├── docker/            Docker configurations
 ├── docs/              Architecture documentation
@@ -92,9 +92,9 @@ focus/
 | **Website** | `apps/website/` | 🚧 In Development | Next.js, React, TypeScript, Tailwind CSS, Zustand |
 | **Mobile** | `apps/mobile/` | 🚧 In Development | Expo SDK 52, React Native, TypeScript, Zustand |
 | **Extension** | `apps/extension/` | 🚧 In Development | Vite, React, TypeScript, Tailwind CSS, Zustand, MV3 |
+| **Desktop** | `apps/desktop/` | 🚧 In Development | Electron, Vite, React, TypeScript, Tailwind CSS, Zustand |
 | **Backend** | `apps/backend/` | 📦 Planned | TBD |
 | **CLI** | `apps/cli/` | 📦 Planned | TBD |
-| **Desktop** | `apps/desktop/` | 📦 Planned | TBD |
 
 ---
 
@@ -104,6 +104,14 @@ focus/
 
 - Node.js (v18+ recommended)
 - npm / yarn / pnpm
+
+### Desktop Development Setup
+
+```bash
+cd apps/desktop
+npm install
+npm run dev
+```
 
 ### Web Development Setup
 
