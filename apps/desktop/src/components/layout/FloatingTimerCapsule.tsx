@@ -162,6 +162,10 @@ export const FloatingTimerCapsule: React.FC = () => {
     ? 'FLOW' 
     : (timerState === 'BREAK' ? 'BREAK' : 'POMODORO');
 
+  const modeEmoji = activeTab === 'FLOW' 
+    ? '⏱️' 
+    : (activeTab === 'BREAK' ? '☕' : '🍅');
+
   const handleSelectTab = (tab: 'POMODORO' | 'BREAK' | 'FLOW') => {
     setIsActive(false);
     if (tab === 'POMODORO') {
@@ -188,7 +192,7 @@ export const FloatingTimerCapsule: React.FC = () => {
           className="bg-zinc-900 border border-zinc-800 rounded-full px-3 py-1 flex items-center justify-between gap-3 shadow-md hover:bg-zinc-800 hover:border-zinc-700 transition-all active:scale-98 text-xs"
         >
           <div className="flex items-center gap-1.5 min-w-0 text-left">
-            <span className="text-xs">🍅</span>
+            <span className="text-xs">{modeEmoji}</span>
             <span className="text-[11px] font-semibold text-zinc-200 tracking-tight">{timerLabel}</span>
             {activeTask && (
               <span className="text-[10px] text-zinc-400 truncate max-w-[70px]">
@@ -227,7 +231,7 @@ export const FloatingTimerCapsule: React.FC = () => {
             title="Click to collapse widget"
           >
             <div className="flex items-center gap-2">
-              <span className="text-base">🍅</span>
+              <span className="text-base">{modeEmoji}</span>
               <span className="text-xs font-bold text-white tracking-tight">{timerLabel}</span>
             </div>
             <span className="text-xl font-extrabold font-mono text-white tracking-tight">
