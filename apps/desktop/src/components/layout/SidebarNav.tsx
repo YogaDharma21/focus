@@ -10,7 +10,7 @@ export const SidebarNav: React.FC = () => {
   const navItems: { id: ViewType; label: string; icon: React.FC<{ className?: string }> }[] = [
     { id: "FOCUS", label: "Timer", icon: Timer },
     { id: "TODO", label: "Tasks", icon: CheckSquare },
-    { id: "JOURNAL", label: "Analytics", icon: BarChart3 },
+    { id: "JOURNAL", label: "Stats", icon: BarChart3 },
     { id: "NOTES", label: "Mood Notes", icon: HeartHandshake },
   ];
 
