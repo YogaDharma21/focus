@@ -75,12 +75,15 @@ export default function Page() {
                     mediaPlayerOpen && "md:pr-[344px]"
                 )}>
                     <header className="flex items-center justify-between mb-8">
-                        <h1 className="text-xl font-bold tracking-tight opacity-90">
-                            {currentView === "FOCUS" && "Focus Session"}
-                            {currentView === "TODO" && "Tasks"}
-                            {currentView === "JOURNAL" && "Journal & Stats"}
-                            {currentView === "NOTES" && "Notes"}
-                        </h1>
+                        <div className="flex items-center gap-3">
+                            <img src="/icon-192.png" alt="Focus Logo" className="w-8 h-8 rounded-lg object-contain shadow-sm" />
+                            <h1 className="text-xl font-bold tracking-tight opacity-90">
+                                {currentView === "FOCUS" && "Focus Session"}
+                                {currentView === "TODO" && "Tasks"}
+                                {currentView === "JOURNAL" && "Journal & Stats"}
+                                {currentView === "NOTES" && "Notes"}
+                            </h1>
+                        </div>
                         <div className="flex items-center gap-1">
                             <button
                                 onClick={toggleFocusMode}
