@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { X, Play, Pause, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
+import { electron } from '../../lib/electron';
 
 const DISTRACTION_OPTIONS = ["Phone", "Social Media", "Bathroom", "Meeting", "Other"];
 
@@ -9,14 +10,22 @@ export const DeepFocusOverlay: React.FC = () => {
     deepFocusMode, 
     setDeepFocusMode, 
     timeLeft, 
+    setTimeLeft,
     flowTimeElapsed,
+    setFlowTimeElapsed,
     timerMode, 
+    setTimerMode,
+    timerState,
+    setTimerState,
     isActive, 
     setIsActive,
     addDistraction,
+    addSession,
+    pomodoroSettings,
     todos,
+    updateTodo,
     selectedTodoId,
-    toggleTodo
+    sessionName
   } = useDesktopStore();
 
   const [showDistractionMenu, setShowDistractionMenu] = useState(false);
@@ -44,6 +53,75 @@ export const DeepFocusOverlay: React.FC = () => {
   const timeString = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 
   const activeTask = todos.find(t => t.id === selectedTodoId);
+
+  const handleCompleteSession = () => {
+    setIsActive(false);
+
+    const title = activeTask?.text || sessionName || 'Focus Session';
+
+    if (timerMode === 'POMODORO') {
+      if (timerState === 'WORK') {
+        const durationWorked = Math.max(60, (pomodoroSettings.work * 60) - timeLeft);
+        
+        addSession({
+          id: crypto.randomUUID(),
+          date: new Date().toISOString(),
+          duration: durationWorked,
+          mode: 'POMODORO',
+          taskTitle: title
+        });
+
+        if (activeTask) {
+          updateTodo(activeTask.id, {
+            completedPomodoros: (activeTask.completedPomodoros || 0) + 1,
+            completed: true,
+            completedAt: new Date().toISOString(),
+            groupId: 'finished'
+          });
+        }
+
+        electron.showNotification("Session Complete! 🎉", `Great work finishing "${title}"! Time for a break.`);
+        
+        setTimerState('BREAK');
+        setTimeLeft(pomodoroSettings.break * 60);
+
+        if (pomodoroSettings.autoStartBreak) {
+          setIsActive(true);
+        }
+      } else {
+        electron.showNotification("Break Complete! ⚡", "Ready to start focusing again?");
+        setTimerState('WORK');
+        setTimeLeft(pomodoroSettings.work * 60);
+      }
+    } else {
+      const durationWorked = Math.max(60, flowTimeElapsed);
+      
+      addSession({
+        id: crypto.randomUUID(),
+        date: new Date().toISOString(),
+        duration: durationWorked,
+        mode: 'STOPWATCH',
+        taskTitle: title
+      });
+
+      if (activeTask) {
+        updateTodo(activeTask.id, {
+          completed: true,
+          completedAt: new Date().toISOString(),
+          groupId: 'finished'
+        });
+      }
+
+      electron.showNotification("Flow Session Complete! 🌊", `Finished ${Math.floor(durationWorked / 60)} minutes of focus.`);
+      
+      setTimerMode('POMODORO');
+      setTimerState('BREAK');
+      setTimeLeft(pomodoroSettings.break * 60);
+      setFlowTimeElapsed(0);
+    }
+
+    setDeepFocusMode(false);
+  };
 
   return (
     <div className="fixed inset-0 bg-[#09090b] z-50 flex flex-col items-center justify-between p-8 select-none animate-in fade-in duration-200">
@@ -110,13 +188,7 @@ export const DeepFocusOverlay: React.FC = () => {
 
           {/* Finish / Complete Task */}
           <button
-            onClick={() => {
-              if (activeTask) {
-                toggleTodo(activeTask.id);
-              } else {
-                setIsActive(false);
-              }
-            }}
+            onClick={handleCompleteSession}
             className="w-11 h-11 flex items-center justify-center text-zinc-400 hover:text-emerald-400 transition-colors"
             title="Complete Session"
           >

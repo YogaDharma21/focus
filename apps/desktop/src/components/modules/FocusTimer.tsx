@@ -27,6 +27,7 @@ export const FocusTimer: React.FC = () => {
     selectedTodoId,
     setSelectedTodoId,
     toggleTodo,
+    updateTodo,
     toggleSubtask,
     addSession,
     addDistraction,
@@ -98,38 +99,76 @@ export const FocusTimer: React.FC = () => {
 
   useEffect(() => {
     if (isActive && timerMode === 'POMODORO' && timeLeft === 0) {
-      handlePomodoroComplete();
+      handleCompleteSession();
     }
   }, [timeLeft, isActive, timerMode]);
 
-  const handlePomodoroComplete = () => {
+  const handleCompleteSession = () => {
     setIsActive(false);
     playCompletionSound();
 
     const currentTask = todos.find(t => t.id === selectedTodoId);
     const title = currentTask?.text || sessionName || 'Focus Session';
 
-    if (timerState === 'WORK') {
-      electron.showNotification("Focus Session Complete! 🎉", "Great work! Time for a break.");
+    if (timerMode === 'POMODORO') {
+      if (timerState === 'WORK') {
+        const durationWorked = Math.max(60, (pomodoroSettings.work * 60) - timeLeft);
+        
+        addSession({
+          id: crypto.randomUUID(),
+          date: new Date().toISOString(),
+          duration: durationWorked,
+          mode: 'POMODORO',
+          taskTitle: title
+        });
+
+        if (currentTask) {
+          updateTodo(currentTask.id, {
+            completedPomodoros: (currentTask.completedPomodoros || 0) + 1,
+            completed: true,
+            completedAt: new Date().toISOString(),
+            groupId: 'finished'
+          });
+        }
+
+        electron.showNotification("Session Complete! 🎉", `Great work finishing "${title}"! Time for a break.`);
+        
+        setTimerState('BREAK');
+        setTimeLeft(pomodoroSettings.break * 60);
+
+        if (pomodoroSettings.autoStartBreak) {
+          setIsActive(true);
+        }
+      } else {
+        electron.showNotification("Break Complete! ⚡", "Ready to start focusing again?");
+        setTimerState('WORK');
+        setTimeLeft(pomodoroSettings.work * 60);
+      }
+    } else {
+      const durationWorked = Math.max(60, flowTimeElapsed);
       
       addSession({
         id: crypto.randomUUID(),
         date: new Date().toISOString(),
-        duration: pomodoroSettings.work * 60,
-        mode: 'POMODORO',
+        duration: durationWorked,
+        mode: 'STOPWATCH',
         taskTitle: title
       });
 
+      if (currentTask) {
+        updateTodo(currentTask.id, {
+          completed: true,
+          completedAt: new Date().toISOString(),
+          groupId: 'finished'
+        });
+      }
+
+      electron.showNotification("Flow Session Complete! 🌊", `Finished ${Math.floor(durationWorked / 60)} minutes of focus.`);
+      
+      setTimerMode('POMODORO');
       setTimerState('BREAK');
       setTimeLeft(pomodoroSettings.break * 60);
-
-      if (pomodoroSettings.autoStartBreak) {
-        setIsActive(true);
-      }
-    } else {
-      electron.showNotification("Break Completed! ⚡", "Ready to get back into flow state?");
-      setTimerState('WORK');
-      setTimeLeft(pomodoroSettings.work * 60);
+      setFlowTimeElapsed(0);
     }
   };
 
@@ -427,15 +466,7 @@ export const FocusTimer: React.FC = () => {
         </button>
 
         <button
-          onClick={() => {
-            if (activeTask) {
-              toggleTodo(activeTask.id);
-            } else if (timerMode === 'STOPWATCH' && isActive) {
-              handleFinishFlowSession();
-            } else {
-              handlePomodoroComplete();
-            }
-          }}
+          onClick={handleCompleteSession}
           className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-emerald-400 transition-all flex items-center justify-center shadow-md active:scale-95"
           title="Finish / Complete Session"
         >
