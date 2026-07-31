@@ -247,6 +247,7 @@ export const FocusTimer: React.FC = () => {
       setTimerState('WORK');
       setTimeLeft(pomodoroSettings.work * 60);
     } else if (tab === 'BREAK') {
+      setTimerMode('POMODORO');
       setTimerState('BREAK');
       setTimeLeft(pomodoroSettings.break * 60);
     } else {
