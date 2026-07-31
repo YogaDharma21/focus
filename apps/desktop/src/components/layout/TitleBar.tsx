@@ -8,7 +8,9 @@ export const TitleBar: React.FC = () => {
     isAlwaysOnTop, 
     setAlwaysOnTop, 
     timeLeft, 
+    flowTimeElapsed,
     isActive, 
+    timerMode,
     timerState 
   } = useDesktopStore();
   const [isMaximized, setIsMaximized] = React.useState(false);
@@ -18,6 +20,11 @@ export const TitleBar: React.FC = () => {
     const s = seconds % 60;
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
+
+  const activeSeconds = timerMode === 'POMODORO' ? timeLeft : flowTimeElapsed;
+  const modeLabel = timerMode === 'STOPWATCH' 
+    ? 'FLOW' 
+    : (timerState === 'WORK' ? 'FOCUS' : 'BREAK');
 
   const handleTogglePin = async () => {
     const nextState = !isAlwaysOnTop;
@@ -42,9 +49,9 @@ export const TitleBar: React.FC = () => {
         {isActive && (
           <div className="flex items-center gap-1.5 ml-2 px-2.5 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-200 font-mono text-[10px]">
             <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-semibold">{timerState === 'WORK' ? 'FOCUS' : 'BREAK'}</span>
+            <span className="font-semibold">{modeLabel}</span>
             <span className="text-zinc-500">•</span>
-            <span className="font-bold text-white">{formatTime(timeLeft)}</span>
+            <span className="font-bold text-white">{formatTime(activeSeconds)}</span>
           </div>
         )}
       </div>
