@@ -7,23 +7,24 @@ export const BackgroundDisplay: React.FC = () => {
   const getBgStyle = () => {
     switch (background) {
       case 'mountain':
-        return 'bg-[url("https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1920&q=80")] bg-cover bg-center';
+        // Cool dark mist mountain mood
+        return 'bg-[#0a0e17]';
       case 'library':
-        return 'bg-[url("https://images.unsplash.com/photo-1521587760476-6c12a4b040da?auto=format&fit=crop&w=1920&q=80")] bg-cover bg-center';
+        // Warm dark mahogany library study mood
+        return 'bg-[#120e0b]';
       case 'cafe':
-        return 'bg-[url("https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1920&q=80")] bg-cover bg-center';
+        // Warm lo-fi coffee lounge mood
+        return 'bg-[#140f12]';
       case 'anime-room':
-        return 'bg-[url("https://images.unsplash.com/photo-1578632767115-351597cf2477?auto=format&fit=crop&w=1920&q=80")] bg-cover bg-center';
+        // Midnight lavender/indigo anime room mood
+        return 'bg-[#0d0a14]';
       default:
-        return 'bg-zinc-950';
+        // Solid dark modern
+        return 'bg-[#09090b]';
     }
   };
 
   return (
-    <div className={`fixed inset-0 pointer-events-none transition-all duration-300 ${getBgStyle()}`}>
-      {background !== 'dark' && (
-        <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-[2px]" />
-      )}
-    </div>
+    <div className={`fixed inset-0 pointer-events-none transition-colors duration-500 ${getBgStyle()}`} />
   );
 };
