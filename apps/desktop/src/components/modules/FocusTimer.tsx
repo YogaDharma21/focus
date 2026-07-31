@@ -1,10 +1,12 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   Play, Pause, RotateCcw, AlertTriangle, SlidersHorizontal, CheckCircle2, 
   ChevronDown, Check, CheckSquare2
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
+
+const DISTRACTION_OPTIONS = ["Phone", "Social Media", "Bathroom", "Meeting", "Other"];
 
 export const FocusTimer: React.FC = () => {
   const {
@@ -34,8 +36,9 @@ export const FocusTimer: React.FC = () => {
     setSessionName
   } = useDesktopStore();
 
-  const [showSettings, setShowSettings] = React.useState(false);
-  const [showTaskDropdown, setShowTaskDropdown] = React.useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showTaskDropdown, setShowTaskDropdown] = useState(false);
+  const [showDistractionMenu, setShowDistractionMenu] = useState(false);
 
   const playCompletionSound = () => {
     if (!soundEffectEnabled) return;
@@ -353,7 +356,7 @@ export const FocusTimer: React.FC = () => {
       </div>
 
       {/* 5. Horizontal Control Bar */}
-      <div className="flex items-center justify-center gap-3 pt-2">
+      <div className="flex items-center justify-center gap-3 pt-2 relative">
         <button
           onClick={resetTimer}
           className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-all flex items-center justify-center shadow-md active:scale-95"
@@ -362,18 +365,39 @@ export const FocusTimer: React.FC = () => {
           <RotateCcw className="w-4 h-4" />
         </button>
 
-        <button
-          onClick={() => addDistraction('Distraction')}
-          className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-rose-400 transition-all flex items-center justify-center shadow-md active:scale-95 relative"
-          title="Log Distraction"
-        >
-          <AlertTriangle className="w-4 h-4" />
-          {distractions.length > 0 && (
-            <span className="absolute -top-1 -right-1 bg-rose-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-              {distractions.length}
-            </span>
+        {/* Distraction Alert Button & Popover */}
+        <div className="relative">
+          <button
+            onClick={() => setShowDistractionMenu(!showDistractionMenu)}
+            className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-rose-400 transition-all flex items-center justify-center shadow-md active:scale-95 relative"
+            title="Log Distraction"
+          >
+            <AlertTriangle className="w-4 h-4" />
+            {distractions.length > 0 && (
+              <span className="absolute -top-1 -right-1 bg-rose-600 text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                {distractions.length}
+              </span>
+            )}
+          </button>
+
+          {/* Distraction Reason Popover matching user mockup */}
+          {showDistractionMenu && (
+            <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-48 bg-[#181818] border border-zinc-800/90 rounded-2xl shadow-2xl z-50 p-2 space-y-1 animate-in zoom-in-95 duration-150">
+              {DISTRACTION_OPTIONS.map((opt) => (
+                <button
+                  key={opt}
+                  onClick={() => {
+                    addDistraction(opt);
+                    setShowDistractionMenu(false);
+                  }}
+                  className="w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-100 hover:bg-zinc-800 transition-colors"
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
           )}
-        </button>
+        </div>
 
         <button
           onClick={toggleTimer}

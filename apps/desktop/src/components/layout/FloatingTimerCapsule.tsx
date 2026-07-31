@@ -4,6 +4,8 @@ import {
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 
+const DISTRACTION_OPTIONS = ["Phone", "Social Media", "Bathroom", "Meeting", "Other"];
+
 export const FloatingTimerCapsule: React.FC = () => {
   const { 
     currentView, 
@@ -26,6 +28,7 @@ export const FloatingTimerCapsule: React.FC = () => {
   } = useDesktopStore();
 
   const [isExpanded, setIsExpanded] = useState(false);
+  const [showDistractionMenu, setShowDistractionMenu] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Close popover on outside click
@@ -33,6 +36,7 @@ export const FloatingTimerCapsule: React.FC = () => {
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsExpanded(false);
+        setShowDistractionMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -113,7 +117,7 @@ export const FloatingTimerCapsule: React.FC = () => {
         </button>
       ) : (
         /* 2. Expanded Card Popup matching user image mockup */
-        <div className="w-[420px] bg-[#121214] border border-zinc-800/90 rounded-2xl p-5 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200">
+        <div className="w-[420px] bg-[#121214] border border-zinc-800/90 rounded-2xl p-5 shadow-2xl space-y-4 animate-in zoom-in-95 duration-200 relative">
           {/* Header Row */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -178,7 +182,7 @@ export const FloatingTimerCapsule: React.FC = () => {
           </div>
 
           {/* Bottom Controls Bar */}
-          <div className="flex items-center justify-end gap-2.5 pt-2">
+          <div className="flex items-center justify-end gap-2.5 pt-2 relative">
             {/* Complete Button */}
             <button
               onClick={() => {
@@ -191,14 +195,33 @@ export const FloatingTimerCapsule: React.FC = () => {
               <span>Complete</span>
             </button>
 
-            {/* Distraction Alert Button */}
-            <button
-              onClick={() => addDistraction('Distraction')}
-              className="w-9 h-9 rounded-xl bg-[#181818] border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-rose-400 transition-colors"
-              title="Log Distraction"
-            >
-              <AlertTriangle className="w-4 h-4" />
-            </button>
+            {/* Distraction Alert Button & Popover */}
+            <div className="relative">
+              <button
+                onClick={() => setShowDistractionMenu(!showDistractionMenu)}
+                className="w-9 h-9 rounded-xl bg-[#181818] border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-rose-400 transition-colors"
+                title="Log Distraction"
+              >
+                <AlertTriangle className="w-4 h-4" />
+              </button>
+
+              {showDistractionMenu && (
+                <div className="absolute bottom-12 left-1/2 -translate-x-1/2 w-44 bg-[#181818] border border-zinc-800/90 rounded-2xl shadow-2xl z-50 p-2 space-y-1 animate-in zoom-in-95 duration-150">
+                  {DISTRACTION_OPTIONS.map((opt) => (
+                    <button
+                      key={opt}
+                      onClick={() => {
+                        addDistraction(opt);
+                        setShowDistractionMenu(false);
+                      }}
+                      className="w-full text-left px-3 py-1.5 rounded-xl text-xs font-semibold text-zinc-100 hover:bg-zinc-800 transition-colors"
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* Play/Pause Button */}
             <button
