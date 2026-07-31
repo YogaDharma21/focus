@@ -1,106 +1,212 @@
 import React from 'react';
-import { Clock, AlertTriangle, CheckCircle2, Trophy, Calendar } from 'lucide-react';
+import { 
+  Clock, Activity, CheckCircle2, ListTodo, Flame, Target, TrendingUp, Sparkles 
+} from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 
 export const StatsJournal: React.FC = () => {
-  const { sessions, distractions, todos } = useDesktopStore();
+  const { sessions, todos, timeLeft, timerMode, timerState, flowTimeElapsed } = useDesktopStore();
 
-  const totalFocusSeconds = sessions.reduce((acc, s) => acc + s.duration, 0);
-  const totalFocusMinutes = Math.round(totalFocusSeconds / 60);
-  const completedTasksCount = todos.filter(t => t.completed).length;
+  // 1. Current Timer status string for top floating capsule
+  const activeSeconds = timerMode === 'POMODORO' ? timeLeft : flowTimeElapsed;
+  const m = Math.floor(activeSeconds / 60);
+  const s = activeSeconds % 60;
+  const timeString = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  const timerLabel = timerMode === 'POMODORO' 
+    ? (timerState === 'WORK' ? 'Pomodoro' : 'Break')
+    : 'Flow';
+
+  // 2. Day Progress Calculation
+  const now = new Date();
+  const currentMinutesPassed = now.getHours() * 60 + now.getMinutes();
+  const dayProgressPercent = Math.min(100, Math.max(0, Math.round((currentMinutesPassed / 1440) * 100)));
+  const minutesRemaining = 1440 - currentMinutesPassed;
+  const hoursRemaining = Math.floor(minutesRemaining / 60);
+  const minsRemainingPart = minutesRemaining % 60;
+
+  // 3. Stats Calculations
+  const todayStr = new Date().toISOString().split('T')[0];
+  
+  const todaySessions = sessions.filter(s => s.date.startsWith(todayStr));
+  const minutesToday = Math.round(todaySessions.reduce((acc, s) => acc + s.duration, 0) / 60);
+
+  const tasksTodayCount = todos.filter(t => t.completed).length;
+  const pendingTasksCount = todos.filter(t => !t.completed).length;
+  const totalTasksCount = todos.length;
+  const completionRatePercent = totalTasksCount > 0 
+    ? Math.round((tasksTodayCount / totalTasksCount) * 100) 
+    : 0;
+
+  // 4. Streak Calculation
+  const sessionDatesSet = new Set(sessions.map(s => s.date.split('T')[0]));
+  let currentStreak = 0;
+  let d = new Date();
+  while (sessionDatesSet.has(d.toISOString().split('T')[0])) {
+    currentStreak++;
+    d.setDate(d.getDate() - 1);
+  }
+  const bestStreak = Math.max(currentStreak, sessions.length > 0 ? 1 : 0);
+
+  // 5. Weekly Focus Trend Bar Chart (Sat -> Fri)
+  const daysOfWeek = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
+  const weekData = daysOfWeek.map((dayName, idx) => {
+    // Map day to recent dates
+    const targetDate = new Date();
+    const dayOffset = (targetDate.getDay() + 1 - (idx === 0 ? 6 : idx - 1) + 7) % 7;
+    targetDate.setDate(targetDate.getDate() - dayOffset);
+    const datePrefix = targetDate.toISOString().split('T')[0];
+
+    const daySessions = sessions.filter(s => s.date.startsWith(datePrefix));
+    const dayMinutes = Math.round(daySessions.reduce((acc, s) => acc + s.duration, 0) / 60);
+    return { day: dayName, minutes: dayMinutes };
+  });
+
+  const maxMinutesInWeek = Math.max(...weekData.map(w => w.minutes), 60);
 
   return (
-    <div className="h-full flex flex-col p-4 md:p-6 max-w-5xl mx-auto w-full select-none overflow-y-auto space-y-6">
-      {/* Overview Metric Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-        <div className="shadcn-card p-4 flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300">
-            <Clock className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Total Focus</p>
-            <h3 className="text-xl font-bold font-mono text-zinc-100">{totalFocusMinutes} <span className="text-xs font-normal text-zinc-400">mins</span></h3>
-          </div>
-        </div>
-
-        <div className="shadcn-card p-4 flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-zinc-300">
-            <Trophy className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Sessions</p>
-            <h3 className="text-xl font-bold font-mono text-zinc-100">{sessions.length}</h3>
-          </div>
-        </div>
-
-        <div className="shadcn-card p-4 flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-emerald-400">
-            <CheckCircle2 className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Tasks Done</p>
-            <h3 className="text-xl font-bold font-mono text-zinc-100">{completedTasksCount}</h3>
-          </div>
-        </div>
-
-        <div className="shadcn-card p-4 flex items-center gap-3">
-          <div className="p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-rose-400">
-            <AlertTriangle className="w-5 h-5" />
-          </div>
-          <div>
-            <p className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Distractions</p>
-            <h3 className="text-xl font-bold font-mono text-zinc-100">{distractions.length}</h3>
+    <div className="h-full flex flex-col p-4 md:p-6 max-w-4xl mx-auto w-full select-none overflow-y-auto space-y-6">
+      {/* Title & Top Floating Timer Widget */}
+      <div className="flex items-center justify-between">
+        <h2 className="text-xl font-bold text-white tracking-tight">Journal & Stats</h2>
+        <div className="flex items-center gap-3">
+          <div className="bg-[#141414] border border-zinc-800/90 rounded-2xl px-4 py-2 flex items-center justify-between w-64 shadow-md text-xs font-semibold">
+            <span className="flex items-center gap-1.5 text-zinc-300">
+              <span className="text-sm">🍅</span>
+              <span>{timerLabel}</span>
+            </span>
+            <span className="font-mono text-white text-sm font-bold">{timeString}</span>
           </div>
         </div>
       </div>
 
-      {/* Session History Table */}
-      <div className="shadcn-card p-5 space-y-3 flex-1 flex flex-col min-h-[300px]">
-        <div className="flex items-center justify-between pb-3 border-b border-zinc-800">
-          <h3 className="text-xs font-semibold text-zinc-200 flex items-center gap-2">
-            <Calendar className="w-4 h-4 text-zinc-400" />
-            Focus Session History Log
-          </h3>
-          <span className="text-[10px] text-zinc-500">{sessions.length} recorded</span>
+      {/* 1. Day Progress Card */}
+      <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
+            <Clock className="w-4 h-4 text-zinc-400" />
+            <span>Day Progress</span>
+          </div>
+          <span className="text-xs font-mono font-bold text-white">{dayProgressPercent}%</span>
         </div>
 
-        <div className="flex-1 overflow-y-auto">
-          {sessions.length === 0 ? (
-            <div className="h-40 flex items-center justify-center text-zinc-500 text-xs">
-              No focus sessions logged yet.
+        {/* Progress Bar Line */}
+        <div className="w-full h-2.5 bg-zinc-800/80 rounded-full overflow-hidden">
+          <div 
+            className="bg-white h-full rounded-full transition-all duration-500"
+            style={{ width: `${dayProgressPercent}%` }}
+          />
+        </div>
+
+        <p className="text-[11px] text-zinc-400 font-medium">
+          {hoursRemaining}h {minsRemainingPart}m remaining today
+        </p>
+      </div>
+
+      {/* 2. Top 3 Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        {/* Minutes Today */}
+        <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm text-center flex flex-col items-center justify-center space-y-2">
+          <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
+            <Activity className="w-5 h-5" />
+          </div>
+          <span className="text-3xl font-extrabold text-white font-sans">{minutesToday}</span>
+          <span className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase">Minutes Today</span>
+        </div>
+
+        {/* Tasks Today */}
+        <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm text-center flex flex-col items-center justify-center space-y-2">
+          <div className="w-10 h-10 rounded-xl bg-emerald-950/60 border border-emerald-800/60 flex items-center justify-center text-emerald-400">
+            <CheckCircle2 className="w-5 h-5" />
+          </div>
+          <span className="text-3xl font-extrabold text-white font-sans">{tasksTodayCount}</span>
+          <span className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase">Tasks Today</span>
+        </div>
+
+        {/* Pending Tasks */}
+        <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm text-center flex flex-col items-center justify-center space-y-2">
+          <div className="w-10 h-10 rounded-xl bg-blue-950/60 border border-blue-800/60 flex items-center justify-center text-blue-400">
+            <ListTodo className="w-5 h-5" />
+          </div>
+          <span className="text-3xl font-extrabold text-white font-sans">{pendingTasksCount}</span>
+          <span className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase">Pending Tasks</span>
+        </div>
+      </div>
+
+      {/* 3. Middle 2 Stat Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Longest Streak Card */}
+        <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
+          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
+            <Flame className="w-4 h-4 text-amber-500" />
+            <span>Longest Streak</span>
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-zinc-400 font-medium">Current</span>
+              <span className="text-sm font-bold text-white font-mono">{currentStreak} Days</span>
             </div>
-          ) : (
-            <table className="w-full text-left text-xs text-zinc-300">
-              <thead>
-                <tr className="text-[10px] uppercase font-semibold text-zinc-500 border-b border-zinc-800 pb-2">
-                  <th className="pb-2 font-medium">Date & Time</th>
-                  <th className="pb-2 font-medium">Mode</th>
-                  <th className="pb-2 font-medium">Duration</th>
-                  <th className="pb-2 font-medium">Linked Task</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/60">
-                {sessions.slice().reverse().map((session) => (
-                  <tr key={session.id} className="hover:bg-zinc-900/60 transition-colors">
-                    <td className="py-2.5 font-mono text-zinc-400">
-                      {new Date(session.date).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                    </td>
-                    <td className="py-2.5">
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider border bg-zinc-900 border-zinc-800 text-zinc-300">
-                        {session.mode}
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-zinc-400 font-medium">Best</span>
+              <span className="text-sm font-bold text-white font-mono">{bestStreak} Days</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Completion Rate Card */}
+        <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
+          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
+            <Target className="w-4 h-4 text-emerald-400" />
+            <span>Completion Rate</span>
+          </div>
+
+          <div className="space-y-1">
+            <h3 className="text-3xl font-extrabold text-white font-sans">{completionRatePercent}%</h3>
+            <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-medium pt-1">
+              <CheckCircle2 className="w-3.5 h-3.5 text-zinc-400" />
+              <span>Tasks Finished</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 4. Focus Trend Card */}
+      <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
+            <TrendingUp className="w-4 h-4 text-zinc-300" />
+            <span>Focus Trend</span>
+          </div>
+          <span className="text-[10px] text-zinc-500 font-medium">This Week</span>
+        </div>
+
+        {/* Weekly Bar Chart Container */}
+        <div className="pt-4 pb-2">
+          <div className="flex items-end justify-between gap-3 h-28 border-b border-zinc-800/80 px-2 pb-2">
+            {weekData.map((item) => {
+              const barHeightPercent = Math.min(100, Math.max(12, Math.round((item.minutes / maxMinutesInWeek) * 100)));
+              return (
+                <div key={item.day} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
+                  <div 
+                    className="w-full max-w-[42px] bg-zinc-800 group-hover:bg-zinc-200 rounded-lg transition-all duration-300 relative flex items-end justify-center"
+                    style={{ height: `${barHeightPercent}%` }}
+                  >
+                    {item.minutes > 0 && (
+                      <span className="absolute -top-6 text-[9px] font-mono text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-900 border border-zinc-800 px-1 rounded">
+                        {item.minutes}m
                       </span>
-                    </td>
-                    <td className="py-2.5 font-mono font-medium text-zinc-100">
-                      {Math.round(session.duration / 60)} mins
-                    </td>
-                    <td className="py-2.5 text-zinc-400 truncate max-w-[200px]">
-                      {session.taskTitle || 'General Focus'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          )}
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="flex justify-between px-2 pt-3 text-[10px] font-medium text-zinc-400">
+            {daysOfWeek.map((day) => (
+              <span key={day} className="flex-1 text-center">{day}</span>
+            ))}
+          </div>
         </div>
       </div>
     </div>
