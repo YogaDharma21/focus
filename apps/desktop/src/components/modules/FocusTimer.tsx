@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { 
   Play, Pause, RotateCcw, AlertTriangle, SlidersHorizontal, CheckCircle2, 
-  ChevronDown, Check
+  ChevronDown, Check, CheckSquare2
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
@@ -25,6 +25,7 @@ export const FocusTimer: React.FC = () => {
     selectedTodoId,
     setSelectedTodoId,
     toggleTodo,
+    toggleSubtask,
     addSession,
     addDistraction,
     distractions,
@@ -314,6 +315,31 @@ export const FocusTimer: React.FC = () => {
           onKeyDown={handleCustomFocusSubmit}
           className="w-full bg-[#181818] border border-zinc-800/80 rounded-2xl px-4 py-2.5 text-xs text-zinc-200 text-center focus:outline-none focus:border-zinc-700 placeholder:text-zinc-600 shadow-inner"
         />
+
+        {/* Subtasks checklist for selected active task */}
+        {activeTask && activeTask.subtasks && activeTask.subtasks.length > 0 && (
+          <div className="w-full bg-[#141414] border border-zinc-800/80 rounded-2xl p-3 space-y-2 text-xs shadow-md mt-3 animate-in fade-in duration-200">
+            <div className="flex items-center justify-between px-1">
+              <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
+                Subtasks ({activeTask.subtasks.filter(s => s.completed).length}/{activeTask.subtasks.length})
+              </span>
+            </div>
+            <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+              {activeTask.subtasks.map((sub) => (
+                <button
+                  key={sub.id}
+                  onClick={() => toggleSubtask(activeTask.id, sub.id)}
+                  className="w-full flex items-center gap-2.5 p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/60 hover:bg-zinc-800/80 transition-colors text-left text-xs"
+                >
+                  <CheckSquare2 className={`w-3.5 h-3.5 shrink-0 ${sub.completed ? "text-emerald-400" : "text-zinc-500"}`} />
+                  <span className={`truncate ${sub.completed ? "line-through text-zinc-500" : "text-zinc-200"}`}>
+                    {sub.text}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 4. Horizontal Progress Bar */}
