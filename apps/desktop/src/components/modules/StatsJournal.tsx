@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Clock, Activity, CheckCircle2, ListTodo, Flame, Target, TrendingUp, BarChart2 
+  Clock, Activity, CheckCircle2, ListTodo, Flame, Target, BarChart2 
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 
@@ -47,20 +47,7 @@ export const StatsJournal: React.FC = () => {
   }
   const bestStreak = Math.max(currentStreak, sessions.length > 0 ? 1 : 0);
 
-  // 5. Weekly Focus Trend Bar Chart (Sat -> Fri)
-  const daysOfWeek = ['Sat', 'Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri'];
-  const weekData = daysOfWeek.map((dayName, idx) => {
-    const targetDate = new Date();
-    const dayOffset = (targetDate.getDay() + 1 - (idx === 0 ? 6 : idx - 1) + 7) % 7;
-    targetDate.setDate(targetDate.getDate() - dayOffset);
-    const datePrefix = targetDate.toISOString().split('T')[0];
 
-    const daySessions = sessions.filter(s => s.date.startsWith(datePrefix));
-    const dayMinutes = Math.round(daySessions.reduce((acc, s) => acc + s.duration, 0) / 60);
-    return { day: dayName, minutes: dayMinutes };
-  });
-
-  const maxMinutesInWeek = Math.max(...weekData.map(w => w.minutes), 60);
 
   // 6. Distraction Analysis Calculation
   const distractionCounts: Record<string, number> = {};
@@ -184,45 +171,7 @@ export const StatsJournal: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. Focus Trend Card */}
-      <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
-            <TrendingUp className="w-4 h-4 text-zinc-300" />
-            <span>Focus Trend</span>
-          </div>
-          <span className="text-[10px] text-zinc-500 font-medium">This Week</span>
-        </div>
 
-        {/* Weekly Bar Chart Container */}
-        <div className="pt-4 pb-2">
-          <div className="flex items-end justify-between gap-3 h-28 border-b border-zinc-800/80 px-2 pb-2">
-            {weekData.map((item) => {
-              const barHeightPercent = Math.min(100, Math.max(12, Math.round((item.minutes / maxMinutesInWeek) * 100)));
-              return (
-                <div key={item.day} className="flex-1 flex flex-col items-center gap-2 h-full justify-end group">
-                  <div 
-                    className="w-full max-w-[42px] bg-zinc-800 group-hover:bg-zinc-200 rounded-lg transition-all duration-300 relative flex items-end justify-center"
-                    style={{ height: `${barHeightPercent}%` }}
-                  >
-                    {item.minutes > 0 && (
-                      <span className="absolute -top-6 text-[9px] font-mono text-zinc-300 opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-900 border border-zinc-800 px-1 rounded">
-                        {item.minutes}m
-                      </span>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="flex justify-between px-2 pt-3 text-[10px] font-medium text-zinc-400">
-            {daysOfWeek.map((day) => (
-              <span key={day} className="flex-1 text-center">{day}</span>
-            ))}
-          </div>
-        </div>
-      </div>
 
       {/* 5. Distraction Analysis Card (Placed under Focus Trend) */}
       <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
