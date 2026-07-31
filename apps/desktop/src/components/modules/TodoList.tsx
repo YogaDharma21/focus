@@ -1,27 +1,24 @@
 import React, { useState } from 'react';
 import { 
   Plus, CheckCircle2, Circle, Trash2, FolderPlus, 
-  ListTodo, CheckSquare2, Calendar, FileText, Timer
+  ListTodo, CheckSquare2, Target
 } from 'lucide-react';
 import { useDesktopStore, TodoItem } from '../../lib/store';
 
 export const TodoList: React.FC = () => {
   const { 
     todos, addTodo, toggleTodo, deleteTodo, updateTodo, 
-    groups, addGroup, deleteGroup,
+    groups, addGroup,
     addSubtask, toggleSubtask, deleteSubtask, updateSubtask,
-    selectedTodoId, setSelectedTodoId
+    selectedTodoId, setSelectedTodoId, setView
   } = useDesktopStore();
 
   const [activeGroupId, setActiveGroupId] = useState<string>("all");
   const [newGroupInput, setNewGroupInput] = useState("");
   const [showAddGroupModal, setShowAddGroupModal] = useState(false);
 
-  // New task form state
+  // Simplified new task form state (only task name)
   const [textInput, setTextInput] = useState("");
-  const [descriptionInput, setDescriptionInput] = useState("");
-  const [priorityInput, setPriorityInput] = useState<"low" | "medium" | "high" | "urgent">("medium");
-  const [estimatedPomodoros, setEstimatedPomodoros] = useState(1);
   const [newSubtaskInput, setNewSubtaskInput] = useState("");
 
   const handleCreateTask = (e: React.FormEvent) => {
@@ -31,11 +28,10 @@ export const TodoList: React.FC = () => {
     const newTask: TodoItem = {
       id: crypto.randomUUID(),
       text: textInput.trim(),
-      description: descriptionInput.trim() || undefined,
       completed: false,
-      priority: priorityInput,
+      priority: "medium",
       groupId: activeGroupId === "all" || activeGroupId === "finished" ? "current" : activeGroupId,
-      estimatedPomodoros,
+      estimatedPomodoros: 1,
       completedPomodoros: 0,
       subtasks: []
     };
@@ -43,7 +39,6 @@ export const TodoList: React.FC = () => {
     addTodo(newTask);
     setSelectedTodoId(newTask.id);
     setTextInput("");
-    setDescriptionInput("");
   };
 
   const handleAddGroup = (e: React.FormEvent) => {
@@ -74,7 +69,7 @@ export const TodoList: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col md:flex-row gap-4 p-4 md:p-6 max-w-6xl mx-auto w-full select-none overflow-hidden">
-      {/* Left Column: Folders & Create Task */}
+      {/* Left Column: Folders & Simplified New Task Form */}
       <div className="w-full md:w-72 flex flex-col space-y-4 shrink-0">
         <div className="shadcn-card p-4 space-y-2">
           <div className="flex items-center justify-between px-1">
@@ -128,47 +123,19 @@ export const TodoList: React.FC = () => {
           </div>
         </div>
 
-        {/* Quick Add Task Form */}
+        {/* Simplified Quick Add Task Form (Name Only) */}
         <form onSubmit={handleCreateTask} className="shadcn-card p-4 space-y-3">
           <h4 className="text-xs font-semibold text-zinc-200">New Task</h4>
           <input
             type="text"
-            placeholder="Task name..."
+            placeholder="Task name... (Press Enter)"
             value={textInput}
             onChange={(e) => setTextInput(e.target.value)}
-            className="w-full shadcn-input px-3 py-1.5 text-xs"
+            className="w-full shadcn-input px-3 py-2 text-xs"
           />
-          <input
-            type="text"
-            placeholder="Description (optional)..."
-            value={descriptionInput}
-            onChange={(e) => setDescriptionInput(e.target.value)}
-            className="w-full shadcn-input px-3 py-1.5 text-xs"
-          />
-          <div className="flex gap-2">
-            <select
-              value={priorityInput}
-              onChange={(e: any) => setPriorityInput(e.target.value)}
-              className="bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 rounded-lg px-2.5 py-1 focus:outline-none"
-            >
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-              <option value="urgent">Urgent</option>
-            </select>
-            <input
-              type="number"
-              min={1}
-              max={10}
-              value={estimatedPomodoros}
-              onChange={(e) => setEstimatedPomodoros(Number(e.target.value) || 1)}
-              className="w-16 shadcn-input px-2 py-1 text-xs text-center"
-              title="Estimated Sessions"
-            />
-          </div>
           <button
             type="submit"
-            className="w-full py-1.5 rounded-lg bg-zinc-100 text-zinc-950 text-xs font-semibold hover:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5"
+            className="w-full py-2 rounded-lg bg-zinc-100 text-zinc-950 text-xs font-semibold hover:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5"
           >
             <Plus className="w-3.5 h-3.5" />
             Add Task
@@ -226,9 +193,26 @@ export const TodoList: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
+                      {/* Focus on this task button */}
+                      {!todo.completed && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedTodoId(todo.id);
+                            setView("FOCUS");
+                          }}
+                          className="px-2 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 text-[10px] font-medium text-zinc-200 flex items-center gap-1 border border-zinc-700 transition-colors"
+                          title="Focus on this task"
+                        >
+                          <Target className="w-3 h-3 text-zinc-100" />
+                          <span>Focus</span>
+                        </button>
+                      )}
+
                       <span className={`text-[9px] px-2 py-0.5 rounded-full border uppercase font-bold tracking-wider ${getPriorityBadgeClass(todo.priority)}`}>
                         {todo.priority || 'medium'}
                       </span>
+
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
