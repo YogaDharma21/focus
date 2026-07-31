@@ -89,7 +89,7 @@ export const FloatingTimerCapsule: React.FC = () => {
       }
     } else {
       const durationWorked = Math.max(1, flowTimeElapsed);
-      const calculatedBreakSeconds = Math.max(30, Math.floor(durationWorked / 5));
+      const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
       
       addSession({
         id: crypto.randomUUID(),
