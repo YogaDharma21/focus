@@ -1,6 +1,12 @@
 const { app, BrowserWindow, ipcMain, Tray, Menu, Notification, globalShortcut, nativeImage } = require('electron');
 const path = require('path');
 
+// Set application name and Windows AppUserModelID for notifications
+app.setName('Focus Desktop');
+if (process.platform === 'win32') {
+  app.setAppUserModelId('Focus Desktop');
+}
+
 let mainWindow = null;
 let tray = null;
 
@@ -16,6 +22,7 @@ function createDummyTrayIcon() {
 
 function createWindow() {
   mainWindow = new BrowserWindow({
+    title: 'Focus Desktop',
     width: 1200,
     height: 800,
     minWidth: 380,
@@ -146,7 +153,7 @@ function setupIPC() {
 
   ipcMain.on('show-notification', (_event, { title, body }) => {
     if (Notification.isSupported()) {
-      new Notification({ title: title || 'Focus', body: body || '' }).show();
+      new Notification({ title: title || 'Focus Desktop', body: body || '' }).show();
     }
   });
 }
