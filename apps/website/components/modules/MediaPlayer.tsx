@@ -1,710 +1,199 @@
 "use client";
 
-import React, { useState, useRef, useCallback, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { useAppStore } from "@/lib/store";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
     Music,
-    Youtube,
-    Link as LinkIcon,
     ChevronDown,
-    Trash2,
     Volume2,
     VolumeX,
     Play,
     Pause,
-    ChevronUp,
-    Music2,
+    Disc,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-declare global {
-    interface Window {
-        YT: any;
-        onYouTubeIframeAPIReady: () => void;
-    }
-}
-
-type MediaTab = "YOUTUBE" | "SPOTIFY" | "LOCAL";
-
 export function MediaPlayer() {
     const {
-        mediaType,
-        youtubeUrl,
-        youtubePlaylist,
-        spotifyUrl,
         localUrl,
-        localPlaylist,
-        setMediaType,
-        setMediaUrl,
-        addToPlaylist,
-        removeFromPlaylist,
         mediaPlayerOpen,
         setMediaPlayerOpen,
     } = useAppStore();
 
-    const activeTab: MediaTab = mediaType;
-
-    const [ytApiReady, setYtApiReady] = useState(false);
-    const [playerReady, setPlayerReady] = useState(false);
     const [isPlaying, setIsPlaying] = useState(false);
     const [muted, setMuted] = useState(false);
-    const [volume, setVolume] = useState(50);
-    const [showPlaylist, setShowPlaylist] = useState(false);
-    const [inputUrl, setInputUrl] = useState("");
-    const [spotifyInputUrl, setSpotifyInputUrl] = useState("");
-    const [volumeInputMode, setVolumeInputMode] = useState(false);
-    const [volumeInputValue, setVolumeInputValue] = useState("");
-    const [activeLocalTrack, setActiveLocalTrack] = useState<string | null>(
-        localUrl || null,
-    );
-    const [isLocalPlaying, setIsLocalPlaying] = useState(false);
-    const [containerReady, setContainerReady] = useState(false);
+    const [volume, setVolume] = useState(60);
 
-    const playerRef = useRef<any>(null);
-    const initialized = useRef(false);
-    const userPaused = useRef(false);
-    const unmutedOnce = useRef(false);
-    const volumeInputRef = useRef<HTMLInputElement>(null);
-    const audioRef = useRef<HTMLAudioElement>(null);
-    const prevTabRef = useRef<MediaTab>(activeTab);
+    const audioRef = useRef<HTMLAudioElement | null>(null);
+    const containerRef = useRef<HTMLDivElement | null>(null);
 
-    const extractId = (url: string) => {
-        return url.split("v=")[1]?.split("&")[0] || url.split("/").pop();
-    };
-
-    const extractSpotifyId = (url: string) => {
-        const match = url.match(
-            /spotify\.com\/(playlist|track|album)\/([a-zA-Z0-9]+)/,
-        );
-        if (match) return { type: match[1], id: match[2] };
-        return null;
-    };
-
-    const getSpotifyEmbedUrl = (url: string) => {
-        if (url.includes("embed")) return url;
-        const match = extractSpotifyId(url);
-        if (match) return `https://open.spotify.com/embed/${match.type}/${match.id}`;
-        return url;
-    };
-
-    const spotifyEmbedUrl =
-        spotifyUrl && extractSpotifyId(spotifyUrl)
-            ? getSpotifyEmbedUrl(spotifyUrl)
-            : null;
-
+    // Synchronize volume
     useEffect(() => {
-        if (typeof window !== "undefined") {
-            if (window.innerWidth < 768) {
+        if (audioRef.current) {
+            audioRef.current.volume = muted ? 0 : volume / 100;
+        }
+    }, [volume, muted]);
+
+    // Handle outside clicks to close expanded popup
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (
+                containerRef.current &&
+                !containerRef.current.contains(event.target as Node)
+            ) {
                 setMediaPlayerOpen(false);
             }
-            if (!window.YT) {
-                const tag = document.createElement("script");
-                tag.src = "https://www.youtube.com/iframe_api";
-                const firstScriptTag =
-                    document.getElementsByTagName("script")[0];
-                firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
-                window.onYouTubeIframeAPIReady = () => setYtApiReady(true);
-            } else {
-                setYtApiReady(true);
-            }
-        }
-    }, [setMediaPlayerOpen]);
+        };
 
-    useEffect(() => {
-        if (ytApiReady && !initialized.current) {
-            const checkContainer = setInterval(() => {
-                const container = document.getElementById(
-                    "youtube-player-container",
-                );
-                if (container) {
-                    clearInterval(checkContainer);
-                    setContainerReady(true);
-                }
-            }, 100);
-            return () => clearInterval(checkContainer);
+        if (mediaPlayerOpen) {
+            document.addEventListener("mousedown", handleClickOutside);
         }
-    }, [ytApiReady]);
+        return () => {
+            document.removeEventListener("mousedown", handleClickOutside);
+        };
+    }, [mediaPlayerOpen, setMediaPlayerOpen]);
 
-    useEffect(() => {
-        if (ytApiReady && youtubeUrl && containerReady) {
-            const videoId = extractId(youtubeUrl);
-            const container = document.getElementById(
-                "youtube-player-container",
-            );
-            if (!container) return;
-
-            if (!initialized.current) {
-                initialized.current = true;
-                playerRef.current = new window.YT.Player(
-                    "youtube-player-container",
-                    {
-                        height: "100%",
-                        width: "100%",
-                        videoId: videoId,
-                        playerVars: {
-                            autoplay: 0,
-                            controls: 1,
-                            modestbranding: 1,
-                            rel: 0,
-                            playsinline: 1,
-                            origin: window.location.origin,
-                            wmode: "opaque",
-                        },
-                        events: {
-                            onReady: () => {
-                                setPlayerReady(true);
-                                if (playerRef.current) {
-                                    setMuted(false);
-                                    setVolume(50);
-                                    playerRef.current.setVolume(50);
-                                    setIsPlaying(false);
-                                }
-                            },
-                            onStateChange: (e: any) => {
-                                const YTP = window.YT?.PlayerState;
-                                if (typeof YTP !== "undefined") {
-                                    if (e.data === YTP.PLAYING)
-                                        setIsPlaying(true);
-                                    if (
-                                        e.data === YTP.PAUSED ||
-                                        e.data === YTP.ENDED
-                                    )
-                                        setIsPlaying(false);
-                                }
-                            },
-                        },
-                    },
-                );
-            } else if (
-                playerRef.current &&
-                typeof playerRef.current.loadVideoById === "function"
-            ) {
-                unmutedOnce.current = false;
-                playerRef.current.loadVideoById(videoId);
-            }
-        }
-    }, [ytApiReady, youtubeUrl, containerReady]);
-
-    useEffect(() => {
-        if (prevTabRef.current !== "LOCAL" && activeTab === "LOCAL") {
-            setIsLocalPlaying(false);
-            setActiveLocalTrack(localUrl || localPlaylist[0]?.url || null);
-        }
-        if (prevTabRef.current === "LOCAL" && activeTab !== "LOCAL") {
-            if (audioRef.current) {
-                audioRef.current.pause();
-                setIsLocalPlaying(false);
-            }
-        }
-        if (prevTabRef.current !== "YOUTUBE" && activeTab === "YOUTUBE") {
-            userPaused.current = false;
+    const togglePlay = useCallback(() => {
+        if (!audioRef.current) return;
+        if (isPlaying) {
+            audioRef.current.pause();
             setIsPlaying(false);
-        }
-        prevTabRef.current = activeTab;
-    }, [activeTab, localUrl, localPlaylist]);
-
-    const handleYoutubeSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (inputUrl) {
-            addToPlaylist(inputUrl);
-            setInputUrl("");
-        }
-    };
-
-    const handleSpotifySubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        if (spotifyInputUrl) {
-            setMediaUrl("SPOTIFY", spotifyInputUrl.trim());
-            setSpotifyInputUrl("");
-        }
-    };
-
-    const handleVolumeChange = useCallback(
-        (e: React.ChangeEvent<HTMLInputElement>) => {
-            const newVolume = parseInt(e.target.value);
-            setVolume(newVolume);
-            if (audioRef.current) {
-                audioRef.current.volume = newVolume / 100;
-            }
-            if (playerRef.current && playerReady) {
-                if (newVolume > 0 && muted) {
-                    playerRef.current.unMute();
-                    setMuted(false);
-                }
-                playerRef.current.setVolume(newVolume);
-            }
-        },
-        [muted, playerReady],
-    );
-
-    const applyVolume = useCallback(
-        (value: number) => {
-            const clampedValue = Math.max(0, Math.min(100, value));
-            setVolume(clampedValue);
-            if (audioRef.current) {
-                audioRef.current.volume = clampedValue / 100;
-            }
-            if (playerRef.current && playerReady) {
-                if (clampedValue > 0 && muted) {
-                    playerRef.current.unMute();
-                    setMuted(false);
-                }
-                playerRef.current.setVolume(clampedValue);
-            }
-        },
-        [muted, playerReady],
-    );
-
-    const handleVolumeInputKeyDown = useCallback(
-        (e: React.KeyboardEvent<HTMLInputElement>) => {
-            if (e.key === "Enter") {
-                e.preventDefault();
-                const numValue = parseFloat(volumeInputValue);
-                if (!isNaN(numValue)) applyVolume(numValue);
-                setVolumeInputMode(false);
-            } else if (e.key === "Escape") {
-                setVolumeInputMode(false);
-                setVolumeInputValue(volume.toString());
-            }
-        },
-        [volumeInputValue, applyVolume, volume],
-    );
-
-    const handleVolumeInputBlur = useCallback(() => {
-        const numValue = parseFloat(volumeInputValue);
-        if (!isNaN(numValue)) applyVolume(numValue);
-        setVolumeInputMode(false);
-    }, [volumeInputValue, applyVolume]);
-
-    const handleVolumeDisplayClick = useCallback(() => {
-        setVolumeInputMode(true);
-        setVolumeInputValue(volume.toString());
-        setTimeout(() => {
-            volumeInputRef.current?.select();
-        }, 0);
-    }, [volume]);
-
-    const toggleMute = useCallback(() => {
-        if (audioRef.current) {
-            audioRef.current.muted = !muted;
-        }
-        if (playerRef.current && playerReady) {
-            if (muted) {
-                playerRef.current.unMute();
-                const targetVolume = volume === 0 ? 50 : volume;
-                playerRef.current.setVolume(targetVolume);
-                if (volume === 0) setVolume(50);
-                playerRef.current.playVideo();
-                setMuted(false);
-            } else {
-                playerRef.current.mute();
-                setMuted(true);
-            }
         } else {
-            setMuted(!muted);
+            audioRef.current.play().then(() => {
+                setIsPlaying(true);
+            }).catch((err) => {
+                console.log("Audio play error:", err);
+            });
         }
-    }, [muted, playerReady, volume]);
+    }, [isPlaying]);
 
-    const toggleLocalPlay = (
-        track: { title: string; artist: string; url: string },
-    ) => {
-        const targetUrl = track.url || "/music1.mp3";
-        if (audioRef.current) {
-            audioRef.current.volume = volume / 100;
-            if (activeLocalTrack === targetUrl && !audioRef.current.paused) {
-                audioRef.current.pause();
-                setIsLocalPlaying(false);
-            } else {
-                if (!audioRef.current.src || !audioRef.current.src.endsWith(targetUrl)) {
-                    audioRef.current.src = targetUrl;
-                }
-                setActiveLocalTrack(targetUrl);
-                setMediaUrl("LOCAL", targetUrl);
-                audioRef.current.play().then(() => {
-                    setIsLocalPlaying(true);
-                }).catch((err) => {
-                    console.log("Audio play error:", err);
-                });
-            }
-        }
+    const toggleMute = () => {
+        setMuted(!muted);
     };
 
-    const tabs: { key: MediaTab; label: string; icon: React.ReactNode }[] = [
-        { key: "LOCAL", label: "Local", icon: <Music className="w-3.5 h-3.5" /> },
-        {
-            key: "YOUTUBE",
-            label: "YouTube",
-            icon: <Youtube className="w-3.5 h-3.5" />,
-        },
-        {
-            key: "SPOTIFY",
-            label: "Spotify",
-            icon: <Music2 className="w-3.5 h-3.5" />,
-        },
-    ];
+    const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const val = parseInt(e.target.value, 10);
+        setVolume(val);
+        if (val > 0 && muted) {
+            setMuted(false);
+        }
+    };
 
     return (
-        <div
-            className={cn(
-                "fixed z-40 transition-all duration-300 ease-out",
-                mediaPlayerOpen
-                    ? "bottom-6 right-6 w-80"
-                    : "opacity-0 invisible pointer-events-none w-0 h-0",
-            )}
-        >
-            <div
+        <div ref={containerRef} className="relative inline-block text-left select-none">
+            {/* Audio Element */}
+            <audio
+                ref={audioRef}
+                src={localUrl || "/music1.mp3"}
+                loop
+                onPlay={() => setIsPlaying(true)}
+                onPause={() => setIsPlaying(false)}
+            />
+
+            {/* Collapsed Pill (Top Floating Button) */}
+            <button
+                onClick={() => setMediaPlayerOpen(!mediaPlayerOpen)}
                 className={cn(
-                    "bg-card/90 backdrop-blur-2xl border border-border/20 shadow-lg overflow-hidden flex flex-col relative",
+                    "flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl transition-all duration-300 shadow-md border group",
                     mediaPlayerOpen
-                        ? "rounded-[var(--radius)] p-4 gap-3"
-                        : "rounded-[var(--radius)] items-center justify-center w-full h-full",
+                        ? "bg-[#18181b] border-white/20 text-white shadow-xl ring-1 ring-white/10"
+                        : "bg-[#141416]/90 hover:bg-[#1c1c1f] border-white/10 text-white/90 hover:text-white"
                 )}
+                aria-label="Toggle ambient music player"
             >
-                {mediaPlayerOpen && (
-                    <div className="flex items-center justify-between shrink-0 w-full">
-                        <div className="flex items-center gap-2">
-                            <Music className="w-5 h-5 text-primary" />
-                            <span className="text-sm font-medium">
-                                Focus Player
+                <Music className={cn("w-4 h-4 transition-transform duration-300 group-hover:scale-110", isPlaying && "text-primary animate-pulse")} />
+                <span className="font-semibold text-xs sm:text-sm tracking-wide">
+                    Lo-Fi
+                </span>
+                {isPlaying && (
+                    <span className="flex items-center gap-0.5 h-3 ml-0.5">
+                        <span className="w-0.5 h-2.5 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
+                        <span className="w-0.5 h-3 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]" />
+                        <span className="w-0.5 h-2 bg-primary rounded-full animate-bounce" />
+                    </span>
+                )}
+            </button>
+
+            {/* Expanded Floating Card Popup */}
+            {mediaPlayerOpen && (
+                <div className="fixed right-4 sm:absolute sm:right-0 top-16 sm:top-full mt-2 w-[calc(100vw-2rem)] max-w-[320px] sm:w-80 bg-[#121214]/95 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200 space-y-3.5">
+                    {/* Header */}
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-white">
+                            <Music className="w-4 h-4 text-white/90" />
+                            <span className="text-sm font-semibold tracking-wide">
+                                Ambient Music
                             </span>
                         </div>
                         <button
                             onClick={() => setMediaPlayerOpen(false)}
-                            className="w-8 h-8 rounded-[var(--radius)] bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors"
+                            className="p-1 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                            title="Collapse"
                         >
-                            <ChevronUp className="w-4 h-4 rotate-180" />
+                            <ChevronDown className="w-4 h-4" />
                         </button>
                     </div>
-                )}
 
-                {mediaPlayerOpen && (
-                    <div className="flex items-center gap-1 shrink-0 bg-white/5 rounded-lg p-0.5">
-                        {tabs.map((tab) => (
-                            <button
-                                key={tab.key}
-                                onClick={() => setMediaType(tab.key)}
-                                className={cn(
-                                    "flex-1 flex items-center justify-center gap-1.5 py-1.5 text-xs font-medium rounded-md transition-all",
-                                    activeTab === tab.key
-                                        ? "bg-primary text-primary-foreground shadow-sm"
-                                        : "text-muted-foreground hover:text-foreground hover:bg-white/10",
-                                )}
-                            >
-                                {tab.icon}
-                                <span className="hidden sm:inline">
-                                    {tab.label}
-                                </span>
-                            </button>
-                        ))}
-                    </div>
-                )}
+                    {/* Main Inner Player Card */}
+                    <div className="bg-[#09090b] border border-white/5 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-inner">
+                        <div className="flex items-center gap-3 min-w-0">
+                            <div className={cn(
+                                "w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 transition-transform duration-500",
+                                isPlaying && "rotate-45"
+                            )}>
+                                <Disc className={cn("w-5 h-5 text-white/80", isPlaying && "text-primary animate-spin [animation-duration:6s]")} />
+                            </div>
+                            <div className="min-w-0">
+                                <h4 className="text-sm font-bold text-white truncate">
+                                    Lo-Fi
+                                </h4>
+                                <p className="text-xs text-white/50 truncate">
+                                    Focus Ambient Music
+                                </p>
+                            </div>
+                        </div>
 
-                {mediaPlayerOpen && (
-                    <div
-                        id="youtube-player-wrapper"
-                        className={cn(
-                            "overflow-hidden shrink-0 isolate transition-all duration-200",
-                            activeTab === "YOUTUBE"
-                                ? "aspect-video w-full relative opacity-100 visible"
-                                : "fixed opacity-0 invisible pointer-events-none w-px h-px overflow-hidden border-0",
-                        )}
-                    >
-                        <div
-                            id="youtube-player-container"
-                            className="w-full h-full"
-                        />
-                    </div>
-                )}
-
-                {mediaPlayerOpen && activeTab === "YOUTUBE" && (
-                    <div className="w-full space-y-3">
-                        <form
-                            onSubmit={handleYoutubeSubmit}
-                            className="flex gap-2 shrink-0 w-full"
+                        {/* Large Circular Play/Pause Button */}
+                        <button
+                            onClick={togglePlay}
+                            className="w-10 h-10 rounded-full bg-white hover:bg-white/90 text-black active:scale-95 transition-all duration-200 flex items-center justify-center shrink-0 shadow-lg"
+                            aria-label={isPlaying ? "Pause music" : "Play music"}
                         >
-                            <Input
-                                placeholder="Paste YouTube URL..."
-                                className="h-8 text-xs bg-black/20 rounded-[var(--radius)]"
-                                value={inputUrl}
-                                onChange={(e) => setInputUrl(e.target.value)}
-                            />
-                            <Button
-                                type="submit"
-                                size="sm"
-                                className="h-8 rounded-[var(--radius)] px-3"
-                            >
-                                Play
-                            </Button>
-                        </form>
+                            {isPlaying ? (
+                                <Pause className="w-5 h-5 fill-current text-black" />
+                            ) : (
+                                <Play className="w-5 h-5 fill-current text-black ml-0.5" />
+                            )}
+                        </button>
+                    </div>
 
-                        <div className="flex items-center gap-2 px-1 shrink-0">
-                            <button
-                                onClick={toggleMute}
-                                className="p-1.5 rounded-[var(--radius)] hover:bg-white/10 transition-colors"
-                            >
-                                {muted ? (
-                                    <VolumeX className="w-4 h-4" />
-                                ) : (
-                                    <Volume2 className="w-4 h-4" />
-                                )}
-                            </button>
-                            <Button
-                                size="sm"
-                                onClick={() => {
-                                    if (!playerRef.current) return;
-                                    if (isPlaying) {
-                                        userPaused.current = true;
-                                        playerRef.current.pauseVideo();
-                                        setIsPlaying(false);
-                                    } else {
-                                        userPaused.current = false;
-                                        playerRef.current.playVideo();
-                                        setIsPlaying(true);
-                                        if (muted) {
-                                            playerRef.current.unMute();
-                                            setMuted(false);
-                                        }
-                                        if (volume === 0) {
-                                            setVolume(50);
-                                            playerRef.current.setVolume(50);
-                                        }
-                                    }
-                                }}
-                                className="h-8 rounded-[var(--radius)] px-3"
-                            >
-                                {isPlaying ? (
-                                    <Pause className="w-4 h-4" />
-                                ) : (
-                                    <Play className="w-4 h-4" />
-                                )}
-                            </Button>
+                    {/* Bottom Controls Row: Volume Slider */}
+                    <div className="flex items-center gap-3 pt-1">
+                        <button
+                            onClick={toggleMute}
+                            className="text-white/70 hover:text-white transition-colors p-1"
+                            aria-label={muted ? "Unmute" : "Mute"}
+                        >
+                            {muted || volume === 0 ? (
+                                <VolumeX className="w-4 h-4" />
+                            ) : (
+                                <Volume2 className="w-4 h-4" />
+                            )}
+                        </button>
+
+                        <div className="flex-1 flex items-center">
                             <input
                                 type="range"
                                 min="0"
                                 max="100"
-                                step="1"
-                                value={volume}
+                                value={muted ? 0 : volume}
                                 onChange={handleVolumeChange}
-                                className="flex-1 h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:bg-primary [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:transition-transform [&::-webkit-slider-thumb]:hover:scale-125"
+                                className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
                             />
-                            {volumeInputMode ? (
-                                <input
-                                    ref={volumeInputRef}
-                                    type="number"
-                                    min="0"
-                                    max="100"
-                                    step="0.5"
-                                    value={volumeInputValue}
-                                    onChange={(e) =>
-                                        setVolumeInputValue(e.target.value)
-                                    }
-                                    onKeyDown={handleVolumeInputKeyDown}
-                                    onBlur={handleVolumeInputBlur}
-                                    className="w-14 h-6 text-xs font-medium bg-card/60 border border-border/40 rounded-md px-2 py-0.5 text-right text-foreground outline-none focus:border-primary/60 focus:ring-1 focus:ring-primary/30 transition-all"
-                                    autoFocus
-                                />
-                            ) : (
-                                <span
-                                    onClick={handleVolumeDisplayClick}
-                                    className="text-xs font-medium text-muted-foreground min-w-[3rem] text-right cursor-pointer hover:text-primary hover:bg-primary/10 px-1.5 py-0.5 rounded-md transition-all"
-                                    title="Click to edit volume"
-                                    role="button"
-                                    tabIndex={0}
-                                    onKeyDown={(e) => {
-                                        if (
-                                            e.key === "Enter" ||
-                                            e.key === " "
-                                        ) {
-                                            handleVolumeDisplayClick();
-                                        }
-                                    }}
-                                >
-                                    {volume}%
-                                </span>
-                            )}
                         </div>
-
-                        <button
-                            onClick={() =>
-                                setShowPlaylist(!showPlaylist)
-                            }
-                            className={cn(
-                                "w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors shrink-0",
-                                showPlaylist
-                                    ? "bg-primary/20 text-primary"
-                                    : "bg-white/5 hover:bg-white/10",
-                            )}
-                        >
-                            <span className="flex items-center gap-2">
-                                <LinkIcon className="w-4 h-4" />
-                                History ({youtubePlaylist.length})
-                            </span>
-                        </button>
-
-                        {showPlaylist && (
-                            <div className="space-y-2 overflow-y-auto max-h-32">
-                                <div className="space-y-1">
-                                    {youtubePlaylist.map((url, idx) => (
-                                        <div
-                                            key={idx}
-                                            className="flex items-center justify-between p-2 rounded-[var(--radius)] bg-white/5 group"
-                                        >
-                                            <span className="text-[10px] text-muted-foreground truncate flex-1">
-                                                {extractId(url)}
-                                            </span>
-                                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                <button
-                                                    onClick={() =>
-                                                        setMediaUrl(
-                                                            "YOUTUBE",
-                                                            url,
-                                                        )
-                                                    }
-                                                    className={cn(
-                                                        "text-[10px] px-2 py-0.5 rounded",
-                                                        youtubeUrl === url
-                                                            ? "bg-primary text-primary-foreground"
-                                                            : "hover:bg-white/20",
-                                                    )}
-                                                >
-                                                    {youtubeUrl === url
-                                                        ? "Current"
-                                                        : "Play"}
-                                                </button>
-                                                <button
-                                                    onClick={() =>
-                                                        removeFromPlaylist(
-                                                            url,
-                                                        )
-                                                    }
-                                                    className="text-muted-foreground hover:text-destructive p-1"
-                                                >
-                                                    <Trash2 className="w-3 h-3" />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
                     </div>
-                )}
-
-                {mediaPlayerOpen && activeTab === "SPOTIFY" && (
-                    <div className="w-full space-y-3">
-                        <form
-                            onSubmit={handleSpotifySubmit}
-                            className="flex gap-2 shrink-0"
-                        >
-                            <Input
-                                placeholder="Paste Spotify playlist or track URL..."
-                                className="h-8 text-xs bg-black/20 rounded-[var(--radius)]"
-                                value={spotifyInputUrl}
-                                onChange={(e) =>
-                                    setSpotifyInputUrl(e.target.value)
-                                }
-                            />
-                            <Button
-                                type="submit"
-                                size="sm"
-                                className="h-8 rounded-[var(--radius)] px-3"
-                            >
-                                Load
-                            </Button>
-                        </form>
-
-                        {spotifyEmbedUrl ? (
-                            <iframe
-                                src={spotifyEmbedUrl}
-                                width="100%"
-                                height="152"
-                                frameBorder="0"
-                                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-                                loading="lazy"
-                                className="rounded-[var(--radius)]"
-                                style={{ minHeight: 152 }}
-                            />
-                        ) : (
-                            <div className="aspect-[2/1] w-full flex flex-col items-center justify-center bg-white/5 rounded-[var(--radius)] text-muted-foreground text-xs gap-2 p-4 text-center">
-                                <Music2 className="w-8 h-8 opacity-40" />
-                                <p>
-                                    Paste a Spotify playlist or track URL above to
-                                    get started.
-                                </p>
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {mediaPlayerOpen && activeTab === "LOCAL" && (
-                    <div className="w-full space-y-2 max-h-72 overflow-y-auto pr-1">
-                        {localPlaylist.map((track) => {
-                            const isActiveTrack =
-                                activeLocalTrack === track.url &&
-                                isLocalPlaying;
-                            return (
-                                <button
-                                    key={track.id}
-                                    onClick={() => toggleLocalPlay(track)}
-                                    className={cn(
-                                        "w-full flex items-center gap-3 p-2.5 rounded-[var(--radius)] transition-colors text-left",
-                                        isActiveTrack
-                                            ? "bg-primary/20 border border-primary/30"
-                                            : "bg-white/5 hover:bg-white/10 border border-transparent",
-                                    )}
-                                >
-                                    <div
-                                        className={cn(
-                                            "w-8 h-8 rounded-full flex items-center justify-center shrink-0",
-                                            isActiveTrack
-                                                ? "bg-primary text-primary-foreground"
-                                                : "bg-white/10 text-foreground",
-                                        )}
-                                    >
-                                        {isLocalPlaying ? (
-                                            <Pause className="w-3.5 h-3.5" />
-                                        ) : (
-                                            <Play className="w-3.5 h-3.5 ml-0.5" />
-                                        )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                        <p className="text-xs font-medium truncate">
-                                            {track.title}
-                                        </p>
-                                        <p className="text-[10px] text-muted-foreground truncate">
-                                            {track.artist}
-                                        </p>
-                                    </div>
-                                    {isActiveTrack && isLocalPlaying && (
-                                        <div className="flex items-end gap-[2px] h-4">
-                                            <span className="w-[3px] h-3 bg-primary rounded-full animate-pulse" />
-                                            <span className="w-[3px] h-4 bg-primary rounded-full animate-pulse delay-75" />
-                                            <span className="w-[3px] h-2 bg-primary rounded-full animate-pulse delay-150" />
-                                        </div>
-                                    )}
-                                </button>
-                            );
-                        })}
-                    </div>
-                )}
-
-                <audio
-                    ref={audioRef}
-                    src={activeLocalTrack || localUrl || "/music1.mp3"}
-                    loop
-                    onPlay={() => setIsLocalPlaying(true)}
-                    onPause={() => setIsLocalPlaying(false)}
-                    onEnded={() => {
-                        if (audioRef.current) {
-                            audioRef.current.currentTime = 0;
-                            audioRef.current.play().catch(() => {});
-                        }
-                    }}
-                    className="hidden"
-                />
-            </div>
+                </div>
+            )}
         </div>
     );
 }

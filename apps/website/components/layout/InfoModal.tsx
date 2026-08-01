@@ -14,19 +14,12 @@ const PROJECT_INFO = {
     name: "Focus",
     version: "1.2.0",
     description:
-        "A minimalist productivity app designed to help you stay in flow. Features a Pomodoro-style timer, task management, stats/journaling, and an ambient media player for focus enhancement.",
-    github: "https://github.com/YogaDharma21/focus-website",
-    techStack: ["Next.js", "React", "TypeScript", "Tailwind CSS", "shadcn/ui"],
+        "A minimalist productivity app designed to help you stay in flow. Features a Pomodoro-style timer, task management, stats, and an ambient media player for focus enhancement.",
     links: [
         {
             label: "GitHub Repository",
             url: "https://github.com/YogaDharma21/focus-website",
             icon: Github,
-        },
-        {
-            label: "Report an Issue",
-            url: "https://github.com/YogaDharma21/focus-website/issues",
-            icon: ExternalLink,
         },
     ],
 };
@@ -49,20 +42,6 @@ export function InfoModal() {
                 <div className="space-y-4 pt-2">
                     <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <span>Version {PROJECT_INFO.version}</span>
-                    </div>
-
-                    <div>
-                        <p className="text-sm font-medium mb-2">Built with</p>
-                        <div className="flex flex-wrap gap-2">
-                            {PROJECT_INFO.techStack.map((tech) => (
-                                <span
-                                    key={tech}
-                                    className="px-2 py-1 bg-secondary rounded-[var(--radius)] text-xs"
-                                >
-                                    {tech}
-                                </span>
-                            ))}
-                        </div>
                     </div>
 
                     <div className="pt-2 border-t">
@@ -96,7 +75,7 @@ export function InfoButton() {
         <>
             <button
                 onClick={() => setOpen(true)}
-                className="flex flex-col items-center justify-center w-16 h-14 rounded-[var(--radius)] transition-all duration-300 ease-out group text-muted-foreground hover:text-foreground hover:bg-white/5"
+                className="flex flex-col items-center justify-center w-12 h-11 sm:w-16 sm:h-14 rounded-[var(--radius)] transition-all duration-300 ease-out group text-muted-foreground hover:text-foreground hover:bg-white/5"
             >
                 <span className="transform transition-transform duration-300 group-hover:scale-105">
                     <svg
@@ -130,22 +109,6 @@ export function InfoButton() {
                     <div className="space-y-4 pt-2">
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                             <span>Version {PROJECT_INFO.version}</span>
-                        </div>
-
-                        <div>
-                            <p className="text-sm font-medium mb-2">
-                                Built with
-                            </p>
-                            <div className="flex flex-wrap gap-2">
-                                {PROJECT_INFO.techStack.map((tech) => (
-                                    <span
-                                        key={tech}
-                                        className="px-2 py-1 bg-secondary rounded-[var(--radius)] text-xs"
-                                    >
-                                        {tech}
-                                    </span>
-                                ))}
-                            </div>
                         </div>
 
                         <div className="pt-2 border-t">

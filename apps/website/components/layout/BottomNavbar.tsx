@@ -1,13 +1,12 @@
 "use client";
 
 import { useAppStore, ViewType } from "@/lib/store";
-import { Timer, CheckSquare, BarChart2, NotebookPen, Music } from "lucide-react";
+import { Timer, CheckSquare, BarChart2, NotebookPen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/hooks";
 
 export function BottomNavbar() {
-    const { currentView, setView, setMediaPlayerOpen, mediaPlayerOpen } =
-        useAppStore();
+    const { currentView, setView } = useAppStore();
     const isDesktop = useMediaQuery("(min-width: 768px)");
 
     const navItems: {
@@ -77,21 +76,6 @@ export function BottomNavbar() {
                         </button>
                     );
                 })}
-                <button
-                    onClick={() => setMediaPlayerOpen(!mediaPlayerOpen)}
-                    className={cn(
-                        "relative flex flex-col items-center justify-center w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 transition-all duration-300 ease-out group text-muted-foreground hover:text-foreground hover:bg-white/5",
-                        isDesktop ? "rounded-[var(--radius)]" : "rounded-[var(--radius)]",
-                    )}
-                    aria-label="Toggle media player"
-                >
-                    <span className="transform transition-transform duration-300 group-hover:scale-105">
-                        <Music className="w-5 h-5 sm:w-6 sm:h-6" />
-                    </span>
-                    {mediaPlayerOpen && (
-                        <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-primary rounded-[var(--radius)]" />
-                    )}
-                </button>
             </nav>
         </div>
     );
