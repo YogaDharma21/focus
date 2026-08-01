@@ -8,16 +8,9 @@ interface AppState {
     currentView: ViewType;
     setView: (view: ViewType) => void;
 
-    mediaType: "YOUTUBE" | "SPOTIFY" | "LOCAL";
-    youtubeUrl: string;
-    youtubePlaylist: string[];
-    spotifyUrl: string;
     localUrl: string;
     localPlaylist: { id: string; title: string; artist: string; url: string }[];
-    setMediaType: (type: "YOUTUBE" | "SPOTIFY" | "LOCAL") => void;
-    setMediaUrl: (type: "YOUTUBE" | "SPOTIFY" | "LOCAL", url: string) => void;
-    addToPlaylist: (url: string) => void;
-    removeFromPlaylist: (url: string) => void;
+    setMediaUrl: (url: string) => void;
     mediaPlayerOpen: boolean;
     setMediaPlayerOpen: (open: boolean) => void;
 
@@ -132,56 +125,18 @@ export const useAppStore = create<AppState>()(
             currentView: "FOCUS",
             setView: (view) => set({ currentView: view }),
 
-            mediaType: "LOCAL",
-            youtubeUrl: "https://www.youtube.com/watch?v=DEWzT1geuPU",
-            youtubePlaylist: ["https://www.youtube.com/watch?v=DEWzT1geuPU"],
-            spotifyUrl:
-                "https://open.spotify.com/playlist/37i9dQZF1DX8Uebhn9wzrS?si=5rvssghNSWKXYYRCYbb5Xg",
             localUrl: "/music1.mp3",
             localPlaylist: [
                 {
                     id: "local-1",
                     title: "Lo-Fi",
-                    artist: "",
+                    artist: "Focus Ambient Music",
                     url: "/music1.mp3",
                 },
             ],
 
-            setMediaType: (type) => set({ mediaType: type }),
-            setMediaUrl: (type, url) =>
-                set((state) => ({
-                    [type === "YOUTUBE"
-                        ? "youtubeUrl"
-                        : type === "SPOTIFY"
-                          ? "spotifyUrl"
-                          : "localUrl"]: url,
-                    ...(type === "YOUTUBE" &&
-                    !state.youtubePlaylist.includes(url)
-                        ? { youtubePlaylist: [...state.youtubePlaylist, url] }
-                        : {}),
-                })),
-            addToPlaylist: (url) =>
-                set((state) => ({
-                    youtubePlaylist: state.youtubePlaylist.includes(url)
-                        ? state.youtubePlaylist
-                        : [...state.youtubePlaylist, url],
-                    youtubeUrl: url,
-                })),
-            removeFromPlaylist: (url) =>
-                set((state) => {
-                    const newPlaylist = state.youtubePlaylist.filter(
-                        (u) => u !== url,
-                    );
-                    return {
-                        youtubePlaylist: newPlaylist,
-                        youtubeUrl:
-                            state.youtubeUrl === url
-                                ? newPlaylist[0] ||
-                                  "https://www.youtube.com/watch?v=DEWzT1geuPU"
-                                : state.youtubeUrl,
-                    };
-                }),
-            mediaPlayerOpen: true,
+            setMediaUrl: (url) => set({ localUrl: url }),
+            mediaPlayerOpen: false,
             setMediaPlayerOpen: (open) => set({ mediaPlayerOpen: open }),
 
             timerMode: "POMODORO",

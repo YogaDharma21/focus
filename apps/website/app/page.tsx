@@ -70,25 +70,23 @@ export default function Page() {
             )}>
                 <BottomNavbar />
                 
-                <div className={cn(
-                    "flex-1 w-full max-w-7xl mx-auto p-6 pb-24 z-10 relative transition-all duration-300 ease-in-out",
-                    mediaPlayerOpen && "md:pr-[344px]"
-                )}>
-                    <header className="flex items-center justify-between mb-8">
+                <div className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 pb-24 z-10 relative transition-all duration-300 ease-in-out">
+                    <header className="flex items-center justify-between mb-8 gap-2">
                         <div className="flex items-center gap-3">
                             <img src="/icon-192.png" alt="Focus Logo" className="w-8 h-8 rounded-lg object-contain shadow-sm" />
-                            <h1 className="text-xl font-bold tracking-tight opacity-90">
+                            <h1 className="text-xl font-bold tracking-tight opacity-90 hidden sm:block">
                                 {currentView === "FOCUS" && "Focus Session"}
                                 {currentView === "TODO" && "Tasks"}
                                 {currentView === "JOURNAL" && "Journal & Stats"}
                                 {currentView === "NOTES" && "Notes"}
                             </h1>
                         </div>
-                        <div className="flex items-center gap-1">
+                        <div className="flex items-center gap-1.5 sm:gap-2 relative z-30">
+                            <MediaPlayer />
                             <button
                                 onClick={toggleFocusMode}
                                 className={cn(
-                                    "flex flex-col items-center justify-center w-16 h-14 rounded-[var(--radius)] transition-all duration-300 ease-out group",
+                                    "flex flex-col items-center justify-center w-12 h-11 sm:w-16 sm:h-14 rounded-[var(--radius)] transition-all duration-300 ease-out group",
                                     deepFocusMode
                                         ? "text-primary-foreground bg-primary shadow-lg"
                                         : "text-muted-foreground hover:text-foreground hover:bg-white/5",
@@ -96,7 +94,7 @@ export default function Page() {
                                 title="Toggle Deep Focus Mode"
                             >
                                 <span className="transform transition-transform duration-300 group-hover:scale-105">
-                                    <Focus className="w-6 h-6" />
+                                    <Focus className="w-5 h-5 sm:w-6 sm:h-6" />
                                 </span>
                             </button>
                             <BackgroundSelector />
@@ -116,10 +114,7 @@ export default function Page() {
                         )}
 
                         {(currentView === "TODO" || currentView === "JOURNAL") && (
-                            <div className={cn(
-                                "max-w-2xl mx-auto w-full pb-8 pt-12 transition-all duration-300 ease-in-out",
-                                mediaPlayerOpen && "lg:max-w-none lg:mx-0 lg:pr-0"
-                            )}>
+                            <div className="max-w-2xl mx-auto w-full pb-8 pt-12 transition-all duration-300 ease-in-out">
                                 {currentView === "TODO" ? (
                                     <TodoList />
                                 ) : (
@@ -129,18 +124,13 @@ export default function Page() {
                         )}
 
                         {currentView === "NOTES" && (
-                            <div className={cn(
-                                "max-w-2xl mx-auto w-full pb-8 pt-12 transition-all duration-300 ease-in-out",
-                                mediaPlayerOpen && "lg:max-w-none lg:mx-0 lg:pr-0"
-                            )}>
+                            <div className="max-w-2xl mx-auto w-full pb-8 pt-12 transition-all duration-300 ease-in-out">
                                 <MoodNotes />
                             </div>
                         )}
                     </div>
                 </div>
             </div>
-
-            <MediaPlayer />
         </main>
     );
 }
