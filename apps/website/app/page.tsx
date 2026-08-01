@@ -77,7 +77,7 @@ export default function Page() {
                             <h1 className="text-xl font-bold tracking-tight opacity-90 hidden sm:block">
                                 {currentView === "FOCUS" && "Focus Session"}
                                 {currentView === "TODO" && "Tasks"}
-                                {currentView === "JOURNAL" && "Journal & Stats"}
+                                {currentView === "JOURNAL" && "Stats"}
                                 {currentView === "NOTES" && "Notes"}
                             </h1>
                         </div>
