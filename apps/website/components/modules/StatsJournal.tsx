@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppStore, Distraction } from "@/lib/store";
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -10,12 +10,10 @@ import {
     List,
     Clock,
     Flame,
-    TrendingUp,
     Target,
     BarChart3,
 } from "lucide-react";
-import { isSameDay, parseISO, addDays, format, eachDayOfInterval } from "date-fns";
-import { cn } from "@/lib/utils";
+import { isSameDay, parseISO } from "date-fns";
 
 export function StatsJournal() {
     const { sessions, sessionStartTime, isActive, todos, distractions } =
@@ -141,31 +139,6 @@ export function StatsJournal() {
 
     const bestStreak = calculateBestStreak();
 
-    // Focus trend - last 7 days
-    const focusTrend = useMemo(() => {
-        const todayDate = new Date();
-        const days = eachDayOfInterval({
-            start: addDays(todayDate, -6),
-            end: todayDate,
-        });
-
-        return days.map((date) => {
-            const daySessions = sessions.filter((s) =>
-                s.date && isSameDay(parseISO(s.date), date),
-            );
-            const totalSecs = daySessions.reduce((acc, s) => acc + s.duration, 0);
-            const isToday = isSameDay(date, todayDate);
-            const effectiveSecs = totalSecs + (isToday ? liveElapsed : 0);
-            const minutes = Math.round(effectiveSecs / 60);
-            const displayLabel = effectiveSecs > 0
-                ? (effectiveSecs < 60 ? `${effectiveSecs}s` : `${Math.round(effectiveSecs / 60)}m`)
-                : "0m";
-            return { date: format(date, "EEE"), minutes, seconds: effectiveSecs, displayLabel };
-        });
-    }, [sessions, liveElapsed]);
-
-    const maxTrendMinutes = Math.max(...focusTrend.map((d) => d.minutes), 1);
-
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
@@ -242,75 +215,43 @@ export function StatsJournal() {
             <div className="grid grid-cols-2 gap-4">
                 {/* Longest Streak */}
                 <Card className="p-4 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-3 rounded-[var(--radius)]">
-                    <div className="flex items-center gap-2">
-                        <Flame className="w-4 h-4 text-orange-500" />
-                        <h3 className="text-sm font-medium">Longest Streak</h3>
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-center justify-center shrink-0 shadow-sm">
+                            <Flame className="w-4 h-4 fill-amber-500/20" />
+                        </div>
+                        <h3 className="text-sm font-bold tracking-tight text-foreground">Longest Streak</h3>
                     </div>
-                    <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-2 pt-1">
                         <div className="flex items-center justify-between">
                             <span className="text-xs text-muted-foreground">Current</span>
-                            <span className="text-lg font-bold">{currentStreak} Days</span>
+                            <span className="text-base font-bold">{currentStreak} Days</span>
                         </div>
                         <div className="flex items-center justify-between">
                             <span className="text-xs text-muted-foreground">Best</span>
-                            <span className="text-lg font-bold">{bestStreak} Days</span>
+                            <span className="text-base font-bold">{bestStreak} Days</span>
                         </div>
                     </div>
                 </Card>
 
                 {/* Completion Rate */}
                 <Card className="p-4 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-3 rounded-[var(--radius)]">
-                    <div className="flex items-center gap-2">
-                        <Target className="w-4 h-4 text-green-500" />
-                        <h3 className="text-sm font-medium">Completion Rate</h3>
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 flex items-center justify-center shrink-0 shadow-sm">
+                            <Target className="w-4 h-4" />
+                        </div>
+                        <h3 className="text-sm font-bold tracking-tight text-foreground">Completion Rate</h3>
                     </div>
-                    <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-1 pt-1">
                         <div className="text-2xl font-bold">
                             {todos.length > 0 ? Math.round((todos.filter((t) => t.completed).length / todos.length) * 100) : 0}%
                         </div>
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <CheckCircle2 className="w-3 h-3" />
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                             Tasks Finished
                         </div>
                     </div>
                 </Card>
             </div>
-
-            {/* Focus Trend */}
-            <Card className="p-4 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-4 rounded-[var(--radius)]">
-                <div className="flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-primary" />
-                    <h3 className="text-sm font-medium">Focus Trend</h3>
-                </div>
-                <div className="flex flex-col gap-1">
-                    <span className="text-xs text-muted-foreground">This Week</span>
-                    <div className="flex items-end gap-2 h-24 mt-2 pt-5">
-                        {focusTrend.map((item, index) => (
-                            <div
-                                key={index}
-                                className="flex-1 flex flex-col items-center gap-1.5 h-full justify-end group relative"
-                                title={`${item.date}: ${item.displayLabel}`}
-                            >
-                                <span className="text-[10px] font-medium text-primary/80 group-hover:text-primary transition-colors">
-                                    {item.seconds > 0 ? item.displayLabel : ""}
-                                </span>
-                                <div
-                                    className={cn(
-                                        "w-full rounded-t-sm transition-all duration-500",
-                                        item.seconds > 0 ? "bg-primary" : "bg-primary/10"
-                                    )}
-                                    style={{
-                                        height: `${Math.max((item.minutes / maxTrendMinutes) * 100, item.seconds > 0 ? 15 : 6)}%`,
-                                    }}
-                                />
-                                <span className="text-[10px] text-muted-foreground">
-                                    {item.date}
-                                </span>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            </Card>
 
             {totalDistractions > 0 && (
                 <Card className="p-6 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-4 rounded-[var(--radius)]">
