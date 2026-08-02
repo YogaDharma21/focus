@@ -495,7 +495,6 @@ export function Popup() {
   const secs = state.timeLeft % 60;
   const timeFormatted = `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   const totalDuration = state.timerState === "WORK" ? state.pomodoroSettings.work * 60 : state.pomodoroSettings.break * 60;
-  const progressPercent = state.timerState === "FLOW" ? 100 : (totalDuration > 0 ? Math.min(100, Math.max(0, ((totalDuration - state.timeLeft) / totalDuration) * 100)) : 0);
 
   // Stats Calculations
   const finishedTasksTodayCount = state.todos.filter(t => t.completed).length;
@@ -1221,46 +1220,20 @@ export function Popup() {
               </button>
             </div>
 
-            {/* Circular Timer Ring */}
-            <div className="relative w-40 h-40 my-2 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90">
-                <circle
-                  cx="80"
-                  cy="80"
-                  r="68"
-                  className={isDark ? "stroke-neutral-800" : "stroke-neutral-200"}
-                  strokeWidth="8"
-                  fill="transparent"
-                />
-                <circle
-                  cx="80"
-                  cy="80"
-                  r="68"
-                  className={`transition-all duration-1000 ease-linear ${
-                    isDark ? "stroke-white" : "stroke-black"
-                  }`}
-                  strokeWidth="8"
-                  strokeDasharray={427}
-                  strokeDashoffset={427 - (427 * progressPercent) / 100}
-                  strokeLinecap="square"
-                  fill="transparent"
-                />
-              </svg>
-
-              <div className="absolute flex flex-col items-center justify-center text-center">
-                <span className="text-3xl font-black font-mono tracking-tighter">
-                  {timeFormatted}
-                </span>
-                <span className={`text-[9px] font-mono uppercase tracking-widest mt-1 px-2 py-0.5 rounded border ${
-                  isDark
-                    ? "bg-neutral-900 text-neutral-300 border-neutral-700"
-                    : "bg-neutral-100 text-neutral-800 border-neutral-300"
-                }`}>
-                  {state.isActive
-                    ? (state.timerState === "FLOW" ? "STOPWATCH FLOW" : state.timerState === "WORK" ? "WORK IN PROGRESS" : "ON BREAK")
-                    : "PAUSED"}
-                </span>
-              </div>
+            {/* Timer Display - Big Number */}
+            <div className="flex flex-col items-center justify-center my-4 py-6">
+              <span className="text-7xl font-black font-mono tracking-tighter leading-none">
+                {timeFormatted}
+              </span>
+              <span className={`text-[10px] font-mono uppercase tracking-widest mt-3 px-3 py-1 rounded-lg border ${
+                isDark
+                  ? "bg-neutral-900 text-neutral-300 border-neutral-700"
+                  : "bg-neutral-100 text-neutral-800 border-neutral-300"
+              }`}>
+                {state.isActive
+                  ? (state.timerState === "FLOW" ? "STOPWATCH FLOW" : state.timerState === "WORK" ? "WORK IN PROGRESS" : "ON BREAK")
+                  : "PAUSED"}
+              </span>
             </div>
 
             {/* Goal Input */}
