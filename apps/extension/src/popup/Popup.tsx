@@ -757,21 +757,22 @@ export function Popup() {
                   Launch break timer immediately after work or flow
                 </span>
               </div>
-              <button
-                type="button"
+              <div
                 onClick={() => setAutoStartBreakInput(!autoStartBreakInput)}
-                className={`relative w-10 h-5 rounded-full transition-colors ${
+                className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
                   autoStartBreakInput
                     ? isDark ? "bg-white" : "bg-black"
                     : isDark ? "bg-neutral-700" : "bg-neutral-300"
                 }`}
               >
-                <span className={`absolute top-0.5 w-4 h-4 rounded-full transition-transform ${
-                  autoStartBreakInput
-                    ? isDark ? "translate-x-5 bg-black" : "translate-x-5 bg-white"
-                    : isDark ? "translate-x-0.5 bg-neutral-400" : "translate-x-0.5 bg-white"
-                }`} />
-              </button>
+                <div
+                  className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
+                    autoStartBreakInput
+                      ? isDark ? "left-[22px] bg-black" : "left-[22px] bg-white"
+                      : isDark ? "left-[2px] bg-neutral-400" : "left-[2px] bg-white"
+                  }`}
+                />
+              </div>
             </div>
 
             <button
