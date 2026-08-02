@@ -34,7 +34,10 @@ import {
   Music,
   Volume2,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Activity,
+  Target,
+  CheckCircle2 as TaskDone
 } from "lucide-react";
 import { AppStateData, TodoItem, PriorityType, RecurringType, BackgroundTheme } from "../types";
 import { getStoredState, saveStoredState, subscribeToStateChanges, DEFAULT_STATE } from "../lib/storage";
@@ -51,11 +54,11 @@ const MOOD_EMOJIS = [
 ];
 
 const DISTRACTION_CATEGORIES = [
-  "📱 Phone",
-  "🌐 Social Media",
-  "🚪 Bathroom",
-  "💬 Meeting",
-  "❓ Other"
+  "Phone",
+  "Social Media",
+  "Bathroom",
+  "Meeting",
+  "Other"
 ];
 
 const BACKGROUND_THEMES: { id: BackgroundTheme; name: string }[] = [
@@ -93,7 +96,6 @@ export function Popup() {
 
   // Music Player State & Controls
   const [isMusicExpanded, setIsMusicExpanded] = useState(false);
-  const prevTimerStateRef = React.useRef<string | null>(null);
 
   const isMusicPlaying = state?.isMusicPlaying ?? false;
   const musicVolume = state?.musicVolume ?? 0.8;
@@ -123,15 +125,6 @@ export function Popup() {
       updateState({ isMusicPlaying: !isMusicPlaying });
     }
   };
-
-  useEffect(() => {
-    if (state?.timerState) {
-      if (prevTimerStateRef.current && (prevTimerStateRef.current === "WORK" || prevTimerStateRef.current === "FLOW") && state.timerState === "BREAK") {
-        playSoundEffect();
-      }
-      prevTimerStateRef.current = state.timerState;
-    }
-  }, [state?.timerState]);
 
   useEffect(() => {
     getStoredState().then((initial) => {
@@ -213,6 +206,10 @@ export function Popup() {
   const completeSession = () => {
     playSoundEffect();
     const isWorkOrFlow = state.timerState === "WORK" || state.timerState === "FLOW";
+
+    if (isWorkOrFlow && typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({ target: "background", action: "RESTORE_BLOCKED_TABS" });
+    }
     const durationLogged = state.timerState === "FLOW" ? state.timeLeft : (state.pomodoroSettings.work * 60 - state.timeLeft);
     const minsLogged = Math.max(1, Math.round(durationLogged / 60));
 
@@ -259,7 +256,7 @@ export function Popup() {
     }
 
     updateState({
-      isActive: state.timerState === "WORK" && state.pomodoroSettings.autoStartBreak,
+      isActive: isWorkOrFlow && state.pomodoroSettings.autoStartBreak,
       timerState: nextState,
       previousMode: prevMode,
       timeLeft: nextTime,
@@ -495,7 +492,6 @@ export function Popup() {
   const secs = state.timeLeft % 60;
   const timeFormatted = `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   const totalDuration = state.timerState === "WORK" ? state.pomodoroSettings.work * 60 : state.pomodoroSettings.break * 60;
-  const progressPercent = state.timerState === "FLOW" ? 100 : (totalDuration > 0 ? Math.min(100, Math.max(0, ((totalDuration - state.timeLeft) / totalDuration) * 100)) : 0);
 
   // Stats Calculations
   const finishedTasksTodayCount = state.todos.filter(t => t.completed).length;
@@ -505,6 +501,7 @@ export function Popup() {
   // Distraction Analysis Breakdown
   const distractionCounts: { [cat: string]: number } = {};
   state.distractions.forEach(d => {
+    if (d.category === "Shield Blocked Tab") return;
     const cat = d.category || "Other";
     distractionCounts[cat] = (distractionCounts[cat] || 0) + 1;
   });
@@ -698,10 +695,7 @@ export function Popup() {
           isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
         }`}>
           <div className="flex items-center justify-between pb-3 border-b border-current">
-            <div className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              <h2 className="text-sm font-bold font-mono uppercase tracking-wider">TIMER SETTINGS</h2>
-            </div>
+            <h2 className="text-sm font-bold font-sans">Timer Settings</h2>
             <button
               onClick={() => setShowSettingsModal(false)}
               className={`p-1 rounded-lg border ${
@@ -712,58 +706,85 @@ export function Popup() {
             </button>
           </div>
 
-          <form onSubmit={saveSettings} className="space-y-4 my-auto">
-            <div>
-              <label className="text-xs font-mono font-bold block mb-1">Work Duration (Minutes)</label>
-              <input
-                type="number"
-                min="1"
-                max="120"
-                value={workMinsInput}
-                onChange={(e) => setWorkMinsInput(parseInt(e.target.value) || 25)}
-                className={`w-full p-2.5 rounded-xl border text-sm font-mono focus:outline-none ${
-                  isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
-                }`}
-              />
+          <form onSubmit={saveSettings} className="space-y-3 my-auto">
+            {/* Work Duration */}
+            <div className={`p-3 rounded-xl border flex items-center justify-between ${
+              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+            }`}>
+              <span className="text-xs font-bold font-sans">Work Duration</span>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min="1"
+                  max="120"
+                  value={workMinsInput}
+                  onChange={(e) => setWorkMinsInput(parseInt(e.target.value) || 25)}
+                  className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none ${
+                    isDark ? "bg-neutral-800 border-neutral-700 text-white" : "bg-white border-neutral-300 text-black"
+                  }`}
+                />
+                <span className={`text-[10px] font-mono ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>min</span>
+              </div>
             </div>
 
-            <div>
-              <label className="text-xs font-mono font-bold block mb-1">Break Duration (Minutes)</label>
-              <input
-                type="number"
-                min="1"
-                max="60"
-                value={breakMinsInput}
-                onChange={(e) => setBreakMinsInput(parseInt(e.target.value) || 5)}
-                className={`w-full p-2.5 rounded-xl border text-sm font-mono focus:outline-none ${
-                  isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
-                }`}
-              />
+            {/* Break Duration */}
+            <div className={`p-3 rounded-xl border flex items-center justify-between ${
+              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+            }`}>
+              <span className="text-xs font-bold font-sans">Break Duration</span>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={breakMinsInput}
+                  onChange={(e) => setBreakMinsInput(parseInt(e.target.value) || 5)}
+                  className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none ${
+                    isDark ? "bg-neutral-800 border-neutral-700 text-white" : "bg-white border-neutral-300 text-black"
+                  }`}
+                />
+                <span className={`text-[10px] font-mono ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>min</span>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 pt-1">
-              <input
-                type="checkbox"
-                id="autoBreak"
-                checked={autoStartBreakInput}
-                onChange={(e) => setAutoStartBreakInput(e.target.checked)}
-                className="w-4 h-4 cursor-pointer"
-              />
-              <label htmlFor="autoBreak" className="text-xs font-mono cursor-pointer">
-                Auto-start break when session finishes
-              </label>
+            {/* Auto-start Break Toggle */}
+            <div className={`p-3 rounded-xl border flex items-center justify-between ${
+              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+            }`}>
+              <div className="flex flex-col">
+                <span className="text-xs font-bold font-sans">Auto-start Break</span>
+                <span className={`text-[10px] font-mono ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
+                  Launch break timer immediately after work or flow
+                </span>
+              </div>
+              <div
+                onClick={() => setAutoStartBreakInput(!autoStartBreakInput)}
+                className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
+                  autoStartBreakInput
+                    ? isDark ? "bg-white" : "bg-black"
+                    : isDark ? "bg-neutral-700" : "bg-neutral-300"
+                }`}
+              >
+                <div
+                  className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
+                    autoStartBreakInput
+                      ? isDark ? "left-[22px] bg-black" : "left-[22px] bg-white"
+                      : isDark ? "left-[2px] bg-neutral-400" : "left-[2px] bg-white"
+                  }`}
+                />
+              </div>
             </div>
 
             <button
               type="submit"
               className={`w-full py-3 rounded-xl font-bold text-xs border transition-all mt-4 ${
-                isDark ? "bg-white text-black border-white hover:bg-neutral-200" : "bg-black text-white border-black hover:bg-neutral-800"
+                isDark ? "bg-neutral-800 text-white border-neutral-700 hover:bg-neutral-700" : "bg-neutral-100 text-black border-neutral-300 hover:bg-neutral-200"
               }`}
             >
-              Save Settings
+              Confirm Changes
             </button>
 
-            <div className="pt-3 border-t border-current mt-2">
+            <div className="pt-2">
               <button
                 type="button"
                 onClick={resetAllData}
@@ -1221,46 +1242,20 @@ export function Popup() {
               </button>
             </div>
 
-            {/* Circular Timer Ring */}
-            <div className="relative w-40 h-40 my-2 flex items-center justify-center">
-              <svg className="w-full h-full transform -rotate-90">
-                <circle
-                  cx="80"
-                  cy="80"
-                  r="68"
-                  className={isDark ? "stroke-neutral-800" : "stroke-neutral-200"}
-                  strokeWidth="8"
-                  fill="transparent"
-                />
-                <circle
-                  cx="80"
-                  cy="80"
-                  r="68"
-                  className={`transition-all duration-1000 ease-linear ${
-                    isDark ? "stroke-white" : "stroke-black"
-                  }`}
-                  strokeWidth="8"
-                  strokeDasharray={427}
-                  strokeDashoffset={427 - (427 * progressPercent) / 100}
-                  strokeLinecap="square"
-                  fill="transparent"
-                />
-              </svg>
-
-              <div className="absolute flex flex-col items-center justify-center text-center">
-                <span className="text-3xl font-black font-mono tracking-tighter">
-                  {timeFormatted}
-                </span>
-                <span className={`text-[9px] font-mono uppercase tracking-widest mt-1 px-2 py-0.5 rounded border ${
-                  isDark
-                    ? "bg-neutral-900 text-neutral-300 border-neutral-700"
-                    : "bg-neutral-100 text-neutral-800 border-neutral-300"
-                }`}>
-                  {state.isActive
-                    ? (state.timerState === "FLOW" ? "STOPWATCH FLOW" : state.timerState === "WORK" ? "WORK IN PROGRESS" : "ON BREAK")
-                    : "PAUSED"}
-                </span>
-              </div>
+            {/* Timer Display - Big Number */}
+            <div className="flex flex-col items-center justify-center my-4 py-6">
+              <span className="text-7xl font-black font-mono tracking-tighter leading-none">
+                {timeFormatted}
+              </span>
+              <span className={`text-[10px] font-mono uppercase tracking-widest mt-3 px-3 py-1 rounded-lg border ${
+                isDark
+                  ? "bg-neutral-900 text-neutral-300 border-neutral-700"
+                  : "bg-neutral-100 text-neutral-800 border-neutral-300"
+              }`}>
+                {state.isActive
+                  ? (state.timerState === "FLOW" ? "STOPWATCH FLOW" : state.timerState === "WORK" ? "WORK IN PROGRESS" : "ON BREAK")
+                  : "PAUSED"}
+              </span>
             </div>
 
             {/* Goal Input */}
@@ -1708,65 +1703,84 @@ export function Popup() {
               );
             })()}
 
-            {/* Top 3 Cards Side-by-Side: Focused Today, Finished Tasks, Pending Tasks */}
+            {/* Top 3 Metric Cards */}
             <div className="grid grid-cols-3 gap-2">
-              <div className={`p-2.5 rounded-xl border flex flex-col items-center text-center ${
+              <div className={`p-3 rounded-xl border flex flex-col items-center text-center ${
                 isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
               }`}>
-                <Clock className="w-4 h-4 mb-1" />
-                <span className="text-sm font-extrabold font-mono">{state.stats.todayMinutes}m</span>
-                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">Focused Today</span>
+                <div className={`w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 ${
+                  isDark ? "bg-neutral-800 border-neutral-700 text-white" : "bg-neutral-200 border-neutral-300 text-black"
+                }`}>
+                  <Activity className="w-4 h-4" />
+                </div>
+                <span className="text-lg font-extrabold font-mono">{state.stats.todayMinutes}</span>
+                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">MINUTES TODAY</span>
               </div>
 
-              <div className={`p-2.5 rounded-xl border flex flex-col items-center text-center ${
+              <div className={`p-3 rounded-xl border flex flex-col items-center text-center ${
                 isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
               }`}>
-                <CheckSquare className="w-4 h-4 mb-1" />
-                <span className="text-sm font-extrabold font-mono">{finishedTasksTodayCount}</span>
-                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">Tasks Finished</span>
+                <div className="w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 bg-emerald-900/50 border-emerald-700 text-emerald-400">
+                  <CheckCircle className="w-4 h-4" />
+                </div>
+                <span className="text-lg font-extrabold font-mono">{finishedTasksTodayCount}</span>
+                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">TASKS TODAY</span>
               </div>
 
-              <div className={`p-2.5 rounded-xl border flex flex-col items-center text-center ${
+              <div className={`p-3 rounded-xl border flex flex-col items-center text-center ${
                 isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
               }`}>
-                <ListTodo className="w-4 h-4 mb-1" />
-                <span className="text-sm font-extrabold font-mono">{pendingTasksCount}</span>
-                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">Pending Tasks</span>
+                <div className="w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 bg-blue-900/50 border-blue-700 text-blue-400">
+                  <ListTodo className="w-4 h-4" />
+                </div>
+                <span className="text-lg font-extrabold font-mono">{pendingTasksCount}</span>
+                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">PENDING TASKS</span>
               </div>
             </div>
 
-            {/* Streak & Task Done Rate Underneath */}
+            {/* Longest Streak & Completion Rate */}
             <div className="grid grid-cols-2 gap-2">
-              <div className={`p-2.5 rounded-xl border flex items-center gap-2 ${
+              <div className={`p-3 rounded-xl border flex items-start gap-3 ${
                 isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
               }`}>
-                <Flame className="w-5 h-5 flex-shrink-0" />
-                <div className="flex flex-col text-[11px] font-mono leading-tight">
-                  <div>Current: <b>{state.stats.streakDays}d</b></div>
-                  <div>Best: <b>{state.stats.longestStreak}d</b></div>
+                <div className="w-8 h-8 rounded-full bg-amber-900/50 border border-amber-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Flame className="w-4 h-4 text-amber-400" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold font-sans mb-1">Longest Streak</span>
+                  <div className="text-[11px] font-mono">
+                    <span className={isDark ? "text-neutral-400" : "text-neutral-600"}>Current</span>
+                    <span className="font-bold ml-2">{state.stats.streakDays} Days</span>
+                  </div>
+                  <div className="text-[11px] font-mono">
+                    <span className={isDark ? "text-neutral-400" : "text-neutral-600"}>Best</span>
+                    <span className="font-bold ml-2">{state.stats.longestStreak} Days</span>
+                  </div>
                 </div>
               </div>
 
-              <div className={`p-2.5 rounded-xl border flex items-center justify-between ${
+              <div className={`p-3 rounded-xl border flex items-start gap-3 ${
                 isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
               }`}>
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4" />
-                  <div>
-                    <div className="text-[9px] uppercase tracking-wider font-mono opacity-60">TASK DONE RATE</div>
-                    <div className="text-xs font-bold font-mono">
-                      {taskDoneRatePercent}%
-                    </div>
+                <div className="w-8 h-8 rounded-full bg-emerald-900/50 border border-emerald-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Target className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold font-sans mb-1">Completion Rate</span>
+                  <span className="text-lg font-extrabold font-mono">{taskDoneRatePercent}%</span>
+                  <div className="flex items-center gap-1 text-[10px] font-mono">
+                    <TaskDone className="w-3 h-3 text-emerald-400" />
+                    <span className={isDark ? "text-neutral-400" : "text-neutral-600"}>Tasks Finished</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Weekly Focus Trend Chart with Actual Data & Hover Tooltips */}
+            {/* Weekly Focus Trend Chart */}
             <div className={`p-3 rounded-xl border ${
               isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
             }`}>
-              <div className="text-[10px] font-mono uppercase tracking-wider font-bold mb-3">FOCUS TREND (ACTUAL DATA)</div>
+              <div className="text-[10px] font-mono uppercase tracking-wider font-bold mb-3">FOCUS TREND</div>
               <div className="flex items-end justify-between gap-2 h-24 pt-2 border-b border-current">
                 {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => {
                   const minsLogged = state.stats.weeklyMinutes[day] || 0;
@@ -1777,7 +1791,6 @@ export function Popup() {
                       key={day}
                       className="flex-1 flex flex-col items-center gap-1 h-full justify-end group relative cursor-pointer"
                     >
-                      {/* Hover Tooltip showing exact length */}
                       <div className={`absolute -top-7 px-2 py-1 rounded text-[9px] font-mono font-bold border pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap shadow-lg ${
                         isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
                       }`}>
@@ -1804,17 +1817,48 @@ export function Popup() {
             <div className={`p-3 rounded-xl border ${
               isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
             }`}>
-              <div className="text-[10px] font-mono uppercase tracking-wider font-bold mb-2">DISTRACTION ANALYSIS</div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 rounded-lg bg-rose-900/50 border border-rose-700 flex items-center justify-center">
+                  <BarChart3 className="w-3.5 h-3.5 text-rose-400" />
+                </div>
+                <span className="text-[10px] font-mono uppercase tracking-wider font-bold">Distraction Analysis</span>
+              </div>
               {Object.keys(distractionCounts).length === 0 ? (
                 <div className="text-xs font-mono opacity-50 py-1">No distractions logged yet.</div>
               ) : (
-                <div className="space-y-1.5">
-                  {Object.entries(distractionCounts).map(([cat, count]) => (
-                    <div key={cat} className="flex items-center justify-between text-xs font-mono">
-                      <span>{cat}</span>
-                      <span className="font-bold border px-1.5 py-0.5 rounded text-[10px]">{count} times</span>
-                    </div>
-                  ))}
+                <div className="space-y-2">
+                  {(() => {
+                    const totalDistractions = Object.values(distractionCounts).reduce((a, b) => a + b, 0);
+                    const mostCommon = Object.entries(distractionCounts).sort((a, b) => b[1] - a[1])[0];
+                    const mostCommonPercent = mostCommon ? Math.round((mostCommon[1] / totalDistractions) * 100) : 0;
+                    return (
+                      <div className={`text-[11px] font-mono ${isDark ? "text-neutral-400" : "text-neutral-600"}`}>
+                        Most common: <span className="font-bold text-white">{mostCommon?.[0]}</span> ({mostCommonPercent}%)
+                      </div>
+                    );
+                  })()}
+                  {Object.entries(distractionCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([cat, count]) => {
+                      const totalDistractions = Object.values(distractionCounts).reduce((a, b) => a + b, 0);
+                      const percent = totalDistractions > 0 ? Math.round((count / totalDistractions) * 100) : 0;
+                      return (
+                        <div key={cat} className="space-y-1">
+                          <div className="flex items-center justify-between text-[11px] font-mono">
+                            <span className="font-bold">{cat}</span>
+                            <span className="opacity-70">{count} ({percent}%)</span>
+                          </div>
+                          <div className={`w-full h-1.5 rounded-full overflow-hidden ${
+                            isDark ? "bg-neutral-800" : "bg-neutral-200"
+                          }`}>
+                            <div
+                              className="h-full rounded-full bg-fuchsia-500 transition-all duration-500"
+                              style={{ width: `${percent}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
                 </div>
               )}
             </div>
