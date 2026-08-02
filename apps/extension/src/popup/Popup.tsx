@@ -93,7 +93,6 @@ export function Popup() {
 
   // Music Player State & Controls
   const [isMusicExpanded, setIsMusicExpanded] = useState(false);
-  const prevTimerStateRef = React.useRef<string | null>(null);
 
   const isMusicPlaying = state?.isMusicPlaying ?? false;
   const musicVolume = state?.musicVolume ?? 0.8;
@@ -123,15 +122,6 @@ export function Popup() {
       updateState({ isMusicPlaying: !isMusicPlaying });
     }
   };
-
-  useEffect(() => {
-    if (state?.timerState) {
-      if (prevTimerStateRef.current && (prevTimerStateRef.current === "WORK" || prevTimerStateRef.current === "FLOW") && state.timerState === "BREAK") {
-        playSoundEffect();
-      }
-      prevTimerStateRef.current = state.timerState;
-    }
-  }, [state?.timerState]);
 
   useEffect(() => {
     getStoredState().then((initial) => {
