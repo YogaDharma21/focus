@@ -256,7 +256,7 @@ export function Popup() {
     }
 
     updateState({
-      isActive: state.timerState === "WORK" && state.pomodoroSettings.autoStartBreak,
+      isActive: isWorkOrFlow && state.pomodoroSettings.autoStartBreak,
       timerState: nextState,
       previousMode: prevMode,
       timeLeft: nextTime,
@@ -754,7 +754,7 @@ export function Popup() {
               <div className="flex flex-col">
                 <span className="text-xs font-bold font-sans">Auto-start Break</span>
                 <span className={`text-[10px] font-mono ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
-                  Launch break timer immediately after work
+                  Launch break timer immediately after work or flow
                 </span>
               </div>
               <button
