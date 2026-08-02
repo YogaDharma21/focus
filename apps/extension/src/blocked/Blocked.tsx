@@ -14,7 +14,7 @@ const QUOTES = [
 
 export function Blocked() {
   const [state, setState] = useState<AppStateData | null>(null);
-  const [targetDomain, setTargetDomain] = useState("");
+  const [targetUrl, setTargetUrl] = useState("");
   const [quote, setQuote] = useState(QUOTES[0]);
 
   useEffect(() => {
@@ -26,12 +26,7 @@ export function Blocked() {
     const params = new URLSearchParams(window.location.search);
     const target = params.get("target");
     if (target) {
-      try {
-        const parsed = new URL(target);
-        setTargetDomain(parsed.hostname);
-      } catch {
-        setTargetDomain(target);
-      }
+      setTargetUrl(target);
     }
 
     setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
@@ -55,8 +50,8 @@ export function Blocked() {
         enabled: false
       }
     });
-    if (targetDomain) {
-      window.location.href = `https://${targetDomain}`;
+    if (targetUrl) {
+      window.location.href = targetUrl;
     } else {
       window.history.back();
     }
@@ -66,6 +61,16 @@ export function Blocked() {
   const mins = state ? Math.floor(state.timeLeft / 60) : 0;
   const secs = state ? state.timeLeft % 60 : 0;
   const timeFormatted = `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+
+  let displayDomain = "Website Blocked";
+  if (targetUrl) {
+    try {
+      const parsed = new URL(targetUrl);
+      displayDomain = parsed.hostname;
+    } catch {
+      displayDomain = targetUrl;
+    }
+  }
 
   return (
     <div className={`min-h-screen flex items-center justify-center p-6 select-none font-sans ${
@@ -85,7 +90,7 @@ export function Blocked() {
         </span>
 
         <h1 className="text-xl font-extrabold font-heading tracking-tight mb-2 uppercase">
-          {targetDomain ? `${targetDomain}` : "Website Blocked"}
+          {displayDomain}
         </h1>
 
         <p className={`text-xs max-w-sm mb-6 leading-relaxed ${isDark ? "text-neutral-400" : "text-neutral-600"}`}>
