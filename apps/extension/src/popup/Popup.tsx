@@ -501,6 +501,7 @@ export function Popup() {
   // Distraction Analysis Breakdown
   const distractionCounts: { [cat: string]: number } = {};
   state.distractions.forEach(d => {
+    if (d.category === "Shield Blocked Tab") return;
     const cat = d.category || "Other";
     distractionCounts[cat] = (distractionCounts[cat] || 0) + 1;
   });
@@ -694,10 +695,7 @@ export function Popup() {
           isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
         }`}>
           <div className="flex items-center justify-between pb-3 border-b border-current">
-            <div className="flex items-center gap-2">
-              <Settings className="w-4 h-4" />
-              <h2 className="text-sm font-bold font-mono uppercase tracking-wider">TIMER SETTINGS</h2>
-            </div>
+            <h2 className="text-sm font-bold font-sans">Timer Settings</h2>
             <button
               onClick={() => setShowSettingsModal(false)}
               className={`p-1 rounded-lg border ${
@@ -708,58 +706,84 @@ export function Popup() {
             </button>
           </div>
 
-          <form onSubmit={saveSettings} className="space-y-4 my-auto">
-            <div>
-              <label className="text-xs font-mono font-bold block mb-1">Work Duration (Minutes)</label>
-              <input
-                type="number"
-                min="1"
-                max="120"
-                value={workMinsInput}
-                onChange={(e) => setWorkMinsInput(parseInt(e.target.value) || 25)}
-                className={`w-full p-2.5 rounded-xl border text-sm font-mono focus:outline-none ${
-                  isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
-                }`}
-              />
+          <form onSubmit={saveSettings} className="space-y-3 my-auto">
+            {/* Work Duration */}
+            <div className={`p-3 rounded-xl border flex items-center justify-between ${
+              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+            }`}>
+              <span className="text-xs font-bold font-sans">Work Duration</span>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min="1"
+                  max="120"
+                  value={workMinsInput}
+                  onChange={(e) => setWorkMinsInput(parseInt(e.target.value) || 25)}
+                  className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none ${
+                    isDark ? "bg-neutral-800 border-neutral-700 text-white" : "bg-white border-neutral-300 text-black"
+                  }`}
+                />
+                <span className={`text-[10px] font-mono ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>min</span>
+              </div>
             </div>
 
-            <div>
-              <label className="text-xs font-mono font-bold block mb-1">Break Duration (Minutes)</label>
-              <input
-                type="number"
-                min="1"
-                max="60"
-                value={breakMinsInput}
-                onChange={(e) => setBreakMinsInput(parseInt(e.target.value) || 5)}
-                className={`w-full p-2.5 rounded-xl border text-sm font-mono focus:outline-none ${
-                  isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
-                }`}
-              />
+            {/* Break Duration */}
+            <div className={`p-3 rounded-xl border flex items-center justify-between ${
+              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+            }`}>
+              <span className="text-xs font-bold font-sans">Break Duration</span>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={breakMinsInput}
+                  onChange={(e) => setBreakMinsInput(parseInt(e.target.value) || 5)}
+                  className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none ${
+                    isDark ? "bg-neutral-800 border-neutral-700 text-white" : "bg-white border-neutral-300 text-black"
+                  }`}
+                />
+                <span className={`text-[10px] font-mono ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>min</span>
+              </div>
             </div>
 
-            <div className="flex items-center gap-2 pt-1">
-              <input
-                type="checkbox"
-                id="autoBreak"
-                checked={autoStartBreakInput}
-                onChange={(e) => setAutoStartBreakInput(e.target.checked)}
-                className="w-4 h-4 cursor-pointer"
-              />
-              <label htmlFor="autoBreak" className="text-xs font-mono cursor-pointer">
-                Auto-start break when session finishes
-              </label>
+            {/* Auto-start Break Toggle */}
+            <div className={`p-3 rounded-xl border flex items-center justify-between ${
+              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+            }`}>
+              <div className="flex flex-col">
+                <span className="text-xs font-bold font-sans">Auto-start Break</span>
+                <span className={`text-[10px] font-mono ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
+                  Launch break timer immediately after work
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setAutoStartBreakInput(!autoStartBreakInput)}
+                className={`relative w-10 h-5 rounded-full transition-colors ${
+                  autoStartBreakInput
+                    ? isDark ? "bg-white" : "bg-black"
+                    : isDark ? "bg-neutral-700" : "bg-neutral-300"
+                }`}
+              >
+                <span className={`absolute top-0.5 w-4 h-4 rounded-full transition-transform ${
+                  autoStartBreakInput
+                    ? isDark ? "translate-x-5 bg-black" : "translate-x-5 bg-white"
+                    : isDark ? "translate-x-0.5 bg-neutral-400" : "translate-x-0.5 bg-white"
+                }`} />
+              </button>
             </div>
 
             <button
               type="submit"
               className={`w-full py-3 rounded-xl font-bold text-xs border transition-all mt-4 ${
-                isDark ? "bg-white text-black border-white hover:bg-neutral-200" : "bg-black text-white border-black hover:bg-neutral-800"
+                isDark ? "bg-neutral-800 text-white border-neutral-700 hover:bg-neutral-700" : "bg-neutral-100 text-black border-neutral-300 hover:bg-neutral-200"
               }`}
             >
-              Save Settings
+              Confirm Changes
             </button>
 
-            <div className="pt-3 border-t border-current mt-2">
+            <div className="pt-2">
               <button
                 type="button"
                 onClick={resetAllData}
