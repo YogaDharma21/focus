@@ -76,6 +76,10 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
         sendToOffscreen("PLAY_SOUND_EFFECT");
         sendResponse({ success: true });
         return true;
+      } else if (message.action === "RESTORE_BLOCKED_TABS") {
+        restoreBlockedTabs();
+        sendResponse({ success: true });
+        return true;
       }
     }
   });
@@ -134,6 +138,27 @@ async function enforceTabBlocking(state?: AppStateData) {
             },
           ],
         });
+      }
+    }
+  });
+}
+
+async function restoreBlockedTabs() {
+  if (typeof chrome === "undefined" || !chrome.tabs) return;
+
+  const blockedPageBase = chrome.runtime.getURL("blocked.html");
+
+  chrome.tabs.query({}, (tabs) => {
+    if (!tabs) return;
+    for (const tab of tabs) {
+      if (tab.id && tab.url && tab.url.startsWith(blockedPageBase)) {
+        try {
+          const blockedUrl = new URL(tab.url);
+          const targetUrl = blockedUrl.searchParams.get("target");
+          if (targetUrl) {
+            chrome.tabs.update(tab.id, { url: targetUrl });
+          }
+        } catch {}
       }
     }
   });
@@ -301,6 +326,7 @@ async function startBackgroundTimer() {
         updateBadge(nextTime, autoStart, nextState);
 
         sendToOffscreen("PLAY_SOUND_EFFECT");
+        restoreBlockedTabs();
 
         if (typeof chrome !== "undefined" && chrome.notifications) {
           chrome.notifications.create({
