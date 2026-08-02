@@ -51,11 +51,11 @@ const MOOD_EMOJIS = [
 ];
 
 const DISTRACTION_CATEGORIES = [
-  "📱 Phone",
-  "🌐 Social Media",
-  "🚪 Bathroom",
-  "💬 Meeting",
-  "❓ Other"
+  "Phone",
+  "Social Media",
+  "Bathroom",
+  "Meeting",
+  "Other"
 ];
 
 const BACKGROUND_THEMES: { id: BackgroundTheme; name: string }[] = [
