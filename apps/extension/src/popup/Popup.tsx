@@ -34,7 +34,10 @@ import {
   Music,
   Volume2,
   ChevronUp,
-  ChevronDown
+  ChevronDown,
+  Activity,
+  Target,
+  CheckCircle2 as TaskDone
 } from "lucide-react";
 import { AppStateData, TodoItem, PriorityType, RecurringType, BackgroundTheme } from "../types";
 import { getStoredState, saveStoredState, subscribeToStateChanges, DEFAULT_STATE } from "../lib/storage";
@@ -1671,65 +1674,84 @@ export function Popup() {
               );
             })()}
 
-            {/* Top 3 Cards Side-by-Side: Focused Today, Finished Tasks, Pending Tasks */}
+            {/* Top 3 Metric Cards */}
             <div className="grid grid-cols-3 gap-2">
-              <div className={`p-2.5 rounded-xl border flex flex-col items-center text-center ${
+              <div className={`p-3 rounded-xl border flex flex-col items-center text-center ${
                 isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
               }`}>
-                <Clock className="w-4 h-4 mb-1" />
-                <span className="text-sm font-extrabold font-mono">{state.stats.todayMinutes}m</span>
-                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">Focused Today</span>
+                <div className={`w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 ${
+                  isDark ? "bg-neutral-800 border-neutral-700 text-white" : "bg-neutral-200 border-neutral-300 text-black"
+                }`}>
+                  <Activity className="w-4 h-4" />
+                </div>
+                <span className="text-lg font-extrabold font-mono">{state.stats.todayMinutes}</span>
+                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">MINUTES TODAY</span>
               </div>
 
-              <div className={`p-2.5 rounded-xl border flex flex-col items-center text-center ${
+              <div className={`p-3 rounded-xl border flex flex-col items-center text-center ${
                 isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
               }`}>
-                <CheckSquare className="w-4 h-4 mb-1" />
-                <span className="text-sm font-extrabold font-mono">{finishedTasksTodayCount}</span>
-                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">Tasks Finished</span>
+                <div className="w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 bg-emerald-900/50 border-emerald-700 text-emerald-400">
+                  <CheckCircle className="w-4 h-4" />
+                </div>
+                <span className="text-lg font-extrabold font-mono">{finishedTasksTodayCount}</span>
+                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">TASKS TODAY</span>
               </div>
 
-              <div className={`p-2.5 rounded-xl border flex flex-col items-center text-center ${
+              <div className={`p-3 rounded-xl border flex flex-col items-center text-center ${
                 isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
               }`}>
-                <ListTodo className="w-4 h-4 mb-1" />
-                <span className="text-sm font-extrabold font-mono">{pendingTasksCount}</span>
-                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">Pending Tasks</span>
+                <div className="w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 bg-blue-900/50 border-blue-700 text-blue-400">
+                  <ListTodo className="w-4 h-4" />
+                </div>
+                <span className="text-lg font-extrabold font-mono">{pendingTasksCount}</span>
+                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">PENDING TASKS</span>
               </div>
             </div>
 
-            {/* Streak & Task Done Rate Underneath */}
+            {/* Longest Streak & Completion Rate */}
             <div className="grid grid-cols-2 gap-2">
-              <div className={`p-2.5 rounded-xl border flex items-center gap-2 ${
+              <div className={`p-3 rounded-xl border flex items-start gap-3 ${
                 isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
               }`}>
-                <Flame className="w-5 h-5 flex-shrink-0" />
-                <div className="flex flex-col text-[11px] font-mono leading-tight">
-                  <div>Current: <b>{state.stats.streakDays}d</b></div>
-                  <div>Best: <b>{state.stats.longestStreak}d</b></div>
+                <div className="w-8 h-8 rounded-full bg-amber-900/50 border border-amber-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Flame className="w-4 h-4 text-amber-400" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold font-sans mb-1">Longest Streak</span>
+                  <div className="text-[11px] font-mono">
+                    <span className={isDark ? "text-neutral-400" : "text-neutral-600"}>Current</span>
+                    <span className="font-bold ml-2">{state.stats.streakDays} Days</span>
+                  </div>
+                  <div className="text-[11px] font-mono">
+                    <span className={isDark ? "text-neutral-400" : "text-neutral-600"}>Best</span>
+                    <span className="font-bold ml-2">{state.stats.longestStreak} Days</span>
+                  </div>
                 </div>
               </div>
 
-              <div className={`p-2.5 rounded-xl border flex items-center justify-between ${
+              <div className={`p-3 rounded-xl border flex items-start gap-3 ${
                 isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
               }`}>
-                <div className="flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4" />
-                  <div>
-                    <div className="text-[9px] uppercase tracking-wider font-mono opacity-60">TASK DONE RATE</div>
-                    <div className="text-xs font-bold font-mono">
-                      {taskDoneRatePercent}%
-                    </div>
+                <div className="w-8 h-8 rounded-full bg-emerald-900/50 border border-emerald-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Target className="w-4 h-4 text-emerald-400" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold font-sans mb-1">Completion Rate</span>
+                  <span className="text-lg font-extrabold font-mono">{taskDoneRatePercent}%</span>
+                  <div className="flex items-center gap-1 text-[10px] font-mono">
+                    <TaskDone className="w-3 h-3 text-emerald-400" />
+                    <span className={isDark ? "text-neutral-400" : "text-neutral-600"}>Tasks Finished</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Weekly Focus Trend Chart with Actual Data & Hover Tooltips */}
+            {/* Weekly Focus Trend Chart */}
             <div className={`p-3 rounded-xl border ${
               isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
             }`}>
-              <div className="text-[10px] font-mono uppercase tracking-wider font-bold mb-3">FOCUS TREND (ACTUAL DATA)</div>
+              <div className="text-[10px] font-mono uppercase tracking-wider font-bold mb-3">FOCUS TREND</div>
               <div className="flex items-end justify-between gap-2 h-24 pt-2 border-b border-current">
                 {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => {
                   const minsLogged = state.stats.weeklyMinutes[day] || 0;
@@ -1740,7 +1762,6 @@ export function Popup() {
                       key={day}
                       className="flex-1 flex flex-col items-center gap-1 h-full justify-end group relative cursor-pointer"
                     >
-                      {/* Hover Tooltip showing exact length */}
                       <div className={`absolute -top-7 px-2 py-1 rounded text-[9px] font-mono font-bold border pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap shadow-lg ${
                         isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
                       }`}>
@@ -1767,17 +1788,48 @@ export function Popup() {
             <div className={`p-3 rounded-xl border ${
               isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
             }`}>
-              <div className="text-[10px] font-mono uppercase tracking-wider font-bold mb-2">DISTRACTION ANALYSIS</div>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-7 h-7 rounded-lg bg-rose-900/50 border border-rose-700 flex items-center justify-center">
+                  <BarChart3 className="w-3.5 h-3.5 text-rose-400" />
+                </div>
+                <span className="text-[10px] font-mono uppercase tracking-wider font-bold">Distraction Analysis</span>
+              </div>
               {Object.keys(distractionCounts).length === 0 ? (
                 <div className="text-xs font-mono opacity-50 py-1">No distractions logged yet.</div>
               ) : (
-                <div className="space-y-1.5">
-                  {Object.entries(distractionCounts).map(([cat, count]) => (
-                    <div key={cat} className="flex items-center justify-between text-xs font-mono">
-                      <span>{cat}</span>
-                      <span className="font-bold border px-1.5 py-0.5 rounded text-[10px]">{count} times</span>
-                    </div>
-                  ))}
+                <div className="space-y-2">
+                  {(() => {
+                    const totalDistractions = Object.values(distractionCounts).reduce((a, b) => a + b, 0);
+                    const mostCommon = Object.entries(distractionCounts).sort((a, b) => b[1] - a[1])[0];
+                    const mostCommonPercent = mostCommon ? Math.round((mostCommon[1] / totalDistractions) * 100) : 0;
+                    return (
+                      <div className={`text-[11px] font-mono ${isDark ? "text-neutral-400" : "text-neutral-600"}`}>
+                        Most common: <span className="font-bold text-white">{mostCommon?.[0]}</span> ({mostCommonPercent}%)
+                      </div>
+                    );
+                  })()}
+                  {Object.entries(distractionCounts)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([cat, count]) => {
+                      const totalDistractions = Object.values(distractionCounts).reduce((a, b) => a + b, 0);
+                      const percent = totalDistractions > 0 ? Math.round((count / totalDistractions) * 100) : 0;
+                      return (
+                        <div key={cat} className="space-y-1">
+                          <div className="flex items-center justify-between text-[11px] font-mono">
+                            <span className="font-bold">{cat}</span>
+                            <span className="opacity-70">{count} ({percent}%)</span>
+                          </div>
+                          <div className={`w-full h-1.5 rounded-full overflow-hidden ${
+                            isDark ? "bg-neutral-800" : "bg-neutral-200"
+                          }`}>
+                            <div
+                              className="h-full rounded-full bg-fuchsia-500 transition-all duration-500"
+                              style={{ width: `${percent}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
                 </div>
               )}
             </div>
