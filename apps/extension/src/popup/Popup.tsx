@@ -206,6 +206,10 @@ export function Popup() {
   const completeSession = () => {
     playSoundEffect();
     const isWorkOrFlow = state.timerState === "WORK" || state.timerState === "FLOW";
+
+    if (isWorkOrFlow && typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({ target: "background", action: "RESTORE_BLOCKED_TABS" });
+    }
     const durationLogged = state.timerState === "FLOW" ? state.timeLeft : (state.pomodoroSettings.work * 60 - state.timeLeft);
     const minsLogged = Math.max(1, Math.round(durationLogged / 60));
 
