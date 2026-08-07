@@ -4,7 +4,7 @@ import { SidebarNav } from './components/layout/SidebarNav';
 import { FocusTimer } from './components/modules/FocusTimer';
 import { TodoList } from './components/modules/TodoList';
 import { StatsJournal } from './components/modules/StatsJournal';
-import { MoodNotes } from './components/modules/MoodNotes';
+import { MoodTracker } from './components/modules/MoodTracker';
 import { MediaPlayer } from './components/modules/MediaPlayer';
 import { BackgroundDisplay } from './components/modules/BackgroundDisplay';
 import { DeepFocusOverlay } from './components/modules/DeepFocusOverlay';
@@ -61,11 +61,11 @@ export const App: React.FC = () => {
       <div className="flex-1 flex overflow-hidden z-10">
         <SidebarNav />
 
-        <main className="flex-1 overflow-hidden relative">
+        <main className="flex-1 overflow-y-auto p-6 relative">
           {currentView === 'FOCUS' && <FocusTimer />}
           {currentView === 'TODO' && <TodoList />}
           {currentView === 'JOURNAL' && <StatsJournal />}
-          {currentView === 'NOTES' && <MoodNotes />}
+          {currentView === 'NOTES' && <MoodTracker />}
         </main>
       </div>
 
