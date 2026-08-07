@@ -27,27 +27,42 @@
 ## Screenshots Gallery
 
 <details>
-<summary>View All Platform Screenshots</summary>
+<summary>View Web Application Screenshots</summary>
 
-### Web Application
+### Focus Session
+![Main Dashboard](./apps/website/public/screenshots/screenshot-main.png)
 
-| Main Dashboard | Task Management | Stats & Analytics | Mood & Notes |
-| :---: | :---: | :---: | :---: |
-| ![Main Dashboard](./apps/website/public/screenshots/screenshot-main.png) | ![Task Management](./apps/website/public/screenshots/screenshot-tasks.png) | ![Stats & Analytics](./apps/website/public/screenshots/screenshot-stats.png) | ![Mood & Notes](./apps/website/public/screenshots/screenshot-mood.png) |
+### Task Management
+![Task Management](./apps/website/public/screenshots/screenshot-tasks.png)
 
-### Mobile Application
+### Stats & Analytics
+![Stats & Journal](./apps/website/public/screenshots/screenshot-stats.png)
+
+### Mood & Notes
+![Mood Notes](./apps/website/public/screenshots/screenshot-mood.png)
+
+</details>
+
+<details>
+<summary>View Mobile Application Screenshots</summary>
 
 | Focus & Flow Mode | Task Management | Stats & Analytics | Mood Notes |
 | :---: | :---: | :---: | :---: |
 | ![Mobile Focus](./apps/mobile/assets/images/screenshot-focus.jpeg) | ![Mobile Tasks](./apps/mobile/assets/images/screenshot-tasks.jpeg) | ![Mobile Stats](./apps/mobile/assets/images/screenshot-stats.jpeg) | ![Mobile Mood](./apps/mobile/assets/images/screenshot-mood.jpeg) |
 
-### Desktop Application
+</details>
+
+<details>
+<summary>View Desktop Application Screenshots</summary>
 
 | Timer | Tasks | Stats | Notes |
 | :---: | :---: | :---: | :---: |
 | ![Timer](./apps/desktop/public/Screenshot-timer.png) | ![Tasks](./apps/desktop/public/Screenshot-tasks.png) | ![Stats](./apps/desktop/public/Screenshot-stats.png) | ![Notes](./apps/desktop/public/Screenshot-notes.png) |
 
-### Browser Extension
+</details>
+
+<details>
+<summary>View Browser Extension Screenshots</summary>
 
 | Timer | Tasks | Site Blocking | Stats | Notes |
 | :---: | :---: | :---: | :---: | :---: |

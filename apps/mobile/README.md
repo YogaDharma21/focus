@@ -12,22 +12,9 @@
 
 ## Screenshots Gallery
 
-<details>
-<summary>View Mobile Application Screenshots</summary>
-
-<div align="center">
-
-| Focus & Flow Mode | Task Management |
-| :---: | :---: |
-| ![Focus Mode](./assets/images/screenshot-focus.jpeg) | ![Task Management](./assets/images/screenshot-tasks.jpeg) |
-
-| Stats & Analytics | Mood Notes |
-| :---: | :---: |
-| ![Stats & Analytics](./assets/images/screenshot-stats.jpeg) | ![Mood Notes](./assets/images/screenshot-mood.jpeg) |
-
-</div>
-
-</details>
+| Focus & Flow Mode | Task Management | Stats & Analytics | Mood Notes |
+| :---: | :---: | :---: | :---: |
+| ![Focus Mode](./assets/images/screenshot-focus.jpeg) | ![Task Management](./assets/images/screenshot-tasks.jpeg) | ![Stats & Analytics](./assets/images/screenshot-stats.jpeg) | ![Mood Notes](./assets/images/screenshot-mood.jpeg) |
 
 ---
 
