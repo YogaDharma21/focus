@@ -53,6 +53,15 @@
 </details>
 
 <details>
+<summary>View Desktop Application Screenshots</summary>
+
+| Timer | Tasks | Stats | Notes |
+| :---: | :---: | :---: | :---: |
+| ![Timer](./apps/desktop/public/Screenshot-timer.png) | ![Tasks](./apps/desktop/public/Screenshot-tasks.png) | ![Stats](./apps/desktop/public/Screenshot-stats.png) | ![Notes](./apps/desktop/public/Screenshot-notes.png) |
+
+</details>
+
+<details>
 <summary>View Browser Extension Screenshots</summary>
 
 | Timer | Tasks | Site Blocking | Stats | Notes |

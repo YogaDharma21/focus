@@ -30,7 +30,7 @@ function createDummyTrayIcon() {
 }
 
 function createWindow() {
-    const iconPath = path.join(__dirname, "../public/icon.png");
+    const iconPath = path.join(__dirname, "../public/favicon.ico");
     mainWindow = new BrowserWindow({
         title: "Focus Desktop",
         icon: iconPath,
