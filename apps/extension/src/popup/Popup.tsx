@@ -37,8 +37,10 @@ import {
   ChevronDown,
   Activity,
   Target,
-  CheckCircle2 as TaskDone
+  CheckCircle2 as TaskDone,
+  Smile,
 } from "lucide-react";
+import { MoodTracker } from "./components/MoodTracker";
 import { AppStateData, TodoItem, PriorityType, RecurringType, BackgroundTheme } from "../types";
 import { getStoredState, saveStoredState, subscribeToStateChanges, DEFAULT_STATE } from "../lib/storage";
 import "../index.css";
