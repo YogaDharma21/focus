@@ -20,6 +20,7 @@ export interface MoodConfig {
     borderClass: string;
     textClass: string;
     ringClass: string;
+    pillSelectedClass: string;
 }
 
 export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
@@ -27,51 +28,56 @@ export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
         key: "amazing",
         label: "Amazing",
         emoji: "😊",
-        color: "#10b981", // emerald-500
-        bgClass: "bg-emerald-500 hover:bg-emerald-400",
-        borderClass: "border-emerald-500",
-        textClass: "text-emerald-400",
-        ringClass: "ring-emerald-400",
+        color: "#ffffff",
+        bgClass: "bg-white hover:bg-slate-100",
+        borderClass: "border-white",
+        textClass: "text-white font-semibold",
+        ringClass: "ring-white",
+        pillSelectedClass: "bg-white text-slate-950 shadow-lg scale-105 border-white font-bold",
     },
     ok: {
         key: "ok",
         label: "OK",
         emoji: "🙂",
-        color: "#38bdf8", // sky-400
-        bgClass: "bg-sky-400 hover:bg-sky-300",
-        borderClass: "border-sky-400",
-        textClass: "text-sky-300",
-        ringClass: "ring-sky-300",
+        color: "#cbd5e1", // slate-300
+        bgClass: "bg-slate-300 hover:bg-slate-200",
+        borderClass: "border-slate-300",
+        textClass: "text-slate-300 font-semibold",
+        ringClass: "ring-slate-300",
+        pillSelectedClass: "bg-slate-300 text-slate-950 shadow-lg scale-105 border-slate-300 font-bold",
     },
     tired: {
         key: "tired",
         label: "Tired",
         emoji: "😴",
-        color: "#fbbf24", // amber-400
-        bgClass: "bg-amber-400 hover:bg-amber-300",
-        borderClass: "border-amber-400",
-        textClass: "text-amber-300",
-        ringClass: "ring-amber-300",
+        color: "#64748b", // slate-500
+        bgClass: "bg-slate-500 hover:bg-slate-400",
+        borderClass: "border-slate-500",
+        textClass: "text-slate-400 font-semibold",
+        ringClass: "ring-slate-400",
+        pillSelectedClass: "bg-slate-500 text-white shadow-lg scale-105 border-slate-500 font-bold",
     },
     sad: {
         key: "sad",
         label: "Sad",
         emoji: "😔",
-        color: "#6366f1", // indigo-500
-        bgClass: "bg-indigo-500 hover:bg-indigo-400",
-        borderClass: "border-indigo-500",
-        textClass: "text-indigo-300",
-        ringClass: "ring-indigo-300",
+        color: "#334155", // slate-700
+        bgClass: "bg-slate-700 hover:bg-slate-600",
+        borderClass: "border-slate-700",
+        textClass: "text-slate-300 font-semibold",
+        ringClass: "ring-slate-600",
+        pillSelectedClass: "bg-slate-700 text-white shadow-lg scale-105 border-slate-700 font-bold",
     },
     stressed: {
         key: "stressed",
         label: "Stressed",
         emoji: "😤",
-        color: "#f43f5e", // rose-500
-        bgClass: "bg-rose-500 hover:bg-rose-400",
-        borderClass: "border-rose-500",
-        textClass: "text-rose-400",
-        ringClass: "ring-rose-400",
+        color: "#0f172a", // slate-900 / dark charcoal
+        bgClass: "bg-slate-900 border border-slate-700 hover:bg-slate-800",
+        borderClass: "border-slate-700",
+        textClass: "text-slate-400 font-semibold",
+        ringClass: "ring-slate-700",
+        pillSelectedClass: "bg-slate-900 border border-slate-700 text-white shadow-lg scale-105 font-bold",
     },
 };
 
@@ -218,7 +224,7 @@ export function MoodTracker() {
                                 className={cn(
                                     "flex flex-col items-center justify-center p-3 rounded-xl transition-all duration-200 border group",
                                     isSelected
-                                        ? `${cfg.bgClass} text-white shadow-lg scale-105 border-transparent`
+                                        ? cfg.pillSelectedClass
                                         : "bg-background/40 hover:bg-background/80 border-border/40 text-foreground"
                                 )}
                             >
@@ -227,7 +233,7 @@ export function MoodTracker() {
                                 </span>
                                 <span className={cn(
                                     "text-xs font-medium mt-1.5",
-                                    isSelected ? "text-white font-semibold" : "text-muted-foreground group-hover:text-foreground"
+                                    isSelected ? "font-bold" : "text-muted-foreground group-hover:text-foreground"
                                 )}>
                                     {cfg.label}
                                 </span>
@@ -400,8 +406,8 @@ export function MoodTracker() {
                                                     cfg
                                                         ? `${cfg.bgClass} shadow-sm scale-100 hover:scale-125 z-10`
                                                         : "bg-muted/20 hover:bg-muted/50 border border-border/20 hover:border-primary/40",
-                                                    isSelectedCell && "ring-2 ring-white border-2 border-white scale-110 z-30 shadow-md",
-                                                    isCellToday && !isSelectedCell && "ring-2 ring-primary/80 ring-offset-1 ring-offset-background z-20"
+                                                    isSelectedCell && "ring-2 ring-primary border-2 border-primary scale-110 z-30 shadow-md",
+                                                    isCellToday && !isSelectedCell && "ring-2 ring-primary/60 ring-offset-1 ring-offset-background z-20"
                                                 )}
                                                 title={`${format(new Date(selectedYear, monthIdx, dayNum), "MMM d, yyyy")}${cfg ? `: ${cfg.label} ${cfg.emoji}` : ": Empty (1 click: Select date | 2 clicks: Cycle mood)"}${noteObj?.text ? ` - "${noteObj.text}"` : ""}`}
                                             />
@@ -443,8 +449,8 @@ export function MoodTracker() {
                             const cfg = MOOD_CONFIGS[key];
                             return (
                                 <div key={key} className="flex items-center gap-1.5 text-xs">
-                                    <span className={cn("w-3 h-3 rounded-[3px]", cfg.bgClass)} />
-                                    <span className="text-muted-foreground">{cfg.label}</span>
+                                    <span className={cn("w-3.5 h-3.5 rounded-[3px]", cfg.bgClass)} />
+                                    <span className="text-muted-foreground font-medium">{cfg.label}</span>
                                     <span className="font-mono text-[10px] font-semibold text-foreground/80">({stats[key]})</span>
                                 </div>
                             );
