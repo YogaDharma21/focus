@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { DistractionCounter } from "./DistractionCounter";
-import { SessionReportDialog, type SessionReportData } from "./SessionReportDialog";
 
 export function FocusTimer() {
     const {
@@ -57,8 +56,6 @@ export function FocusTimer() {
 
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [taskSelectorOpen, setTaskSelectorOpen] = useState(false);
-    const [reportOpen, setReportOpen] = useState(false);
-    const [completedDuration, setCompletedDuration] = useState(0);
 
     const uncompletedTodos = useMemo(
         () => todos.filter((t) => !t.completed),
@@ -144,8 +141,20 @@ export function FocusTimer() {
                 : timeLeft;
 
         if (duration > 0) {
-            setCompletedDuration(duration);
-            setReportOpen(true);
+            addSession({
+                id: crypto.randomUUID(),
+                date: new Date().toISOString(),
+                duration,
+                mode: timerMode,
+            });
+            fetch("/api/sessions", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    duration,
+                    tasks: selectedTodo ? [selectedTodo.text] : [],
+                }),
+            }).catch(() => {});
         }
 
         if (timerMode === "POMODORO" && timerState === "WORK") {
@@ -225,17 +234,9 @@ export function FocusTimer() {
         updateTodo,
         toggleTodo,
         toggleSubtask,
+        addSession,
+        selectedTodo,
     ]);
-
-    const handleReportSubmit = (data: SessionReportData) => {
-        addSession({
-            id: crypto.randomUUID(),
-            date: new Date().toISOString(),
-            duration: data.duration,
-            mode: timerMode,
-        });
-        setReportOpen(false);
-    };
 
     const prevSettingsRef = useRef({ work: pomodoroSettings.work, break: pomodoroSettings.break });
 
@@ -670,15 +671,6 @@ export function FocusTimer() {
                     </Button>
                 </div>
             </div>
-
-            <SessionReportDialog
-                open={reportOpen}
-                onOpenChange={setReportOpen}
-                duration={completedDuration}
-                tasks={[]}
-                sessionName={sessionName}
-                onSubmit={handleReportSubmit}
-            />
         </div>
     );
 }
