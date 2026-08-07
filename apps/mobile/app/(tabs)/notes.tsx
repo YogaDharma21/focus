@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { View, StyleSheet } from 'react-native';
-import { MoodNotes } from '@/components/modules/MoodNotes';
+import { MoodTracker } from '@/components/modules/MoodTracker';
 import { useAppStore } from '@/lib/store';
 
 export default function NotesScreen() {
@@ -12,7 +12,7 @@ export default function NotesScreen() {
 
   return (
     <View style={styles.container}>
-      <MoodNotes />
+      <MoodTracker />
     </View>
   );
 }

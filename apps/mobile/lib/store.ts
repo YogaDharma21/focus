@@ -109,6 +109,8 @@ interface AppState {
   moodNotes: MoodNote[];
   addMoodNote: (note: MoodNote) => void;
   deleteMoodNote: (id: string) => void;
+  setMoodForDate: (date: string, mood: string, text?: string) => void;
+  cycleMoodForDate: (date: string) => void;
   sessions: Session[];
   distractions: Distraction[];
 
@@ -269,6 +271,106 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           moodNotes: (state.moodNotes || []).filter((n) => n.id !== id),
         })),
+      setMoodForDate: (dateKey, mood, text) =>
+        set((state) => {
+          const notes = state.moodNotes || [];
+          const normalizedTarget = dateKey.slice(0, 10);
+          const existingIndex = notes.findIndex(
+            (n) => n.date.slice(0, 10) === normalizedTarget,
+          );
+
+          if (!mood) {
+            if (existingIndex >= 0) {
+              return { moodNotes: notes.filter((_, idx) => idx !== existingIndex) };
+            }
+            return { moodNotes: notes };
+          }
+
+          if (existingIndex >= 0) {
+            const updated = [...notes];
+            updated[existingIndex] = {
+              ...updated[existingIndex],
+              mood,
+              text: text !== undefined ? text : updated[existingIndex].text,
+            };
+            return { moodNotes: updated };
+          } else {
+            return {
+              moodNotes: [
+                ...notes,
+                {
+                  id: generateId(),
+                  date: dateKey,
+                  mood,
+                  text: text || "",
+                },
+              ],
+            };
+          }
+        }),
+      cycleMoodForDate: (dateKey) =>
+        set((state) => {
+          const notes = state.moodNotes || [];
+          const normalizedTarget = dateKey.slice(0, 10);
+          const existing = notes.find((n) => n.date.slice(0, 10) === normalizedTarget);
+
+          const currentMoodRaw = existing?.mood;
+          let currentMood = "";
+          if (currentMoodRaw) {
+            if (currentMoodRaw === "amazing" || currentMoodRaw === "😊" || currentMoodRaw === "🤩" || currentMoodRaw === "Happy" || currentMoodRaw === "Excited") currentMood = "amazing";
+            else if (currentMoodRaw === "ok" || currentMoodRaw === "🙂" || currentMoodRaw === "😐" || currentMoodRaw === "Okay") currentMood = "ok";
+            else if (currentMoodRaw === "tired" || currentMoodRaw === "😴" || currentMoodRaw === "Tired") currentMood = "tired";
+            else if (currentMoodRaw === "sad" || currentMoodRaw === "😔" || currentMoodRaw === "Sad") currentMood = "sad";
+            else if (currentMoodRaw === "stressed" || currentMoodRaw === "😤" || currentMoodRaw === "Stressed") currentMood = "stressed";
+            else currentMood = currentMoodRaw;
+          }
+
+          const cycle: string[] = ["amazing", "ok", "tired", "sad", "stressed"];
+          let nextMood = "";
+
+          if (!currentMood) {
+            nextMood = "amazing";
+          } else {
+            const idx = cycle.indexOf(currentMood);
+            if (idx === -1 || idx === cycle.length - 1) {
+              nextMood = "";
+            } else {
+              nextMood = cycle[idx + 1];
+            }
+          }
+
+          const existingIndex = notes.findIndex(
+            (n) => n.date.slice(0, 10) === normalizedTarget,
+          );
+
+          if (!nextMood) {
+            if (existingIndex >= 0) {
+              return { moodNotes: notes.filter((_, idx) => idx !== existingIndex) };
+            }
+            return { moodNotes: notes };
+          }
+
+          if (existingIndex >= 0) {
+            const updated = [...notes];
+            updated[existingIndex] = {
+              ...updated[existingIndex],
+              mood: nextMood,
+            };
+            return { moodNotes: updated };
+          } else {
+            return {
+              moodNotes: [
+                ...notes,
+                {
+                  id: generateId(),
+                  date: dateKey,
+                  mood: nextMood,
+                  text: "",
+                },
+              ],
+            };
+          }
+        }),
       sessions: [],
       distractions: [],
 
