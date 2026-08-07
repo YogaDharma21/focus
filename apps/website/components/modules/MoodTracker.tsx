@@ -5,7 +5,7 @@ import { useAppStore } from "@/lib/store";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Smile, ChevronLeft, ChevronRight, Sparkles, Trash2, Calendar as CalendarIcon, Info, CalendarDays } from "lucide-react";
+import { Smile, ChevronLeft, ChevronRight, Sparkles, Trash2, Calendar as CalendarIcon, CalendarDays } from "lucide-react";
 import { format, isValid, getDaysInMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -124,7 +124,17 @@ export function MoodTracker() {
 
     const isTodaySelected = selectedDateKey === todayStr;
 
-    // Helper to format selected date label
+    // Helper to format date string
+    const formatDateStr = (dateKey: string) => {
+        try {
+            const parts = dateKey.split("-").map(Number);
+            const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+            return format(dateObj, "MMM d, yyyy");
+        } catch {
+            return dateKey;
+        }
+    };
+
     const getFormattedSelectedDate = () => {
         try {
             const parts = selectedDateKey.split("-").map(Number);
@@ -134,6 +144,12 @@ export function MoodTracker() {
             return selectedDateKey;
         }
     };
+
+    // Calculate active date info for bottom banner (hovered date or clicked/selected date)
+    const activeDateKey = hoveredDateInfo?.dateStr || selectedDateKey;
+    const activeNoteObj = moodNotes.find((n) => n.date.slice(0, 10) === activeDateKey);
+    const activeMoodKey = normalizeMoodKey(activeNoteObj?.mood);
+    const activeFormattedDate = formatDateStr(activeDateKey);
 
     // Calculate mood stats for selected year
     const yearNotes = moodNotes.filter((n) => {
@@ -166,7 +182,7 @@ export function MoodTracker() {
                     <div className="flex items-center gap-2">
                         <Smile className="w-5 h-5 text-primary" />
                         <h2 className="font-semibold text-lg">
-                            Log Mood {isTodaySelected ? "(Today)" : `for ${format(new Date(selectedDateKey.replace(/-/g, "/")), "MMM d")}`}
+                            Log Mood {isTodaySelected ? "(Today)" : `for ${formatDateStr(selectedDateKey)}`}
                         </h2>
                     </div>
 
@@ -268,7 +284,7 @@ export function MoodTracker() {
                             Yearly Mood Tracker
                         </h3>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                            <strong>Single click</strong> to select date & edit. <strong>Double click</strong> to cycle mood.
+                            <strong>1 click</strong> to select date & view details below. <strong>2 clicks</strong> to cycle mood.
                         </p>
                     </div>
 
@@ -397,33 +413,27 @@ export function MoodTracker() {
                     </div>
                 </div>
 
-                {/* Info Banner */}
+                {/* Selected/Active Date Info Banner */}
                 <div className="min-h-[44px] flex items-center justify-between p-3 rounded-xl bg-background/40 border border-border/40 text-xs">
-                    {hoveredDateInfo ? (
-                        <div className="flex items-center justify-between w-full">
-                            <div className="flex items-center gap-2">
-                                <span className="font-semibold text-foreground">{hoveredDateInfo.formattedDate}:</span>
-                                {hoveredDateInfo.moodKey ? (
-                                    <span className={cn("font-medium flex items-center gap-1", MOOD_CONFIGS[hoveredDateInfo.moodKey].textClass)}>
-                                        {MOOD_CONFIGS[hoveredDateInfo.moodKey].emoji} {MOOD_CONFIGS[hoveredDateInfo.moodKey].label}
-                                    </span>
-                                ) : (
-                                    <span className="text-muted-foreground italic">No mood logged</span>
-                                )}
-                                {hoveredDateInfo.text && (
-                                    <span className="text-foreground/80 italic ml-2 max-w-[300px] truncate">
-                                        "{hoveredDateInfo.text}"
-                                    </span>
-                                )}
-                            </div>
-                            <span className="text-[10px] text-muted-foreground hidden sm:inline">1 Click: Select | 2 Clicks: Cycle</span>
+                    <div className="flex items-center justify-between w-full">
+                        <div className="flex items-center gap-2 flex-wrap">
+                            <span className="font-bold text-foreground text-sm">{activeFormattedDate}:</span>
+                            {activeMoodKey ? (
+                                <span className={cn("font-semibold text-sm flex items-center gap-1.5", MOOD_CONFIGS[activeMoodKey].textClass)}>
+                                    <span className="text-base">{MOOD_CONFIGS[activeMoodKey].emoji}</span>
+                                    <span>{MOOD_CONFIGS[activeMoodKey].label}</span>
+                                </span>
+                            ) : (
+                                <span className="text-muted-foreground italic">No mood logged</span>
+                            )}
+                            {activeNoteObj?.text && (
+                                <span className="text-foreground/80 italic ml-2 max-w-[300px] truncate bg-background/50 px-2 py-0.5 rounded border border-border/30">
+                                    "{activeNoteObj.text}"
+                                </span>
+                            )}
                         </div>
-                    ) : (
-                        <div className="flex items-center gap-2 text-muted-foreground">
-                            <Info className="w-4 h-4 text-primary/70" />
-                            <span>1 click to select date & edit details. 2 clicks (double-click) to quick-cycle mood.</span>
-                        </div>
-                    )}
+                        <span className="text-[10px] text-muted-foreground hidden sm:inline">1 Click: Select Date | 2 Clicks: Cycle Mood</span>
+                    </div>
                 </div>
 
                 {/* Mood Legend & Yearly Summary */}
