@@ -476,6 +476,69 @@ export function Popup() {
     updateState({ moodNotes: state.moodNotes.filter(n => n.id !== id) });
   };
 
+  const setMoodForDate = (dateKey: string, mood: string, text?: string) => {
+    const notes = state.moodNotes || [];
+    const targetDate = dateKey.slice(0, 10);
+    const existingIndex = notes.findIndex((n) => n.date.slice(0, 10) === targetDate);
+
+    if (!mood) {
+      if (existingIndex >= 0) {
+        updateState({ moodNotes: notes.filter((_, idx) => idx !== existingIndex) });
+      }
+      return;
+    }
+
+    if (existingIndex >= 0) {
+      const updated = [...notes];
+      updated[existingIndex] = {
+        ...updated[existingIndex],
+        mood,
+        text: text !== undefined ? text : updated[existingIndex].text,
+      };
+      updateState({ moodNotes: updated });
+    } else {
+      const newNote = {
+        id: crypto.randomUUID(),
+        date: dateKey,
+        mood,
+        text: text || "",
+      };
+      updateState({ moodNotes: [newNote, ...notes] });
+    }
+  };
+
+  const cycleMoodForDate = (dateKey: string) => {
+    const notes = state.moodNotes || [];
+    const targetDate = dateKey.slice(0, 10);
+    const existing = notes.find((n) => n.date.slice(0, 10) === targetDate);
+
+    const currentMoodRaw = existing?.mood;
+    let currentMood = "";
+    if (currentMoodRaw) {
+      if (currentMoodRaw === "amazing" || currentMoodRaw === "😊" || currentMoodRaw === "🤩" || currentMoodRaw === "Happy" || currentMoodRaw === "Excited") currentMood = "amazing";
+      else if (currentMoodRaw === "ok" || currentMoodRaw === "🙂" || currentMoodRaw === "😐" || currentMoodRaw === "Okay") currentMood = "ok";
+      else if (currentMoodRaw === "tired" || currentMoodRaw === "😴" || currentMoodRaw === "Tired") currentMood = "tired";
+      else if (currentMoodRaw === "sad" || currentMoodRaw === "😔" || currentMoodRaw === "Sad") currentMood = "sad";
+      else if (currentMoodRaw === "stressed" || currentMoodRaw === "😤" || currentMoodRaw === "Stressed") currentMood = "stressed";
+      else currentMood = currentMoodRaw;
+    }
+
+    const cycle = ["amazing", "ok", "tired", "sad", "stressed"];
+    let nextMood = "";
+    if (!currentMood) {
+      nextMood = "amazing";
+    } else {
+      const idx = cycle.indexOf(currentMood);
+      if (idx === -1 || idx === cycle.length - 1) {
+        nextMood = "";
+      } else {
+        nextMood = cycle[idx + 1];
+      }
+    }
+
+    setMoodForDate(dateKey, nextMood);
+  };
+
   const openGithubLink = () => {
     const url = "https://github.com/YogaDharma21/focus";
     if (typeof chrome !== "undefined" && chrome.tabs) {
@@ -1226,7 +1289,7 @@ export function Popup() {
           { id: "timer", label: "Timer", icon: TimerIcon },
           { id: "tasks", label: "Tasks", icon: CheckSquare, badge: state.todos.filter(t => !t.completed).length },
           { id: "shield", label: "Shield", icon: Shield, activeIndicator: state.shield.enabled && state.isActive },
-          { id: "notes", label: "Notes", icon: BookOpen, badge: state.moodNotes.length },
+          { id: "notes", label: "Mood", icon: Smile, badge: state.moodNotes.length },
           { id: "stats", label: "Stats", icon: BarChart3 }
         ].map((tab) => {
           const Icon = tab.icon;
@@ -1744,87 +1807,15 @@ export function Popup() {
           </div>
         )}
 
-        {/* MOOD NOTES TAB */}
+        {/* MOOD TRACKER TAB */}
         {activeTab === "notes" && (
-          <div className="flex flex-col gap-3 h-full">
-            <form onSubmit={addMoodNote} className={`p-3 rounded-xl border flex flex-col gap-2 ${
-              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
-            }`}>
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-bold font-mono flex items-center gap-1.5">
-                  <MessageSquarePlus className="w-3.5 h-3.5" />
-                  LOG MOOD REFLECTION
-                </span>
-                <select
-                  value={selectedMood}
-                  onChange={(e) => setSelectedMood(e.target.value)}
-                  className={`px-2 py-1 rounded-lg text-xs font-medium border focus:outline-none ${
-                    isDark ? "bg-neutral-800 border-neutral-700 text-white" : "bg-white border-neutral-300 text-black"
-                  }`}
-                >
-                  {MOOD_EMOJIS.map((m) => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
-                </select>
-              </div>
-
-              <textarea
-                value={newMoodText}
-                onChange={(e) => setNewMoodText(e.target.value)}
-                placeholder="How did your session go? Write a reflection..."
-                rows={2}
-                className={`w-full p-2 rounded-lg text-xs border focus:outline-none ${
-                  isDark
-                    ? "bg-black border-neutral-800 text-white placeholder-neutral-600 focus:border-white"
-                    : "bg-white border-neutral-300 text-black placeholder-neutral-400 focus:border-black"
-                }`}
-              />
-              <button
-                type="submit"
-                className={`py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                  isDark ? "bg-white text-black border-white hover:bg-neutral-200" : "bg-black text-white border-black hover:bg-neutral-800"
-                }`}
-              >
-                Save Reflection
-              </button>
-            </form>
-
-            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-              <div className={`text-[10px] font-mono uppercase tracking-wider ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
-                Saved Reflections ({state.moodNotes.length})
-              </div>
-
-              {state.moodNotes.length === 0 ? (
-                <div className={`text-center py-8 text-xs font-mono ${isDark ? "text-neutral-600" : "text-neutral-400"}`}>
-                  NO MOOD REFLECTIONS SAVED YET.
-                </div>
-              ) : (
-                state.moodNotes.map((note) => (
-                  <div key={note.id} className={`p-3 rounded-xl border flex flex-col gap-1 text-xs transition-all ${
-                    isDark ? "bg-neutral-900/60 border-neutral-800 text-neutral-300" : "bg-neutral-50 border-neutral-200 text-neutral-800"
-                  }`}>
-                    <div className="flex items-center justify-between text-[10px] font-mono">
-                      <span className={`font-bold px-1.5 py-0.5 rounded border ${
-                        isDark ? "bg-neutral-800 text-white border-neutral-700" : "bg-neutral-200 text-black border-neutral-300"
-                      }`}>
-                        {note.mood}
-                      </span>
-                      <div className="flex items-center gap-2">
-                        <span className="opacity-60">{note.date}</span>
-                        <button
-                          onClick={() => deleteMoodNote(note.id)}
-                          className={`p-0.5 ${isDark ? "text-neutral-500 hover:text-white" : "text-neutral-400 hover:text-black"}`}
-                        >
-                          <Trash2 className="w-3 h-3" />
-                        </button>
-                      </div>
-                    </div>
-                    <p className="text-xs leading-relaxed mt-1">{note.text}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+          <MoodTracker
+            moodNotes={state.moodNotes}
+            onSetMoodForDate={setMoodForDate}
+            onCycleMoodForDate={cycleMoodForDate}
+            onDeleteMoodNote={deleteMoodNote}
+            isDark={isDark}
+          />
         )}
 
         {/* STATS TAB */}
