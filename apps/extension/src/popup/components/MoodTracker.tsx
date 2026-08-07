@@ -109,11 +109,9 @@ export function MoodTracker({
     text?: string;
   } | null>(null);
 
-  // Get note for currently selected date
   const selectedDateNote = moodNotes.find((n) => n.date.slice(0, 10) === selectedDateKey);
   const currentSelectedMoodKey = normalizeMoodKey(selectedDateNote?.mood);
 
-  // Sync form state when selected date or note changes
   useEffect(() => {
     setSelectedMood(currentSelectedMoodKey);
     setDescriptionText(selectedDateNote?.text || "");
@@ -126,7 +124,7 @@ export function MoodTracker({
 
   const isTodaySelected = selectedDateKey === todayStr;
 
-  const formatDateStr = (dateKey: string) => {
+  const formatDateShort = (dateKey: string) => {
     try {
       const parts = dateKey.split("-").map(Number);
       const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
@@ -136,23 +134,11 @@ export function MoodTracker({
     }
   };
 
-  const getFormattedSelectedDate = () => {
-    try {
-      const parts = selectedDateKey.split("-").map(Number);
-      const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
-      return format(dateObj, "EEEE, MMMM d, yyyy");
-    } catch {
-      return selectedDateKey;
-    }
-  };
-
-  // Compute active date info for bottom banner
   const activeDateKey = hoveredDateInfo?.dateStr || selectedDateKey;
   const activeNoteObj = moodNotes.find((n) => n.date.slice(0, 10) === activeDateKey);
   const activeMoodKey = normalizeMoodKey(activeNoteObj?.mood);
-  const activeFormattedDate = formatDateStr(activeDateKey);
+  const activeFormattedDate = formatDateShort(activeDateKey);
 
-  // Calculate stats for current year
   const yearNotes = moodNotes.filter((n) => {
     const d = new Date(n.date);
     return isValid(d) && d.getFullYear() === selectedYear;
@@ -176,22 +162,23 @@ export function MoodTracker({
   const totalTrackedDays = Object.values(stats).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="flex flex-col gap-3 h-full overflow-y-auto pr-0.5">
-      {/* Quick Input & Inspector Card for Selected Date */}
-      <div className={`p-3 rounded-xl border flex flex-col gap-2.5 ${
+    <div className="flex flex-col gap-2.5 h-full overflow-y-auto pr-0.5">
+      {/* Quick Input & Inspector Card */}
+      <div className={`p-3 rounded-xl border flex flex-col gap-2 ${
         isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
       }`}>
-        <div className="flex items-center justify-between gap-1 text-xs">
-          <div className="flex items-center gap-1.5 font-bold font-mono">
-            <Smile className="w-3.5 h-3.5 text-primary" />
-            <span>LOG MOOD {isTodaySelected ? "(TODAY)" : `(${formatDateStr(selectedDateKey)})`}</span>
+        {/* Clean Header */}
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-1.5 font-bold font-mono text-xs whitespace-nowrap min-w-0">
+            <Smile className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+            <span className="truncate">LOG MOOD</span>
           </div>
 
-          <div className="flex items-center gap-1.5">
-            <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${
+          <div className="flex items-center gap-1.5 flex-shrink-0">
+            <span className={`text-[10px] font-mono px-2 py-0.5 rounded border whitespace-nowrap ${
               isDark ? "bg-neutral-800 border-neutral-700 text-neutral-300" : "bg-neutral-200 border-neutral-300 text-neutral-800"
             }`}>
-              {getFormattedSelectedDate()}
+              {formatDateShort(selectedDateKey)}
             </span>
             {!isTodaySelected && (
               <button
@@ -199,7 +186,7 @@ export function MoodTracker({
                   setSelectedDateKey(todayStr);
                   setSelectedYear(today.getFullYear());
                 }}
-                className={`flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded border ${
+                className={`flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded border whitespace-nowrap transition-all ${
                   isDark ? "bg-white/10 text-white border-white/20 hover:bg-white/20" : "bg-black/10 text-black border-black/20 hover:bg-black/20"
                 }`}
                 title="Go to today"
@@ -222,7 +209,7 @@ export function MoodTracker({
                 type="button"
                 onClick={() => setSelectedMood(key)}
                 className={cn(
-                  "flex flex-col items-center justify-center py-2 px-1 rounded-lg border transition-all text-xs group",
+                  "flex flex-col items-center justify-center py-1.5 px-1 rounded-lg border transition-all text-xs group",
                   isSelected
                     ? cfg.pillSelectedClass
                     : isDark
@@ -230,10 +217,10 @@ export function MoodTracker({
                     : "bg-white hover:bg-neutral-100 border-neutral-300 text-black"
                 )}
               >
-                <span className="text-xl transition-transform duration-200 group-hover:scale-110">
+                <span className="text-lg transition-transform duration-200 group-hover:scale-110">
                   {cfg.emoji}
                 </span>
-                <span className="text-[10px] font-medium mt-0.5">
+                <span className="text-[9px] font-medium mt-0.5">
                   {cfg.label}
                 </span>
               </button>
@@ -241,7 +228,7 @@ export function MoodTracker({
           })}
         </div>
 
-        {/* Reflection / Description Input */}
+        {/* Description Text Area */}
         <textarea
           placeholder="Optional reflection: What made you feel this way?"
           rows={2}
@@ -256,7 +243,7 @@ export function MoodTracker({
 
         <div className="flex items-center justify-between text-xs pt-0.5">
           {selectedDateNote ? (
-            <div className="flex items-center gap-1.5 text-[10px] text-neutral-400 truncate max-w-[220px]">
+            <div className="flex items-center gap-1.5 text-[10px] text-neutral-400 truncate max-w-[210px]">
               <span>Logged: <strong className={MOOD_CONFIGS[currentSelectedMoodKey || "amazing"].textClass}>{MOOD_CONFIGS[currentSelectedMoodKey || "amazing"].label} {MOOD_CONFIGS[currentSelectedMoodKey || "amazing"].emoji}</strong></span>
               {selectedDateNote.text && <span className="italic truncate">"{selectedDateNote.text}"</span>}
               <button
@@ -265,7 +252,7 @@ export function MoodTracker({
                   setSelectedMood(null);
                   setDescriptionText("");
                 }}
-                className="text-neutral-500 hover:text-rose-500 transition-colors ml-1 p-0.5"
+                className="text-neutral-500 hover:text-rose-500 transition-colors ml-1 p-0.5 flex-shrink-0"
                 title="Clear mood note"
               >
                 <Trash2 className="w-3 h-3" />
@@ -278,7 +265,7 @@ export function MoodTracker({
           <button
             type="button"
             onClick={handleSaveMood}
-            className={`ml-auto px-3 py-1 rounded-lg text-xs font-bold border transition-all flex items-center gap-1 ${
+            className={`ml-auto px-2.5 py-1 rounded-lg text-xs font-bold border transition-all flex items-center gap-1 flex-shrink-0 ${
               isDark ? "bg-white text-black border-white hover:bg-neutral-200" : "bg-black text-white border-black hover:bg-neutral-800"
             }`}
           >
@@ -288,8 +275,8 @@ export function MoodTracker({
         </div>
       </div>
 
-      {/* Yearly Pixel Grid Container */}
-      <div className={`p-3 rounded-xl border flex flex-col gap-3 ${
+      {/* Yearly Pixel Grid Card */}
+      <div className={`p-3 rounded-xl border flex flex-col gap-2.5 ${
         isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
       }`}>
         <div className="flex items-center justify-between border-b pb-2 border-neutral-800/60">
@@ -304,7 +291,7 @@ export function MoodTracker({
               className={`p-1 rounded hover:bg-neutral-800 transition-colors ${isDark ? "text-neutral-400 hover:text-white" : "text-neutral-600 hover:text-black"}`}
               title="Previous year"
             >
-              <ChevronLeft className="w-4 h-4" />
+              <ChevronLeft className="w-3.5 h-3.5" />
             </button>
             <span className={`font-mono font-bold text-xs px-2 py-0.5 rounded border ${
               isDark ? "bg-black border-neutral-800 text-white" : "bg-white border-neutral-300 text-black"
@@ -316,7 +303,7 @@ export function MoodTracker({
               className={`p-1 rounded hover:bg-neutral-800 transition-colors ${isDark ? "text-neutral-400 hover:text-white" : "text-neutral-600 hover:text-black"}`}
               title="Next year"
             >
-              <ChevronRight className="w-4 h-4" />
+              <ChevronRight className="w-3.5 h-3.5" />
             </button>
 
             {selectedYear !== today.getFullYear() && (
@@ -335,9 +322,9 @@ export function MoodTracker({
 
         {/* 12 Months x 31 Days Pixel Grid */}
         <div className="overflow-x-auto pb-1">
-          <div className="min-w-[280px] flex flex-col items-center">
+          <div className="w-full flex flex-col items-center">
             {/* Header Months J F M A M J J A S O N D */}
-            <div className="grid grid-cols-[24px_repeat(12,1fr)] gap-0.5 w-full text-center text-[10px] font-mono font-bold text-neutral-500 mb-1">
+            <div className="grid grid-cols-[20px_repeat(12,1fr)] gap-[2px] w-full text-center text-[9px] font-mono font-bold text-neutral-500 mb-1">
               <div className="w-5"></div>
               {MONTH_LABELS.map((m, idx) => (
                 <div key={idx} className="w-full flex items-center justify-center" title={FULL_MONTH_NAMES[idx]}>
@@ -350,8 +337,8 @@ export function MoodTracker({
             {Array.from({ length: 31 }, (_, dayIdx) => {
               const dayNum = dayIdx + 1;
               return (
-                <div key={dayNum} className="grid grid-cols-[24px_repeat(12,1fr)] gap-0.5 w-full items-center my-[1px]">
-                  <div className="text-[9px] font-mono text-neutral-500 text-right pr-1 select-none">
+                <div key={dayNum} className="grid grid-cols-[20px_repeat(12,1fr)] gap-[2px] w-full items-center my-[1px]">
+                  <div className="text-[8px] font-mono text-neutral-500 text-right pr-1 select-none">
                     {dayNum < 10 ? `0${dayNum}` : dayNum}
                   </div>
 
@@ -391,7 +378,7 @@ export function MoodTracker({
                           onCycleMoodForDate(dateKey);
                         }}
                         onMouseEnter={() => {
-                          const formattedDate = format(new Date(selectedYear, monthIdx, dayNum), "MMM d, yyyy");
+                          const formattedDate = formatDateShort(dateKey);
                           setHoveredDateInfo({
                             dateStr: dateKey,
                             formattedDate,
@@ -401,7 +388,7 @@ export function MoodTracker({
                         }}
                         onMouseLeave={() => setHoveredDateInfo(null)}
                         className={cn(
-                          "aspect-square w-full rounded-[3px] transition-all cursor-pointer relative group",
+                          "aspect-square w-full rounded-[2px] transition-all cursor-pointer relative group",
                           cfg
                             ? `${cfg.bgClass} shadow-sm scale-100 hover:scale-125 z-10`
                             : isDark
@@ -410,7 +397,7 @@ export function MoodTracker({
                           isSelectedCell && "ring-2 ring-white border border-white scale-110 z-30 shadow-md",
                           isCellToday && !isSelectedCell && "ring-1 ring-primary/80 ring-offset-1 ring-offset-black z-20"
                         )}
-                        title={`${format(new Date(selectedYear, monthIdx, dayNum), "MMM d, yyyy")}${cfg ? `: ${cfg.label} ${cfg.emoji}` : ": Empty (1 click: Select | 2 clicks: Cycle)"}`}
+                        title={`${formatDateShort(dateKey)}${cfg ? `: ${cfg.label} ${cfg.emoji}` : ": Empty (1 click: Select | 2 clicks: Cycle)"}`}
                       />
                     );
                   })}
@@ -424,40 +411,40 @@ export function MoodTracker({
         <div className={`p-2 rounded-lg border text-xs flex items-center justify-between ${
           isDark ? "bg-black/60 border-neutral-800 text-neutral-300" : "bg-white border-neutral-200 text-neutral-800"
         }`}>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-bold text-xs">{activeFormattedDate}:</span>
+          <div className="flex items-center gap-1.5 flex-wrap min-w-0">
+            <span className="font-bold text-xs whitespace-nowrap">{activeFormattedDate}:</span>
             {activeMoodKey ? (
-              <span className={cn("font-semibold text-xs flex items-center gap-1", MOOD_CONFIGS[activeMoodKey].textClass)}>
+              <span className={cn("font-semibold text-xs flex items-center gap-1 whitespace-nowrap", MOOD_CONFIGS[activeMoodKey].textClass)}>
                 <span>{MOOD_CONFIGS[activeMoodKey].emoji}</span>
                 <span>{MOOD_CONFIGS[activeMoodKey].label}</span>
               </span>
             ) : (
-              <span className="text-neutral-500 italic text-[11px]">No mood logged</span>
+              <span className="text-neutral-500 italic text-[11px] whitespace-nowrap">No mood logged</span>
             )}
             {activeNoteObj?.text && (
-              <span className="text-neutral-400 italic text-[11px] truncate max-w-[180px]">
+              <span className="text-neutral-400 italic text-[11px] truncate max-w-[150px]">
                 "{activeNoteObj.text}"
               </span>
             )}
           </div>
-          <span className="text-[9px] font-mono text-neutral-500">1 Click: Select | 2 Clicks: Cycle</span>
+          <span className="text-[9px] font-mono text-neutral-500 whitespace-nowrap flex-shrink-0 ml-1">1 Click: Select | 2 Clicks: Cycle</span>
         </div>
 
-        {/* Legend & Stats */}
-        <div className="pt-2 border-t border-neutral-800/60 flex items-center justify-between text-[10px] font-mono">
+        {/* Legend & Stats Footer - Clean, Non-wrapping Flex Layout */}
+        <div className="pt-2 border-t border-neutral-800/60 flex flex-wrap items-center justify-between gap-1.5 text-[10px] font-mono">
           <div className="flex items-center gap-2 flex-wrap">
             {(Object.keys(MOOD_CONFIGS) as MoodType[]).map((key) => {
               const cfg = MOOD_CONFIGS[key];
               return (
-                <div key={key} className="flex items-center gap-1">
+                <div key={key} className="flex items-center gap-1 whitespace-nowrap">
                   <span className={cn("w-2.5 h-2.5 rounded-[2px]", cfg.bgClass)} />
-                  <span className="text-neutral-400">{cfg.label}</span>
-                  <span className="font-bold">({stats[key]})</span>
+                  <span className="text-neutral-400 text-[9px]">{cfg.label}</span>
+                  <span className="font-bold text-[9px]">({stats[key]})</span>
                 </div>
               );
             })}
           </div>
-          <div className="text-neutral-500">Total: <strong>{totalTrackedDays}</strong></div>
+          <div className="text-neutral-400 whitespace-nowrap flex-shrink-0">Total Tracked: <strong className="text-white">{totalTrackedDays}</strong></div>
         </div>
       </div>
     </div>
