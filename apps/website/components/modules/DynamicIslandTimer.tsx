@@ -286,7 +286,7 @@ export function DynamicIslandTimer() {
                                         "text-xs px-2 py-0.5 rounded-[var(--radius)]",
                                         timerState === "WORK"
                                             ? "bg-primary/20 text-primary"
-                                            : "bg-green-500/20 text-green-500",
+                                            : "bg-primary/20 text-primary",
                                     )}
                                 >
                                     {timerState === "WORK" ? "Work" : "Break"}
