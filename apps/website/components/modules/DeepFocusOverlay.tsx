@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { DistractionCounter } from "./DistractionCounter";
-import { SessionReportDialog, type SessionReportData } from "./SessionReportDialog";
 
 export function DeepFocusOverlay() {
     const {
@@ -30,8 +29,6 @@ export function DeepFocusOverlay() {
         selectedSubtaskId,
     } = useAppStore();
 
-    const [reportOpen, setReportOpen] = useState(false);
-    const [completedDuration, setCompletedDuration] = useState(0);
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const sessionStartTimeRef = useRef<number | null>(null);
 
@@ -96,11 +93,22 @@ export function DeepFocusOverlay() {
                 : timeLeft;
 
         if (duration > 0) {
-            setCompletedDuration(duration);
-            setReportOpen(true);
-        } else {
-            setDeepFocusMode(false);
+            addSession({
+                id: crypto.randomUUID(),
+                date: new Date().toISOString(),
+                duration,
+                mode: timerMode,
+            });
+            fetch("/api/sessions", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    duration,
+                    tasks: [],
+                }),
+            }).catch(() => {});
         }
+        setDeepFocusMode(false);
 
         if (timerMode === "POMODORO" && timerState === "WORK") {
             setPreviousMode("POMODORO");
@@ -144,18 +152,8 @@ export function DeepFocusOverlay() {
         setDeepFocusMode,
         playSound,
         pomodoroSettings,
+        addSession,
     ]);
-
-    const handleReportSubmit = (data: SessionReportData) => {
-        addSession({
-            id: crypto.randomUUID(),
-            date: new Date().toISOString(),
-            duration: data.duration,
-            mode: timerMode,
-        });
-        setReportOpen(false);
-        setDeepFocusMode(false);
-    };
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -254,20 +252,6 @@ export function DeepFocusOverlay() {
             <div className="absolute bottom-8 text-xs text-muted-foreground">
                 Press <kbd className="px-2 py-1 bg-secondary/50 rounded text-[10px] font-mono border border-border">Esc</kbd> to exit focus mode
             </div>
-
-            <SessionReportDialog
-                open={reportOpen}
-                onOpenChange={(open) => {
-                    setReportOpen(open);
-                    if (!open) {
-                        setDeepFocusMode(false);
-                    }
-                }}
-                duration={completedDuration}
-                tasks={[]}
-                sessionName={sessionName}
-                onSubmit={handleReportSubmit}
-            />
         </div>
     );
 }
