@@ -70,6 +70,8 @@ interface AppState {
     toggleSubtask: (todoId: string, subtaskId: string) => void;
     deleteSubtask: (todoId: string, subtaskId: string) => void;
     updateSubtask: (todoId: string, subtaskId: string, text: string) => void;
+
+    resetAllData: () => void;
 }
 
 export interface Group {
@@ -305,6 +307,43 @@ export const useAppStore = create<AppState>()(
                 set((state) => ({
                     pomodoroSettings: { ...state.pomodoroSettings, ...updates },
                 })),
+
+            resetAllData: () => {
+                useAppStore.persist.clearStorage();
+                set({
+                    currentView: "FOCUS",
+                    localUrl: "/music1.mp3",
+                    localPlaylist: [
+                        {
+                            id: "local-1",
+                            title: "Lo-Fi",
+                            artist: "Focus Ambient Music",
+                            url: "/music1.mp3",
+                        },
+                    ],
+                    mediaPlayerOpen: false,
+                    timerMode: "POMODORO",
+                    timerState: "WORK",
+                    previousMode: "POMODORO",
+                    timeLeft: 25 * 60,
+                    isActive: false,
+                    sessionStartTime: null,
+                    sessionName: "",
+                    selectedTodoId: null,
+                    selectedSubtaskId: null,
+                    todos: [],
+                    groups: [
+                        { id: "current", name: "Current Tasks", type: "system" },
+                        { id: "finished", name: "Finished", type: "system" },
+                    ],
+                    moodNotes: [],
+                    sessions: [],
+                    distractions: [],
+                    deepFocusMode: false,
+                    background: "dark",
+                    pomodoroSettings: { work: 25, break: 5, autoStartBreak: false },
+                });
+            },
         }),
         {
             name: "focus-app-storage-v2",
