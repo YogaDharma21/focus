@@ -253,28 +253,40 @@ export function StatsJournal() {
                 </Card>
             </div>
 
-            {totalDistractions > 0 && (
-                <Card className="p-6 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-4 rounded-[var(--radius)]">
+            <Card className="p-6 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-4 rounded-[var(--radius)]">
+                <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <div className="p-2 bg-red-500/10 rounded-[var(--radius)] text-red-500">
                             <BarChart3 className="w-4 h-4" />
                         </div>
                         <h2 className="font-semibold text-lg">Distraction Analysis</h2>
                     </div>
+                    {totalDistractions > 0 && (
+                        <span className="text-xs text-muted-foreground font-medium">
+                            {totalDistractions} total
+                        </span>
+                    )}
+                </div>
 
-                    <div className="text-sm text-muted-foreground">
-                        Most common:{" "}
-                        <span className="font-medium text-foreground">
-                            {mostCommon?.[0]}
-                        </span>{" "}
-                        ({Math.round((mostCommon?.[1] || 0) / totalDistractions * 100)}%)
+                <div className="text-sm text-muted-foreground">
+                    Most common:{" "}
+                    <span className="font-medium text-foreground">
+                        {totalDistractions > 0 ? mostCommon?.[0] : "None"}
+                    </span>{" "}
+                    {totalDistractions > 0 &&
+                        `(${Math.round(((mostCommon?.[1] || 0) / totalDistractions) * 100)}%)`}
+                </div>
+
+                {totalDistractions === 0 ? (
+                    <div className="p-4 border border-dashed rounded-[var(--radius)] text-center text-sm text-muted-foreground bg-muted/10">
+                        No distractions logged yet. Keep up the deep focus!
                     </div>
-
+                ) : (
                     <div className="space-y-3">
                         {distractionCategories.map((cat) => {
                             const count = categoryCounts[cat] || 0;
                             if (count === 0) return null;
-                            const percentage = Math.round(count / totalDistractions * 100);
+                            const percentage = Math.round((count / totalDistractions) * 100);
                             return (
                                 <div key={cat} className="space-y-1">
                                     <div className="flex items-center justify-between text-sm">
@@ -292,8 +304,8 @@ export function StatsJournal() {
                             );
                         })}
                     </div>
-                </Card>
-            )}
+                )}
+            </Card>
         </div>
     );
 }
