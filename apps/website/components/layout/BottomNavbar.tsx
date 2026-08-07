@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppStore, ViewType } from "@/lib/store";
-import { Timer, CheckSquare, BarChart2, NotebookPen } from "lucide-react";
+import { Timer, CheckSquare, BarChart2, Smile } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/lib/hooks";
 
@@ -26,9 +26,9 @@ export function BottomNavbar() {
             icon: <BarChart2 className="w-5 h-5" />,
         },
         {
-            label: "Notes",
+            label: "Mood",
             value: "NOTES",
-            icon: <NotebookPen className="w-5 h-5" />,
+            icon: <Smile className="w-5 h-5" />,
         },
     ];
 
