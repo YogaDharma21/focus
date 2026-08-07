@@ -141,7 +141,7 @@ export default function TabLayout() {
           <Tabs.Screen
             name="notes"
             options={{
-              title: 'Notes',
+              title: 'Mood',
               tabBarIcon: ({ color }) => <Smile size={22} color={color} />,
             }}
           />
