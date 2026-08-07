@@ -11,7 +11,7 @@ import { DynamicIslandTimer } from "@/components/modules/DynamicIslandTimer";
 import { DeepFocusOverlay } from "@/components/modules/DeepFocusOverlay";
 import { BackgroundDisplay } from "@/components/modules/BackgroundDisplay";
 import { BackgroundSelector } from "@/components/modules/BackgroundSelector";
-import { MoodNotes } from "@/components/modules/MoodNotes";
+import { MoodTracker } from "@/components/modules/MoodTracker";
 import { useAppStore } from "@/lib/store";
 import { useTimerEngine } from "@/lib/hooks";
 import { useEffect, useRef, useState } from "react";
@@ -78,7 +78,7 @@ export default function Page() {
                                 {currentView === "FOCUS" && "Focus Session"}
                                 {currentView === "TODO" && "Tasks"}
                                 {currentView === "JOURNAL" && "Stats"}
-                                {currentView === "NOTES" && "Notes"}
+                                {currentView === "NOTES" && "Mood Tracker"}
                             </h1>
                         </div>
                         <div className="flex items-center gap-1.5 sm:gap-2 relative z-30">
@@ -125,7 +125,7 @@ export default function Page() {
 
                         {currentView === "NOTES" && (
                             <div className="max-w-2xl mx-auto w-full pb-8 pt-12 transition-all duration-300 ease-in-out">
-                                <MoodNotes />
+                                <MoodTracker />
                             </div>
                         )}
                     </div>
