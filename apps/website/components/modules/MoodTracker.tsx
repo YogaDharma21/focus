@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAppStore } from "@/lib/store";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Smile, ChevronLeft, ChevronRight, Sparkles, Trash2, Calendar as CalendarIcon, Info } from "lucide-react";
-import { format, isValid, getDaysInMonth, isToday } from "date-fns";
+import { Smile, ChevronLeft, ChevronRight, Sparkles, Trash2, Calendar as CalendarIcon, Info, CalendarDays } from "lucide-react";
+import { format, isValid, getDaysInMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 
 export type MoodType = "amazing" | "ok" | "tired" | "sad" | "stressed";
@@ -97,6 +97,7 @@ export function MoodTracker() {
     const todayStr = format(today, "yyyy-MM-dd");
     
     const [selectedYear, setSelectedYear] = useState<number>(today.getFullYear());
+    const [selectedDateKey, setSelectedDateKey] = useState<string>(todayStr);
     const [selectedMood, setSelectedMood] = useState<MoodType | null>(null);
     const [descriptionText, setDescriptionText] = useState("");
     const [hoveredDateInfo, setHoveredDateInfo] = useState<{
@@ -106,14 +107,32 @@ export function MoodTracker() {
         text?: string;
     } | null>(null);
 
-    // Find today's note if it exists
-    const todayNote = moodNotes.find((n) => n.date.slice(0, 10) === todayStr);
-    const currentTodayMoodKey = normalizeMoodKey(todayNote?.mood);
+    // Get note for currently selected date
+    const selectedDateNote = moodNotes.find((n) => n.date.slice(0, 10) === selectedDateKey);
+    const currentSelectedMoodKey = normalizeMoodKey(selectedDateNote?.mood);
 
-    const handleSaveTodayMood = () => {
-        const moodToSave = selectedMood || currentTodayMoodKey || "amazing";
-        setMoodForDate(todayStr, moodToSave, descriptionText.trim());
-        setDescriptionText("");
+    // Sync input form whenever selectedDateKey changes or store updates
+    useEffect(() => {
+        setSelectedMood(currentSelectedMoodKey);
+        setDescriptionText(selectedDateNote?.text || "");
+    }, [selectedDateKey, selectedDateNote?.mood, selectedDateNote?.text]);
+
+    const handleSaveMood = () => {
+        const moodToSave = selectedMood || currentSelectedMoodKey || "amazing";
+        setMoodForDate(selectedDateKey, moodToSave, descriptionText.trim());
+    };
+
+    const isTodaySelected = selectedDateKey === todayStr;
+
+    // Helper to format selected date label
+    const getFormattedSelectedDate = () => {
+        try {
+            const parts = selectedDateKey.split("-").map(Number);
+            const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+            return format(dateObj, "EEEE, MMMM d, yyyy");
+        } catch {
+            return selectedDateKey;
+        }
     };
 
     // Calculate mood stats for selected year
@@ -141,22 +160,40 @@ export function MoodTracker() {
 
     return (
         <div className="h-full flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
-            {/* Quick Today Mood Input Card */}
+            {/* Input & Detail Inspector Card for Selected Date */}
             <Card className="p-6 bg-card/50 border-0 shadow-md backdrop-blur-xl rounded-[var(--radius)] space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
                         <Smile className="w-5 h-5 text-primary" />
-                        <h2 className="font-semibold text-lg">Log Today's Mood</h2>
+                        <h2 className="font-semibold text-lg">
+                            Log Mood {isTodaySelected ? "(Today)" : `for ${format(new Date(selectedDateKey.replace(/-/g, "/")), "MMM d")}`}
+                        </h2>
                     </div>
-                    <span className="text-xs text-muted-foreground font-medium bg-background/60 px-3 py-1 rounded-full border border-border/40">
-                        {format(today, "EEEE, MMMM d, yyyy")}
-                    </span>
+
+                    <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground font-medium bg-background/60 px-3 py-1 rounded-full border border-border/40">
+                            {getFormattedSelectedDate()}
+                        </span>
+                        {!isTodaySelected && (
+                            <button
+                                onClick={() => {
+                                    setSelectedDateKey(todayStr);
+                                    setSelectedYear(today.getFullYear());
+                                }}
+                                className="flex items-center gap-1 text-xs text-primary hover:underline bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20"
+                                title="Go to today"
+                            >
+                                <CalendarDays className="w-3.5 h-3.5" />
+                                Today
+                            </button>
+                        )}
+                    </div>
                 </div>
 
                 <div className="grid grid-cols-5 gap-2 sm:gap-3">
                     {(Object.keys(MOOD_CONFIGS) as MoodType[]).map((key) => {
                         const cfg = MOOD_CONFIGS[key];
-                        const isSelected = (selectedMood || currentTodayMoodKey) === key;
+                        const isSelected = selectedMood === key;
                         return (
                             <button
                                 key={key}
@@ -184,31 +221,35 @@ export function MoodTracker() {
                 </div>
 
                 <Textarea
-                    placeholder="Optional description: What made you feel this way today?"
+                    placeholder="Optional description: What made you feel this way?"
                     className="resize-none bg-background/50 border-border/40 focus-visible:ring-1 focus-visible:ring-primary/40 text-sm min-h-[80px] rounded-xl"
                     value={descriptionText}
                     onChange={(e) => setDescriptionText(e.target.value)}
                 />
 
                 <div className="flex items-center justify-between pt-1">
-                    {todayNote ? (
+                    {selectedDateNote ? (
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span>Logged as <strong className={MOOD_CONFIGS[currentTodayMoodKey || "amazing"].textClass}>{MOOD_CONFIGS[currentTodayMoodKey || "amazing"].label} {MOOD_CONFIGS[currentTodayMoodKey || "amazing"].emoji}</strong></span>
-                            {todayNote.text && <span className="italic truncate max-w-[200px]">"{todayNote.text}"</span>}
+                            <span>Logged as <strong className={MOOD_CONFIGS[currentSelectedMoodKey || "amazing"].textClass}>{MOOD_CONFIGS[currentSelectedMoodKey || "amazing"].label} {MOOD_CONFIGS[currentSelectedMoodKey || "amazing"].emoji}</strong></span>
+                            {selectedDateNote.text && <span className="italic truncate max-w-[200px]">"{selectedDateNote.text}"</span>}
                             <button
-                                onClick={() => deleteMoodNote(todayNote.id)}
+                                onClick={() => {
+                                    deleteMoodNote(selectedDateNote.id);
+                                    setSelectedMood(null);
+                                    setDescriptionText("");
+                                }}
                                 className="text-muted-foreground hover:text-rose-500 transition-colors ml-1 p-1"
-                                title="Clear today's mood"
+                                title="Clear mood for this date"
                             >
                                 <Trash2 className="w-3.5 h-3.5" />
                             </button>
                         </div>
                     ) : (
-                        <span className="text-xs text-muted-foreground">No mood logged for today yet</span>
+                        <span className="text-xs text-muted-foreground">No mood logged for this date yet</span>
                     )}
 
                     <Button
-                        onClick={handleSaveTodayMood}
+                        onClick={handleSaveMood}
                         className="ml-auto flex items-center gap-2"
                         size="sm"
                     >
@@ -227,7 +268,7 @@ export function MoodTracker() {
                             Yearly Mood Tracker
                         </h3>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                            Click any box to cycle mood: Amazing → OK → Tired → Sad → Stressed → Clear
+                            <strong>Single click</strong> to select date & edit. <strong>Double click</strong> to cycle mood.
                         </p>
                     </div>
 
@@ -252,7 +293,10 @@ export function MoodTracker() {
 
                         {selectedYear !== today.getFullYear() && (
                             <button
-                                onClick={() => setSelectedYear(today.getFullYear())}
+                                onClick={() => {
+                                    setSelectedYear(today.getFullYear());
+                                    setSelectedDateKey(todayStr);
+                                }}
                                 className="text-xs text-primary hover:underline ml-2"
                             >
                                 Current Year
@@ -300,6 +344,7 @@ export function MoodTracker() {
                                         const moodKey = normalizeMoodKey(noteObj?.mood);
                                         const cfg = moodKey ? MOOD_CONFIGS[moodKey] : null;
 
+                                        const isSelectedCell = selectedDateKey === dateKey;
                                         const isCellToday = selectedYear === today.getFullYear() &&
                                             monthIdx === today.getMonth() &&
                                             dayNum === today.getDate();
@@ -317,7 +362,13 @@ export function MoodTracker() {
                                             <button
                                                 key={monthIdx}
                                                 type="button"
-                                                onClick={() => cycleMoodForDate(dateKey)}
+                                                onClick={() => {
+                                                    setSelectedDateKey(dateKey);
+                                                }}
+                                                onDoubleClick={(e) => {
+                                                    e.preventDefault();
+                                                    cycleMoodForDate(dateKey);
+                                                }}
                                                 onMouseEnter={() => {
                                                     const formattedDate = format(new Date(selectedYear, monthIdx, dayNum), "MMM d, yyyy");
                                                     setHoveredDateInfo({
@@ -333,9 +384,10 @@ export function MoodTracker() {
                                                     cfg
                                                         ? `${cfg.bgClass} shadow-sm scale-100 hover:scale-125 z-10`
                                                         : "bg-muted/20 hover:bg-muted/50 border border-border/20 hover:border-primary/40",
-                                                    isCellToday && "ring-2 ring-primary ring-offset-1 ring-offset-background z-20"
+                                                    isSelectedCell && "ring-2 ring-white border-2 border-white scale-110 z-30 shadow-md",
+                                                    isCellToday && !isSelectedCell && "ring-2 ring-primary/80 ring-offset-1 ring-offset-background z-20"
                                                 )}
-                                                title={`${format(new Date(selectedYear, monthIdx, dayNum), "MMM d, yyyy")}${cfg ? `: ${cfg.label} ${cfg.emoji}` : ": Empty (Click to add mood)"}${noteObj?.text ? ` - "${noteObj.text}"` : ""}`}
+                                                title={`${format(new Date(selectedYear, monthIdx, dayNum), "MMM d, yyyy")}${cfg ? `: ${cfg.label} ${cfg.emoji}` : ": Empty (1 click: Select date | 2 clicks: Cycle mood)"}${noteObj?.text ? ` - "${noteObj.text}"` : ""}`}
                                             />
                                         );
                                     })}
@@ -345,7 +397,7 @@ export function MoodTracker() {
                     </div>
                 </div>
 
-                {/* Hover / Info Banner */}
+                {/* Info Banner */}
                 <div className="min-h-[44px] flex items-center justify-between p-3 rounded-xl bg-background/40 border border-border/40 text-xs">
                     {hoveredDateInfo ? (
                         <div className="flex items-center justify-between w-full">
@@ -364,12 +416,12 @@ export function MoodTracker() {
                                     </span>
                                 )}
                             </div>
-                            <span className="text-[10px] text-muted-foreground hidden sm:inline">Click box to cycle mood</span>
+                            <span className="text-[10px] text-muted-foreground hidden sm:inline">1 Click: Select | 2 Clicks: Cycle</span>
                         </div>
                     ) : (
                         <div className="flex items-center gap-2 text-muted-foreground">
                             <Info className="w-4 h-4 text-primary/70" />
-                            <span>Hover over any date box to view details. Click to cycle mood.</span>
+                            <span>1 click to select date & edit details. 2 clicks (double-click) to quick-cycle mood.</span>
                         </div>
                     )}
                 </div>
