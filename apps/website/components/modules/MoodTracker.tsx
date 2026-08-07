@@ -39,45 +39,45 @@ export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
         key: "ok",
         label: "OK",
         emoji: "🙂",
-        color: "#94a3b8", // slate-400 (distinctly darker than white)
-        bgClass: "bg-slate-400 hover:bg-slate-300",
-        borderClass: "border-slate-400",
+        color: "#cbd5e1", // slate-300
+        bgClass: "bg-slate-300 hover:bg-slate-200",
+        borderClass: "border-slate-300",
         textClass: "text-slate-300 font-semibold",
-        ringClass: "ring-slate-400",
-        pillSelectedClass: "bg-slate-400 text-slate-950 shadow-lg scale-105 border-slate-400 font-bold",
+        ringClass: "ring-slate-300",
+        pillSelectedClass: "bg-slate-300 text-slate-950 shadow-lg scale-105 border-slate-300 font-bold",
     },
     tired: {
         key: "tired",
         label: "Tired",
         emoji: "😴",
-        color: "#475569", // slate-600
-        bgClass: "bg-slate-600 hover:bg-slate-500",
-        borderClass: "border-slate-600",
+        color: "#64748b", // slate-500
+        bgClass: "bg-slate-500 hover:bg-slate-400",
+        borderClass: "border-slate-500",
         textClass: "text-slate-400 font-semibold",
-        ringClass: "ring-slate-500",
-        pillSelectedClass: "bg-slate-600 text-white shadow-lg scale-105 border-slate-600 font-bold",
+        ringClass: "ring-slate-400",
+        pillSelectedClass: "bg-slate-500 text-white shadow-lg scale-105 border-slate-500 font-bold",
     },
     sad: {
         key: "sad",
         label: "Sad",
         emoji: "😔",
-        color: "#1e293b", // slate-800
-        bgClass: "bg-slate-800 hover:bg-slate-700 border border-slate-700/40",
-        borderClass: "border-slate-800",
-        textClass: "text-slate-400 font-semibold",
-        ringClass: "ring-slate-700",
-        pillSelectedClass: "bg-slate-800 text-white shadow-lg scale-105 border-slate-700 font-bold",
+        color: "#334155", // slate-700
+        bgClass: "bg-slate-700 hover:bg-slate-600",
+        borderClass: "border-slate-700",
+        textClass: "text-slate-300 font-semibold",
+        ringClass: "ring-slate-600",
+        pillSelectedClass: "bg-slate-700 text-white shadow-lg scale-105 border-slate-700 font-bold",
     },
     stressed: {
         key: "stressed",
         label: "Stressed",
         emoji: "😤",
-        color: "#020617", // slate-950 (darkest charcoal)
-        bgClass: "bg-slate-950 border border-slate-700/80 hover:bg-slate-900",
-        borderClass: "border-slate-700",
-        textClass: "text-slate-500 font-semibold",
-        ringClass: "ring-slate-800",
-        pillSelectedClass: "bg-slate-950 border border-slate-700 text-white shadow-lg scale-105 font-bold",
+        color: "#1e293b", // slate-800 (solid charcoal, no border, clearly distinct from empty dark boxes)
+        bgClass: "bg-slate-800 hover:bg-slate-700",
+        borderClass: "border-slate-800",
+        textClass: "text-slate-300 font-semibold",
+        ringClass: "ring-slate-700",
+        pillSelectedClass: "bg-slate-800 text-white shadow-lg scale-105 border-slate-800 font-bold",
     },
 };
 
