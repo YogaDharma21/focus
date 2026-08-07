@@ -1522,7 +1522,7 @@ export function Popup() {
                 </div>
 
                 {(selectedTask.subtasks || []).length > 0 && (
-                  <div className="space-y-1 max-h-20 overflow-y-auto pt-1 border-t border-current text-[11px]">
+                   <div className="space-y-1 max-h-48 overflow-y-auto pt-1 border-t border-current text-[11px]">
                     {selectedTask.subtasks!.map(s => (
                       <div key={s.id} className="flex items-center gap-1.5">
                         <button onClick={() => toggleSubtask(selectedTask.id, s.id)}>
