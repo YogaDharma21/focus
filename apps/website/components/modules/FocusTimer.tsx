@@ -52,6 +52,7 @@ export function FocusTimer() {
         selectedSubtaskId,
         setSelectedSubtaskId,
         setDeepFocusMode,
+        resetAllData,
     } = useAppStore();
 
     const [settingsOpen, setSettingsOpen] = useState(false);
@@ -629,6 +630,25 @@ export function FocusTimer() {
                                 >
                                     Confirm Changes
                                 </Button>
+
+                                <div className="pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            if (
+                                                window.confirm(
+                                                    "Are you sure you want to reset all data to defaults? This will clear all tasks, sessions, mood notes, and stats.",
+                                                )
+                                            ) {
+                                                resetAllData();
+                                                setSettingsOpen(false);
+                                            }
+                                        }}
+                                        className="w-full py-2.5 rounded-full font-mono font-bold text-xs border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-all bg-transparent cursor-pointer"
+                                    >
+                                        Reset All Extension Data
+                                    </button>
+                                </div>
                             </div>
                         </DialogContent>
                     </Dialog>
