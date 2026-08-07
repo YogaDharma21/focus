@@ -77,6 +77,7 @@ export function Popup() {
   const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showDistractionPicker, setShowDistractionPicker] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
+  const [showFloatingTimerCard, setShowFloatingTimerCard] = useState(false);
   const [selectedTaskDetail, setSelectedTaskDetail] = useState<TodoItem | null>(null);
 
   // Local inputs
@@ -537,6 +538,31 @@ export function Popup() {
           </div>
         </div>
 
+        {/* Floating Mini Timer Pill in Navbar Middle (Visible when outside Timer tab) */}
+        {activeTab !== "timer" && (
+          <button
+            onClick={() => setShowFloatingTimerCard(!showFloatingTimerCard)}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold transition-all shadow-sm ${
+              showFloatingTimerCard
+                ? isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
+                : isDark
+                  ? "bg-neutral-900/90 border-neutral-800 text-white hover:bg-neutral-800"
+                  : "bg-white border-neutral-300 text-black hover:bg-neutral-100"
+            } ${state.isActive ? (isDark ? "border-emerald-500/60 ring-1 ring-emerald-500/40" : "border-emerald-600/60 ring-1 ring-emerald-600/40") : ""}`}
+            title="Toggle Floating Timer Controls"
+          >
+            <span className="text-xs">
+              {state.timerState === "WORK" ? "🍅" : state.timerState === "BREAK" ? "☕" : "⏱"}
+            </span>
+            <span className="font-extrabold font-mono text-[11px] tracking-tight">
+              {timeFormatted}
+            </span>
+            {state.isActive && (
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            )}
+          </button>
+        )}
+
         {/* Action Controls: Theme Mode Toggle + Background Switcher (Paintbrush icon) + Info */}
         <div className="flex items-center gap-1.5">
           {/* Background Theme Selector Button with Paintbrush Icon */}
@@ -579,6 +605,150 @@ export function Popup() {
           </button>
         </div>
       </header>
+
+      {/* Floating Timer Card Overlay (Matching Provided Mockups) */}
+      {activeTab !== "timer" && showFloatingTimerCard && (
+        <div className={`absolute top-14 left-3 right-3 z-50 p-3.5 rounded-2xl border shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 ${
+          isDark
+            ? "bg-neutral-900/95 border-neutral-800 text-white shadow-black/80"
+            : "bg-white/95 border-neutral-200 text-black shadow-neutral-400/50"
+        }`}>
+          {/* Header Row: Emoji + Mode Name & Live Timer */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-base">
+                {state.timerState === "WORK" ? "🍅" : state.timerState === "BREAK" ? "☕" : "⏱"}
+              </span>
+              <span className="text-sm font-bold font-sans">
+                {state.timerState === "WORK" ? "Pomodoro" : state.timerState === "BREAK" ? "Break" : "Flow"}
+              </span>
+            </div>
+            <div className="text-xl font-black font-mono tracking-tight">
+              {timeFormatted}
+            </div>
+          </div>
+
+          {/* Mode Switcher Buttons Row */}
+          <div className={`grid grid-cols-3 gap-1.5 p-1 rounded-xl border mb-3 ${
+            isDark ? "bg-neutral-950/80 border-neutral-800" : "bg-neutral-100 border-neutral-300"
+          }`}>
+            <button
+              onClick={() => switchTimerModeAndState("POMODORO", "WORK")}
+              className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+                state.timerState === "WORK"
+                  ? isDark ? "bg-white text-black shadow" : "bg-black text-white shadow"
+                  : isDark ? "text-neutral-400 hover:text-white" : "text-neutral-600 hover:text-black"
+              }`}
+            >
+              <span>🍅</span>
+              <span>Pomodoro</span>
+            </button>
+            <button
+              onClick={() => switchTimerModeAndState("POMODORO", "BREAK")}
+              className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+                state.timerState === "BREAK"
+                  ? isDark ? "bg-white text-black shadow" : "bg-black text-white shadow"
+                  : isDark ? "text-neutral-400 hover:text-white" : "text-neutral-600 hover:text-black"
+              }`}
+            >
+              <span>☕</span>
+              <span>Break</span>
+            </button>
+            <button
+              onClick={() => switchTimerModeAndState("FLOW", "FLOW")}
+              className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+                state.timerState === "FLOW"
+                  ? isDark ? "bg-white text-black shadow" : "bg-black text-white shadow"
+                  : isDark ? "text-neutral-400 hover:text-white" : "text-neutral-600 hover:text-black"
+              }`}
+            >
+              <span>⏱</span>
+              <span>Flow</span>
+            </button>
+          </div>
+
+          {/* Divider Line */}
+          <div className={`border-t mb-2.5 ${isDark ? "border-neutral-800" : "border-neutral-200"}`} />
+
+          {/* Tag & Group Badge Row */}
+          <div className="flex items-center justify-between mb-3 px-0.5">
+            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold font-sans border ${
+              isDark ? "bg-neutral-800/80 border-neutral-700 text-neutral-200" : "bg-neutral-200/80 border-neutral-300 text-neutral-800"
+            }`}>
+              {selectedTask ? selectedTask.text : (state.sessionName || "Work")}
+            </span>
+
+            <button
+              onClick={() => {
+                setActiveTab("timer");
+                setShowFloatingTimerCard(false);
+              }}
+              className="text-[10px] font-bold font-mono opacity-70 hover:opacity-100 flex items-center gap-1"
+            >
+              <span>Open Timer</span>
+              <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
+
+          {/* Control Action Buttons Row */}
+          <div className="flex items-center gap-2">
+            {/* Complete Session Button */}
+            <button
+              onClick={() => {
+                completeSession();
+                setShowFloatingTimerCard(false);
+              }}
+              className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                isDark
+                  ? "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-white"
+                  : "bg-neutral-100 border-neutral-300 hover:bg-neutral-200 text-black"
+              }`}
+              title="Complete Session"
+            >
+              <CheckCircle2 className="w-3.5 h-3.5" />
+              <span>Complete</span>
+            </button>
+
+            {/* Log Distraction Button */}
+            <button
+              onClick={() => {
+                setShowFloatingTimerCard(false);
+                setShowDistractionPicker(true);
+              }}
+              className={`p-2 rounded-xl border transition-all ${
+                isDark
+                  ? "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-neutral-300"
+                  : "bg-neutral-100 border-neutral-300 hover:bg-neutral-200 text-neutral-700"
+              }`}
+              title="Log Distraction"
+            >
+              <AlertTriangle className="w-4 h-4" />
+            </button>
+
+            {/* Start / Pause Button */}
+            <button
+              onClick={toggleTimer}
+              className={`flex-1 py-2 px-3 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all shadow ${
+                isDark
+                  ? "bg-white text-black border-white hover:bg-neutral-200"
+                  : "bg-black text-white border-black hover:bg-neutral-800"
+              }`}
+            >
+              {state.isActive ? (
+                <>
+                  <Pause className="w-3.5 h-3.5 fill-current" />
+                  <span>Pause</span>
+                </>
+              ) : (
+                <>
+                  <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
+                  <span>Start</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Background Theme Selector Picker Overlay */}
       {showThemePicker && (
