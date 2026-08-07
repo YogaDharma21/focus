@@ -283,10 +283,7 @@ export function DynamicIslandTimer() {
                             <div className="flex items-center gap-2">
                                 <span
                                     className={cn(
-                                        "text-xs px-2 py-0.5 rounded-[var(--radius)]",
-                                        timerState === "WORK"
-                                            ? "bg-primary/20 text-primary"
-                                            : "bg-green-500/20 text-green-500",
+                                        "text-xs px-2 py-0.5 rounded-[var(--radius)] bg-primary/20 text-primary",
                                     )}
                                 >
                                     {timerState === "WORK" ? "Work" : "Break"}
