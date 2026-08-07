@@ -2,6 +2,7 @@ import React from 'react';
 import { Minus, Square, Copy, X, Pin, Sparkles } from 'lucide-react';
 import { electron } from '../../lib/electron';
 import { useDesktopStore } from '../../lib/store';
+import iconUrl from '../../../public/icon.png';
 
 export const TitleBar: React.FC = () => {
   const { 
@@ -41,7 +42,7 @@ export const TitleBar: React.FC = () => {
     <header className="h-10 w-full bg-zinc-900 border-b border-zinc-800 flex items-center justify-between px-3 select-none drag-region text-xs text-zinc-300 relative z-50 shrink-0">
       {/* Left: App Branding & Live Status */}
       <div className="flex items-center gap-2.5 no-drag">
-        <img src="/icon.png" className="w-5 h-5 rounded-md object-contain shadow-sm" alt="Focus Desktop" />
+        <img src={iconUrl} className="w-5 h-5 rounded-md object-contain shadow-sm" alt="Focus Desktop" />
         <span className="font-bold text-zinc-100 tracking-tight text-xs">Focus Desktop</span>
         
         {isActive && (
