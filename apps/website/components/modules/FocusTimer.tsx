@@ -656,9 +656,9 @@ export function FocusTimer() {
                                                 setSettingsOpen(false);
                                             }
                                         }}
-                                        className="w-full py-2.5 rounded-full font-mono font-bold text-xs border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-all bg-transparent cursor-pointer"
+                                        className="w-full py-2.5 rounded-md font-mono font-bold text-xs border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-all bg-transparent cursor-pointer"
                                     >
-                                        Reset All Extension Data
+                                        Reset All Data
                                     </button>
                                 </div>
                             </div>
