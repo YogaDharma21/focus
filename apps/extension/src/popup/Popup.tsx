@@ -776,14 +776,18 @@ export function Popup() {
           <div className="flex items-center gap-2">
             {/* Complete Session Button */}
             <button
+              disabled={!state.isActive}
               onClick={() => {
+                if (!state.isActive) return;
                 completeSession();
                 setShowFloatingTimerCard(false);
               }}
               className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-white"
+                !state.isActive
+                  ? "bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed opacity-50"
+                  : "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-white"
               }`}
-              title="Complete Session"
+              title={state.isActive ? "Complete Session" : "Start timer to complete session"}
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>Complete</span>
@@ -791,14 +795,18 @@ export function Popup() {
 
             {/* Log Distraction Button */}
             <button
+              disabled={!state.isActive}
               onClick={() => {
+                if (!state.isActive) return;
                 setShowFloatingTimerCard(false);
                 setShowDistractionPicker(true);
               }}
               className={`p-2 rounded-xl border transition-all ${
-                "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-neutral-300"
+                !state.isActive
+                  ? "bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed opacity-50"
+                  : "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-neutral-300"
               }`}
-              title="Log Distraction"
+              title={state.isActive ? "Log Distraction" : "Start timer to log distraction"}
             >
               <AlertTriangle className="w-4 h-4" />
             </button>
@@ -1744,11 +1752,17 @@ export function Popup() {
             <div className="flex items-center gap-2">
               {/* Log Distraction Button */}
               <button
-                onClick={() => setShowDistractionPicker(true)}
+                disabled={!state.isActive}
+                onClick={() => {
+                  if (!state.isActive) return;
+                  setShowDistractionPicker(true);
+                }}
                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
-                  "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
+                  !state.isActive
+                    ? "bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed opacity-50"
+                    : "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
                 }`}
-                title="Log Distraction"
+                title={state.isActive ? "Log Distraction" : "Start timer to log distraction"}
               >
                 <AlertTriangle className="w-4 h-4" />
               </button>
@@ -1776,11 +1790,17 @@ export function Popup() {
 
               {/* Complete Session Button */}
               <button
-                onClick={completeSession}
+                disabled={!state.isActive}
+                onClick={() => {
+                  if (!state.isActive) return;
+                  completeSession();
+                }}
                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
-                  "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
+                  !state.isActive
+                    ? "bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed opacity-50"
+                    : "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
                 }`}
-                title="Complete Session"
+                title={state.isActive ? "Complete Session" : "Start timer to complete session"}
               >
                 <CheckCircle className="w-4 h-4" />
               </button>
