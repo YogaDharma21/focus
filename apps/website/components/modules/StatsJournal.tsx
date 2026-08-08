@@ -213,7 +213,7 @@ export function StatsJournal() {
                     className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border-primary/10 shadow-md backdrop-blur-sm rounded-[var(--radius)] cursor-pointer hover:bg-primary/10 transition-colors"
                     onClick={() => setShowHours(!showHours)}
                 >
-                    <div className="p-2 bg-primary/10 rounded-[var(--radius)] text-primary mb-1">
+                    <div className="p-2 bg-primary/10 border border-primary/20 rounded-[var(--radius)] text-primary mb-1">
                         <Activity className="w-5 h-5" />
                     </div>
                     <div className="text-2xl font-bold">
@@ -224,8 +224,8 @@ export function StatsJournal() {
                     </span>
                 </Card>
 
-                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-green-500/5 border-green-500/10 shadow-md backdrop-blur-sm rounded-[var(--radius)]">
-                    <div className="p-2 bg-green-500/10 rounded-[var(--radius)] text-green-500 mb-1">
+                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border-primary/10 shadow-md backdrop-blur-sm rounded-[var(--radius)]">
+                    <div className="p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-[var(--radius)] text-emerald-500 mb-1">
                         <CheckCircle2 className="w-5 h-5" />
                     </div>
                     <div className="text-2xl font-bold">
@@ -236,8 +236,8 @@ export function StatsJournal() {
                     </span>
                 </Card>
 
-                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-blue-500/5 border-blue-500/10 shadow-md backdrop-blur-sm rounded-[var(--radius)]">
-                    <div className="p-2 bg-blue-500/10 rounded-[var(--radius)] text-blue-500 mb-1">
+                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border-primary/10 shadow-md backdrop-blur-sm rounded-[var(--radius)]">
+                    <div className="p-2 bg-blue-500/10 border border-blue-500/30 rounded-[var(--radius)] text-blue-500 mb-1">
                         <List className="w-5 h-5" />
                     </div>
                     <div className="text-2xl font-bold">{tasksPending}</div>
