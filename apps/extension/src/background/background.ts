@@ -430,6 +430,7 @@ if (typeof chrome !== "undefined" && chrome.storage) {
       } else {
         stopBackgroundTimer();
         updateBadge(newState?.timeLeft || 0, false, newState?.timerState || "WORK");
+        restoreBlockedTabs();
       }
     }
   });
@@ -442,8 +443,10 @@ getStoredState().then((state) => {
     startBackgroundTimer();
   } else {
     updateBadge(state.timeLeft, false, state.timerState);
+    restoreBlockedTabs();
   }
   if (state.isMusicPlaying) {
     sendToOffscreen("PLAY_MUSIC", { volume: state.musicVolume ?? 0.8 });
   }
 });
+
