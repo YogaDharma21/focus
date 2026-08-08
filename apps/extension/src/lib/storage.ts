@@ -44,13 +44,13 @@ export const DEFAULT_STATE: AppStateData = {
     streakDays: 0,
     longestStreak: 0,
     weeklyMinutes: {
+      "Sun": 0,
       "Mon": 0,
       "Tue": 0,
       "Wed": 0,
       "Thu": 0,
       "Fri": 0,
-      "Sat": 0,
-      "Sun": 0
+      "Sat": 0
     }
   },
   isMusicPlaying: false,
