@@ -3,11 +3,9 @@
 import { useAppStore, ViewType } from "@/lib/store";
 import { Timer, CheckSquare, BarChart2, Smile } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useMediaQuery } from "@/lib/hooks";
 
 export function BottomNavbar() {
     const { currentView, setView } = useAppStore();
-    const isDesktop = useMediaQuery("(min-width: 768px)");
 
     const navItems: {
         label: string;
@@ -35,18 +33,15 @@ export function BottomNavbar() {
     return (
         <div
             className={cn(
-                "z-40 transition-all duration-300 ease-out",
-                isDesktop
-                    ? "sticky top-0 flex flex-col items-center justify-center w-20 h-screen py-6 pl-6"
-                    : "fixed bottom-6 left-1/2 -translate-x-1/2 flex flex-row gap-2",
+                "fixed z-40 transition-all duration-300 ease-out",
+                "bottom-6 left-1/2 -translate-x-1/2 flex flex-row gap-2",
+                "md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:left-6 md:translate-x-0 md:flex-col md:gap-0",
             )}
         >
             <nav
                 className={cn(
-                    "flex items-center gap-2 p-2 bg-sidebar/80 backdrop-blur-xl border border-sidebar-border shadow-lg ring-1 ring-white/5",
-                    isDesktop
-                        ? "flex-col rounded-[var(--radius)]"
-                        : "flex-row rounded-[var(--radius)]",
+                    "flex items-center gap-2 p-2 bg-sidebar/80 backdrop-blur-xl border border-sidebar-border shadow-lg ring-1 ring-white/5 rounded-[var(--radius)]",
+                    "flex-row md:flex-col",
                 )}
             >
                 {navItems.map((item) => {
@@ -56,11 +51,10 @@ export function BottomNavbar() {
                             key={item.value}
                             onClick={() => setView(item.value)}
                             className={cn(
-                                "relative flex flex-col items-center justify-center w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 transition-all duration-300 ease-out group",
+                                "relative flex flex-col items-center justify-center w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 transition-all duration-300 ease-out group rounded-[var(--radius)]",
                                 isActive
                                     ? "text-primary-foreground bg-primary shadow-lg"
                                     : "text-muted-foreground hover:text-foreground hover:bg-white/5",
-                                isDesktop ? "rounded-[var(--radius)]" : "rounded-[var(--radius)]",
                             )}
                         >
                             <span
@@ -80,3 +74,4 @@ export function BottomNavbar() {
         </div>
     );
 }
+
