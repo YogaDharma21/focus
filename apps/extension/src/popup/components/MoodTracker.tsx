@@ -279,7 +279,7 @@ export function MoodTracker({
       <div className={`p-3 rounded-xl border flex flex-col gap-2.5 ${
         isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
       }`}>
-        <div className={`flex items-center justify-between border-b pb-2 ${isDark ? "border-neutral-800" : "border-neutral-200"}`}>
+        <div className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-1.5 text-xs font-bold font-mono">
             <CalendarIcon className="w-3.5 h-3.5 text-primary" />
             <span>YEARLY MOOD TRACKER</span>
@@ -431,7 +431,7 @@ export function MoodTracker({
         </div>
 
         {/* Legend & Stats Footer - Clean, Non-wrapping Flex Layout */}
-        <div className={`pt-2 border-t ${isDark ? "border-neutral-800" : "border-neutral-200"} flex flex-wrap items-center justify-between gap-1.5 text-[10px] font-mono`}>
+        <div className="pt-2 flex flex-wrap items-center justify-between gap-1.5 text-[10px] font-mono">
           <div className="flex items-center gap-2 flex-wrap">
             {(Object.keys(MOOD_CONFIGS) as MoodType[]).map((key) => {
               const cfg = MOOD_CONFIGS[key];
