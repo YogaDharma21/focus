@@ -38,7 +38,7 @@
 - **Smart Flow Break Time** — Automatically calculates break duration as 1/5th of your Flow session length.
 - **Deep Focus Mode** — Distraction-free immersive view with session controls and keyboard shortcuts (`Esc` / `F`).
 - **Focus Session Tasks** — Type custom focus goals directly into the timer and press `Enter` to instantly create and select new tasks.
-- **Task Management** — Organize tasks into groups, subtasks, estimated pomodoros, and recurring items.
+- **Task Management** — Organize tasks into groups, subtasks, and estimated pomodoros.
 - **Stats & Productivity Analytics** — Track daily focus minutes, completion rates, streak metrics, and weekly trends.
 - **Mood & Notes** — Record daily mood logs and reflections.
 - **Ambient Media Player** — Background music player supporting YouTube playlists, Spotify embeds, and local focus tracks.

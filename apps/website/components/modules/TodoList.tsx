@@ -15,9 +15,6 @@ import {
     Check,
     Sparkles,
     Timer,
-    Repeat,
-    Bell,
-    Tag,
     FileText,
     StickyNote,
 } from "lucide-react";
@@ -88,8 +85,6 @@ export function TodoList() {
     const [editingSubtaskText, setEditingSubtaskText] = useState("");
     const [tempDescription, setTempDescription] = useState("");
     const [tempNotes, setTempNotes] = useState("");
-    const [tempTagsInput, setTempTagsInput] = useState("");
-    const [tempRemindersInput, setTempRemindersInput] = useState("");
     const editingTask = todos.find((t) => t.id === editingTaskId) || null;
     
     useEffect(() => {
@@ -98,8 +93,6 @@ export function TodoList() {
             setEditingTaskName(editingTask.text);
             setTempDescription(editingTask.description || "");
             setTempNotes(editingTask.notes || "");
-            setTempTagsInput((editingTask.tags || []).join(", "));
-            setTempRemindersInput((editingTask.reminders || []).join(", "));
         }
     }, [editingTask?.id]);
 
@@ -115,7 +108,6 @@ export function TodoList() {
             groupId: selectedGroupId,
             priority: "medium",
             estimatedPomodoros: 1,
-            recurring: "none",
         };
 
         addTodo(todo);
@@ -371,12 +363,6 @@ export function TodoList() {
                                             )}
                                         </div>
                                     )}
-                                    {todo.tags && todo.tags.length > 0 && (
-                                        <div className="flex items-center gap-1">
-                                            <Tag className="w-3 h-3" />
-                                            {todo.tags.slice(0, 2).join(", ")}
-                                        </div>
-                                    )}
                                     {todo.priority && todo.priority !== "medium" && (
                                         <div className="flex items-center gap-1">
                                             <Sparkles className="w-3 h-3" />
@@ -524,50 +510,6 @@ export function TodoList() {
 
                             <div className="space-y-2">
                                 <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1">
-                                    <Tag className="w-3 h-3" /> Tags
-                                </label>
-                                <div className="flex flex-wrap gap-1 mb-2">
-                                    {(editingTask.tags || []).map((tag, idx) => (
-                                        <Badge key={idx} variant="secondary" className="text-xs">
-                                            {tag}
-                                            <button
-                                                className="ml-1 opacity-50 hover:opacity-100"
-                                                onClick={() => {
-                                                    updateTodo(editingTask.id, {
-                                                        tags: (editingTask.tags || []).filter((_, i) => i !== idx),
-                                                    });
-                                                }}
-                                            >
-                                                ×
-                                            </button>
-                                        </Badge>
-                                    ))}
-                                </div>
-                                <Input
-                                    placeholder="Add tags (comma separated)..."
-                                    value={tempTagsInput}
-                                    onChange={(e) => setTempTagsInput(e.target.value)}
-                                    onBlur={() => {
-                                        const newTags = tempTagsInput.split(",").map(t => t.trim()).filter(Boolean);
-                                        if (JSON.stringify(newTags) !== JSON.stringify(editingTask.tags || [])) {
-                                            updateTodo(editingTask.id, { tags: newTags });
-                                        }
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            const newTags = tempTagsInput.split(",").map(t => t.trim()).filter(Boolean);
-                                            if (JSON.stringify(newTags) !== JSON.stringify(editingTask.tags || [])) {
-                                                updateTodo(editingTask.id, { tags: newTags });
-                                            }
-                                            setTempTagsInput("");
-                                        }
-                                    }}
-                                    className="h-8 text-xs bg-secondary/10"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1">
                                     <StickyNote className="w-3 h-3" /> Notes
                                 </label>
                                 <Textarea
@@ -580,72 +522,6 @@ export function TodoList() {
                                         }
                                     }}
                                     className="resize-none min-h-[80px]"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1">
-                                    <Repeat className="w-3 h-3" /> Recurring
-                                </label>
-                                <Select
-                                    defaultValue={editingTask.recurring || "none"}
-                                    onValueChange={(val) => {
-                                        updateTodo(editingTask.id, { recurring: val as TodoItem["recurring"] });
-                                    }}
-                                >
-                                    <SelectTrigger className="rounded-[var(--radius)]">
-                                        <SelectValue placeholder="Select recurrence" />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-[var(--radius)]">
-                                        <SelectItem value="none">No</SelectItem>
-                                        <SelectItem value="daily">Daily</SelectItem>
-                                        <SelectItem value="weekly">Weekly</SelectItem>
-                                        <SelectItem value="monthly">Monthly</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1">
-                                    <Bell className="w-3 h-3" /> Reminders
-                                </label>
-                                <div className="flex flex-wrap gap-1 mb-2">
-                                    {(editingTask.reminders || []).map((reminder, idx) => (
-                                        <Badge key={idx} variant="outline" className="text-xs">
-                                            {reminder}
-                                            <button
-                                                className="ml-1 opacity-50 hover:opacity-100"
-                                                onClick={() => {
-                                                    updateTodo(editingTask.id, {
-                                                        reminders: (editingTask.reminders || []).filter((_, i) => i !== idx),
-                                                    });
-                                                }}
-                                            >
-                                                ×
-                                            </button>
-                                        </Badge>
-                                    ))}
-                                </div>
-                                <Input
-                                    placeholder="Add reminder (comma separated datetime)..."
-                                    value={tempRemindersInput}
-                                    onChange={(e) => setTempRemindersInput(e.target.value)}
-                                    onBlur={() => {
-                                        const newReminders = tempRemindersInput.split(",").map(t => t.trim()).filter(Boolean);
-                                        if (JSON.stringify(newReminders) !== JSON.stringify(editingTask.reminders || [])) {
-                                            updateTodo(editingTask.id, { reminders: newReminders });
-                                        }
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === "Enter") {
-                                            const newReminders = tempRemindersInput.split(",").map(t => t.trim()).filter(Boolean);
-                                            if (JSON.stringify(newReminders) !== JSON.stringify(editingTask.reminders || [])) {
-                                                updateTodo(editingTask.id, { reminders: newReminders });
-                                            }
-                                            setTempRemindersInput("");
-                                        }
-                                    }}
-                                    className="h-8 text-xs bg-secondary/10"
                                 />
                             </div>
 
