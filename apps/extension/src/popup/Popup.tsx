@@ -1675,11 +1675,6 @@ export function Popup() {
               </div>
             )}
 
-            {/* Session Progress Bar (matching website design) */}
-            <div className="w-full max-w-[280px] my-2">
-              <Progress value={progressValue} className="h-1.5" />
-            </div>
-
             {/* Control Buttons Grid */}
             <div className="flex items-center gap-2">
               {/* Log Distraction Button */}
