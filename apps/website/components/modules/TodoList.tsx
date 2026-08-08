@@ -754,7 +754,7 @@ export function TodoList() {
                                 </div>
                             </div>
 
-                            <div className="pt-2 flex items-center justify-between border-t border-border/40">
+                            <div className="pt-2 flex items-center justify-end border-t border-border/40">
                                 <Button
                                     variant="ghost"
                                     size="sm"
@@ -766,13 +766,6 @@ export function TodoList() {
                                 >
                                     <Trash2 className="w-3.5 h-3.5" />
                                     Delete Task
-                                </Button>
-                                <Button
-                                    size="sm"
-                                    className="text-xs px-5"
-                                    onClick={() => setEditingTaskId(null)}
-                                >
-                                    Done
                                 </Button>
                             </div>
                         </div>
