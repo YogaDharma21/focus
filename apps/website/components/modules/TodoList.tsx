@@ -117,7 +117,7 @@ export function TodoList() {
     );
 
     return (
-        <div className="h-full flex flex-col p-4 animate-in fade-in slide-in-from-right-8 duration-500">
+        <div className="h-full flex flex-col p-4">
             <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
                     <h2 className="text-2xl font-light tracking-wide">Tasks</h2>

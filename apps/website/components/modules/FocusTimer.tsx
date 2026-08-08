@@ -294,7 +294,7 @@ export function FocusTimer() {
             : 100;
 
     return (
-        <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center min-h-[50vh] animate-in fade-in duration-700 relative">
+        <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center min-h-[50vh] relative">
             <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
 
             <div className="flex gap-2 mb-3 p-1 bg-secondary/30 rounded-[var(--radius)] backdrop-blur-md">

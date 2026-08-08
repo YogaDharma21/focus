@@ -185,7 +185,7 @@ export function StatsJournal() {
     );
 
     return (
-        <div className="h-full flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="h-full flex flex-col gap-6">
             <Card className="p-4 bg-primary/5 border-primary/10 shadow-md backdrop-blur-sm rounded-[var(--radius)]">
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">

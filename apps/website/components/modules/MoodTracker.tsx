@@ -182,7 +182,7 @@ export function MoodTracker() {
     const totalTrackedDays = Object.values(stats).reduce((a, b) => a + b, 0);
 
     return (
-        <div className="h-full flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
+        <div className="h-full flex flex-col gap-6 pb-12">
             {/* Input & Detail Inspector Card for Selected Date */}
             <Card className="p-6 bg-card/50 border-0 shadow-md backdrop-blur-xl rounded-[var(--radius)] space-y-4">
                 <div className="flex items-center justify-between gap-2">
