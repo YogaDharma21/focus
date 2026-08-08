@@ -1694,26 +1694,22 @@ export function Popup() {
                 </button>
               ) : (
                 /* Custom Focus Mode (Editable Input Mode) */
-                <div className="relative flex items-center">
+                <div className="w-full flex items-center rounded-xl border bg-neutral-900 border-neutral-800 focus-within:border-white px-2 py-1 transition-colors">
                   <input
                     type="text"
                     value={state.sessionName}
                     onChange={(e) => updateState({ sessionName: e.target.value })}
                     onKeyDown={handleGoalKeyDown}
-                    placeholder="Session Goal (Press Enter to create task)..."
-                    className={`w-full pl-3 pr-9 py-2 rounded-xl text-xs text-center font-medium border focus:outline-none ${
-                      "bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-white"
-                    }`}
+                    placeholder="Session Goal (Press Enter)..."
+                    className="flex-1 min-w-0 bg-transparent text-xs text-center font-medium text-white placeholder-neutral-500 focus:outline-none pl-6 pr-1 py-1"
                   />
                   <button
                     type="button"
                     onClick={() => setShowTaskDropdown(!showTaskDropdown)}
-                    className={`absolute right-2 p-1 rounded-lg transition-colors ${
-                      "hover:bg-neutral-800 text-neutral-400 hover:text-white"
-                    }`}
+                    className="shrink-0 p-1 rounded-lg hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
                     title="Select from your tasks"
                   >
-                    <ListTodo className={`w-4 h-4 ${"text-white"}`} />
+                    <ListTodo className="w-4 h-4 text-white" />
                   </button>
                 </div>
               )}
