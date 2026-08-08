@@ -80,6 +80,7 @@ export function Popup() {
   const [showDistractionPicker, setShowDistractionPicker] = useState(false);
   const [showThemePicker, setShowThemePicker] = useState(false);
   const [showFloatingTimerCard, setShowFloatingTimerCard] = useState(false);
+  const [showTaskDropdown, setShowTaskDropdown] = useState(false);
   const [selectedTaskDetail, setSelectedTaskDetail] = useState<TodoItem | null>(null);
 
   // Local inputs
@@ -1493,46 +1494,161 @@ export function Popup() {
               </span>
             </div>
 
-            {/* Goal Input */}
-            <div className="w-full max-w-[280px] mb-2">
-              <input
-                type="text"
-                value={state.sessionName}
-                onChange={(e) => updateState({ sessionName: e.target.value })}
-                onKeyDown={handleGoalKeyDown}
-                placeholder="Session Goal (Press Enter to create task)..."
-                className={`w-full px-3 py-1.5 rounded-xl text-xs text-center font-medium border focus:outline-none ${
-                  isDark
-                    ? "bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-white"
-                    : "bg-neutral-100 border-neutral-300 text-black placeholder-neutral-400 focus:border-black"
-                }`}
-              />
-            </div>
-
-            {/* Selected Task & Subtasks in Timer */}
-            {selectedTask && (
-              <div className={`w-full max-w-[320px] p-2.5 mb-2 rounded-xl border flex flex-col gap-1.5 ${
-                isDark ? "bg-neutral-900/90 border-neutral-800" : "bg-neutral-100/90 border-neutral-300"
-              }`}>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-bold truncate text-[11px] font-mono">{selectedTask.text}</span>
-                  <button onClick={() => updateState({ selectedTodoId: null })} className="text-[10px] opacity-60 hover:opacity-100">
-                    Clear
+            {/* Focus Session Goal / Task Selector */}
+            <div className="w-full max-w-[280px] mb-2 relative">
+              {selectedTask ? (
+                /* Task Selected (Locked Typing Mode - Matches Reference Image) */
+                <button
+                  type="button"
+                  onClick={() => setShowTaskDropdown(!showTaskDropdown)}
+                  className={`w-full px-4 py-3 rounded-2xl border transition-all flex flex-col items-center justify-center gap-1 shadow-sm ${
+                    isDark
+                      ? "bg-neutral-900/90 border-neutral-800 hover:border-neutral-700 text-white"
+                      : "bg-neutral-100/90 border-neutral-300 hover:border-neutral-400 text-black"
+                  }`}
+                  title="Click to select another task or custom focus"
+                >
+                  <div className="flex items-center justify-center gap-2 max-w-full">
+                    <ListTodo className="w-4 h-4 shrink-0 text-emerald-500" />
+                    <span className="font-semibold text-sm tracking-tight truncate max-w-[200px]">
+                      {selectedTask.text}
+                    </span>
+                  </div>
+                  <ChevronDown className="w-3.5 h-3.5 opacity-60 transition-transform duration-200" />
+                </button>
+              ) : (
+                /* Custom Focus Mode (Editable Input Mode) */
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    value={state.sessionName}
+                    onChange={(e) => updateState({ sessionName: e.target.value })}
+                    onKeyDown={handleGoalKeyDown}
+                    placeholder="Session Goal (Press Enter to create task)..."
+                    className={`w-full pl-3 pr-9 py-2 rounded-xl text-xs text-center font-medium border focus:outline-none ${
+                      isDark
+                        ? "bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-white"
+                        : "bg-neutral-100 border-neutral-300 text-black placeholder-neutral-400 focus:border-black"
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowTaskDropdown(!showTaskDropdown)}
+                    className={`absolute right-2 p-1 rounded-lg transition-colors ${
+                      isDark ? "hover:bg-neutral-800 text-neutral-400 hover:text-white" : "hover:bg-neutral-200 text-neutral-600 hover:text-black"
+                    }`}
+                    title="Select from your tasks"
+                  >
+                    <ListTodo className="w-4 h-4" />
                   </button>
                 </div>
+              )}
 
-                {(selectedTask.subtasks || []).length > 0 && (
-                  <div className="space-y-1 max-h-20 overflow-y-auto pt-1 border-t border-current text-[11px]">
-                    {selectedTask.subtasks!.map(s => (
-                      <div key={s.id} className="flex items-center gap-1.5">
-                        <button onClick={() => toggleSubtask(selectedTask.id, s.id)}>
-                          {s.completed ? <CheckCircle2 className="w-3 h-3" /> : <Circle className="w-3 h-3" />}
-                        </button>
-                        <span className={s.completed ? "line-through opacity-50" : ""}>{s.text}</span>
-                      </div>
-                    ))}
+              {/* Task Selector Dropdown Menu */}
+              {showTaskDropdown && (
+                <div className={`absolute top-full left-0 right-0 mt-1.5 z-50 p-2 rounded-2xl border shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-1 ${
+                  isDark ? "bg-neutral-900/95 border-neutral-800 text-white" : "bg-white/95 border-neutral-200 text-black"
+                }`}>
+                  <div className="flex items-center justify-between px-2 py-1 border-b border-current/10">
+                    <span className="text-[10px] font-mono font-bold uppercase opacity-60">FOCUS TOPIC</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowTaskDropdown(false)}
+                      className="text-[10px] font-mono opacity-50 hover:opacity-100"
+                    >
+                      ✕
+                    </button>
                   </div>
-                )}
+
+                  {/* Custom Focus Option */}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      updateState({ selectedTodoId: null });
+                      setShowTaskDropdown(false);
+                    }}
+                    className={`w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all ${
+                      !selectedTask
+                        ? isDark ? "bg-white/10 text-white font-bold" : "bg-black/5 text-black font-bold"
+                        : isDark ? "hover:bg-neutral-800/80 text-neutral-300" : "hover:bg-neutral-100 text-neutral-700"
+                    }`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <Edit3 className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                      <div className="flex flex-col">
+                        <span className="leading-tight">Custom Focus</span>
+                        <span className={`text-[10px] font-mono ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
+                          Type custom goal
+                        </span>
+                      </div>
+                    </div>
+                    {!selectedTask && <span className="text-xs font-bold text-sky-400">✓</span>}
+                  </button>
+
+                  <div className={`border-t my-0.5 ${isDark ? "border-neutral-800" : "border-neutral-200"}`} />
+
+                  {/* Task List Header */}
+                  <div className="px-2 pt-1 text-[10px] font-mono font-bold uppercase opacity-50">
+                    MY TASKS
+                  </div>
+
+                  {/* Tasks List */}
+                  <div className="max-h-40 overflow-y-auto space-y-0.5">
+                    {state.todos.filter(t => !t.completed).length === 0 ? (
+                      <div className="px-3 py-2 text-[11px] font-mono opacity-50 italic text-center">
+                        No pending tasks
+                      </div>
+                    ) : (
+                      state.todos.filter(t => !t.completed).map((task) => (
+                        <button
+                          key={task.id}
+                          type="button"
+                          onClick={() => {
+                            updateState({ selectedTodoId: task.id, sessionName: task.text });
+                            setShowTaskDropdown(false);
+                          }}
+                          className={`w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all ${
+                            selectedTask?.id === task.id
+                              ? isDark ? "bg-white/10 text-white font-bold" : "bg-black/5 text-black font-bold"
+                              : isDark ? "hover:bg-neutral-800/80 text-neutral-300" : "hover:bg-neutral-100 text-neutral-700"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 truncate pr-2">
+                            <ListTodo className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <span className="truncate">{task.text}</span>
+                          </div>
+                          {selectedTask?.id === task.id && (
+                            <span className="text-xs font-bold text-emerald-400 shrink-0">✓</span>
+                          )}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Subtasks Section for Selected Task */}
+            {selectedTask && (selectedTask.subtasks || []).length > 0 && (
+              <div className={`w-full max-w-[280px] p-2.5 mb-2 rounded-xl border flex flex-col gap-1.5 ${
+                isDark ? "bg-neutral-900/90 border-neutral-800" : "bg-neutral-100/90 border-neutral-300"
+              }`}>
+                <div className="flex items-center justify-between text-[11px] font-mono font-bold opacity-70">
+                  <span>SUBTASKS</span>
+                  <span>
+                    {(selectedTask.subtasks || []).filter(s => s.completed).length} / {(selectedTask.subtasks || []).length}
+                  </span>
+                </div>
+                <div className="space-y-1 max-h-24 overflow-y-auto pt-1 border-t border-current/10 text-[11px]">
+                  {selectedTask.subtasks!.map(s => (
+                    <div key={s.id} className="flex items-center gap-1.5">
+                      <button onClick={() => toggleSubtask(selectedTask.id, s.id)}>
+                        {s.completed ? <CheckCircle2 className="w-3 h-3 text-emerald-500" /> : <Circle className="w-3 h-3 opacity-60" />}
+                      </button>
+                      <span className={s.completed ? "line-through opacity-50" : ""}>{s.text}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
