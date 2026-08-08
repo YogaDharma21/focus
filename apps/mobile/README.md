@@ -15,17 +15,17 @@
 <details>
 <summary>View Mobile Application Screenshots</summary>
 
-<div align="center">
+### Focus Session
+![Focus Mode](./assets/images/screenshot-focus.jpeg)
 
-| Focus & Flow Mode | Task Management |
-| :---: | :---: |
-| ![Focus Mode](./assets/images/screenshot-focus.jpeg) | ![Task Management](./assets/images/screenshot-tasks.jpeg) |
+### Task Management
+![Task Management](./assets/images/screenshot-tasks.jpeg)
 
-| Stats & Analytics | Mood Notes |
-| :---: | :---: |
-| ![Stats & Analytics](./assets/images/screenshot-stats.jpeg) | ![Mood Notes](./assets/images/screenshot-mood.jpeg) |
+### Stats & Analytics
+![Stats & Analytics](./assets/images/screenshot-stats.jpeg)
 
-</div>
+### Mood & Notes
+![Mood Notes](./assets/images/screenshot-mood.jpeg)
 
 </details>
 

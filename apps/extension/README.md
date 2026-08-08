@@ -12,11 +12,27 @@
 
 ---
 
-## Screenshots
+## Screenshots Gallery
 
-| Timer | Tasks | Site Blocking | Stats | Notes |
-| :---: | :---: | :---: | :---: | :---: |
-| ![Timer](./public/Screenshot-timer.png) | ![Tasks](./public/Screenshot-tasks.png) | ![Block](./public/Screenshot-block.png) | ![Stats](./public/Screenshot-stats.png) | ![Notes](./public/Screenshot-notes.png) |
+<details>
+<summary>View Extension Screenshots</summary>
+
+### Focus Session
+![Timer](./public/Screenshot-timer.png)
+
+### Task Management
+![Tasks](./public/Screenshot-tasks.png)
+
+### Focus Shield (Site Blocking)
+![Block](./public/Screenshot-block.png)
+
+### Stats & Analytics
+![Stats](./public/Screenshot-stats.png)
+
+### Mood & Notes
+![Notes](./public/Screenshot-notes.png)
+
+</details>
 
 ---
 
