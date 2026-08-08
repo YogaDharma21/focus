@@ -1,26 +1,24 @@
 import React, { useEffect, useState } from "react";
-import { ShieldAlert, Timer, ArrowLeft } from "lucide-react";
+import { ShieldAlert, Timer } from "lucide-react";
 import { AppStateData } from "../types";
-import { getStoredState, saveStoredState } from "../lib/storage";
+import { getStoredState, saveStoredState, subscribeToStateChanges } from "../lib/storage";
 import "../index.css";
-
-const QUOTES = [
-  "“Focus is a muscle. The more you practice avoiding distractions, the easier it gets.”",
-  "“Starve your distractions, feed your focus.”",
-  "“Do something today that your future self will thank you for.”",
-  "“Your focus determines your reality.”",
-  "“The successful warrior is the average man, with laser-like focus.”"
-];
 
 export function Blocked() {
   const [state, setState] = useState<AppStateData | null>(null);
   const [targetUrl, setTargetUrl] = useState("");
-  const [quote, setQuote] = useState(QUOTES[0]);
 
   useEffect(() => {
     getStoredState().then((s) => {
       setState(s);
       document.body.className = s.themeMode || "dark";
+    });
+
+    const unsubscribe = subscribeToStateChanges((newState) => {
+      setState(newState);
+      if (newState.themeMode) {
+        document.body.className = newState.themeMode;
+      }
     });
 
     const params = new URLSearchParams(window.location.search);
@@ -29,18 +27,10 @@ export function Blocked() {
       setTargetUrl(target);
     }
 
-    setQuote(QUOTES[Math.floor(Math.random() * QUOTES.length)]);
+    return () => {
+      unsubscribe();
+    };
   }, []);
-
-  const closeTab = () => {
-    if (typeof chrome !== "undefined" && chrome.tabs) {
-      chrome.tabs.getCurrent((tab) => {
-        if (tab?.id) chrome.tabs.remove(tab.id);
-      });
-    } else {
-      window.history.back();
-    }
-  };
 
   const pauseShieldTemporarily = async () => {
     if (!state) return;
@@ -118,25 +108,8 @@ export function Blocked() {
           </div>
         )}
 
-        {/* Quote Card */}
-        <div className={`p-4 rounded-xl border italic text-xs mb-8 ${
-          isDark ? "bg-neutral-900/50 border-neutral-800 text-neutral-300" : "bg-neutral-100 border-neutral-200 text-neutral-700"
-        }`}>
-          {quote}
-        </div>
-
         {/* Actions */}
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full">
-          <button
-            onClick={closeTab}
-            className={`w-full py-3 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border transition-all ${
-              isDark ? "bg-white text-black border-white hover:bg-neutral-200" : "bg-black text-white border-black hover:bg-neutral-800"
-            }`}
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Return to Work</span>
-          </button>
-
+        <div className="w-full">
           <button
             onClick={pauseShieldTemporarily}
             className={`w-full py-3 px-4 rounded-xl font-semibold text-xs border transition-all ${
@@ -150,3 +123,4 @@ export function Blocked() {
     </div>
   );
 }
+
