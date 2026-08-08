@@ -16,7 +16,7 @@ function Progress({
     <div
       data-slot="progress"
       className={cn(
-        "bg-neutral-200 dark:bg-neutral-800 h-1.5 rounded-none relative flex w-full items-center overflow-x-hidden",
+        "bg-neutral-200 dark:bg-neutral-800 h-1.5 rounded-full relative flex w-full items-center overflow-hidden",
         className
       )}
       {...props}
@@ -24,7 +24,7 @@ function Progress({
       <div
         data-slot="progress-indicator"
         className={cn(
-          "bg-neutral-900 dark:bg-white size-full flex-1 transition-all duration-300",
+          "bg-neutral-900 dark:bg-white size-full flex-1 rounded-full transition-all duration-300",
           indicatorClassName
         )}
         style={{ transform: `translateX(-${100 - progressValue}%)` }}
