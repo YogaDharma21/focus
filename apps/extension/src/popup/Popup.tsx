@@ -2125,7 +2125,7 @@ export function Popup() {
               <div className={`p-3 rounded-xl border flex items-start gap-3 ${
                 "bg-neutral-900 border-neutral-800"
               }`}>
-                <div className="w-8 h-8 rounded-full bg-amber-900/50 border border-amber-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div className="w-8 h-8 rounded-lg bg-amber-900/50 border border-amber-700 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <Flame className="w-4 h-4 text-amber-400" />
                 </div>
                 <div className="flex flex-col">
@@ -2144,7 +2144,7 @@ export function Popup() {
               <div className={`p-3 rounded-xl border flex items-start gap-3 ${
                 "bg-neutral-900 border-neutral-800"
               }`}>
-                <div className="w-8 h-8 rounded-full bg-emerald-900/50 border border-emerald-700 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <div className="w-8 h-8 rounded-lg bg-emerald-900/50 border border-emerald-700 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <Target className="w-4 h-4 text-emerald-400" />
                 </div>
                 <div className="flex flex-col">
