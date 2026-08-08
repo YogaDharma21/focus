@@ -4,7 +4,7 @@ import { useAppStore, TodoItem } from "@/lib/store";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Play, Pause, RotateCcw, CheckCircle2, Settings2, ChevronDown, ListTodo, FileText } from "lucide-react";
+import { Play, Pause, RotateCcw, CheckCircle2, Settings2, ChevronDown, ListTodo, FileText, Check } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import {
     Dialog,
@@ -354,29 +354,78 @@ export function FocusTimer() {
 
                 <div className="flex flex-col items-center gap-2 w-full max-w-sm">
                     <Popover open={taskSelectorOpen} onOpenChange={setTaskSelectorOpen}>
-                        <PopoverTrigger asChild>
-                            <button
-                                className={cn(
-                                    "w-full text-center bg-transparent text-xl placeholder:text-muted-foreground/70 text-foreground transition-all",
-                                    "border border-dashed border-border/60 hover:border-border rounded-[var(--radius)] px-4 py-2",
-                                    selectedTodo && "border-solid border-primary/40 bg-primary/5",
-                                )}
-                            >
-                                {selectedTodo ? (
-                                    <span className="flex items-center justify-center gap-2">
-                                        <ListTodo className="w-4 h-4 text-primary shrink-0" />
-                                        <span className="truncate">{selectedTodo.text}</span>
-                                    </span>
-                                ) : sessionName ? (
-                                    <span className="truncate">{sessionName}</span>
-                                ) : (
-                                    <span className="text-muted-foreground/70">What are you focusing on?</span>
-                                )}
-                                <ChevronDown className="w-4 h-4 inline-block ml-1 text-muted-foreground" />
-                            </button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-[--radix-popover-trigger-width] max-h-80 overflow-y-auto p-1">
-                            <div className="flex flex-col">
+                        <div className="relative w-full max-w-sm">
+                            {selectedTodo ? (
+                                <PopoverTrigger asChild>
+                                    <button
+                                        type="button"
+                                        className={cn(
+                                            "w-full px-4 py-2.5 rounded-full border transition-all flex items-center justify-between gap-2 shadow-sm",
+                                            "bg-neutral-900/90 border-neutral-800 hover:border-neutral-700 text-white cursor-pointer group relative",
+                                        )}
+                                        title="Click to select another task or custom focus"
+                                    >
+                                        <div className="flex items-center justify-center gap-2 min-w-0 flex-1 mx-auto">
+                                            <ListTodo className="w-4 h-4 text-white shrink-0" />
+                                            <span className="font-semibold text-sm tracking-tight truncate max-w-[220px] text-white">
+                                                {selectedTodo.text}
+                                            </span>
+                                            <ChevronDown className="w-3.5 h-3.5 opacity-60 transition-transform duration-200 text-white shrink-0 group-hover:opacity-100" />
+                                        </div>
+                                    </button>
+                                </PopoverTrigger>
+                            ) : (
+                                <div className="relative flex items-center w-full">
+                                    <input
+                                        type="text"
+                                        value={sessionName}
+                                        onChange={(e) => setSessionName(e.target.value)}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter" && sessionName.trim()) {
+                                                e.preventDefault();
+                                                const existing = todos.find(
+                                                    (t) => t.text.toLowerCase() === sessionName.trim().toLowerCase() && !t.completed,
+                                                );
+                                                if (existing) {
+                                                    setSelectedTodoId(existing.id);
+                                                    setSessionName(existing.text);
+                                                } else {
+                                                    const newId = crypto.randomUUID();
+                                                    const item: TodoItem = {
+                                                        id: newId,
+                                                        text: sessionName.trim(),
+                                                        completed: false,
+                                                        groupId: "current",
+                                                        completedPomodoros: 0,
+                                                        estimatedPomodoros: 1,
+                                                    };
+                                                    addTodo(item);
+                                                    setSelectedTodoId(newId);
+                                                    setSessionName("");
+                                                }
+                                            }
+                                        }}
+                                        placeholder="Session Goal (Press Enter)..."
+                                        className={cn(
+                                            "w-full pl-9 pr-9 py-2.5 rounded-full text-sm text-center font-medium border transition-colors focus:outline-none shadow-sm",
+                                            "bg-neutral-900 border-neutral-800 text-white placeholder:text-neutral-500 focus:border-neutral-700",
+                                        )}
+                                    />
+                                    <PopoverTrigger asChild>
+                                        <button
+                                            type="button"
+                                            className="absolute right-2.5 p-1 rounded-lg transition-colors hover:bg-neutral-800 text-neutral-400 hover:text-white"
+                                            title="Select from your tasks"
+                                        >
+                                            <ListTodo className="w-4 h-4 text-white" />
+                                        </button>
+                                    </PopoverTrigger>
+                                </div>
+                            )}
+                        </div>
+
+                        <PopoverContent className="w-[--radix-popover-trigger-width] min-w-[280px] max-h-80 overflow-y-auto p-1.5 bg-neutral-900 border-neutral-800 text-white shadow-xl rounded-2xl">
+                            <div className="flex flex-col gap-0.5">
                                 <button
                                     onClick={() => {
                                         setSessionName("");
@@ -385,69 +434,52 @@ export function FocusTimer() {
                                         setTaskSelectorOpen(false);
                                     }}
                                     className={cn(
-                                        "text-left px-3 py-2 text-sm rounded-sm transition-colors",
+                                        "w-full px-3 py-2 text-xs font-medium rounded-xl text-left transition-all flex items-center justify-between",
                                         !selectedTodo && !sessionName
-                                            ? "bg-primary/10 text-primary"
-                                            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground",
+                                            ? "bg-white/10 text-white font-bold"
+                                            : "text-neutral-300 hover:bg-neutral-800/80 hover:text-white",
                                     )}
                                 >
-                                    Custom focus...
+                                    <span>Custom focus...</span>
+                                    {!selectedTodo && !sessionName && <Check className="w-3.5 h-3.5 shrink-0 text-white" />}
                                 </button>
                                 {uncompletedTodos.length > 0 && (
-                                    <div className="h-px bg-border my-1" />
+                                    <div className="h-px bg-neutral-800/80 my-1" />
                                 )}
-                                {uncompletedTodos.map((todo) => (
-                                    <button
-                                        key={todo.id}
-                                        onClick={() => handleSelectTask(todo.id)}
-                                        className={cn(
-                                            "text-left px-3 py-2 text-sm rounded-sm transition-colors flex items-center gap-2",
-                                            selectedTodoId === todo.id
-                                                ? "bg-primary/10 text-primary font-medium"
-                                                : "hover:bg-accent hover:text-accent-foreground",
-                                        )}
-                                    >
-                                        <ListTodo className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-                                        <span className="truncate">{todo.text}</span>
-                                        {todo.subtasks && todo.subtasks.length > 0 && (
-                                            <span className="ml-auto text-xs text-muted-foreground shrink-0">
-                                                {todo.subtasks.filter((s) => s.completed).length}/{todo.subtasks.length}
-                                            </span>
-                                        )}
-                                    </button>
-                                ))}
+                                {uncompletedTodos.map((todo) => {
+                                    const isSelected = selectedTodoId === todo.id;
+                                    const completedSubs = todo.subtasks?.filter((s) => s.completed).length ?? 0;
+                                    const totalSubs = todo.subtasks?.length ?? 0;
+                                    return (
+                                        <button
+                                            key={todo.id}
+                                            onClick={() => handleSelectTask(todo.id)}
+                                            className={cn(
+                                                "w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all",
+                                                isSelected
+                                                    ? "bg-white/10 text-white font-bold"
+                                                    : "hover:bg-neutral-800/80 text-neutral-300 hover:text-white",
+                                            )}
+                                        >
+                                            <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
+                                                <ListTodo className="w-3.5 h-3.5 shrink-0 text-white" />
+                                                <span className="truncate">{todo.text}</span>
+                                                {totalSubs > 0 && (
+                                                    <span className="ml-auto text-[10px] font-mono text-neutral-400 shrink-0">
+                                                        {completedSubs}/{totalSubs}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            {isSelected && <Check className="w-3.5 h-3.5 shrink-0 text-white" />}
+                                        </button>
+                                    );
+                                })}
                                 {uncompletedTodos.length === 0 && (
-                                    <p className="text-xs text-muted-foreground text-center py-3">No tasks available</p>
+                                    <p className="text-xs text-neutral-500 text-center py-3">No pending tasks</p>
                                 )}
                             </div>
                         </PopoverContent>
                     </Popover>
-
-                    {!selectedTodo && (
-                        <Input
-                            value={sessionName}
-                            onChange={(e) => setSessionName(e.target.value)}
-                            onKeyDown={(e) => {
-                                if (e.key === "Enter" && sessionName.trim()) {
-                                    e.preventDefault();
-                                    const newId = crypto.randomUUID();
-                                    const item: TodoItem = {
-                                        id: newId,
-                                        text: sessionName.trim(),
-                                        completed: false,
-                                        groupId: "current",
-                                        completedPomodoros: 0,
-                                        estimatedPomodoros: 1,
-                                    };
-                                    addTodo(item);
-                                    setSelectedTodoId(newId);
-                                    setSessionName("");
-                                }
-                            }}
-                            placeholder="Or type a custom focus..."
-                            className="text-center bg-transparent border-none text-sm focus-visible:ring-0 placeholder:text-muted-foreground/50 text-foreground max-w-sm"
-                        />
-                    )}
                 </div>
 
                 {selectedTodo && selectedTodoSubtasks.length > 0 && (
