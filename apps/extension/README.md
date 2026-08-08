@@ -47,7 +47,7 @@
 ### Task Management
 - Create, complete, and delete tasks with priority levels (low, medium, high, urgent).
 - Organize tasks into custom groups.
-- Subtasks, due dates, estimated/completed pomodoros, and recurring schedules.
+- Subtasks, due dates, and estimated/completed pomodoros.
 - Task detail view with inline editing.
 
 ### Focus Shield (Site Blocking)
