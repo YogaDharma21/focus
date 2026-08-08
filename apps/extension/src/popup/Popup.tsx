@@ -38,13 +38,39 @@ import {
   Activity,
   Target,
   CheckCircle2 as TaskDone,
+  Calendar,
+  ListChecks,
   Smile,
 } from "lucide-react";
+import { format } from "date-fns";
 import { MoodTracker } from "./components/MoodTracker";
 import { Progress } from "../components/ui/progress";
 import { AppStateData, TodoItem, PriorityType, BackgroundTheme } from "../types";
 import { getStoredState, saveStoredState, subscribeToStateChanges, DEFAULT_STATE } from "../lib/storage";
 import "../index.css";
+
+function formatTaskDueDate(dueDate?: string, dueTime?: string): string {
+  if (!dueDate) return "";
+  try {
+    let dateObj: Date;
+    if (dueDate.includes("T")) {
+      dateObj = new Date(dueDate);
+    } else if (dueTime) {
+      dateObj = new Date(`${dueDate}T${dueTime}`);
+    } else {
+      dateObj = new Date(`${dueDate}T00:00:00`);
+    }
+
+    if (isNaN(dateObj.getTime())) return dueDate;
+
+    if (dueTime || (dueDate.includes("T") && (dateObj.getHours() !== 0 || dateObj.getMinutes() !== 0))) {
+      return format(dateObj, "MMM d, HH:mm");
+    }
+    return format(dateObj, "MMM d");
+  } catch {
+    return dueDate;
+  }
+}
 
 const MOOD_EMOJIS = [
   "😄 Happy",
@@ -1571,29 +1597,60 @@ export function Popup() {
                         No pending tasks
                       </div>
                     ) : (
-                      state.todos.filter(t => !t.completed).map((task) => (
-                        <button
-                          key={task.id}
-                          type="button"
-                          onClick={() => {
-                            updateState({ selectedTodoId: task.id, sessionName: task.text });
-                            setShowTaskDropdown(false);
-                          }}
-                          className={`w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all ${
-                            selectedTask?.id === task.id
-                              ? isDark ? "bg-white/10 text-white font-bold" : "bg-black/5 text-black font-bold"
-                              : isDark ? "hover:bg-neutral-800/80 text-neutral-300" : "hover:bg-neutral-100 text-neutral-700"
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 truncate pr-2">
-                            <ListTodo className={`w-3.5 h-3.5 shrink-0 ${isDark ? "text-white" : "text-black"}`} />
-                            <span className="truncate">{task.text}</span>
-                          </div>
-                          {selectedTask?.id === task.id && (
-                            <span className={`text-xs font-bold shrink-0 ${isDark ? "text-white" : "text-black"}`}>✓</span>
-                          )}
-                        </button>
-                      ))
+                      state.todos.filter(t => !t.completed).map((task) => {
+                        const hasDueDate = Boolean(task.dueDate);
+                        const hasPomodoros = Boolean((task.estimatedPomodoros && task.estimatedPomodoros > 0) || (task.completedPomodoros && task.completedPomodoros > 0));
+                        const hasSubtasks = Boolean(task.subtasks && task.subtasks.length > 0);
+                        const hasMetadata = hasDueDate || hasPomodoros || hasSubtasks;
+
+                        return (
+                          <button
+                            key={task.id}
+                            type="button"
+                            onClick={() => {
+                              updateState({ selectedTodoId: task.id, sessionName: task.text });
+                              setShowTaskDropdown(false);
+                            }}
+                            className={`w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all ${
+                              selectedTask?.id === task.id
+                                ? isDark ? "bg-white/10 text-white font-bold" : "bg-black/5 text-black font-bold"
+                                : isDark ? "hover:bg-neutral-800/80 text-neutral-300" : "hover:bg-neutral-100 text-neutral-700"
+                            }`}
+                          >
+                            <div className="flex items-start gap-2 min-w-0 flex-1 pr-2">
+                              <ListTodo className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark ? "text-white" : "text-black"}`} />
+                              <div className="flex flex-col min-w-0 flex-1 gap-0.5">
+                                <span className="truncate">{task.text}</span>
+                                {hasMetadata && (
+                                  <div className="flex items-center gap-2.5 text-[10px] font-mono text-neutral-400 flex-wrap">
+                                    {hasDueDate && (
+                                      <div className="flex items-center gap-1 text-orange-500 font-medium">
+                                        <Calendar className="w-3 h-3" />
+                                        <span>{formatTaskDueDate(task.dueDate, task.dueTime)}</span>
+                                      </div>
+                                    )}
+                                    {hasPomodoros && (
+                                      <div className="flex items-center gap-1 text-neutral-400">
+                                        <Clock className="w-3 h-3" />
+                                        <span>{task.completedPomodoros || 0}/{task.estimatedPomodoros || 1}</span>
+                                      </div>
+                                    )}
+                                    {hasSubtasks && (
+                                      <div className="flex items-center gap-1 text-neutral-400">
+                                        <ListChecks className="w-3 h-3" />
+                                        <span>{task.subtasks!.filter(s => s.completed).length}/{task.subtasks!.length}</span>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            {selectedTask?.id === task.id && (
+                              <span className={`text-xs font-bold shrink-0 ${isDark ? "text-white" : "text-black"}`}>✓</span>
+                            )}
+                          </button>
+                        );
+                      })
                     )}
                   </div>
                 </div>
@@ -1823,50 +1880,85 @@ export function Popup() {
               ) : (
                 state.todos
                   .filter(t => (t.groupId || "current") === activeGroupId)
-                  .map((todo) => (
-                    <div
-                      key={todo.id}
-                      className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 transition-all ${
-                        todo.completed
-                          ? isDark ? "bg-neutral-950 border-neutral-900 opacity-50 line-through text-neutral-500" : "bg-neutral-100 border-neutral-200 opacity-50 line-through text-neutral-400"
-                          : isDark ? "bg-neutral-900 border-neutral-800 hover:border-neutral-700" : "bg-neutral-50 border-neutral-300 hover:border-neutral-400"
-                      }`}
-                    >
-                      <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                        <button onClick={() => toggleTodo(todo.id)} className="flex-shrink-0">
-                          {todo.completed ? (
-                            <CheckCircle2 className={`w-4 h-4 ${isDark ? "text-white" : "text-black"}`} />
-                          ) : (
-                            <Circle className={`w-4 h-4 ${isDark ? "text-neutral-500" : "text-neutral-400"}`} />
-                          )}
-                        </button>
-                        <span
-                          onClick={() => setSelectedTaskDetail(todo)}
-                          className="text-xs font-medium truncate cursor-pointer hover:underline"
-                        >
-                          {todo.text}
-                        </span>
-                      </div>
+                  .map((todo) => {
+                    const hasDueDate = Boolean(todo.dueDate);
+                    const hasPomodoros = Boolean((todo.estimatedPomodoros && todo.estimatedPomodoros > 0) || (todo.completedPomodoros && todo.completedPomodoros > 0));
+                    const hasSubtasks = Boolean(todo.subtasks && todo.subtasks.length > 0);
+                    const hasMetadata = hasDueDate || hasPomodoros || hasSubtasks;
 
-                      <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <button
-                          onClick={() => focusOnTask(todo)}
-                          className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold flex items-center gap-1 border ${
-                            state.selectedTodoId === todo.id
-                              ? isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
-                              : isDark ? "bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700" : "bg-neutral-200 text-neutral-800 border-neutral-300 hover:bg-neutral-300"
-                          }`}
-                        >
-                          <span>Focus</span>
-                          <ArrowRight className="w-2.5 h-2.5" />
-                        </button>
+                    return (
+                      <div
+                        key={todo.id}
+                        className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 transition-all ${
+                          todo.completed
+                            ? isDark ? "bg-neutral-950 border-neutral-900 opacity-50 text-neutral-500" : "bg-neutral-100 border-neutral-200 opacity-50 text-neutral-400"
+                            : isDark ? "bg-neutral-900 border-neutral-800 hover:border-neutral-700" : "bg-neutral-50 border-neutral-300 hover:border-neutral-400"
+                        }`}
+                      >
+                        <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                          <button onClick={() => toggleTodo(todo.id)} className="flex-shrink-0 mt-0.5">
+                            {todo.completed ? (
+                              <CheckCircle2 className={`w-4 h-4 ${isDark ? "text-white" : "text-black"}`} />
+                            ) : (
+                              <Circle className={`w-4 h-4 ${isDark ? "text-neutral-500" : "text-neutral-400"}`} />
+                            )}
+                          </button>
+                          
+                          <div className="flex flex-col flex-1 min-w-0 gap-0.5">
+                            <span
+                              onClick={() => setSelectedTaskDetail(todo)}
+                              className={`text-xs font-bold truncate cursor-pointer hover:underline ${
+                                todo.completed ? "line-through opacity-70" : isDark ? "text-white" : "text-neutral-900"
+                              }`}
+                            >
+                              {todo.text}
+                            </span>
 
-                        <button onClick={() => setSelectedTaskDetail(todo)} className={`p-1 ${isDark ? "text-neutral-500 hover:text-white" : "text-neutral-400 hover:text-black"}`}>
-                          <Edit3 className="w-3.5 h-3.5" />
-                        </button>
+                            {hasMetadata && (
+                              <div className="flex items-center gap-3 text-[10px] font-mono text-neutral-400 flex-wrap">
+                                {hasDueDate && (
+                                  <div className="flex items-center gap-1 text-orange-500 font-medium">
+                                    <Calendar className="w-3 h-3" />
+                                    <span>{formatTaskDueDate(todo.dueDate, todo.dueTime)}</span>
+                                  </div>
+                                )}
+                                {hasPomodoros && (
+                                  <div className="flex items-center gap-1 text-neutral-400">
+                                    <Clock className="w-3 h-3" />
+                                    <span>{todo.completedPomodoros || 0}/{todo.estimatedPomodoros || 1}</span>
+                                  </div>
+                                )}
+                                {hasSubtasks && (
+                                  <div className="flex items-center gap-1 text-neutral-400">
+                                    <ListChecks className="w-3 h-3" />
+                                    <span>{todo.subtasks!.filter(s => s.completed).length}/{todo.subtasks!.length}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5 flex-shrink-0">
+                          <button
+                            onClick={() => focusOnTask(todo)}
+                            className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold flex items-center gap-1 border ${
+                              state.selectedTodoId === todo.id
+                                ? isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
+                                : isDark ? "bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700" : "bg-neutral-200 text-neutral-800 border-neutral-300 hover:bg-neutral-300"
+                            }`}
+                          >
+                            <span>Focus</span>
+                            <ArrowRight className="w-2.5 h-2.5" />
+                          </button>
+
+                          <button onClick={() => setSelectedTaskDetail(todo)} className={`p-1 ${isDark ? "text-neutral-500 hover:text-white" : "text-neutral-400 hover:text-black"}`}>
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  ))
+                    );
+                  })
               )}
             </div>
           </div>
