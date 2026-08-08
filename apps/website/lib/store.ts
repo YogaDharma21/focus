@@ -102,15 +102,12 @@ export interface TodoItem {
     completed: boolean;
     category?: string;
     priority?: "low" | "medium" | "high" | "urgent";
-    tags?: string[];
     deadline?: string;
     dueDate?: string;
     subtasks?: { id: string; text: string; completed: boolean }[];
     notes?: string;
     estimatedPomodoros?: number;
     completedPomodoros?: number;
-    recurring?: "none" | "daily" | "weekly" | "monthly";
-    reminders?: string[];
     link?: string;
     groupId?: string;
     completedAt?: string;
