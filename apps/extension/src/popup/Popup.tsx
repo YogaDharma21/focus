@@ -1701,14 +1701,14 @@ export function Popup() {
                     onChange={(e) => updateState({ sessionName: e.target.value })}
                     onKeyDown={handleGoalKeyDown}
                     placeholder="Session Goal (Press Enter to create task)..."
-                    className={`w-full pl-3 pr-9 py-2 rounded-xl text-xs text-center font-medium border focus:outline-none ${
+                    className={`w-full pl-10 pr-10 py-2 rounded-xl text-xs text-center font-medium border focus:outline-none truncate ${
                       "bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-white"
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowTaskDropdown(!showTaskDropdown)}
-                    className={`absolute right-2 p-1 rounded-lg transition-colors ${
+                    className={`absolute right-2.5 p-1 rounded-lg transition-colors ${
                       "hover:bg-neutral-800 text-neutral-400 hover:text-white"
                     }`}
                     title="Select from your tasks"
