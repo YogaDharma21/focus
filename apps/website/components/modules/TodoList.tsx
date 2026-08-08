@@ -20,12 +20,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-} from "@/components/ui/sheet";
-import {
     Dialog,
     DialogContent,
     DialogHeader,
@@ -412,25 +406,17 @@ export function TodoList() {
                 </div>
             </ScrollArea>
 
-            <Sheet
+            <Dialog
                 open={!!editingTaskId}
                 onOpenChange={(open) => !open && setEditingTaskId(null)}
             >
-                <SheetContent
-                    side="right"
-                    className="w-[100%] sm:w-[540px] bg-background border-l border-border/50 p-0"
-                >
+                <DialogContent className="sm:max-w-lg md:max-w-xl max-h-[90vh] overflow-y-auto p-6 space-y-6 bg-background/95 backdrop-blur-md border-border/60 shadow-2xl rounded-2xl">
                     {editingTask && (
-                        <div className="h-full flex flex-col p-10 pr-14 gap-10 overflow-y-auto">
-                            <SheetHeader className="mb-2">
-                                <SheetTitle className="text-2xl font-light">
-                                    Task Details
-                                </SheetTitle>
-                            </SheetHeader>
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-muted-foreground uppercase">
-                                    Task
-                                </label>
+                        <div className="space-y-6">
+                            <DialogHeader className="space-y-3">
+                                <div className="flex items-center justify-between text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                                    <span>Task Details</span>
+                                </div>
                                 {isEditingTaskName ? (
                                     <Input
                                         autoFocus
@@ -441,62 +427,89 @@ export function TodoList() {
                                                 updateTodo(editingTask.id, { text: editingTaskName.trim() });
                                             }
                                             setIsEditingTaskName(false);
-                                    }}
-                                    onKeyDown={(e) => {
-                                        if (e.key === 'Enter') {
-                                            if (editingTaskName.trim()) {
-                                                updateTodo(editingTask.id, { text: editingTaskName.trim() });
+                                        }}
+                                        onKeyDown={(e) => {
+                                            if (e.key === "Enter") {
+                                                if (editingTaskName.trim()) {
+                                                    updateTodo(editingTask.id, { text: editingTaskName.trim() });
+                                                }
+                                                setIsEditingTaskName(false);
                                             }
-                                            setIsEditingTaskName(false);
-                                        }
-                                            if (e.key === 'Escape') {
+                                            if (e.key === "Escape") {
                                                 setIsEditingTaskName(false);
                                             }
                                         }}
-                                        className="text-lg font-medium h-12"
+                                        className="text-xl font-medium h-11 bg-muted/40 border-primary/50"
                                     />
                                 ) : (
-                                    <div 
-                                        className="text-lg font-medium p-2 bg-secondary/10 rounded-[var(--radius)] cursor-pointer hover:bg-secondary/20 transition-colors"
+                                    <DialogTitle
+                                        className="text-xl font-semibold cursor-pointer hover:bg-muted/40 p-2 -ml-2 rounded-lg transition-colors group flex items-center gap-2"
                                         onClick={() => {
                                             setEditingTaskName(editingTask.text);
                                             setIsEditingTaskName(true);
                                         }}
                                     >
-                                        {editingTask.text}
-                                    </div>
+                                        <span className={cn(editingTask.completed && "line-through text-muted-foreground")}>
+                                            {editingTask.text}
+                                        </span>
+                                    </DialogTitle>
                                 )}
+                            </DialogHeader>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div className="bg-muted/30 border border-border/40 rounded-xl p-3.5 space-y-2">
+                                    <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
+                                        <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Priority
+                                    </label>
+                                    <Select
+                                        defaultValue={editingTask.priority || "medium"}
+                                        onValueChange={(val) => {
+                                            updateTodo(editingTask.id, { priority: val as TodoItem["priority"] });
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-full bg-background/50 border-border/50 rounded-lg h-9">
+                                            <SelectValue placeholder="Select priority" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="low">Low</SelectItem>
+                                            <SelectItem value="medium">Medium</SelectItem>
+                                            <SelectItem value="high">High</SelectItem>
+                                            <SelectItem value="urgent">Urgent</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+
+                                <div className="bg-muted/30 border border-border/40 rounded-xl p-3.5 space-y-2">
+                                    <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
+                                        <List className="w-3.5 h-3.5 text-blue-500" /> Group
+                                    </label>
+                                    <Select
+                                        defaultValue={editingTask.groupId || "inbox"}
+                                        onValueChange={(val) => {
+                                            updateTodo(editingTask.id, { groupId: val });
+                                        }}
+                                    >
+                                        <SelectTrigger className="w-full bg-background/50 border-border/50 rounded-lg h-9">
+                                            <SelectValue placeholder="Select group" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            {groups.map((g) => (
+                                                <SelectItem key={g.id} value={g.id}>
+                                                    {g.name}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                </div>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1">
-                                    <Sparkles className="w-3 h-3" /> Priority
+                            <div className="bg-muted/30 border border-border/40 rounded-xl p-4 space-y-3">
+                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
+                                    <Timer className="w-3.5 h-3.5 text-emerald-500" /> Focus Sessions
                                 </label>
-                                <Select
-                                    defaultValue={editingTask.priority || "medium"}
-                                    onValueChange={(val) => {
-                                        updateTodo(editingTask.id, { priority: val as TodoItem["priority"] });
-                                    }}
-                                >
-                                    <SelectTrigger className="rounded-[var(--radius)]">
-                                        <SelectValue placeholder="Select priority" />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-[var(--radius)]">
-                                        <SelectItem value="low">Low</SelectItem>
-                                        <SelectItem value="medium">Medium</SelectItem>
-                                        <SelectItem value="high">High</SelectItem>
-                                        <SelectItem value="urgent">Urgent</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1">
-                                    <Timer className="w-3 h-3" /> Sessions
-                                </label>
-                                <div className="flex gap-3">
-                                    <div className="flex-1">
-                                        <label className="text-[10px] text-muted-foreground mb-1 block">Estimated</label>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-[11px] text-muted-foreground mb-1 block">Estimated</label>
                                         <Input
                                             type="number"
                                             min={1}
@@ -506,11 +519,11 @@ export function TodoList() {
                                                     estimatedPomodoros: parseInt(e.target.value) || 1,
                                                 });
                                             }}
-                                            className="h-9"
+                                            className="h-9 bg-background/50 border-border/50"
                                         />
                                     </div>
-                                    <div className="flex-1">
-                                        <label className="text-[10px] text-muted-foreground mb-1 block">Completed</label>
+                                    <div>
+                                        <label className="text-[11px] text-muted-foreground mb-1 block">Completed</label>
                                         <Input
                                             type="number"
                                             min={0}
@@ -520,192 +533,131 @@ export function TodoList() {
                                                     completedPomodoros: parseInt(e.target.value) || 0,
                                                 });
                                             }}
-                                            className="h-9"
+                                            className="h-9 bg-background/50 border-border/50"
                                         />
                                     </div>
                                 </div>
                                 {(editingTask.estimatedPomodoros || 0) > 0 && (
-                                    <div className="w-full bg-secondary/30 rounded-full h-2 overflow-hidden">
-                                        <div
-                                            className="bg-primary h-full rounded-full transition-all"
-                                            style={{
-                                                width: `${Math.min(100, ((editingTask.completedPomodoros || 0) / (editingTask.estimatedPomodoros || 1)) * 100)}%`,
-                                            }}
-                                        />
+                                    <div className="space-y-1 pt-1">
+                                        <div className="w-full bg-secondary/50 rounded-full h-2 overflow-hidden">
+                                            <div
+                                                className="bg-primary h-full rounded-full transition-all duration-300"
+                                                style={{
+                                                    width: `${Math.min(100, ((editingTask.completedPomodoros || 0) / (editingTask.estimatedPomodoros || 1)) * 100)}%`,
+                                                }}
+                                            />
+                                        </div>
+                                        <p className="text-[10px] text-muted-foreground text-right font-medium">
+                                            {Math.round(Math.min(100, ((editingTask.completedPomodoros || 0) / (editingTask.estimatedPomodoros || 1)) * 100))}% Completed
+                                        </p>
                                     </div>
                                 )}
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-muted-foreground uppercase">
-                                    Deadline
+                            <div className="bg-muted/30 border border-border/40 rounded-xl p-4 space-y-2.5">
+                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
+                                    <CalendarIcon className="w-3.5 h-3.5 text-indigo-500" /> Deadline
                                 </label>
-                                <div className="flex flex-col gap-2">
-                                    <div className="flex gap-2">
-                                        <Popover>
-                                            <PopoverTrigger asChild>
-                                                <Button
-                                                    variant="outline"
-                                                    className={cn(
-                                                        "flex-1 justify-start text-left font-normal h-10",
-                                                        !editingTask.deadline &&
-                                                            "text-muted-foreground",
-                                                    )}
-                                                >
-                                                    <CalendarIcon className="mr-2 h-4 w-4" />
-                                                    {editingTask.deadline ? (
-                                                        format(
-                                                            new Date(
-                                                                editingTask.deadline,
-                                                            ),
-                                                            "PPP",
-                                                        )
-                                                    ) : (
-                                                        <span>Pick a date</span>
-                                                    )}
-                                                </Button>
-                                            </PopoverTrigger>
-                                            <PopoverContent
-                                                className="w-auto p-0"
-                                                align="start"
+                                <div className="flex flex-wrap sm:flex-nowrap gap-2">
+                                    <Popover>
+                                        <PopoverTrigger asChild>
+                                            <Button
+                                                variant="outline"
+                                                className={cn(
+                                                    "flex-1 justify-start text-left font-normal h-9 bg-background/50 border-border/50 text-xs",
+                                                    !editingTask.deadline && "text-muted-foreground",
+                                                )}
                                             >
-                                                <Calendar
-                                                    mode="single"
-                                                    selected={
-                                                        editingTask.deadline
-                                                            ? new Date(
-                                                                  editingTask.deadline,
-                                                              )
-                                                            : undefined
-                                                    }
-                                                    onSelect={(date) => {
-                                                        if (date) {
-                                                            const existingDate =
-                                                                editingTask.deadline
-                                                                    ? new Date(
-                                                                          editingTask.deadline,
-                                                                      )
-                                                                    : new Date();
-                                                            date.setHours(
-                                                                existingDate.getHours(),
-                                                            );
-                                                            date.setMinutes(
-                                                                existingDate.getMinutes(),
-                                                            );
-                                                            updateTodo(
-                                                                editingTask.id,
-                                                                {
-                                                                    deadline:
-                                                                        date.toISOString(),
-                                                                },
-                                                            );
-                                                        }
-                                                    }}
-                                                    initialFocus
-                                                />
-                                            </PopoverContent>
-                                        </Popover>
-
-                                        <Input
-                                            type="time"
-                                            className="w-32 h-10"
-                                            value={
-                                                editingTask.deadline
-                                                    ? format(
-                                                          new Date(
-                                                              editingTask.deadline,
-                                                          ),
-                                                          "HH:mm",
-                                                      )
-                                                    : ""
-                                            }
-                                            onChange={(e) => {
-                                                const time = e.target.value;
-                                                if (time) {
-                                                    const date =
-                                                        editingTask.deadline
-                                                            ? new Date(
-                                                                  editingTask.deadline,
-                                                              )
-                                                            : new Date();
-                                                    const [hours, minutes] =
-                                                        time
-                                                            .split(":")
-                                                            .map(Number);
-                                                    date.setHours(hours);
-                                                    date.setMinutes(minutes);
-                                                    updateTodo(editingTask.id, {
-                                                        deadline:
-                                                            date.toISOString(),
-                                                    });
+                                                <CalendarIcon className="mr-2 h-3.5 w-3.5" />
+                                                {editingTask.deadline ? (
+                                                    format(new Date(editingTask.deadline), "PPP")
+                                                ) : (
+                                                    <span>Pick a date</span>
+                                                )}
+                                            </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="start">
+                                            <Calendar
+                                                mode="single"
+                                                selected={
+                                                    editingTask.deadline
+                                                        ? new Date(editingTask.deadline)
+                                                        : undefined
                                                 }
-                                            }}
-                                        />
-                                    </div>
-                                    <p className="text-[10px] text-muted-foreground">
-                                        {editingTask.deadline
-                                            ? `Due at ${format(new Date(editingTask.deadline), "p")}`
-                                            : "No time set"}
-                                    </p>
+                                                onSelect={(date) => {
+                                                    if (date) {
+                                                        const existingDate = editingTask.deadline
+                                                            ? new Date(editingTask.deadline)
+                                                            : new Date();
+                                                        date.setHours(existingDate.getHours());
+                                                        date.setMinutes(existingDate.getMinutes());
+                                                        updateTodo(editingTask.id, {
+                                                            deadline: date.toISOString(),
+                                                        });
+                                                    }
+                                                }}
+                                                initialFocus
+                                            />
+                                        </PopoverContent>
+                                    </Popover>
+
+                                    <Input
+                                        type="time"
+                                        className="w-full sm:w-32 h-9 bg-background/50 border-border/50 text-xs"
+                                        value={
+                                            editingTask.deadline
+                                                ? format(new Date(editingTask.deadline), "HH:mm")
+                                                : ""
+                                        }
+                                        onChange={(e) => {
+                                            const time = e.target.value;
+                                            if (time) {
+                                                const date = editingTask.deadline
+                                                    ? new Date(editingTask.deadline)
+                                                    : new Date();
+                                                const [hours, minutes] = time.split(":").map(Number);
+                                                date.setHours(hours);
+                                                date.setMinutes(minutes);
+                                                updateTodo(editingTask.id, {
+                                                    deadline: date.toISOString(),
+                                                });
+                                            }
+                                        }}
+                                    />
                                 </div>
+                                {editingTask.deadline && (
+                                    <p className="text-[10px] text-muted-foreground font-medium">
+                                        Due at {format(new Date(editingTask.deadline), "p")}
+                                    </p>
+                                )}
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-muted-foreground uppercase">
-                                    Group
-                                </label>
-                                <Select
-                                    defaultValue={
-                                        editingTask.groupId || "inbox"
-                                    }
-                                    onValueChange={(val) => {
-                                        updateTodo(editingTask.id, {
-                                            groupId: val,
-                                        });
-                                    }}
-                                >
-                                    <SelectTrigger className="rounded-[var(--radius)]">
-                                        <SelectValue placeholder="Select group" />
-                                    </SelectTrigger>
-                                    <SelectContent className="rounded-[var(--radius)]">
-                                        {groups.map((g) => (
-                                            <SelectItem key={g.id} value={g.id}>
-                                                {g.name}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-
-                            <div className="space-y-4">
-                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center justify-between">
-                                    Subtasks
-                                    <span className="text-[10px] font-normal lowercase">
-                                        {editingTask.subtasks?.filter(
-                                            (s) => s.completed,
-                                        ).length || 0}
-                                        /{editingTask.subtasks?.length || 0}
+                            <div className="bg-muted/30 border border-border/40 rounded-xl p-4 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
+                                        <CheckSquare className="w-3.5 h-3.5 text-teal-500" /> Subtasks
+                                    </label>
+                                    <span className="text-[11px] text-muted-foreground font-medium bg-background/50 px-2 py-0.5 rounded-full border border-border/40">
+                                        {editingTask.subtasks?.filter((s) => s.completed).length || 0}/
+                                        {editingTask.subtasks?.length || 0}
                                     </span>
-                                </label>
+                                </div>
 
                                 <div className="space-y-2">
                                     {editingTask.subtasks?.map((subtask) => (
                                         <div
                                             key={subtask.id}
-                                            className="flex items-center gap-2 group/sub"
+                                            className="flex items-center gap-2 group/sub bg-background/40 hover:bg-background/70 p-2 rounded-lg border border-border/30 transition-colors"
                                         >
                                             <button
                                                 onClick={() =>
-                                                    toggleSubtask(
-                                                        editingTask.id,
-                                                        subtask.id,
-                                                    )
+                                                    toggleSubtask(editingTask.id, subtask.id)
                                                 }
                                                 className={cn(
                                                     "w-4 h-4 rounded border flex items-center justify-center transition-all",
                                                     subtask.completed
                                                         ? "bg-primary border-primary text-primary-foreground"
-                                                        : "border-muted-foreground/30",
+                                                        : "border-muted-foreground/30 hover:border-primary/50",
                                                 )}
                                             >
                                                 {subtask.completed && (
@@ -724,22 +676,22 @@ export function TodoList() {
                                                         setEditingSubtaskId(null);
                                                     }}
                                                     onKeyDown={(e) => {
-                                                        if (e.key === 'Enter') {
+                                                        if (e.key === "Enter") {
                                                             if (editingSubtaskText.trim()) {
                                                                 updateSubtask(editingTask.id, subtask.id, editingSubtaskText.trim());
                                                             }
                                                             setEditingSubtaskId(null);
                                                         }
-                                                        if (e.key === 'Escape') {
+                                                        if (e.key === "Escape") {
                                                             setEditingSubtaskId(null);
                                                         }
                                                     }}
-                                                    className="h-7 text-sm flex-1"
+                                                    className="h-7 text-xs flex-1 bg-background"
                                                 />
                                             ) : (
                                                 <span
                                                     className={cn(
-                                                        "text-sm flex-1 cursor-pointer hover:bg-secondary/10 rounded px-1 py-0.5 transition-colors",
+                                                        "text-xs flex-1 cursor-pointer hover:text-foreground transition-colors",
                                                         subtask.completed &&
                                                             "text-muted-foreground line-through",
                                                     )}
@@ -754,12 +706,9 @@ export function TodoList() {
                                             <Button
                                                 variant="ghost"
                                                 size="icon"
-                                                className="h-6 w-6 opacity-0 group-hover/sub:opacity-100"
+                                                className="h-6 w-6 text-muted-foreground hover:text-destructive opacity-0 group-hover/sub:opacity-100 transition-opacity"
                                                 onClick={() =>
-                                                    deleteSubtask(
-                                                        editingTask.id,
-                                                        subtask.id,
-                                                    )
+                                                    deleteSubtask(editingTask.id, subtask.id)
                                                 }
                                             >
                                                 <Trash2 className="w-3 h-3" />
@@ -767,21 +716,14 @@ export function TodoList() {
                                         </div>
                                     ))}
 
-                                    <div className="flex gap-2">
+                                    <div className="flex gap-2 pt-1">
                                         <Input
-                                            placeholder="Add subtask..."
-                                            className="h-8 text-xs bg-secondary/10"
+                                            placeholder="Add a subtask..."
+                                            className="h-8 text-xs bg-background/50 border-border/40 focus:bg-background"
                                             onKeyDown={(e) => {
-                                                if (
-                                                    e.key === "Enter" &&
-                                                    e.currentTarget.value.trim()
-                                                ) {
-                                                    const text =
-                                                        e.currentTarget.value.trim();
-                                                    addSubtask(
-                                                        editingTask.id,
-                                                        text,
-                                                    );
+                                                if (e.key === "Enter" && e.currentTarget.value.trim()) {
+                                                    const text = e.currentTarget.value.trim();
+                                                    addSubtask(editingTask.id, text);
                                                     e.currentTarget.value = "";
                                                 }
                                             }}
@@ -790,20 +732,31 @@ export function TodoList() {
                                 </div>
                             </div>
 
-                            <Button
-                                variant="destructive"
-                                className="w-full"
-                                onClick={() => {
-                                    deleteTodo(editingTask.id);
-                                    setEditingTaskId(null);
-                                }}
-                            >
-                                Delete Task
-                            </Button>
+                            <div className="pt-2 flex items-center justify-between border-t border-border/40">
+                                <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-destructive hover:bg-destructive/10 hover:text-destructive flex items-center gap-1.5 text-xs"
+                                    onClick={() => {
+                                        deleteTodo(editingTask.id);
+                                        setEditingTaskId(null);
+                                    }}
+                                >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    Delete Task
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    className="text-xs px-5"
+                                    onClick={() => setEditingTaskId(null)}
+                                >
+                                    Done
+                                </Button>
+                            </div>
                         </div>
                     )}
-                </SheetContent>
-            </Sheet>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
