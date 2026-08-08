@@ -1496,57 +1496,9 @@ export function Popup() {
 
             {/* Focus Session Goal / Task Selector */}
             <div className="w-full max-w-[280px] mb-2 relative">
-              {selectedTask ? (
-                /* Task Selected (Locked Typing Mode - Matches Reference Image) */
-                <button
-                  type="button"
-                  onClick={() => setShowTaskDropdown(!showTaskDropdown)}
-                  className={`w-full px-4 py-3 rounded-2xl border transition-all flex flex-col items-center justify-center gap-1 shadow-sm ${
-                    isDark
-                      ? "bg-neutral-900/90 border-neutral-800 hover:border-neutral-700 text-white"
-                      : "bg-neutral-100/90 border-neutral-300 hover:border-neutral-400 text-black"
-                  }`}
-                  title="Click to select another task or custom focus"
-                >
-                  <div className="flex items-center justify-center gap-2 max-w-full">
-                    <ListTodo className="w-4 h-4 shrink-0 text-emerald-500" />
-                    <span className="font-semibold text-sm tracking-tight truncate max-w-[200px]">
-                      {selectedTask.text}
-                    </span>
-                  </div>
-                  <ChevronDown className="w-3.5 h-3.5 opacity-60 transition-transform duration-200" />
-                </button>
-              ) : (
-                /* Custom Focus Mode (Editable Input Mode) */
-                <div className="relative flex items-center">
-                  <input
-                    type="text"
-                    value={state.sessionName}
-                    onChange={(e) => updateState({ sessionName: e.target.value })}
-                    onKeyDown={handleGoalKeyDown}
-                    placeholder="Session Goal (Press Enter to create task)..."
-                    className={`w-full pl-3 pr-9 py-2 rounded-xl text-xs text-center font-medium border focus:outline-none ${
-                      isDark
-                        ? "bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-white"
-                        : "bg-neutral-100 border-neutral-300 text-black placeholder-neutral-400 focus:border-black"
-                    }`}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowTaskDropdown(!showTaskDropdown)}
-                    className={`absolute right-2 p-1 rounded-lg transition-colors ${
-                      isDark ? "hover:bg-neutral-800 text-neutral-400 hover:text-white" : "hover:bg-neutral-200 text-neutral-600 hover:text-black"
-                    }`}
-                    title="Select from your tasks"
-                  >
-                    <ListTodo className="w-4 h-4" />
-                  </button>
-                </div>
-              )}
-
-              {/* Task Selector Dropdown Menu */}
+              {/* Task Selector Dropdown Menu (Pops UPWARDS so Timer Controls below remain visible!) */}
               {showTaskDropdown && (
-                <div className={`absolute top-full left-0 right-0 mt-1.5 z-50 p-2 rounded-2xl border shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-1 ${
+                <div className={`absolute bottom-full left-0 right-0 mb-1.5 z-50 p-2 rounded-2xl border shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-1 ${
                   isDark ? "bg-neutral-900/95 border-neutral-800 text-white" : "bg-white/95 border-neutral-200 text-black"
                 }`}>
                   <div className="flex items-center justify-between px-2 py-1 border-b border-current/10">
@@ -1574,7 +1526,7 @@ export function Popup() {
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <Edit3 className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                      <Edit3 className={`w-3.5 h-3.5 shrink-0 ${isDark ? "text-white" : "text-black"}`} />
                       <div className="flex flex-col">
                         <span className="leading-tight">Custom Focus</span>
                         <span className={`text-[10px] font-mono ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
@@ -1582,7 +1534,7 @@ export function Popup() {
                         </span>
                       </div>
                     </div>
-                    {!selectedTask && <span className="text-xs font-bold text-sky-400">✓</span>}
+                    {!selectedTask && <span className={`text-xs font-bold ${isDark ? "text-white" : "text-black"}`}>✓</span>}
                   </button>
 
                   <div className={`border-t my-0.5 ${isDark ? "border-neutral-800" : "border-neutral-200"}`} />
@@ -1593,7 +1545,7 @@ export function Popup() {
                   </div>
 
                   {/* Tasks List */}
-                  <div className="max-h-40 overflow-y-auto space-y-0.5">
+                  <div className="max-h-36 overflow-y-auto space-y-0.5">
                     {state.todos.filter(t => !t.completed).length === 0 ? (
                       <div className="px-3 py-2 text-[11px] font-mono opacity-50 italic text-center">
                         No pending tasks
@@ -1614,16 +1566,64 @@ export function Popup() {
                           }`}
                         >
                           <div className="flex items-center gap-2 truncate pr-2">
-                            <ListTodo className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                            <ListTodo className={`w-3.5 h-3.5 shrink-0 ${isDark ? "text-white" : "text-black"}`} />
                             <span className="truncate">{task.text}</span>
                           </div>
                           {selectedTask?.id === task.id && (
-                            <span className="text-xs font-bold text-emerald-400 shrink-0">✓</span>
+                            <span className={`text-xs font-bold shrink-0 ${isDark ? "text-white" : "text-black"}`}>✓</span>
                           )}
                         </button>
                       ))
                     )}
                   </div>
+                </div>
+              )}
+
+              {selectedTask ? (
+                /* Task Selected (Locked Typing Mode - Matches Reference Image) */
+                <button
+                  type="button"
+                  onClick={() => setShowTaskDropdown(!showTaskDropdown)}
+                  className={`w-full px-4 py-3 rounded-2xl border transition-all flex flex-col items-center justify-center gap-1 shadow-sm ${
+                    isDark
+                      ? "bg-neutral-900/90 border-neutral-800 hover:border-neutral-700 text-white"
+                      : "bg-neutral-100/90 border-neutral-300 hover:border-neutral-400 text-black"
+                  }`}
+                  title="Click to select another task or custom focus"
+                >
+                  <div className="flex items-center justify-center gap-2 max-w-full">
+                    <ListTodo className={`w-4 h-4 shrink-0 ${isDark ? "text-white" : "text-black"}`} />
+                    <span className="font-semibold text-sm tracking-tight truncate max-w-[200px]">
+                      {selectedTask.text}
+                    </span>
+                  </div>
+                  <ChevronDown className={`w-3.5 h-3.5 opacity-60 transition-transform duration-200 ${isDark ? "text-white" : "text-black"}`} />
+                </button>
+              ) : (
+                /* Custom Focus Mode (Editable Input Mode) */
+                <div className="relative flex items-center">
+                  <input
+                    type="text"
+                    value={state.sessionName}
+                    onChange={(e) => updateState({ sessionName: e.target.value })}
+                    onKeyDown={handleGoalKeyDown}
+                    placeholder="Session Goal (Press Enter to create task)..."
+                    className={`w-full pl-3 pr-9 py-2 rounded-xl text-xs text-center font-medium border focus:outline-none ${
+                      isDark
+                        ? "bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-white"
+                        : "bg-neutral-100 border-neutral-300 text-black placeholder-neutral-400 focus:border-black"
+                    }`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowTaskDropdown(!showTaskDropdown)}
+                    className={`absolute right-2 p-1 rounded-lg transition-colors ${
+                      isDark ? "hover:bg-neutral-800 text-neutral-400 hover:text-white" : "hover:bg-neutral-200 text-neutral-600 hover:text-black"
+                    }`}
+                    title="Select from your tasks"
+                  >
+                    <ListTodo className={`w-4 h-4 ${isDark ? "text-white" : "text-black"}`} />
+                  </button>
                 </div>
               )}
             </div>
