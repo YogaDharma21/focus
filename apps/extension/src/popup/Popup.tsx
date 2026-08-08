@@ -41,7 +41,7 @@ import {
   Smile,
 } from "lucide-react";
 import { MoodTracker } from "./components/MoodTracker";
-import { AppStateData, TodoItem, PriorityType, RecurringType, BackgroundTheme } from "../types";
+import { AppStateData, TodoItem, PriorityType, BackgroundTheme } from "../types";
 import { getStoredState, saveStoredState, subscribeToStateChanges, DEFAULT_STATE } from "../lib/storage";
 import "../index.css";
 
@@ -232,11 +232,24 @@ export function Popup() {
 
     let updatedTodos = state.todos;
     if (state.selectedTodoId && isWorkOrFlow) {
-      updatedTodos = state.todos.map(t => t.id === state.selectedTodoId ? {
-        ...t,
-        completedPomodoros: (t.completedPomodoros || 0) + 1
-      } : t);
+      updatedTodos = state.todos.map(t => {
+        if (t.id === state.selectedTodoId) {
+          const newCompleted = (t.completedPomodoros || 0) + 1;
+          const est = t.estimatedPomodoros || 1;
+          const isFinished = newCompleted >= est;
+          return {
+            ...t,
+            completedPomodoros: newCompleted,
+            completed: t.completed || isFinished,
+            completedAt: (t.completed || isFinished) ? (t.completedAt || new Date().toISOString()) : undefined,
+            groupId: (t.completed || isFinished) ? "finished" : t.groupId
+          };
+        }
+        return t;
+      });
     }
+
+    const completedTasksCount = updatedTodos.filter(t => t.completed).length;
 
     let nextState: "WORK" | "BREAK" | "FLOW" = "BREAK";
     let nextTime = 0;
@@ -269,7 +282,8 @@ export function Popup() {
       stats: {
         ...state.stats,
         todayMinutes: state.stats.todayMinutes + (isWorkOrFlow ? minsLogged : 0),
-        weeklyMinutes: updatedWeekly
+        weeklyMinutes: updatedWeekly,
+        completedTasksCount
       }
     });
   };
@@ -1100,48 +1114,25 @@ export function Popup() {
               </select>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Priority</label>
-                <select
-                  value={selectedTaskDetail.priority || "medium"}
-                  onChange={(e) => {
-                    const val = e.target.value as PriorityType;
-                    const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, priority: val } : t);
-                    updateState({ todos: updated });
-                    setSelectedTaskDetail({ ...selectedTaskDetail, priority: val });
-                  }}
-                  className={`w-full p-2 rounded-xl border text-xs font-mono focus:outline-none ${
-                    isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
-                  }`}
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Recurring</label>
-                <select
-                  value={selectedTaskDetail.recurring || "none"}
-                  onChange={(e) => {
-                    const val = e.target.value as RecurringType;
-                    const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, recurring: val } : t);
-                    updateState({ todos: updated });
-                    setSelectedTaskDetail({ ...selectedTaskDetail, recurring: val });
-                  }}
-                  className={`w-full p-2 rounded-xl border text-xs font-mono focus:outline-none ${
-                    isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
-                  }`}
-                >
-                  <option value="none">None</option>
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="monthly">Monthly</option>
-                </select>
-              </div>
+            <div>
+              <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Priority</label>
+              <select
+                value={selectedTaskDetail.priority || "medium"}
+                onChange={(e) => {
+                  const val = e.target.value as PriorityType;
+                  const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, priority: val } : t);
+                  updateState({ todos: updated });
+                  setSelectedTaskDetail({ ...selectedTaskDetail, priority: val });
+                }}
+                className={`w-full p-2 rounded-xl border text-xs font-mono focus:outline-none ${
+                  isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                }`}
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+                <option value="urgent">Urgent</option>
+              </select>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -1153,9 +1144,24 @@ export function Popup() {
                   value={selectedTaskDetail.estimatedPomodoros || 1}
                   onChange={(e) => {
                     const val = parseInt(e.target.value) || 1;
-                    const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, estimatedPomodoros: val } : t);
-                    updateState({ todos: updated });
-                    setSelectedTaskDetail({ ...selectedTaskDetail, estimatedPomodoros: val });
+                    const updated = state.todos.map(t => {
+                      if (t.id === selectedTaskDetail.id) {
+                        const comp = t.completedPomodoros || 0;
+                        const isFinished = comp >= val;
+                        return {
+                          ...t,
+                          estimatedPomodoros: val,
+                          completed: t.completed || isFinished,
+                          completedAt: (t.completed || isFinished) ? (t.completedAt || new Date().toISOString()) : undefined,
+                          groupId: (t.completed || isFinished) ? "finished" : t.groupId
+                        };
+                      }
+                      return t;
+                    });
+                    const completedCount = updated.filter(t => t.completed).length;
+                    updateState({ todos: updated, stats: { ...state.stats, completedTasksCount: completedCount } });
+                    const nextSelected = updated.find(t => t.id === selectedTaskDetail.id);
+                    if (nextSelected) setSelectedTaskDetail(nextSelected);
                   }}
                   className={`w-full p-2 rounded-xl border text-xs font-mono focus:outline-none ${
                     isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
@@ -1171,9 +1177,24 @@ export function Popup() {
                   value={selectedTaskDetail.completedPomodoros || 0}
                   onChange={(e) => {
                     const val = parseInt(e.target.value) || 0;
-                    const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, completedPomodoros: val } : t);
-                    updateState({ todos: updated });
-                    setSelectedTaskDetail({ ...selectedTaskDetail, completedPomodoros: val });
+                    const updated = state.todos.map(t => {
+                      if (t.id === selectedTaskDetail.id) {
+                        const est = t.estimatedPomodoros || 1;
+                        const isFinished = val >= est;
+                        return {
+                          ...t,
+                          completedPomodoros: val,
+                          completed: t.completed || isFinished,
+                          completedAt: (t.completed || isFinished) ? (t.completedAt || new Date().toISOString()) : undefined,
+                          groupId: (t.completed || isFinished) ? "finished" : t.groupId
+                        };
+                      }
+                      return t;
+                    });
+                    const completedCount = updated.filter(t => t.completed).length;
+                    updateState({ todos: updated, stats: { ...state.stats, completedTasksCount: completedCount } });
+                    const nextSelected = updated.find(t => t.id === selectedTaskDetail.id);
+                    if (nextSelected) setSelectedTaskDetail(nextSelected);
                   }}
                   className={`w-full p-2 rounded-xl border text-xs font-mono focus:outline-none ${
                     isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
