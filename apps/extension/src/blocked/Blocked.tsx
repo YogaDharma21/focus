@@ -11,14 +11,11 @@ export function Blocked() {
   useEffect(() => {
     getStoredState().then((s) => {
       setState(s);
-      document.body.className = s.themeMode || "dark";
+      document.body.className = "dark";
     });
 
     const unsubscribe = subscribeToStateChanges((newState) => {
       setState(newState);
-      if (newState.themeMode) {
-        document.body.className = newState.themeMode;
-      }
     });
 
     const params = new URLSearchParams(window.location.search);
@@ -59,7 +56,6 @@ export function Blocked() {
     }
   };
 
-  const isDark = !state || state.themeMode === "dark";
   const mins = state ? Math.floor(state.timeLeft / 60) : 0;
   const secs = state ? state.timeLeft % 60 : 0;
   const timeFormatted = `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
@@ -75,15 +71,9 @@ export function Blocked() {
   }
 
   return (
-    <div className={`min-h-screen flex items-center justify-center p-6 select-none font-sans ${
-      isDark ? "bg-black text-white" : "bg-white text-black"
-    }`}>
-      <div className={`max-w-md w-full p-8 rounded-2xl border flex flex-col items-center text-center shadow-2xl ${
-        isDark ? "bg-neutral-950 border-neutral-800" : "bg-neutral-50 border-neutral-300"
-      }`}>
-        <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center mb-5 ${
-          isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
-        }`}>
+    <div className="min-h-screen flex items-center justify-center p-6 select-none font-sans bg-black text-white">
+      <div className="max-w-md w-full p-8 rounded-2xl border flex flex-col items-center text-center shadow-2xl bg-neutral-950 border-neutral-800">
+        <div className="w-14 h-14 rounded-2xl border flex items-center justify-center mb-5 bg-white text-black border-white">
           <ShieldAlert className="w-7 h-7" />
         </div>
 
@@ -95,15 +85,13 @@ export function Blocked() {
           {displayDomain}
         </h1>
 
-        <p className={`text-xs max-w-sm mb-6 leading-relaxed ${isDark ? "text-neutral-400" : "text-neutral-600"}`}>
+        <p className="text-xs max-w-sm mb-6 leading-relaxed text-neutral-400">
           This domain is blocked during your active <b>Pomodoro Work Session</b>.
         </p>
 
         {/* Live Timer Card */}
         {state && (
-          <div className={`w-full p-4 rounded-xl border flex items-center justify-between mb-6 ${
-            isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-100 border-neutral-200"
-          }`}>
+          <div className="w-full p-4 rounded-xl border flex items-center justify-between mb-6 bg-neutral-900 border-neutral-800">
             <div className="flex items-center gap-3">
               <Timer className="w-5 h-5" />
               <div className="text-left">
@@ -112,9 +100,7 @@ export function Blocked() {
               </div>
             </div>
 
-            <div className={`text-[10px] font-mono font-bold uppercase px-2.5 py-1 rounded border ${
-              isDark ? "bg-black text-white border-neutral-700" : "bg-white text-black border-neutral-300"
-            }`}>
+            <div className="text-[10px] font-mono font-bold uppercase px-2.5 py-1 rounded border bg-black text-white border-neutral-700">
               {state.sessionName || "WORK SESSION"}
             </div>
           </div>
@@ -124,9 +110,7 @@ export function Blocked() {
         <div className="w-full">
           <button
             onClick={pauseShieldTemporarily}
-            className={`w-full py-3 px-4 rounded-xl font-semibold text-xs border transition-all ${
-              isDark ? "bg-neutral-900 border-neutral-800 text-neutral-300 hover:bg-neutral-800" : "bg-neutral-100 border-neutral-300 text-neutral-700 hover:bg-neutral-200"
-            }`}
+            className="w-full py-3 px-4 rounded-xl font-semibold text-xs border transition-all bg-neutral-900 border-neutral-800 text-neutral-300 hover:bg-neutral-800"
           >
             Disable Shield
           </button>

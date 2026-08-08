@@ -17,8 +17,6 @@ import {
   Circle,
   ShieldAlert,
   ShieldCheck,
-  Sun,
-  Moon,
   Info,
   Github,
   BookOpen,
@@ -164,7 +162,7 @@ export function Popup() {
   useEffect(() => {
     getStoredState().then((initial) => {
       setState(initial);
-      document.body.className = initial.themeMode || "dark";
+      document.body.className = "dark";
       setWorkMinsInput(initial.pomodoroSettings.work);
       setBreakMinsInput(initial.pomodoroSettings.break);
       setAutoStartBreakInput(initial.pomodoroSettings.autoStartBreak);
@@ -172,7 +170,7 @@ export function Popup() {
 
     const unsubscribe = subscribeToStateChanges((updated) => {
       setState(updated);
-      document.body.className = updated.themeMode || "dark";
+      document.body.className = "dark";
     });
 
     return () => unsubscribe();
@@ -189,21 +187,13 @@ export function Popup() {
     );
   }
 
-  const isDark = state.themeMode === "dark";
 
   const updateState = (updates: Partial<AppStateData>) => {
     saveStoredState(updates).then((nxt) => {
       setState(nxt);
-      if (updates.themeMode) {
-        document.body.className = updates.themeMode;
-      }
     });
   };
 
-  const toggleThemeMode = () => {
-    const nextMode = isDark ? "light" : "dark";
-    updateState({ themeMode: nextMode });
-  };
 
   // Timer controls — write to storage directly, the background's
   // chrome.storage.onChanged listener reacts to start/stop the timer.
@@ -630,12 +620,12 @@ export function Popup() {
 
   return (
     <div className={`w-[420px] h-[580px] flex flex-col overflow-hidden select-none font-sans relative ${
-      isDark ? "text-white" : "text-black"
+      "text-white"
     }`}>
       <BackgroundDisplay theme={state.background} />
       {/* Top Header */}
       <header className={`px-4 py-3 flex items-center justify-between z-10 ${
-        isDark ? "bg-neutral-950/80" : "bg-neutral-100/80"
+        "bg-neutral-950/80"
       } backdrop-blur-sm`}>
         <div className="flex items-center gap-2.5">
           <img src="/icons/icon32.png" className="w-7 h-7 rounded-lg object-contain border border-neutral-700 shadow-sm" alt="Focus Logo" />
@@ -652,11 +642,9 @@ export function Popup() {
             onClick={() => setShowFloatingTimerCard(!showFloatingTimerCard)}
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold transition-all shadow-sm ${
               showFloatingTimerCard
-                ? isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
-                : isDark
-                  ? "bg-neutral-900/90 border-neutral-800 text-white hover:bg-neutral-800"
-                  : "bg-white border-neutral-300 text-black hover:bg-neutral-100"
-            } ${state.isActive ? (isDark ? "border-emerald-500/60 ring-1 ring-emerald-500/40" : "border-emerald-600/60 ring-1 ring-emerald-600/40") : ""}`}
+                ? "bg-white text-black border-white"
+                : "bg-neutral-900/90 border-neutral-800 text-white hover:bg-neutral-800"
+            } ${state.isActive ? ("border-emerald-500/60 ring-1 ring-emerald-500/40") : ""}`}
             title="Toggle Floating Timer Controls"
           >
             <span className="text-xs">
@@ -678,25 +666,12 @@ export function Popup() {
             onClick={() => setShowThemePicker(!showThemePicker)}
             className={`p-1.5 rounded-lg border transition-all flex items-center justify-center ${
               showThemePicker
-                ? isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
-                : isDark ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800" : "bg-white border-neutral-300 text-black hover:bg-neutral-100"
+                ? "bg-white text-black border-white"
+                : "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800"
             }`}
             title="Change Background Theme"
           >
             <Paintbrush className="w-4 h-4" />
-          </button>
-
-          {/* Dark / Light Toggle Tooltip without word "monochrome" */}
-          <button
-            onClick={toggleThemeMode}
-            className={`p-1.5 rounded-lg border transition-all flex items-center justify-center ${
-              isDark
-                ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800"
-                : "bg-white border-neutral-300 text-black hover:bg-neutral-100"
-            }`}
-            title={`Switch to ${isDark ? "Light" : "Dark"} Mode`}
-          >
-            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
 
           {/* Info Button */}
@@ -704,8 +679,8 @@ export function Popup() {
             onClick={() => setShowInfoModal(!showInfoModal)}
             className={`p-1.5 rounded-lg border transition-all flex items-center justify-center ${
               showInfoModal
-                ? isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
-                : isDark ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800" : "bg-white border-neutral-300 text-black hover:bg-neutral-100"
+                ? "bg-white text-black border-white"
+                : "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800"
             }`}
             title="Focus Extension Info"
           >
@@ -717,9 +692,7 @@ export function Popup() {
       {/* Floating Timer Card Overlay (Matching Provided Mockups) */}
       {activeTab !== "timer" && showFloatingTimerCard && (
         <div className={`absolute top-14 left-3 right-3 z-50 p-3.5 rounded-2xl border shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 ${
-          isDark
-            ? "bg-neutral-900/95 border-neutral-800 text-white shadow-black/80"
-            : "bg-white/95 border-neutral-200 text-black shadow-neutral-400/50"
+          "bg-neutral-900/95 border-neutral-800 text-white shadow-black/80"
         }`}>
           {/* Header Row: Emoji + Mode Name & Live Timer */}
           <div className="flex items-center justify-between mb-3">
@@ -738,14 +711,14 @@ export function Popup() {
 
           {/* Mode Switcher Buttons Row */}
           <div className={`grid grid-cols-3 gap-1.5 p-1 rounded-xl border mb-3 ${
-            isDark ? "bg-neutral-950/80 border-neutral-800" : "bg-neutral-100 border-neutral-300"
+            "bg-neutral-950/80 border-neutral-800"
           }`}>
             <button
               onClick={() => switchTimerModeAndState("POMODORO", "WORK")}
               className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
                 state.timerState === "WORK"
-                  ? isDark ? "bg-white text-black shadow" : "bg-black text-white shadow"
-                  : isDark ? "text-neutral-400 hover:text-white" : "text-neutral-600 hover:text-black"
+                  ? "bg-white text-black shadow"
+                  : "text-neutral-400 hover:text-white"
               }`}
             >
               <span>🍅</span>
@@ -755,8 +728,8 @@ export function Popup() {
               onClick={() => switchTimerModeAndState("POMODORO", "BREAK")}
               className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
                 state.timerState === "BREAK"
-                  ? isDark ? "bg-white text-black shadow" : "bg-black text-white shadow"
-                  : isDark ? "text-neutral-400 hover:text-white" : "text-neutral-600 hover:text-black"
+                  ? "bg-white text-black shadow"
+                  : "text-neutral-400 hover:text-white"
               }`}
             >
               <span>☕</span>
@@ -766,8 +739,8 @@ export function Popup() {
               onClick={() => switchTimerModeAndState("FLOW", "FLOW")}
               className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
                 state.timerState === "FLOW"
-                  ? isDark ? "bg-white text-black shadow" : "bg-black text-white shadow"
-                  : isDark ? "text-neutral-400 hover:text-white" : "text-neutral-600 hover:text-black"
+                  ? "bg-white text-black shadow"
+                  : "text-neutral-400 hover:text-white"
               }`}
             >
               <span>⏱</span>
@@ -779,7 +752,7 @@ export function Popup() {
           {/* Tag & Group Badge Row */}
           <div className="flex items-center justify-between mb-3 px-0.5">
             <span className={`px-2.5 py-1 rounded-lg text-xs font-bold font-sans border ${
-              isDark ? "bg-neutral-800/80 border-neutral-700 text-neutral-200" : "bg-neutral-200/80 border-neutral-300 text-neutral-800"
+              "bg-neutral-800/80 border-neutral-700 text-neutral-200"
             }`}>
               {selectedTask ? selectedTask.text : (state.sessionName || "Work")}
             </span>
@@ -805,9 +778,7 @@ export function Popup() {
                 setShowFloatingTimerCard(false);
               }}
               className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                isDark
-                  ? "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-white"
-                  : "bg-neutral-100 border-neutral-300 hover:bg-neutral-200 text-black"
+                "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-white"
               }`}
               title="Complete Session"
             >
@@ -822,9 +793,7 @@ export function Popup() {
                 setShowDistractionPicker(true);
               }}
               className={`p-2 rounded-xl border transition-all ${
-                isDark
-                  ? "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-neutral-300"
-                  : "bg-neutral-100 border-neutral-300 hover:bg-neutral-200 text-neutral-700"
+                "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-neutral-300"
               }`}
               title="Log Distraction"
             >
@@ -835,9 +804,7 @@ export function Popup() {
             <button
               onClick={toggleTimer}
               className={`flex-1 py-2 px-3 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all shadow ${
-                isDark
-                  ? "bg-white text-black border-white hover:bg-neutral-200"
-                  : "bg-black text-white border-black hover:bg-neutral-800"
+                "bg-white text-black border-white hover:bg-neutral-200"
               }`}
             >
               {state.isActive ? (
@@ -859,7 +826,7 @@ export function Popup() {
       {/* Background Theme Selector Picker Overlay */}
       {showThemePicker && (
         <div className={`absolute top-14 right-4 z-50 p-3 rounded-xl border shadow-2xl flex flex-col gap-1 text-xs font-mono animate-in fade-in duration-150 ${
-          isDark ? "bg-neutral-950/90 border-neutral-700 text-white" : "bg-white/90 border-neutral-300 text-black"
+          "bg-neutral-950/90 border-neutral-700 text-white"
         } backdrop-blur-md`}>
           <div className="text-[10px] font-bold uppercase opacity-60 px-2 py-1">SELECT BACKGROUND THEME</div>
           {BACKGROUND_THEMES.map((theme) => {
@@ -873,8 +840,8 @@ export function Popup() {
                 }}
                 className={`px-3 py-1.5 rounded-lg text-left font-bold transition-all flex items-center justify-between gap-4 ${
                   isSelected
-                    ? isDark ? "bg-white text-black" : "bg-black text-white"
-                    : isDark ? "hover:bg-neutral-800" : "hover:bg-neutral-100"
+                    ? "bg-white text-black"
+                    : "hover:bg-neutral-800"
                 }`}
               >
                 <span>{theme.name}</span>
@@ -888,7 +855,7 @@ export function Popup() {
       {/* Info Modal Overlay (Removed Manifest V3 text) */}
       {showInfoModal && (
         <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
-          isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
+          "bg-black/95 text-white"
         }`}>
           <div className="flex items-center justify-between pb-3">
             <div className="flex items-center gap-2">
@@ -898,14 +865,14 @@ export function Popup() {
             <button
               onClick={() => setShowInfoModal(false)}
               className={`p-1 rounded-lg border ${
-                isDark ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800" : "bg-neutral-100 border-neutral-300 text-black hover:bg-neutral-200"
+                "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800"
               }`}
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className={`my-auto text-xs leading-relaxed p-4 rounded-xl border text-center font-medium opacity-90 ${isDark ? "border-neutral-800" : "border-neutral-200"}`}>
+          <div className={`my-auto text-xs leading-relaxed p-4 rounded-xl border text-center font-medium opacity-90 ${"border-neutral-800"}`}>
             Focus is a minimalist, monochrome extension designed for distraction-free deep work, pomodoro tracking, and site blocking.
           </div>
 
@@ -913,7 +880,7 @@ export function Popup() {
             <button
               onClick={openGithubLink}
               className={`w-full py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border transition-all ${
-                isDark ? "bg-white text-black border-white hover:bg-neutral-200" : "bg-black text-white border-black hover:bg-neutral-800"
+                "bg-white text-black border-white hover:bg-neutral-200"
               }`}
             >
               <Github className="w-4 h-4" />
@@ -931,7 +898,7 @@ export function Popup() {
       {/* Distraction Picker Modal */}
       {showDistractionPicker && (
         <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
-          isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
+          "bg-black/95 text-white"
         }`}>
           <div className="flex items-center justify-between pb-3">
             <div className="flex items-center gap-2">
@@ -941,7 +908,7 @@ export function Popup() {
             <button
               onClick={() => setShowDistractionPicker(false)}
               className={`p-1 rounded-lg border ${
-                isDark ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800" : "bg-neutral-100 border-neutral-300 text-black hover:bg-neutral-200"
+                "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800"
               }`}
             >
               <X className="w-4 h-4" />
@@ -955,9 +922,7 @@ export function Popup() {
                 key={cat}
                 onClick={() => selectDistractionCategory(cat)}
                 className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold font-mono border transition-all text-left flex items-center justify-between ${
-                  isDark
-                    ? "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-white"
-                    : "bg-neutral-100 border-neutral-300 hover:bg-neutral-200 text-black"
+                  "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-white"
                 }`}
               >
                 <span>{cat}</span>
@@ -971,14 +936,14 @@ export function Popup() {
       {/* Timer Settings Modal */}
       {showSettingsModal && (
         <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
-          isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
+          "bg-black/95 text-white"
         }`}>
           <div className="flex items-center justify-between pb-3">
             <h2 className="text-sm font-bold font-sans">Timer Settings</h2>
             <button
               onClick={() => setShowSettingsModal(false)}
               className={`p-1 rounded-lg border ${
-                isDark ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800" : "bg-neutral-100 border-neutral-300 text-black hover:bg-neutral-200"
+                "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800"
               }`}
             >
               <X className="w-4 h-4" />
@@ -988,7 +953,7 @@ export function Popup() {
           <form onSubmit={saveSettings} className="space-y-3 my-auto">
             {/* Work Duration */}
             <div className={`p-3 rounded-xl border flex items-center justify-between ${
-              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+              "bg-neutral-900 border-neutral-800"
             }`}>
               <span className="text-xs font-bold font-sans">Work Duration</span>
               <div className="flex items-center gap-1.5">
@@ -999,16 +964,16 @@ export function Popup() {
                   value={workMinsInput}
                   onChange={(e) => setWorkMinsInput(parseInt(e.target.value) || 25)}
                   className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none ${
-                    isDark ? "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]" : "bg-white border-neutral-300 text-black [color-scheme:light]"
+                    "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]"
                   }`}
                 />
-                <span className={`text-[10px] font-mono ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>min</span>
+                <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>min</span>
               </div>
             </div>
 
             {/* Break Duration */}
             <div className={`p-3 rounded-xl border flex items-center justify-between ${
-              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+              "bg-neutral-900 border-neutral-800"
             }`}>
               <span className="text-xs font-bold font-sans">Break Duration</span>
               <div className="flex items-center gap-1.5">
@@ -1019,20 +984,20 @@ export function Popup() {
                   value={breakMinsInput}
                   onChange={(e) => setBreakMinsInput(parseInt(e.target.value) || 5)}
                   className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none ${
-                    isDark ? "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]" : "bg-white border-neutral-300 text-black [color-scheme:light]"
+                    "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]"
                   }`}
                 />
-                <span className={`text-[10px] font-mono ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>min</span>
+                <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>min</span>
               </div>
             </div>
 
             {/* Auto-start Break Toggle */}
             <div className={`p-3 rounded-xl border flex items-center justify-between ${
-              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+              "bg-neutral-900 border-neutral-800"
             }`}>
               <div className="flex flex-col">
                 <span className="text-xs font-bold font-sans">Auto-start Break</span>
-                <span className={`text-[10px] font-mono ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
+                <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>
                   Launch break timer immediately after work or flow
                 </span>
               </div>
@@ -1040,15 +1005,15 @@ export function Popup() {
                 onClick={() => setAutoStartBreakInput(!autoStartBreakInput)}
                 className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
                   autoStartBreakInput
-                    ? isDark ? "bg-white" : "bg-black"
-                    : isDark ? "bg-neutral-700" : "bg-neutral-300"
+                    ? "bg-white"
+                    : "bg-neutral-700"
                 }`}
               >
                 <div
                   className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
                     autoStartBreakInput
-                      ? isDark ? "left-[22px] bg-black" : "left-[22px] bg-white"
-                      : isDark ? "left-[2px] bg-neutral-400" : "left-[2px] bg-white"
+                      ? "left-[22px] bg-black"
+                      : "left-[2px] bg-neutral-400"
                   }`}
                 />
               </div>
@@ -1057,7 +1022,7 @@ export function Popup() {
             <button
               type="submit"
               className={`w-full py-3 rounded-xl font-bold text-xs border transition-all mt-4 ${
-                isDark ? "bg-neutral-800 text-white border-neutral-700 hover:bg-neutral-700" : "bg-neutral-100 text-black border-neutral-300 hover:bg-neutral-200"
+                "bg-neutral-800 text-white border-neutral-700 hover:bg-neutral-700"
               }`}
             >
               Confirm Changes
@@ -1079,7 +1044,7 @@ export function Popup() {
       {/* Task Detail View Modal */}
       {selectedTaskDetail && (
         <div className={`absolute inset-0 z-50 p-4 flex flex-col justify-between backdrop-blur-md overflow-y-auto animate-in fade-in duration-200 ${
-          isDark ? "bg-[#0b0b0b] text-white" : "bg-white text-black"
+          "bg-[#0b0b0b] text-white"
         }`}>
           {/* Header */}
           <div className="flex items-center justify-between pb-2">
@@ -1087,7 +1052,7 @@ export function Popup() {
             <button
               onClick={() => setSelectedTaskDetail(null)}
               className={`p-1 rounded-lg transition-colors ${
-                isDark ? "text-neutral-400 hover:text-white hover:bg-neutral-800" : "text-neutral-500 hover:text-black hover:bg-neutral-100"
+                "text-neutral-400 hover:text-white hover:bg-neutral-800"
               }`}
             >
               <X className="w-4 h-4" />
@@ -1107,7 +1072,7 @@ export function Popup() {
                   setSelectedTaskDetail({ ...selectedTaskDetail, text: val });
                 }}
                 className={`w-full bg-transparent text-xl font-extrabold focus:outline-none focus:border-b pb-0.5 ${
-                  isDark ? "text-white focus:border-neutral-700" : "text-black focus:border-neutral-300"
+                  "text-white focus:border-neutral-700"
                 }`}
               />
             </div>
@@ -1116,7 +1081,7 @@ export function Popup() {
             <div className="grid grid-cols-2 gap-3">
               {/* Priority */}
               <div className={`p-3 rounded-2xl border ${
-                isDark ? "bg-neutral-900/60 border-neutral-800/80" : "bg-neutral-100/80 border-neutral-200"
+                "bg-neutral-900/60 border-neutral-800/80"
               }`}>
                 <div className="flex items-center gap-1.5 mb-2">
                   <Sparkles className="w-3.5 h-3.5 text-amber-500" />
@@ -1131,7 +1096,7 @@ export function Popup() {
                     setSelectedTaskDetail({ ...selectedTaskDetail, priority: val });
                   }}
                   className={`w-full p-2.5 rounded-xl border text-xs font-semibold focus:outline-none cursor-pointer ${
-                    isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white" : "bg-white border-neutral-300 text-black"
+                    "bg-neutral-800/80 border-neutral-700/50 text-white"
                   }`}
                 >
                   <option value="low">Low</option>
@@ -1143,7 +1108,7 @@ export function Popup() {
 
               {/* Group */}
               <div className={`p-3 rounded-2xl border ${
-                isDark ? "bg-neutral-900/60 border-neutral-800/80" : "bg-neutral-100/80 border-neutral-200"
+                "bg-neutral-900/60 border-neutral-800/80"
               }`}>
                 <div className="flex items-center gap-1.5 mb-2">
                   <ListFilter className="w-3.5 h-3.5 text-blue-400" />
@@ -1158,7 +1123,7 @@ export function Popup() {
                     setSelectedTaskDetail({ ...selectedTaskDetail, groupId: val });
                   }}
                   className={`w-full p-2.5 rounded-xl border text-xs font-semibold focus:outline-none cursor-pointer ${
-                    isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white" : "bg-white border-neutral-300 text-black"
+                    "bg-neutral-800/80 border-neutral-700/50 text-white"
                   }`}
                 >
                   {state.groups.map(g => (
@@ -1170,7 +1135,7 @@ export function Popup() {
 
             {/* Focus Sessions Card */}
             <div className={`p-3.5 rounded-2xl border ${
-              isDark ? "bg-neutral-900/60 border-neutral-800/80" : "bg-neutral-100/80 border-neutral-200"
+              "bg-neutral-900/60 border-neutral-800/80"
             }`}>
               <div className="flex items-center gap-1.5 mb-2.5">
                 <Clock className="w-3.5 h-3.5 text-emerald-400" />
@@ -1205,7 +1170,7 @@ export function Popup() {
                       if (nextSelected) setSelectedTaskDetail(nextSelected);
                     }}
                     className={`w-full p-2.5 rounded-xl border text-sm font-bold focus:outline-none ${
-                      isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white [color-scheme:dark]" : "bg-white border-neutral-300 text-black [color-scheme:light]"
+                      "bg-neutral-800/80 border-neutral-700/50 text-white [color-scheme:dark]"
                     }`}
                   />
                 </div>
@@ -1238,7 +1203,7 @@ export function Popup() {
                       if (nextSelected) setSelectedTaskDetail(nextSelected);
                     }}
                     className={`w-full p-2.5 rounded-xl border text-sm font-bold focus:outline-none ${
-                      isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white [color-scheme:dark]" : "bg-white border-neutral-300 text-black [color-scheme:light]"
+                      "bg-neutral-800/80 border-neutral-700/50 text-white [color-scheme:dark]"
                     }`}
                   />
                 </div>
@@ -1251,9 +1216,9 @@ export function Popup() {
                 const pct = Math.min(100, Math.round((comp / Math.max(1, est)) * 100));
                 return (
                   <div className="mt-3">
-                    <div className={`w-full h-2 rounded-full overflow-hidden ${isDark ? "bg-neutral-800" : "bg-neutral-200"}`}>
+                    <div className={`w-full h-2 rounded-full overflow-hidden ${"bg-neutral-800"}`}>
                       <div
-                        className={`h-full rounded-full transition-all duration-300 ${isDark ? "bg-white" : "bg-black"}`}
+                        className={`h-full rounded-full transition-all duration-300 ${"bg-white"}`}
                         style={{ width: `${pct}%` }}
                       />
                     </div>
@@ -1267,7 +1232,7 @@ export function Popup() {
 
             {/* Deadline Card */}
             <div className={`p-3.5 rounded-2xl border ${
-              isDark ? "bg-neutral-900/60 border-neutral-800/80" : "bg-neutral-100/80 border-neutral-200"
+              "bg-neutral-900/60 border-neutral-800/80"
             }`}>
               <div className="flex items-center gap-1.5 mb-2.5">
                 <Calendar className="w-3.5 h-3.5 text-indigo-400" />
@@ -1284,7 +1249,7 @@ export function Popup() {
                     setSelectedTaskDetail({ ...selectedTaskDetail, dueDate: val });
                   }}
                   className={`w-full p-2.5 rounded-xl border text-xs font-mono focus:outline-none ${
-                    isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white [color-scheme:dark]" : "bg-white border-neutral-300 text-black [color-scheme:light]"
+                    "bg-neutral-800/80 border-neutral-700/50 text-white [color-scheme:dark]"
                   }`}
                 />
                 <input
@@ -1297,7 +1262,7 @@ export function Popup() {
                     setSelectedTaskDetail({ ...selectedTaskDetail, dueTime: val });
                   }}
                   className={`w-full p-2.5 rounded-xl border text-xs font-mono focus:outline-none ${
-                    isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white [color-scheme:dark]" : "bg-white border-neutral-300 text-black [color-scheme:light]"
+                    "bg-neutral-800/80 border-neutral-700/50 text-white [color-scheme:dark]"
                   }`}
                 />
               </div>
@@ -1305,7 +1270,7 @@ export function Popup() {
 
             {/* Notes Card */}
             <div className={`p-3.5 rounded-2xl border ${
-              isDark ? "bg-neutral-900/60 border-neutral-800/80" : "bg-neutral-100/80 border-neutral-200"
+              "bg-neutral-900/60 border-neutral-800/80"
             }`}>
               <div className="flex items-center gap-1.5 mb-2.5">
                 <FileText className="w-3.5 h-3.5 text-amber-500" />
@@ -1322,14 +1287,14 @@ export function Popup() {
                 }}
                 placeholder="Add notes or details for this task..."
                 className={`w-full p-3 rounded-xl border text-xs focus:outline-none resize-none min-h-[75px] ${
-                  isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white placeholder-neutral-500" : "bg-white border-neutral-300 text-black placeholder-neutral-400"
+                  "bg-neutral-800/80 border-neutral-700/50 text-white placeholder-neutral-500"
                 }`}
               />
             </div>
 
             {/* Subtasks Card */}
             <div className={`p-3.5 rounded-2xl border ${
-              isDark ? "bg-neutral-900/60 border-neutral-800/80" : "bg-neutral-100/80 border-neutral-200"
+              "bg-neutral-900/60 border-neutral-800/80"
             }`}>
               <div className="flex items-center justify-between mb-2.5">
                 <div className="flex items-center gap-1.5">
@@ -1337,7 +1302,7 @@ export function Popup() {
                   <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">SUBTASKS</span>
                 </div>
                 <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
-                  isDark ? "bg-neutral-800/80 border-neutral-700/50 text-neutral-400" : "bg-neutral-200 border-neutral-300 text-neutral-600"
+                  "bg-neutral-800/80 border-neutral-700/50 text-neutral-400"
                 }`}>
                   {(selectedTaskDetail.subtasks || []).filter(s => s.completed).length}/{(selectedTaskDetail.subtasks || []).length}
                 </span>
@@ -1350,7 +1315,7 @@ export function Popup() {
                   onChange={(e) => setNewSubtaskText(e.target.value)}
                   placeholder="Add a subtask..."
                   className={`w-full p-2.5 rounded-xl border text-xs focus:outline-none ${
-                    isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white placeholder-neutral-500" : "bg-white border-neutral-300 text-black placeholder-neutral-400"
+                    "bg-neutral-800/80 border-neutral-700/50 text-white placeholder-neutral-500"
                   }`}
                 />
               </form>
@@ -1358,13 +1323,13 @@ export function Popup() {
               <div className="space-y-1.5 max-h-36 overflow-y-auto">
                 {(selectedTaskDetail.subtasks || []).map(sub => (
                   <div key={sub.id} className={`p-2 rounded-xl border flex items-center justify-between text-xs ${
-                    isDark ? "bg-neutral-800/40 border-neutral-700/40" : "bg-white border-neutral-200"
+                    "bg-neutral-800/40 border-neutral-700/40"
                   }`}>
                     <div className="flex items-center gap-2 flex-1">
                       <button type="button" onClick={() => toggleSubtask(selectedTaskDetail.id, sub.id)}>
                         {sub.completed ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Circle className="w-3.5 h-3.5 text-neutral-500" />}
                       </button>
-                      <span className={sub.completed ? "line-through text-neutral-500" : (isDark ? "text-white" : "text-black")}>{sub.text}</span>
+                      <span className={sub.completed ? "line-through text-neutral-500" : ("text-white")}>{sub.text}</span>
                     </div>
                   </div>
                 ))}
@@ -1377,7 +1342,7 @@ export function Popup() {
             <button
               onClick={() => focusOnTask(selectedTaskDetail)}
               className={`py-2 px-3 rounded-xl font-extrabold text-xs border flex items-center justify-center gap-2 transition-all ${
-                isDark ? "bg-white text-black border-white hover:bg-neutral-200" : "bg-black text-white border-black hover:bg-neutral-800"
+                "bg-white text-black border-white hover:bg-neutral-200"
               }`}
             >
               <Play className="w-3.5 h-3.5 fill-current" />
@@ -1397,7 +1362,7 @@ export function Popup() {
 
       {/* Main Navigation Bar */}
       <nav className={`flex items-center justify-between px-3 py-1.5 z-10 ${
-        isDark ? "bg-neutral-900/60" : "bg-neutral-50"
+        "bg-neutral-900/60"
       }`}>
         {[
           { id: "timer", label: "Timer", icon: TimerIcon },
@@ -1414,26 +1379,22 @@ export function Popup() {
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-lg transition-all relative text-[10px] font-bold ${
                 isActive
-                  ? isDark
-                    ? "bg-white text-black font-extrabold shadow-sm"
-                    : "bg-black text-white font-extrabold shadow-sm"
-                  : isDark
-                    ? "text-neutral-400 hover:text-white hover:bg-neutral-800"
-                    : "text-neutral-600 hover:text-black hover:bg-neutral-200"
+                  ? "bg-white text-black font-extrabold shadow-sm"
+                  : "text-neutral-400 hover:text-white hover:bg-neutral-800"
               }`}
             >
               <div className="relative">
                 <Icon className="w-3.5 h-3.5" />
                 {tab.badge !== undefined && tab.badge > 0 && (
                   <span className={`absolute -top-1.5 -right-2 text-[9px] font-mono font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center ${
-                    isDark ? "bg-neutral-800 text-white border border-neutral-600" : "bg-neutral-300 text-black border border-neutral-400"
+                    "bg-neutral-800 text-white border border-neutral-600"
                   }`}>
                     {tab.badge}
                   </span>
                 )}
                 {tab.activeIndicator && (
                   <span className={`absolute -top-1 -right-1 w-2 h-2 rounded-full animate-ping ${
-                    isDark ? "bg-white" : "bg-black"
+                    "bg-white"
                   }`} />
                 )}
               </div>
@@ -1446,7 +1407,7 @@ export function Popup() {
       {/* Floating Music Player Bar */}
       <div className="px-3 pt-2 z-20">
         <div className={`flex items-center justify-between p-2 px-3 rounded-2xl border shadow-md transition-all ${
-          isDark ? "bg-neutral-900/90 border-neutral-800 text-white" : "bg-white/90 border-neutral-200 text-black"
+          "bg-neutral-900/90 border-neutral-800 text-white"
         }`}>
           <div
             onClick={() => setIsMusicExpanded(!isMusicExpanded)}
@@ -1462,7 +1423,7 @@ export function Popup() {
             <button
               onClick={toggleMusicPlay}
               className={`w-7 h-7 rounded-lg flex items-center justify-center shadow hover:scale-105 active:scale-95 transition-all ${
-                isDark ? "bg-white text-black" : "bg-black text-white"
+                "bg-white text-black"
               }`}
               title={isMusicPlaying ? "Pause" : "Play"}
             >
@@ -1489,7 +1450,7 @@ export function Popup() {
         {/* Expanded Music Player Drawer */}
         {isMusicExpanded && (
           <div className={`mt-1.5 p-3 rounded-xl border shadow-xl transition-all ${
-            isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-white border-neutral-200 text-black"
+            "bg-neutral-900 border-neutral-800 text-white"
           }`}>
             <div className="flex items-center justify-between mb-2 pb-1.5">
               <div className="flex items-center gap-2 text-xs font-bold">
@@ -1508,8 +1469,8 @@ export function Popup() {
               onClick={toggleMusicPlay}
               className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-all ${
                 isMusicPlaying
-                  ? (isDark ? "bg-neutral-800 border-neutral-700" : "bg-neutral-100 border-neutral-300")
-                  : (isDark ? "bg-neutral-950/50 border-neutral-800/50" : "bg-neutral-50 border-neutral-200")
+                  ? ("bg-neutral-800 border-neutral-700")
+                  : ("bg-neutral-950/50 border-neutral-800/50")
               }`}
             >
               <div className="flex items-center gap-2.5">
@@ -1521,9 +1482,9 @@ export function Popup() {
 
               {isMusicPlaying && (
                 <div className="flex items-end gap-0.5 h-3">
-                  <span className={`w-0.5 h-3 rounded-full animate-pulse ${isDark ? "bg-white" : "bg-black"}`} />
-                  <span className={`w-0.5 h-2 rounded-full animate-pulse delay-75 ${isDark ? "bg-white" : "bg-black"}`} />
-                  <span className={`w-0.5 h-3.5 rounded-full animate-pulse delay-150 ${isDark ? "bg-white" : "bg-black"}`} />
+                  <span className={`w-0.5 h-3 rounded-full animate-pulse ${"bg-white"}`} />
+                  <span className={`w-0.5 h-2 rounded-full animate-pulse delay-75 ${"bg-white"}`} />
+                  <span className={`w-0.5 h-3.5 rounded-full animate-pulse delay-150 ${"bg-white"}`} />
                 </div>
               )}
             </div>
@@ -1555,14 +1516,14 @@ export function Popup() {
           <div className="flex flex-col items-center justify-between min-h-full pb-1 pt-1 gap-2">
             {/* 3-Way Mode Switcher (Pomodoro, Break, Flow - No Minutes in Toggle Labels!) */}
             <div className={`flex items-center p-1 rounded-xl border w-full max-w-[320px] ${
-              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-100 border-neutral-300"
+              "bg-neutral-900 border-neutral-800"
             }`}>
               <button
                 onClick={() => switchTimerModeAndState("POMODORO", "WORK")}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   state.timerState === "WORK"
-                    ? isDark ? "bg-white text-black shadow-md" : "bg-black text-white shadow-md"
-                    : isDark ? "text-neutral-400 hover:text-white" : "text-neutral-500 hover:text-black"
+                    ? "bg-white text-black shadow-md"
+                    : "text-neutral-400 hover:text-white"
                 }`}
               >
                 Pomodoro
@@ -1571,8 +1532,8 @@ export function Popup() {
                 onClick={() => switchTimerModeAndState("POMODORO", "BREAK")}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   state.timerState === "BREAK"
-                    ? isDark ? "bg-white text-black shadow-md" : "bg-black text-white shadow-md"
-                    : isDark ? "text-neutral-400 hover:text-white" : "text-neutral-500 hover:text-black"
+                    ? "bg-white text-black shadow-md"
+                    : "text-neutral-400 hover:text-white"
                 }`}
               >
                 Break
@@ -1581,8 +1542,8 @@ export function Popup() {
                 onClick={() => switchTimerModeAndState("FLOW", "FLOW")}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
                   state.timerState === "FLOW"
-                    ? isDark ? "bg-white text-black shadow-md" : "bg-black text-white shadow-md"
-                    : isDark ? "text-neutral-400 hover:text-white" : "text-neutral-500 hover:text-black"
+                    ? "bg-white text-black shadow-md"
+                    : "text-neutral-400 hover:text-white"
                 }`}
               >
                 Flow
@@ -1601,7 +1562,7 @@ export function Popup() {
               {/* Task Selector Dropdown Menu (Pops UPWARDS so Timer Controls below remain visible!) */}
               {showTaskDropdown && (
                 <div className={`absolute bottom-full left-0 right-0 mb-1.5 z-50 p-2 rounded-2xl border shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-1 ${
-                  isDark ? "bg-neutral-900/95 border-neutral-800 text-white" : "bg-white/95 border-neutral-200 text-black"
+                  "bg-neutral-900/95 border-neutral-800 text-white"
                 }`}>
                   <div className="flex items-center justify-between px-2 py-1">
                     <span className="text-[10px] font-mono font-bold uppercase opacity-60">FOCUS TOPIC</span>
@@ -1623,20 +1584,20 @@ export function Popup() {
                     }}
                     className={`w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all ${
                       !selectedTask
-                        ? isDark ? "bg-white/10 text-white font-bold" : "bg-black/5 text-black font-bold"
-                        : isDark ? "hover:bg-neutral-800/80 text-neutral-300" : "hover:bg-neutral-100 text-neutral-700"
+                        ? "bg-white/10 text-white font-bold"
+                        : "hover:bg-neutral-800/80 text-neutral-300"
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <Edit3 className={`w-3.5 h-3.5 shrink-0 ${isDark ? "text-white" : "text-black"}`} />
+                      <Edit3 className={`w-3.5 h-3.5 shrink-0 ${"text-white"}`} />
                       <div className="flex flex-col">
                         <span className="leading-tight">Custom Focus</span>
-                        <span className={`text-[10px] font-mono ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
+                        <span className={`text-[10px] font-mono ${"text-neutral-400"}`}>
                           Type custom goal
                         </span>
                       </div>
                     </div>
-                    {!selectedTask && <span className={`text-xs font-bold ${isDark ? "text-white" : "text-black"}`}>✓</span>}
+                    {!selectedTask && <span className={`text-xs font-bold ${"text-white"}`}>✓</span>}
                   </button>
 
 
@@ -1668,12 +1629,12 @@ export function Popup() {
                             }}
                             className={`w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all ${
                               selectedTask?.id === task.id
-                                ? isDark ? "bg-white/10 text-white font-bold" : "bg-black/5 text-black font-bold"
-                                : isDark ? "hover:bg-neutral-800/80 text-neutral-300" : "hover:bg-neutral-100 text-neutral-700"
+                                ? "bg-white/10 text-white font-bold"
+                                : "hover:bg-neutral-800/80 text-neutral-300"
                             }`}
                           >
                             <div className="flex items-start gap-2 min-w-0 flex-1 pr-2">
-                              <ListTodo className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${isDark ? "text-white" : "text-black"}`} />
+                              <ListTodo className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${"text-white"}`} />
                               <div className="flex flex-col min-w-0 flex-1 gap-0.5">
                                 <span className="truncate">{task.text}</span>
                                 {hasMetadata && (
@@ -1701,7 +1662,7 @@ export function Popup() {
                               </div>
                             </div>
                             {selectedTask?.id === task.id && (
-                              <span className={`text-xs font-bold shrink-0 ${isDark ? "text-white" : "text-black"}`}>✓</span>
+                              <span className={`text-xs font-bold shrink-0 ${"text-white"}`}>✓</span>
                             )}
                           </button>
                         );
@@ -1717,19 +1678,17 @@ export function Popup() {
                   type="button"
                   onClick={() => setShowTaskDropdown(!showTaskDropdown)}
                   className={`w-full px-4 py-3 rounded-2xl border transition-all flex flex-col items-center justify-center gap-1 shadow-sm ${
-                    isDark
-                      ? "bg-neutral-900/90 border-neutral-800 hover:border-neutral-700 text-white"
-                      : "bg-neutral-100/90 border-neutral-300 hover:border-neutral-400 text-black"
+                    "bg-neutral-900/90 border-neutral-800 hover:border-neutral-700 text-white"
                   }`}
                   title="Click to select another task or custom focus"
                 >
                   <div className="flex items-center justify-center gap-2 max-w-full">
-                    <ListTodo className={`w-4 h-4 shrink-0 ${isDark ? "text-white" : "text-black"}`} />
+                    <ListTodo className={`w-4 h-4 shrink-0 ${"text-white"}`} />
                     <span className="font-semibold text-sm tracking-tight truncate max-w-[200px]">
                       {selectedTask.text}
                     </span>
                   </div>
-                  <ChevronDown className={`w-3.5 h-3.5 opacity-60 transition-transform duration-200 ${isDark ? "text-white" : "text-black"}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 opacity-60 transition-transform duration-200 ${"text-white"}`} />
                 </button>
               ) : (
                 /* Custom Focus Mode (Editable Input Mode) */
@@ -1741,20 +1700,18 @@ export function Popup() {
                     onKeyDown={handleGoalKeyDown}
                     placeholder="Session Goal (Press Enter to create task)..."
                     className={`w-full pl-3 pr-9 py-2 rounded-xl text-xs text-center font-medium border focus:outline-none ${
-                      isDark
-                        ? "bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-white"
-                        : "bg-neutral-100 border-neutral-300 text-black placeholder-neutral-400 focus:border-black"
+                      "bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-white"
                     }`}
                   />
                   <button
                     type="button"
                     onClick={() => setShowTaskDropdown(!showTaskDropdown)}
                     className={`absolute right-2 p-1 rounded-lg transition-colors ${
-                      isDark ? "hover:bg-neutral-800 text-neutral-400 hover:text-white" : "hover:bg-neutral-200 text-neutral-600 hover:text-black"
+                      "hover:bg-neutral-800 text-neutral-400 hover:text-white"
                     }`}
                     title="Select from your tasks"
                   >
-                    <ListTodo className={`w-4 h-4 ${isDark ? "text-white" : "text-black"}`} />
+                    <ListTodo className={`w-4 h-4 ${"text-white"}`} />
                   </button>
                 </div>
               )}
@@ -1763,7 +1720,7 @@ export function Popup() {
             {/* Subtasks Section for Selected Task */}
             {selectedTask && (selectedTask.subtasks || []).length > 0 && (
               <div className={`w-full max-w-[280px] p-2.5 mb-2 rounded-xl border flex flex-col gap-1.5 ${
-                isDark ? "bg-neutral-900/90 border-neutral-800" : "bg-neutral-100/90 border-neutral-300"
+                "bg-neutral-900/90 border-neutral-800"
               }`}>
                 <div className="flex items-center justify-between text-[11px] font-mono font-bold opacity-70">
                   <span>SUBTASKS</span>
@@ -1790,9 +1747,7 @@ export function Popup() {
               <button
                 onClick={() => setShowDistractionPicker(true)}
                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
-                  isDark
-                    ? "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
-                    : "bg-neutral-100 border-neutral-300 hover:bg-neutral-200 text-neutral-700"
+                  "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
                 }`}
                 title="Log Distraction"
               >
@@ -1803,9 +1758,7 @@ export function Popup() {
               <button
                 onClick={resetTimer}
                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
-                  isDark
-                    ? "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
-                    : "bg-neutral-100 border-neutral-300 hover:bg-neutral-200 text-neutral-700"
+                  "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
                 }`}
                 title="Reset Timer"
               >
@@ -1816,9 +1769,7 @@ export function Popup() {
               <button
                 onClick={toggleTimer}
                 className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold transition-all shadow-lg active:scale-95 ${
-                  isDark
-                    ? "bg-white text-black hover:bg-neutral-200"
-                    : "bg-black text-white hover:bg-neutral-800"
+                  "bg-white text-black hover:bg-neutral-200"
                 }`}
               >
                 {state.isActive ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
@@ -1828,9 +1779,7 @@ export function Popup() {
               <button
                 onClick={completeSession}
                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
-                  isDark
-                    ? "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
-                    : "bg-neutral-100 border-neutral-300 hover:bg-neutral-200 text-neutral-700"
+                  "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
                 }`}
                 title="Complete Session"
               >
@@ -1841,9 +1790,7 @@ export function Popup() {
               <button
                 onClick={() => setShowSettingsModal(true)}
                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
-                  isDark
-                    ? "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
-                    : "bg-neutral-100 border-neutral-300 hover:bg-neutral-200 text-neutral-700"
+                  "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
                 }`}
                 title="Timer Settings"
               >
@@ -1865,8 +1812,8 @@ export function Popup() {
                     onClick={() => setActiveGroupId(group.id)}
                     className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold transition-all whitespace-nowrap ${
                       activeGroupId === group.id
-                        ? isDark ? "bg-white text-black" : "bg-black text-white"
-                        : isDark ? "bg-neutral-900 text-neutral-400 border border-neutral-800" : "bg-neutral-100 text-neutral-600 border border-neutral-300"
+                        ? "bg-white text-black"
+                        : "bg-neutral-900 text-neutral-400 border border-neutral-800"
                     }`}
                   >
                     {group.name}
@@ -1877,7 +1824,7 @@ export function Popup() {
               <button
                 onClick={() => setShowAddGroupInput(!showAddGroupInput)}
                 className={`p-1 rounded-lg border text-xs font-mono font-bold flex-shrink-0 ${
-                  isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                  "bg-neutral-900 border-neutral-800 text-white"
                 }`}
                 title="Add Custom Group"
               >
@@ -1893,11 +1840,11 @@ export function Popup() {
                   onChange={(e) => setNewGroupName(e.target.value)}
                   placeholder="New group name..."
                   className={`flex-1 px-3 py-1.5 rounded-xl text-xs font-mono border focus:outline-none ${
-                    isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                    "bg-neutral-900 border-neutral-800 text-white"
                   }`}
                 />
                 <button type="submit" className={`px-3 py-1.5 rounded-xl font-bold text-xs border ${
-                  isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
+                  "bg-white text-black border-white"
                 }`}>
                   Create
                 </button>
@@ -1912,15 +1859,13 @@ export function Popup() {
                 onChange={(e) => setNewTaskText(e.target.value)}
                 placeholder="Add new task..."
                 className={`flex-1 px-3 py-2 rounded-xl text-xs border focus:outline-none ${
-                  isDark
-                    ? "bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-white"
-                    : "bg-neutral-100 border-neutral-300 text-black placeholder-neutral-400 focus:border-black"
+                  "bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-white"
                 }`}
               />
               <button
                 type="submit"
                 className={`px-4 py-2 rounded-xl font-bold transition-all text-xs ${
-                  isDark ? "bg-white text-black hover:bg-neutral-200" : "bg-black text-white hover:bg-neutral-800"
+                  "bg-white text-black hover:bg-neutral-200"
                 }`}
               >
                 Add
@@ -1929,7 +1874,7 @@ export function Popup() {
 
             <div className="flex-1 overflow-y-auto space-y-2 pr-1">
               {state.todos.filter(t => (t.groupId || "current") === activeGroupId).length === 0 ? (
-                <div className={`text-center py-12 text-xs font-mono ${isDark ? "text-neutral-600" : "text-neutral-400"}`}>
+                <div className={`text-center py-12 text-xs font-mono ${"text-neutral-600"}`}>
                   NO TASKS IN THIS GROUP. ADD ONE ABOVE.
                 </div>
               ) : (
@@ -1946,16 +1891,16 @@ export function Popup() {
                         key={todo.id}
                         className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 transition-all ${
                           todo.completed
-                            ? isDark ? "bg-neutral-950 border-neutral-900 opacity-50 text-neutral-500" : "bg-neutral-100 border-neutral-200 opacity-50 text-neutral-400"
-                            : isDark ? "bg-neutral-900 border-neutral-800 hover:border-neutral-700" : "bg-neutral-50 border-neutral-300 hover:border-neutral-400"
+                            ? "bg-neutral-950 border-neutral-900 opacity-50 text-neutral-500"
+                            : "bg-neutral-900 border-neutral-800 hover:border-neutral-700"
                         }`}
                       >
                         <div className="flex items-start gap-2.5 flex-1 min-w-0">
                           <button onClick={() => toggleTodo(todo.id)} className="flex-shrink-0 mt-0.5">
                             {todo.completed ? (
-                              <CheckCircle2 className={`w-4 h-4 ${isDark ? "text-white" : "text-black"}`} />
+                              <CheckCircle2 className={`w-4 h-4 ${"text-white"}`} />
                             ) : (
-                              <Circle className={`w-4 h-4 ${isDark ? "text-neutral-500" : "text-neutral-400"}`} />
+                              <Circle className={`w-4 h-4 ${"text-neutral-500"}`} />
                             )}
                           </button>
                           
@@ -1963,7 +1908,7 @@ export function Popup() {
                             <span
                               onClick={() => setSelectedTaskDetail(todo)}
                               className={`text-xs font-bold truncate cursor-pointer hover:underline ${
-                                todo.completed ? "line-through opacity-70" : isDark ? "text-white" : "text-neutral-900"
+                                todo.completed ? "line-through opacity-70" : "text-white"
                               }`}
                             >
                               {todo.text}
@@ -1999,15 +1944,15 @@ export function Popup() {
                             onClick={() => focusOnTask(todo)}
                             className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold flex items-center gap-1 border ${
                               state.selectedTodoId === todo.id
-                                ? isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
-                                : isDark ? "bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700" : "bg-neutral-200 text-neutral-800 border-neutral-300 hover:bg-neutral-300"
+                                ? "bg-white text-black border-white"
+                                : "bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700"
                             }`}
                           >
                             <span>Focus</span>
                             <ArrowRight className="w-2.5 h-2.5" />
                           </button>
 
-                          <button onClick={() => setSelectedTaskDetail(todo)} className={`p-1 ${isDark ? "text-neutral-500 hover:text-white" : "text-neutral-400 hover:text-black"}`}>
+                          <button onClick={() => setSelectedTaskDetail(todo)} className={`p-1 ${"text-neutral-500 hover:text-white"}`}>
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
                         </div>
@@ -2024,8 +1969,8 @@ export function Popup() {
           <div className="flex flex-col gap-3 h-full">
             <div className={`p-3 rounded-xl border flex items-center justify-between ${
               state.shield.enabled
-                ? isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
-                : isDark ? "bg-neutral-950 border-neutral-800 text-neutral-500" : "bg-neutral-50 border-neutral-200 text-neutral-400"
+                ? "bg-neutral-900 border-neutral-800 text-white"
+                : "bg-neutral-950 border-neutral-800 text-neutral-500"
             }`}>
               <div className="flex items-center gap-2.5">
                 {state.shield.enabled ? <ShieldCheck className="w-5 h-5" /> : <ShieldAlert className="w-5 h-5" />}
@@ -2045,8 +1990,8 @@ export function Popup() {
                 onClick={() => updateState({ shield: { ...state.shield, enabled: !state.shield.enabled } })}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
                   state.shield.enabled
-                    ? isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
-                    : isDark ? "bg-neutral-800 text-neutral-300 border-neutral-700" : "bg-neutral-200 text-neutral-700 border-neutral-300"
+                    ? "bg-white text-black border-white"
+                    : "bg-neutral-800 text-neutral-300 border-neutral-700"
                 }`}
               >
                 {state.shield.enabled ? "ENABLED" : "ENABLE"}
@@ -2060,15 +2005,13 @@ export function Popup() {
                 onChange={(e) => setNewSiteUrl(e.target.value)}
                 placeholder="Block domain (e.g. twitter.com)..."
                 className={`flex-1 px-3 py-2 rounded-xl text-xs font-mono border focus:outline-none ${
-                  isDark
-                    ? "bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-white"
-                    : "bg-neutral-100 border-neutral-300 text-black placeholder-neutral-400 focus:border-black"
+                  "bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-white"
                 }`}
               />
               <button
                 type="submit"
                 className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
-                  isDark ? "bg-neutral-800 border-neutral-700 text-white hover:bg-neutral-700" : "bg-neutral-200 border-neutral-300 text-black hover:bg-neutral-300"
+                  "bg-neutral-800 border-neutral-700 text-white hover:bg-neutral-700"
                 }`}
               >
                 Block
@@ -2076,18 +2019,18 @@ export function Popup() {
             </form>
 
             <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
-              <div className={`text-[10px] font-mono uppercase tracking-wider mb-1 ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
+              <div className={`text-[10px] font-mono uppercase tracking-wider mb-1 ${"text-neutral-500"}`}>
                 Blacklisted Domains ({state.shield.blockedSites.length})
               </div>
               {state.shield.blockedSites.map((site) => (
                 <div
                   key={site}
                   className={`px-3 py-2 rounded-xl border flex items-center justify-between text-xs font-mono ${
-                    isDark ? "bg-neutral-900/60 border-neutral-800 text-neutral-300" : "bg-neutral-50 border-neutral-200 text-neutral-700"
+                    "bg-neutral-900/60 border-neutral-800 text-neutral-300"
                   }`}
                 >
                   <span className="text-[11px]">{site}</span>
-                  <button onClick={() => removeBlockedSite(site)} className={`p-1 ${isDark ? "text-neutral-500 hover:text-white" : "text-neutral-400 hover:text-black"}`}>
+                  <button onClick={() => removeBlockedSite(site)} className={`p-1 ${"text-neutral-500 hover:text-white"}`}>
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -2103,7 +2046,6 @@ export function Popup() {
             onSetMoodForDate={setMoodForDate}
             onCycleMoodForDate={cycleMoodForDate}
             onDeleteMoodNote={deleteMoodNote}
-            isDark={isDark}
           />
         )}
 
@@ -2121,12 +2063,12 @@ export function Popup() {
 
               return (
                 <div className={`p-3 rounded-xl border flex flex-col gap-2.5 ${
-                  isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+                  "bg-neutral-900 border-neutral-800"
                 }`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className={`p-1.5 rounded-lg border flex items-center justify-center ${
-                        isDark ? "bg-neutral-800 border-neutral-700 text-white" : "bg-neutral-200 border-neutral-300 text-black"
+                        "bg-neutral-800 border-neutral-700 text-white"
                       }`}>
                         <Clock className="w-3.5 h-3.5" />
                       </div>
@@ -2147,10 +2089,10 @@ export function Popup() {
             {/* Top 3 Metric Cards */}
             <div className="grid grid-cols-3 gap-2">
               <div className={`p-3 rounded-xl border flex flex-col items-center text-center ${
-                isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+                "bg-neutral-900 border-neutral-800"
               }`}>
                 <div className={`w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 ${
-                  isDark ? "bg-neutral-800 border-neutral-700 text-white" : "bg-neutral-200 border-neutral-300 text-black"
+                  "bg-neutral-800 border-neutral-700 text-white"
                 }`}>
                   <Activity className="w-4 h-4" />
                 </div>
@@ -2159,7 +2101,7 @@ export function Popup() {
               </div>
 
               <div className={`p-3 rounded-xl border flex flex-col items-center text-center ${
-                isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+                "bg-neutral-900 border-neutral-800"
               }`}>
                 <div className="w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 bg-emerald-900/50 border-emerald-700 text-emerald-400">
                   <CheckCircle className="w-4 h-4" />
@@ -2169,7 +2111,7 @@ export function Popup() {
               </div>
 
               <div className={`p-3 rounded-xl border flex flex-col items-center text-center ${
-                isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+                "bg-neutral-900 border-neutral-800"
               }`}>
                 <div className="w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 bg-blue-900/50 border-blue-700 text-blue-400">
                   <ListTodo className="w-4 h-4" />
@@ -2182,7 +2124,7 @@ export function Popup() {
             {/* Longest Streak & Completion Rate */}
             <div className="grid grid-cols-2 gap-2">
               <div className={`p-3 rounded-xl border flex items-start gap-3 ${
-                isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+                "bg-neutral-900 border-neutral-800"
               }`}>
                 <div className="w-8 h-8 rounded-full bg-amber-900/50 border border-amber-700 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <Flame className="w-4 h-4 text-amber-400" />
@@ -2190,18 +2132,18 @@ export function Popup() {
                 <div className="flex flex-col">
                   <span className="text-xs font-bold font-sans mb-1">Longest Streak</span>
                   <div className="text-[11px] font-mono">
-                    <span className={isDark ? "text-neutral-400" : "text-neutral-600"}>Current</span>
+                    <span className={"text-neutral-400"}>Current</span>
                     <span className="font-bold ml-2">{state.stats.streakDays} Days</span>
                   </div>
                   <div className="text-[11px] font-mono">
-                    <span className={isDark ? "text-neutral-400" : "text-neutral-600"}>Best</span>
+                    <span className={"text-neutral-400"}>Best</span>
                     <span className="font-bold ml-2">{state.stats.longestStreak} Days</span>
                   </div>
                 </div>
               </div>
 
               <div className={`p-3 rounded-xl border flex items-start gap-3 ${
-                isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+                "bg-neutral-900 border-neutral-800"
               }`}>
                 <div className="w-8 h-8 rounded-full bg-emerald-900/50 border border-emerald-700 flex items-center justify-center flex-shrink-0 mt-0.5">
                   <Target className="w-4 h-4 text-emerald-400" />
@@ -2211,7 +2153,7 @@ export function Popup() {
                   <span className="text-lg font-extrabold font-mono">{taskDoneRatePercent}%</span>
                   <div className="flex items-center gap-1 text-[10px] font-mono">
                     <TaskDone className="w-3 h-3 text-emerald-400" />
-                    <span className={isDark ? "text-neutral-400" : "text-neutral-600"}>Tasks Finished</span>
+                    <span className={"text-neutral-400"}>Tasks Finished</span>
                   </div>
                 </div>
               </div>
@@ -2219,7 +2161,7 @@ export function Popup() {
 
             {/* Weekly Focus Trend Chart */}
             <div className={`p-3 rounded-xl border ${
-              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+              "bg-neutral-900 border-neutral-800"
             }`}>
               <div className="text-[10px] font-mono uppercase tracking-wider font-bold mb-3">FOCUS TREND</div>
               <div className="flex items-end justify-between gap-2 h-24 pt-2">
@@ -2233,7 +2175,7 @@ export function Popup() {
                       className="flex-1 flex flex-col items-center gap-1 h-full justify-end group relative cursor-pointer"
                     >
                       <div className={`absolute -top-7 px-2 py-1 rounded text-[9px] font-mono font-bold border pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap shadow-lg ${
-                        isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
+                        "bg-white text-black border-white"
                       }`}>
                         {day}: {minsLogged} mins
                       </div>
@@ -2242,8 +2184,8 @@ export function Popup() {
                       <div
                         className={`w-full rounded-t transition-all duration-300 ${
                           minsLogged > 0
-                            ? isDark ? "bg-white group-hover:bg-neutral-300" : "bg-black group-hover:bg-neutral-700"
-                            : isDark ? "bg-neutral-800" : "bg-neutral-200"
+                            ? "bg-white group-hover:bg-neutral-300"
+                            : "bg-neutral-800"
                         }`}
                         style={{ height: `${heightPercent}%` }}
                       />
@@ -2256,7 +2198,7 @@ export function Popup() {
 
             {/* Distraction Analysis Section */}
             <div className={`p-3 rounded-xl border ${
-              isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+              "bg-neutral-900 border-neutral-800"
             }`}>
               <div className="flex items-center gap-2 mb-2">
                 <div className="w-7 h-7 rounded-lg bg-rose-900/50 border border-rose-700 flex items-center justify-center">
@@ -2273,7 +2215,7 @@ export function Popup() {
                     const mostCommon = Object.entries(distractionCounts).sort((a, b) => b[1] - a[1])[0];
                     const mostCommonPercent = mostCommon ? Math.round((mostCommon[1] / totalDistractions) * 100) : 0;
                     return (
-                      <div className={`text-[11px] font-mono ${isDark ? "text-neutral-400" : "text-neutral-600"}`}>
+                      <div className={`text-[11px] font-mono ${"text-neutral-400"}`}>
                         Most common: <span className="font-bold text-white">{mostCommon?.[0]}</span> ({mostCommonPercent}%)
                       </div>
                     );
@@ -2290,7 +2232,7 @@ export function Popup() {
                             <span className="opacity-70">{count} ({percent}%)</span>
                           </div>
                           <div className={`w-full h-1.5 rounded-full overflow-hidden ${
-                            isDark ? "bg-neutral-800" : "bg-neutral-200"
+                            "bg-neutral-800"
                           }`}>
                             <div
                               className="h-full rounded-full bg-fuchsia-500 transition-all duration-500"

@@ -1,7 +1,7 @@
 export type TimerMode = "POMODORO" | "STOPWATCH" | "FLOW";
 export type TimerState = "WORK" | "BREAK" | "FLOW";
 export type PriorityType = "low" | "medium" | "high" | "urgent";
-export type ThemeMode = "dark" | "light";
+export type ThemeMode = "dark";
 export type BackgroundTheme = "dark" | "default" | "gradient" | "mountain" | "library" | "cafe" | "anime-room";
 
 export interface SubTask {
