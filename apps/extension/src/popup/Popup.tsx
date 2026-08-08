@@ -2164,7 +2164,7 @@ export function Popup() {
             }`}>
               <div className="text-[10px] font-mono uppercase tracking-wider font-bold mb-3">FOCUS TREND</div>
               <div className="flex items-end justify-between gap-2 h-24 pt-2">
-                {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => {
+                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => {
                   const minsLogged = state.stats.weeklyMinutes[day] || 0;
                   const maxMins = 120;
                   const heightPercent = minsLogged > 0 ? Math.min(100, Math.max(10, Math.round((minsLogged / maxMins) * 100))) : 4;
