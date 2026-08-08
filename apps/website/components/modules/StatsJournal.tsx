@@ -252,7 +252,7 @@ export function StatsJournal() {
                 {/* Longest Streak */}
                 <Card className="p-4 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-3 rounded-[var(--radius)]">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-center justify-center shrink-0 shadow-sm">
+                        <div className="w-9 h-9 rounded-[var(--radius)] bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-center justify-center shrink-0 shadow-sm">
                             <Flame className="w-4 h-4 fill-amber-500/20" />
                         </div>
                         <h3 className="text-sm font-bold tracking-tight text-foreground">Longest Streak</h3>
@@ -272,7 +272,7 @@ export function StatsJournal() {
                 {/* Completion Rate */}
                 <Card className="p-4 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-3 rounded-[var(--radius)]">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 flex items-center justify-center shrink-0 shadow-sm">
+                        <div className="w-9 h-9 rounded-[var(--radius)] bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 flex items-center justify-center shrink-0 shadow-sm">
                             <Target className="w-4 h-4" />
                         </div>
                         <h3 className="text-sm font-bold tracking-tight text-foreground">Completion Rate</h3>
