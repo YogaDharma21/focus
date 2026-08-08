@@ -42,6 +42,9 @@ import {
   Sparkles,
   ListFilter,
   FileText,
+  Coffee,
+  Zap,
+  Check,
 } from "lucide-react";
 import { format } from "date-fns";
 import { MoodTracker } from "./components/MoodTracker";
@@ -647,8 +650,8 @@ export function Popup() {
             } ${state.isActive ? ("border-emerald-500/60 ring-1 ring-emerald-500/40") : ""}`}
             title="Toggle Floating Timer Controls"
           >
-            <span className="text-xs">
-              {state.timerState === "WORK" ? "🍅" : state.timerState === "BREAK" ? "☕" : "⏱"}
+            <span className="flex items-center">
+              {state.timerState === "WORK" ? <TimerIcon className="w-3 h-3" /> : state.timerState === "BREAK" ? <Coffee className="w-3 h-3" /> : <Zap className="w-3 h-3" />}
             </span>
             <span className="font-extrabold font-mono text-[11px] tracking-tight">
               {timeFormatted}
@@ -697,8 +700,8 @@ export function Popup() {
           {/* Header Row: Emoji + Mode Name & Live Timer */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <span className="text-base">
-                {state.timerState === "WORK" ? "🍅" : state.timerState === "BREAK" ? "☕" : "⏱"}
+              <span className="flex items-center">
+                {state.timerState === "WORK" ? <TimerIcon className="w-4 h-4" /> : state.timerState === "BREAK" ? <Coffee className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
               </span>
               <span className="text-sm font-bold font-sans">
                 {state.timerState === "WORK" ? "Pomodoro" : state.timerState === "BREAK" ? "Break" : "Flow"}
@@ -721,7 +724,7 @@ export function Popup() {
                   : "text-neutral-400 hover:text-white"
               }`}
             >
-              <span>🍅</span>
+              <TimerIcon className="w-3 h-3" />
               <span>Pomodoro</span>
             </button>
             <button
@@ -732,7 +735,7 @@ export function Popup() {
                   : "text-neutral-400 hover:text-white"
               }`}
             >
-              <span>☕</span>
+              <Coffee className="w-3 h-3" />
               <span>Break</span>
             </button>
             <button
@@ -743,7 +746,7 @@ export function Popup() {
                   : "text-neutral-400 hover:text-white"
               }`}
             >
-              <span>⏱</span>
+              <Zap className="w-3 h-3" />
               <span>Flow</span>
             </button>
           </div>
@@ -845,7 +848,7 @@ export function Popup() {
                 }`}
               >
                 <span>{theme.name}</span>
-                {isSelected && <span className="text-[10px]">✓</span>}
+                {isSelected && <Check className="w-3 h-3" />}
               </button>
             );
           })}
@@ -1571,7 +1574,7 @@ export function Popup() {
                       onClick={() => setShowTaskDropdown(false)}
                       className="text-[10px] font-mono opacity-50 hover:opacity-100"
                     >
-                      ✕
+                      <X className="w-3 h-3" />
                     </button>
                   </div>
 
@@ -1597,7 +1600,7 @@ export function Popup() {
                         </span>
                       </div>
                     </div>
-                    {!selectedTask && <span className={`text-xs font-bold ${"text-white"}`}>✓</span>}
+                    {!selectedTask && <Check className="w-3.5 h-3.5" />}
                   </button>
 
 
@@ -1662,7 +1665,7 @@ export function Popup() {
                               </div>
                             </div>
                             {selectedTask?.id === task.id && (
-                              <span className={`text-xs font-bold shrink-0 ${"text-white"}`}>✓</span>
+                              <Check className="w-3.5 h-3.5 shrink-0" />
                             )}
                           </button>
                         );
