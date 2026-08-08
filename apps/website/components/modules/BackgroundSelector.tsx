@@ -8,7 +8,6 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
 import { Palette } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
@@ -54,14 +53,14 @@ export function BackgroundSelector() {
     return (
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button
-                    variant="ghost"
-                    size="icon"
-                    className="text-muted-foreground hover:text-foreground hover:bg-white/5"
+                <button
+                    className="flex flex-col items-center justify-center w-12 h-11 sm:w-16 sm:h-14 rounded-[var(--radius)] transition-all duration-300 ease-out group text-muted-foreground hover:text-foreground hover:bg-white/5"
                     title="Change Background"
                 >
-                    <Palette className="w-5 h-5" />
-                </Button>
+                    <span className="transform transition-transform duration-300 group-hover:scale-105">
+                        <Palette className="w-5 h-5 sm:w-6 sm:h-6" />
+                    </span>
+                </button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
