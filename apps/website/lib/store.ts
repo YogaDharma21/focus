@@ -109,6 +109,7 @@ export interface TodoItem {
     link?: string;
     groupId?: string;
     completedAt?: string;
+    notes?: string;
 }
 
 export interface MoodNote {
