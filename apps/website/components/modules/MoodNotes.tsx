@@ -6,7 +6,7 @@ import { useAppStore } from "@/lib/store";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Trash2, NotebookPen, Smile, Sparkles, Meh, Frown, Angry, Moon } from "lucide-react";
+import { Trash2, NotebookPen, Smile, Sparkles, Meh, Frown, Zap, Moon } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -15,7 +15,7 @@ const MOOD_ICONS: Record<string, React.ReactNode> = {
     Excited: <Sparkles className="w-6 h-6" />,
     Okay: <Meh className="w-6 h-6" />,
     Sad: <Frown className="w-6 h-6" />,
-    Stressed: <Angry className="w-6 h-6" />,
+    Stressed: <Zap className="w-6 h-6" />,
     Tired: <Moon className="w-6 h-6" />,
 };
 
