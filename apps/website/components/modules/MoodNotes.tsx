@@ -49,7 +49,7 @@ export function MoodNotes() {
     const pastNotes = moodNotes.filter((n) => !isToday(new Date(n.date))).reverse();
 
     return (
-        <div className="h-full flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+        <div className="h-full flex flex-col gap-6">
             <Card className="p-6 bg-card/50 border-0 shadow-md backdrop-blur-sm rounded-[var(--radius)] space-y-4">
                 <div className="flex items-center gap-2">
                     <NotebookPen className="w-4 h-4 text-primary" />
