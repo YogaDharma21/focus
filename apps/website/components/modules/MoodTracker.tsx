@@ -6,7 +6,7 @@ import { useAppStore } from "@/lib/store";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Smile, Meh, Moon, Frown, Angry, ChevronLeft, ChevronRight, Sparkles, Trash2, Calendar as CalendarIcon, CalendarDays } from "lucide-react";
+import { Smile, Meh, Moon, Frown, Zap, ChevronLeft, ChevronRight, Sparkles, Trash2, Calendar as CalendarIcon, CalendarDays } from "lucide-react";
 import { format, isValid, getDaysInMonth } from "date-fns";
 import { cn } from "@/lib/utils";
 
@@ -72,7 +72,7 @@ export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
     stressed: {
         key: "stressed",
         label: "Stressed",
-        icon: <Angry className="w-6 h-6" />,
+        icon: <Zap className="w-6 h-6" />,
         color: "#1e293b", // slate-800 (solid charcoal, no border, clearly distinct from empty dark boxes)
         bgClass: "bg-slate-800 hover:bg-slate-700",
         borderClass: "border-slate-800",
