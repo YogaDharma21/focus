@@ -139,22 +139,22 @@ export function StatsJournal() {
 
     const bestStreak = calculateBestStreak();
 
-    // Calculate weekly minutes (Mon - Sun)
-    const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    // Calculate weekly minutes (Sun - Sat)
+    const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
     const getWeeklyMinutes = () => {
         const weeklyMinutes: Record<string, number> = {
-            Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0
+            Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0
         };
 
         const currentDayOfWeek = today.getDay();
-        const distanceToMon = (currentDayOfWeek + 6) % 7;
-        const monday = new Date(today);
-        monday.setDate(today.getDate() - distanceToMon);
-        monday.setHours(0, 0, 0, 0);
+        const distanceToSun = currentDayOfWeek;
+        const sunday = new Date(today);
+        sunday.setDate(today.getDate() - distanceToSun);
+        sunday.setHours(0, 0, 0, 0);
 
         daysOfWeek.forEach((day, index) => {
-            const targetDate = new Date(monday);
-            targetDate.setDate(monday.getDate() + index);
+            const targetDate = new Date(sunday);
+            targetDate.setDate(sunday.getDate() + index);
 
             const daySessions = sessions.filter(
                 (s) => s.date && isSameDay(parseISO(s.date), targetDate)
