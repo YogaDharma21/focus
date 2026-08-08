@@ -617,8 +617,8 @@ export function Popup() {
       isDark ? "text-white" : "text-black"
     } ${bgClass}`}>
       {/* Top Header */}
-      <header className={`px-4 py-3 border-b flex items-center justify-between z-10 ${
-        isDark ? "bg-neutral-950/80 border-neutral-800" : "bg-neutral-100/80 border-neutral-200"
+      <header className={`px-4 py-3 flex items-center justify-between z-10 ${
+        isDark ? "bg-neutral-950/80" : "bg-neutral-100/80"
       } backdrop-blur-sm`}>
         <div className="flex items-center gap-2.5">
           <img src="/icons/icon32.png" className="w-7 h-7 rounded-lg object-contain border border-neutral-700 shadow-sm" alt="Focus Logo" />
@@ -758,8 +758,6 @@ export function Popup() {
             </button>
           </div>
 
-          {/* Divider Line */}
-          <div className={`border-t mb-2.5 ${isDark ? "border-neutral-800" : "border-neutral-200"}`} />
 
           {/* Tag & Group Badge Row */}
           <div className="flex items-center justify-between mb-3 px-0.5">
@@ -846,7 +844,7 @@ export function Popup() {
         <div className={`absolute top-14 right-4 z-50 p-3 rounded-xl border shadow-2xl flex flex-col gap-1 text-xs font-mono animate-in fade-in duration-150 ${
           isDark ? "bg-neutral-950 border-neutral-700 text-white" : "bg-white border-neutral-300 text-black"
         }`}>
-          <div className="text-[10px] font-bold uppercase opacity-60 px-2 py-1 border-b border-current">SELECT BACKGROUND PATTERN</div>
+          <div className="text-[10px] font-bold uppercase opacity-60 px-2 py-1">SELECT BACKGROUND PATTERN</div>
           {BACKGROUND_THEMES.map((theme) => (
             <button
               key={theme.id}
@@ -872,7 +870,7 @@ export function Popup() {
         <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
           isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
         }`}>
-          <div className="flex items-center justify-between pb-3 border-b border-current">
+          <div className="flex items-center justify-between pb-3">
             <div className="flex items-center gap-2">
               <Info className="w-4 h-4" />
               <h2 className="text-sm font-bold font-mono uppercase tracking-wider">ABOUT FOCUS EXTENSION</h2>
@@ -887,11 +885,11 @@ export function Popup() {
             </button>
           </div>
 
-          <div className="my-auto text-xs leading-relaxed p-4 rounded-xl border text-center font-medium opacity-90 border-current">
+          <div className={`my-auto text-xs leading-relaxed p-4 rounded-xl border text-center font-medium opacity-90 ${isDark ? "border-neutral-800" : "border-neutral-200"}`}>
             Focus is a minimalist, monochrome extension designed for distraction-free deep work, pomodoro tracking, and site blocking.
           </div>
 
-          <div className="space-y-2 pt-2 border-t border-current">
+          <div className="space-y-2 pt-2">
             <button
               onClick={openGithubLink}
               className={`w-full py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border transition-all ${
@@ -915,7 +913,7 @@ export function Popup() {
         <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
           isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
         }`}>
-          <div className="flex items-center justify-between pb-3 border-b border-current">
+          <div className="flex items-center justify-between pb-3">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" />
               <h2 className="text-sm font-bold font-mono uppercase tracking-wider">LOG DISTRACTION</h2>
@@ -955,7 +953,7 @@ export function Popup() {
         <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
           isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
         }`}>
-          <div className="flex items-center justify-between pb-3 border-b border-current">
+          <div className="flex items-center justify-between pb-3">
             <h2 className="text-sm font-bold font-sans">Timer Settings</h2>
             <button
               onClick={() => setShowSettingsModal(false)}
@@ -1063,7 +1061,7 @@ export function Popup() {
         <div className={`absolute inset-0 z-50 p-4 flex flex-col justify-between backdrop-blur-md overflow-y-auto animate-in fade-in duration-200 ${
           isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
         }`}>
-          <div className="flex items-center justify-between pb-3 border-b border-current">
+          <div className="flex items-center justify-between pb-3">
             <div className="flex items-center gap-2">
               <ListTodo className="w-4 h-4" />
               <h2 className="text-xs font-bold font-mono uppercase tracking-wider">TASK DETAILS</h2>
@@ -1268,7 +1266,7 @@ export function Popup() {
               />
             </div>
 
-            <div className="pt-2 border-t border-current">
+            <div className="pt-2">
               <label className="text-[10px] font-mono uppercase font-bold block mb-2 opacity-70">Subtasks Checklist</label>
 
               <form onSubmit={(e) => { e.preventDefault(); addSubtask(selectedTaskDetail.id, newSubtaskText); setNewSubtaskText(""); }} className="flex gap-2 mb-2">
@@ -1305,7 +1303,7 @@ export function Popup() {
             </div>
           </div>
 
-          <div className="flex gap-2 pt-2 border-t border-current">
+          <div className="flex gap-2 pt-2">
             <button
               onClick={() => deleteTodo(selectedTaskDetail.id)}
               className="w-full py-2 rounded-xl border border-red-500 text-red-500 text-xs font-bold hover:bg-red-500 hover:text-white transition-all"
@@ -1317,8 +1315,8 @@ export function Popup() {
       )}
 
       {/* Main Navigation Bar */}
-      <nav className={`flex items-center justify-between px-3 py-1.5 border-b z-10 ${
-        isDark ? "bg-neutral-900/60 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+      <nav className={`flex items-center justify-between px-3 py-1.5 z-10 ${
+        isDark ? "bg-neutral-900/60" : "bg-neutral-50"
       }`}>
         {[
           { id: "timer", label: "Timer", icon: TimerIcon },
@@ -1412,7 +1410,7 @@ export function Popup() {
           <div className={`mt-1.5 p-3 rounded-xl border shadow-xl transition-all ${
             isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-white border-neutral-200 text-black"
           }`}>
-            <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-current/10">
+            <div className="flex items-center justify-between mb-2 pb-1.5">
               <div className="flex items-center gap-2 text-xs font-bold">
                 <Volume2 className="w-4 h-4" />
                 <span>Sound Player</span>
@@ -1450,7 +1448,7 @@ export function Popup() {
             </div>
 
             {/* Volume Slider */}
-            <div className="mt-2 pt-2 border-t border-current/10 flex items-center gap-2">
+            <div className="mt-2 pt-2 flex items-center gap-2">
               <Volume2 className="w-3.5 h-3.5 opacity-60 shrink-0" />
               <input
                 type="range"
@@ -1524,7 +1522,7 @@ export function Popup() {
                 <div className={`absolute bottom-full left-0 right-0 mb-1.5 z-50 p-2 rounded-2xl border shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-1 ${
                   isDark ? "bg-neutral-900/95 border-neutral-800 text-white" : "bg-white/95 border-neutral-200 text-black"
                 }`}>
-                  <div className="flex items-center justify-between px-2 py-1 border-b border-current/10">
+                  <div className="flex items-center justify-between px-2 py-1">
                     <span className="text-[10px] font-mono font-bold uppercase opacity-60">FOCUS TOPIC</span>
                     <button
                       type="button"
@@ -1560,7 +1558,6 @@ export function Popup() {
                     {!selectedTask && <span className={`text-xs font-bold ${isDark ? "text-white" : "text-black"}`}>✓</span>}
                   </button>
 
-                  <div className={`border-t my-0.5 ${isDark ? "border-neutral-800" : "border-neutral-200"}`} />
 
                   {/* Task List Header */}
                   <div className="px-2 pt-1 text-[10px] font-mono font-bold uppercase opacity-50">
@@ -1662,7 +1659,7 @@ export function Popup() {
                     {(selectedTask.subtasks || []).filter(s => s.completed).length} / {(selectedTask.subtasks || []).length}
                   </span>
                 </div>
-                <div className="space-y-1 max-h-24 overflow-y-auto pt-1 border-t border-current/10 text-[11px]">
+                <div className="space-y-1 max-h-24 overflow-y-auto pt-1 text-[11px]">
                   {selectedTask.subtasks!.map(s => (
                     <div key={s.id} className="flex items-center gap-1.5">
                       <button onClick={() => toggleSubtask(selectedTask.id, s.id)}>
@@ -1674,11 +1671,6 @@ export function Popup() {
                 </div>
               </div>
             )}
-
-            {/* Session Progress Bar (matching website design) */}
-            <div className="w-full max-w-[280px] my-2">
-              <Progress value={progressValue} className="h-1.5" />
-            </div>
 
             {/* Control Buttons Grid */}
             <div className="flex items-center gap-2">
@@ -1885,7 +1877,7 @@ export function Popup() {
           <div className="flex flex-col gap-3 h-full">
             <div className={`p-3 rounded-xl border flex items-center justify-between ${
               state.shield.enabled
-                ? isDark ? "bg-neutral-900 border-white text-white" : "bg-neutral-100 border-black text-black"
+                ? isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
                 : isDark ? "bg-neutral-950 border-neutral-800 text-neutral-500" : "bg-neutral-50 border-neutral-200 text-neutral-400"
             }`}>
               <div className="flex items-center gap-2.5">
@@ -2083,7 +2075,7 @@ export function Popup() {
               isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
             }`}>
               <div className="text-[10px] font-mono uppercase tracking-wider font-bold mb-3">FOCUS TREND</div>
-              <div className="flex items-end justify-between gap-2 h-24 pt-2 border-b border-current">
+              <div className="flex items-end justify-between gap-2 h-24 pt-2">
                 {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((day) => {
                   const minsLogged = state.stats.weeklyMinutes[day] || 0;
                   const maxMins = 120;
