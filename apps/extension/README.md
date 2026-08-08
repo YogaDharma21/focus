@@ -68,7 +68,7 @@
 - Distraction log with categories and timestamps.
 
 ### Appearance
-- Dark and light theme toggle.
+- Dark mode design.
 - Background pattern selector (solid, gradient, grid, stripes, crosshatch, dot matrix).
 
 ---

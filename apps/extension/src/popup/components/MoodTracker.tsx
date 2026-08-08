@@ -85,7 +85,6 @@ interface MoodTrackerProps {
   onSetMoodForDate: (dateKey: string, mood: string, text?: string) => void;
   onCycleMoodForDate: (dateKey: string) => void;
   onDeleteMoodNote: (id: string) => void;
-  isDark?: boolean;
 }
 
 export function MoodTracker({
@@ -93,7 +92,6 @@ export function MoodTracker({
   onSetMoodForDate,
   onCycleMoodForDate,
   onDeleteMoodNote,
-  isDark = true,
 }: MoodTrackerProps) {
   const today = new Date();
   const todayStr = format(today, "yyyy-MM-dd");
@@ -165,7 +163,7 @@ export function MoodTracker({
     <div className="flex flex-col gap-2.5 h-full overflow-y-auto pr-0.5">
       {/* Quick Input & Inspector Card */}
       <div className={`p-3 rounded-xl border flex flex-col gap-2 ${
-        isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+        "bg-neutral-900 border-neutral-800"
       }`}>
         {/* Clean Header */}
         <div className="flex items-center justify-between gap-2">
@@ -176,7 +174,7 @@ export function MoodTracker({
 
           <div className="flex items-center gap-1.5 flex-shrink-0">
             <span className={`text-[10px] font-mono px-2 py-0.5 rounded border whitespace-nowrap ${
-              isDark ? "bg-neutral-800 border-neutral-700 text-neutral-300" : "bg-neutral-200 border-neutral-300 text-neutral-800"
+              "bg-neutral-800 border-neutral-700 text-neutral-300"
             }`}>
               {formatDateShort(selectedDateKey)}
             </span>
@@ -187,7 +185,7 @@ export function MoodTracker({
                   setSelectedYear(today.getFullYear());
                 }}
                 className={`flex items-center gap-1 text-[10px] font-mono px-2 py-0.5 rounded border whitespace-nowrap transition-all ${
-                  isDark ? "bg-white/10 text-white border-white/20 hover:bg-white/20" : "bg-black/10 text-black border-black/20 hover:bg-black/20"
+                  "bg-white/10 text-white border-white/20 hover:bg-white/20"
                 }`}
                 title="Go to today"
               >
@@ -212,9 +210,7 @@ export function MoodTracker({
                   "flex flex-col items-center justify-center py-1.5 px-1 rounded-lg border transition-all text-xs group",
                   isSelected
                     ? cfg.pillSelectedClass
-                    : isDark
-                    ? "bg-neutral-800/60 hover:bg-neutral-800 border-neutral-700/60 text-white"
-                    : "bg-white hover:bg-neutral-100 border-neutral-300 text-black"
+                    : "bg-neutral-800/60 hover:bg-neutral-800 border-neutral-700/60 text-white"
                 )}
               >
                 <span className="text-lg transition-transform duration-200 group-hover:scale-110">
@@ -235,9 +231,7 @@ export function MoodTracker({
           value={descriptionText}
           onChange={(e) => setDescriptionText(e.target.value)}
           className={`w-full p-2 rounded-lg text-xs border focus:outline-none ${
-            isDark
-              ? "bg-black border-neutral-800 text-white placeholder-neutral-600 focus:border-white"
-              : "bg-white border-neutral-300 text-black placeholder-neutral-400 focus:border-black"
+            "bg-black border-neutral-800 text-white placeholder-neutral-600 focus:border-white"
           }`}
         />
 
@@ -266,7 +260,7 @@ export function MoodTracker({
             type="button"
             onClick={handleSaveMood}
             className={`ml-auto px-2.5 py-1 rounded-lg text-xs font-bold border transition-all flex items-center gap-1 flex-shrink-0 ${
-              isDark ? "bg-white text-black border-white hover:bg-neutral-200" : "bg-black text-white border-black hover:bg-neutral-800"
+              "bg-white text-black border-white hover:bg-neutral-200"
             }`}
           >
             <Sparkles className="w-3 h-3" />
@@ -277,7 +271,7 @@ export function MoodTracker({
 
       {/* Yearly Pixel Grid Card */}
       <div className={`p-3 rounded-xl border flex flex-col gap-2.5 ${
-        isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-50 border-neutral-200"
+        "bg-neutral-900 border-neutral-800"
       }`}>
         <div className="flex items-center justify-between pb-2">
           <div className="flex items-center gap-1.5 text-xs font-bold font-mono">
@@ -288,19 +282,19 @@ export function MoodTracker({
           <div className="flex items-center gap-1">
             <button
               onClick={() => setSelectedYear((y) => y - 1)}
-              className={`p-1 rounded hover:bg-neutral-800 transition-colors ${isDark ? "text-neutral-400 hover:text-white" : "text-neutral-600 hover:text-black"}`}
+              className={`p-1 rounded hover:bg-neutral-800 transition-colors ${"text-neutral-400 hover:text-white"}`}
               title="Previous year"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
             </button>
             <span className={`font-mono font-bold text-xs px-2 py-0.5 rounded border ${
-              isDark ? "bg-black border-neutral-800 text-white" : "bg-white border-neutral-300 text-black"
+              "bg-black border-neutral-800 text-white"
             }`}>
               {selectedYear}
             </span>
             <button
               onClick={() => setSelectedYear((y) => y + 1)}
-              className={`p-1 rounded hover:bg-neutral-800 transition-colors ${isDark ? "text-neutral-400 hover:text-white" : "text-neutral-600 hover:text-black"}`}
+              className={`p-1 rounded hover:bg-neutral-800 transition-colors ${"text-neutral-400 hover:text-white"}`}
               title="Next year"
             >
               <ChevronRight className="w-3.5 h-3.5" />
@@ -391,9 +385,7 @@ export function MoodTracker({
                           "aspect-square w-full rounded-[2px] transition-all cursor-pointer relative group",
                           cfg
                             ? `${cfg.bgClass} shadow-sm scale-100 hover:scale-125 z-10`
-                            : isDark
-                            ? "bg-neutral-800/40 hover:bg-neutral-700/60 border border-neutral-700/30"
-                            : "bg-neutral-200/60 hover:bg-neutral-300/80 border border-neutral-300/40",
+                            : "bg-neutral-800/40 hover:bg-neutral-700/60 border border-neutral-700/30",
                           isSelectedCell && "ring-2 ring-white border border-white scale-110 z-30 shadow-md",
                           isCellToday && !isSelectedCell && "ring-1 ring-primary/80 ring-offset-1 ring-offset-black z-20"
                         )}
@@ -409,7 +401,7 @@ export function MoodTracker({
 
         {/* Selected Date Info Banner */}
         <div className={`p-2 rounded-lg border text-xs flex items-center justify-between ${
-          isDark ? "bg-black/60 border-neutral-800 text-neutral-300" : "bg-white border-neutral-200 text-neutral-800"
+          "bg-black/60 border-neutral-800 text-neutral-300"
         }`}>
           <div className="flex items-center gap-1.5 flex-wrap min-w-0">
             <span className="font-bold text-xs whitespace-nowrap">{activeFormattedDate}:</span>
