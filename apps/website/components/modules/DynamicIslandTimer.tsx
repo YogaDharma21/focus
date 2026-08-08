@@ -285,8 +285,8 @@ export function DynamicIslandTimer() {
 
                     <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
 
-                    {/* Controls Footer - Matching exact user screenshot styling */}
-                    <div className="flex items-center justify-between pt-1">
+                    {/* Controls Footer - Centered tightly without awkward blank space */}
+                    <div className="flex items-center justify-center gap-2.5 pt-1">
                         <button
                             onClick={completeSession}
                             disabled={timeLeft === 0}
@@ -297,31 +297,29 @@ export function DynamicIslandTimer() {
                             <span>Complete</span>
                         </button>
 
-                        <div className="flex items-center gap-2">
-                            <DistractionCounter />
+                        <DistractionCounter />
 
-                            <button
-                                onClick={toggleTimer}
-                                className={cn(
-                                    "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all shadow-sm cursor-pointer",
-                                    isActive
-                                        ? "bg-amber-950/40 text-amber-400 border-2 border-amber-500/80 shadow-[0_0_12px_rgba(245,158,11,0.2)] hover:bg-amber-900/50"
-                                        : "bg-zinc-100 text-zinc-950 hover:bg-zinc-200 border border-zinc-200",
-                                )}
-                            >
-                                {isActive ? (
-                                    <>
-                                        <Pause className="w-3.5 h-3.5 fill-amber-400" />
-                                        <span>Pause</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <Play className="w-3.5 h-3.5 fill-zinc-950 ml-0.5" />
-                                        <span>Start</span>
-                                    </>
-                                )}
-                            </button>
-                        </div>
+                        <button
+                            onClick={toggleTimer}
+                            className={cn(
+                                "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all shadow-sm cursor-pointer",
+                                isActive
+                                    ? "bg-amber-950/40 text-amber-400 border-2 border-amber-500/80 shadow-[0_0_12px_rgba(245,158,11,0.2)] hover:bg-amber-900/50"
+                                    : "bg-zinc-100 text-zinc-950 hover:bg-zinc-200 border border-zinc-200",
+                            )}
+                        >
+                            {isActive ? (
+                                <>
+                                    <Pause className="w-3.5 h-3.5 fill-amber-400" />
+                                    <span>Pause</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Play className="w-3.5 h-3.5 fill-zinc-950 ml-0.5" />
+                                    <span>Start</span>
+                                </>
+                            )}
+                        </button>
                     </div>
                 </div>
             )}
