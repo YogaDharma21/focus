@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useAppStore } from "@/lib/store";
-import { Play, Pause, CheckCircle2 } from "lucide-react";
+import { Play, Pause, CheckCircle2, Timer, Coffee, Clock } from "lucide-react";
 import { useMediaQuery } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
@@ -68,10 +68,10 @@ export function DynamicIslandTimer() {
         };
     }, []);
 
-    const modeConfig: Record<string, { icon: string; label: string }> = {
-        POMODORO_WORK: { icon: "🍅", label: "Pomodoro" },
-        POMODORO_BREAK: { icon: "☕", label: "Break" },
-        STOPWATCH: { icon: "⏱️", label: "Flow" },
+    const modeConfig: Record<string, { icon: React.ReactNode; label: string }> = {
+        POMODORO_WORK: { icon: <Timer className="w-4 h-4" />, label: "Pomodoro" },
+        POMODORO_BREAK: { icon: <Coffee className="w-4 h-4" />, label: "Break" },
+        STOPWATCH: { icon: <Clock className="w-4 h-4" />, label: "Flow" },
     };
     
     const getCurrentModeKey = () => {
@@ -238,7 +238,8 @@ export function DynamicIslandTimer() {
                                     }}
                                     className="rounded-[var(--radius)] text-xs"
                                 >
-                                    🍅 Pomodoro
+                                    <Timer className="w-3 h-3 mr-1" />
+                                    Pomodoro
                                 </Button>
                                 <Button
                                     variant={
@@ -253,7 +254,8 @@ export function DynamicIslandTimer() {
                                     }}
                                     className="rounded-[var(--radius)] text-xs"
                                 >
-                                    ☕ Break
+                                    <Coffee className="w-3 h-3 mr-1" />
+                                    Break
                                 </Button>
                                 <Button
                                     variant={
@@ -268,7 +270,8 @@ export function DynamicIslandTimer() {
                                     }}
                                     className="rounded-[var(--radius)] text-xs"
                                 >
-                                    ⏱️ Flow
+                                    <Clock className="w-3 h-3 mr-1" />
+                                    Flow
                                 </Button>
                             </div>
 
