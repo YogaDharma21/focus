@@ -306,16 +306,38 @@ async function startBackgroundTimer() {
 
         const autoStart = state.timerState === "WORK" && state.pomodoroSettings.autoStartBreak;
 
+        let updatedTodos = state.todos;
+        if (state.timerState === "WORK" && state.selectedTodoId) {
+          updatedTodos = state.todos.map(t => {
+            if (t.id === state.selectedTodoId) {
+              const newCompleted = (t.completedPomodoros || 0) + 1;
+              const est = t.estimatedPomodoros || 1;
+              const isFinished = newCompleted >= est;
+              return {
+                ...t,
+                completedPomodoros: newCompleted,
+                completed: t.completed || isFinished,
+                completedAt: (t.completed || isFinished) ? (t.completedAt || new Date().toISOString()) : undefined,
+                groupId: (t.completed || isFinished) ? "finished" : t.groupId
+              };
+            }
+            return t;
+          });
+        }
+        const updatedCompletedTasksCount = updatedTodos.filter(t => t.completed).length;
+
         await saveStoredState({
           isActive: autoStart,
           timerState: nextState,
           previousMode: prevMode,
           timeLeft: nextTime,
+          todos: updatedTodos,
           sessions: newSessionList,
           stats: {
             ...state.stats,
             todayMinutes: updatedTodayMins,
             weeklyMinutes: updatedWeekly,
+            completedTasksCount: updatedCompletedTasksCount,
           },
         });
 
