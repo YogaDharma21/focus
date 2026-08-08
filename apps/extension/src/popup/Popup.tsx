@@ -1008,7 +1008,7 @@ export function Popup() {
                   value={workMinsInput}
                   onChange={(e) => setWorkMinsInput(parseInt(e.target.value) || 25)}
                   className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none ${
-                    isDark ? "bg-neutral-800 border-neutral-700 text-white" : "bg-white border-neutral-300 text-black"
+                    isDark ? "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]" : "bg-white border-neutral-300 text-black [color-scheme:light]"
                   }`}
                 />
                 <span className={`text-[10px] font-mono ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>min</span>
@@ -1028,7 +1028,7 @@ export function Popup() {
                   value={breakMinsInput}
                   onChange={(e) => setBreakMinsInput(parseInt(e.target.value) || 5)}
                   className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none ${
-                    isDark ? "bg-neutral-800 border-neutral-700 text-white" : "bg-white border-neutral-300 text-black"
+                    isDark ? "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]" : "bg-white border-neutral-300 text-black [color-scheme:light]"
                   }`}
                 />
                 <span className={`text-[10px] font-mono ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>min</span>
@@ -1214,7 +1214,7 @@ export function Popup() {
                       if (nextSelected) setSelectedTaskDetail(nextSelected);
                     }}
                     className={`w-full p-2.5 rounded-xl border text-sm font-bold focus:outline-none ${
-                      isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white" : "bg-white border-neutral-300 text-black"
+                      isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white [color-scheme:dark]" : "bg-white border-neutral-300 text-black [color-scheme:light]"
                     }`}
                   />
                 </div>
@@ -1247,7 +1247,7 @@ export function Popup() {
                       if (nextSelected) setSelectedTaskDetail(nextSelected);
                     }}
                     className={`w-full p-2.5 rounded-xl border text-sm font-bold focus:outline-none ${
-                      isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white" : "bg-white border-neutral-300 text-black"
+                      isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white [color-scheme:dark]" : "bg-white border-neutral-300 text-black [color-scheme:light]"
                     }`}
                   />
                 </div>
@@ -1293,7 +1293,7 @@ export function Popup() {
                     setSelectedTaskDetail({ ...selectedTaskDetail, dueDate: val });
                   }}
                   className={`w-full p-2.5 rounded-xl border text-xs font-mono focus:outline-none ${
-                    isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white" : "bg-white border-neutral-300 text-black"
+                    isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white [color-scheme:dark]" : "bg-white border-neutral-300 text-black [color-scheme:light]"
                   }`}
                 />
                 <input
@@ -1306,7 +1306,7 @@ export function Popup() {
                     setSelectedTaskDetail({ ...selectedTaskDetail, dueTime: val });
                   }}
                   className={`w-full p-2.5 rounded-xl border text-xs font-mono focus:outline-none ${
-                    isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white" : "bg-white border-neutral-300 text-black"
+                    isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white [color-scheme:dark]" : "bg-white border-neutral-300 text-black [color-scheme:light]"
                   }`}
                 />
               </div>
