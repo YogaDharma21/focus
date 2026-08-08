@@ -46,27 +46,54 @@
 <details>
 <summary>View Mobile Application Screenshots</summary>
 
-| Focus & Flow Mode | Task Management | Stats & Analytics | Mood Notes |
-| :---: | :---: | :---: | :---: |
-| ![Mobile Focus](./apps/mobile/assets/images/screenshot-focus.jpeg) | ![Mobile Tasks](./apps/mobile/assets/images/screenshot-tasks.jpeg) | ![Mobile Stats](./apps/mobile/assets/images/screenshot-stats.jpeg) | ![Mobile Mood](./apps/mobile/assets/images/screenshot-mood.jpeg) |
+### Focus Session
+![Mobile Focus](./apps/mobile/assets/images/screenshot-focus.jpeg)
+
+### Task Management
+![Mobile Tasks](./apps/mobile/assets/images/screenshot-tasks.jpeg)
+
+### Stats & Analytics
+![Mobile Stats](./apps/mobile/assets/images/screenshot-stats.jpeg)
+
+### Mood & Notes
+![Mobile Mood](./apps/mobile/assets/images/screenshot-mood.jpeg)
 
 </details>
 
 <details>
 <summary>View Desktop Application Screenshots</summary>
 
-| Timer | Tasks | Stats | Notes |
-| :---: | :---: | :---: | :---: |
-| ![Timer](./apps/desktop/public/Screenshot-timer.png) | ![Tasks](./apps/desktop/public/Screenshot-tasks.png) | ![Stats](./apps/desktop/public/Screenshot-stats.png) | ![Notes](./apps/desktop/public/Screenshot-notes.png) |
+### Focus Session
+![Timer](./apps/desktop/public/Screenshot-timer.png)
+
+### Task Management
+![Tasks](./apps/desktop/public/Screenshot-tasks.png)
+
+### Stats & Analytics
+![Stats](./apps/desktop/public/Screenshot-stats.png)
+
+### Mood & Notes
+![Notes](./apps/desktop/public/Screenshot-notes.png)
 
 </details>
 
 <details>
 <summary>View Browser Extension Screenshots</summary>
 
-| Timer | Tasks | Site Blocking | Stats | Notes |
-| :---: | :---: | :---: | :---: | :---: |
-| ![Timer](./apps/extension/public/Screenshot-timer.png) | ![Tasks](./apps/extension/public/Screenshot-tasks.png) | ![Block](./apps/extension/public/Screenshot-block.png) | ![Stats](./apps/extension/public/Screenshot-stats.png) | ![Notes](./apps/extension/public/Screenshot-notes.png) |
+### Focus Session
+![Timer](./apps/extension/public/Screenshot-timer.png)
+
+### Task Management
+![Tasks](./apps/extension/public/Screenshot-tasks.png)
+
+### Focus Shield (Site Blocking)
+![Block](./apps/extension/public/Screenshot-block.png)
+
+### Stats & Analytics
+![Stats](./apps/extension/public/Screenshot-stats.png)
+
+### Mood & Notes
+![Notes](./apps/extension/public/Screenshot-notes.png)
 
 </details>
 
