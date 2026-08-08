@@ -413,7 +413,8 @@ export function Popup() {
   const deleteTodo = (id: string) => {
     updateState({
       todos: state.todos.filter(t => t.id !== id),
-      selectedTodoId: state.selectedTodoId === id ? null : state.selectedTodoId
+      selectedTodoId: state.selectedTodoId === id ? null : state.selectedTodoId,
+      ...(state.selectedTodoId === id ? { sessionName: "" } : {})
     });
     if (selectedTaskDetail?.id === id) setSelectedTaskDetail(null);
   };
@@ -1581,7 +1582,7 @@ export function Popup() {
                   <button
                     type="button"
                     onClick={() => {
-                      updateState({ selectedTodoId: null });
+                      updateState({ selectedTodoId: null, sessionName: "" });
                       setShowTaskDropdown(false);
                     }}
                     className={`w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all ${
