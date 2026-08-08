@@ -20,12 +20,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-    Sheet,
-    SheetContent,
-    SheetHeader,
-    SheetTitle,
-} from "@/components/ui/sheet";
-import {
     Dialog,
     DialogContent,
     DialogHeader,
@@ -412,21 +406,18 @@ export function TodoList() {
                 </div>
             </ScrollArea>
 
-            <Sheet
+            <Dialog
                 open={!!editingTaskId}
                 onOpenChange={(open) => !open && setEditingTaskId(null)}
             >
-                <SheetContent
-                    side="right"
-                    className="w-[100%] sm:w-[540px] bg-background border-l border-border/50 p-0"
-                >
+                <DialogContent className="sm:max-w-[540px] max-h-[85vh] overflow-y-auto p-6 sm:p-8">
                     {editingTask && (
-                        <div className="h-full flex flex-col p-10 pr-14 gap-10 overflow-y-auto">
-                            <SheetHeader className="mb-2">
-                                <SheetTitle className="text-2xl font-light">
+                        <div className="flex flex-col gap-6">
+                            <DialogHeader className="mb-2">
+                                <DialogTitle className="text-2xl font-light">
                                     Task Details
-                                </SheetTitle>
-                            </SheetHeader>
+                                </DialogTitle>
+                            </DialogHeader>
                             <div className="space-y-2">
                                 <label className="text-xs font-semibold text-muted-foreground uppercase">
                                     Task
@@ -802,8 +793,8 @@ export function TodoList() {
                             </Button>
                         </div>
                     )}
-                </SheetContent>
-            </Sheet>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
