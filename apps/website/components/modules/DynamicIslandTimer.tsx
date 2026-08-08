@@ -216,10 +216,7 @@ export function DynamicIslandTimer() {
                     onClick={(e) => e.stopPropagation()}
                     className={cn(
                         "absolute z-50 w-[320px] sm:w-[360px] bg-[#121214] border border-zinc-800 rounded-2xl p-4 shadow-2xl space-y-3.5 animate-in zoom-in-95 duration-200",
-                        // Mobile: floats directly above navbar
-                        "bottom-full mb-3 left-1/2 -translate-x-1/2",
-                        // Desktop: floats to the right of navbar
-                        "md:bottom-auto md:top-1/2 md:-translate-y-1/2 md:left-full md:ml-4 md:translate-x-0",
+                        "top-full mt-2.5 left-1/2 -translate-x-1/2",
                     )}
                 >
                     {/* Header Row */}
