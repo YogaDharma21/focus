@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useAppStore } from "@/lib/store";
-import { Button } from "@/components/ui/button";
 import {
     Popover,
     PopoverContent,
@@ -19,7 +18,11 @@ const DISTRACTION_CATEGORIES = [
     "Other",
 ] as const;
 
-export function DistractionCounter() {
+interface DistractionCounterProps {
+    className?: string;
+}
+
+export function DistractionCounter({ className }: DistractionCounterProps) {
     const { isActive, setIsActive, addDistraction, setDeepFocusMode } = useAppStore();
     const [open, setOpen] = useState(false);
 
@@ -33,41 +36,37 @@ export function DistractionCounter() {
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                <Button
-                    variant="outline"
-                    size="icon"
+                <button
                     className={cn(
-                        "w-11 h-11 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 transition-all",
-                        isActive
-                            ? "hover:bg-red-500/10 hover:text-red-500 hover:border-red-500/50"
-                            : "opacity-50 cursor-not-allowed",
+                        "w-9 h-9 rounded-xl bg-[#18181b] border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-rose-400 hover:border-zinc-700 transition-all shrink-0 cursor-pointer shadow-sm",
+                        !isActive && "opacity-50 cursor-not-allowed",
+                        className
                     )}
                     disabled={!isActive}
-                    title="I got distracted"
+                    title="Log Distraction"
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
-                </Button>
+                    <AlertTriangle className="w-4 h-4" />
+                </button>
             </PopoverTrigger>
             <PopoverContent
-                className="w-48 p-2 rounded-[var(--radius)] z-[200]"
+                className="w-44 p-1.5 bg-[#18181b] border border-zinc-800 rounded-xl shadow-2xl z-[200]"
                 align="center"
             >
                 <div className="flex flex-col gap-1">
                     {DISTRACTION_CATEGORIES.map((cat) => (
-                        <Button
+                        <button
                             key={cat}
-                            variant="ghost"
-                            size="sm"
-                            className="justify-start rounded-[var(--radius)]"
+                            className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-200 hover:bg-zinc-800 transition-colors cursor-pointer"
                             onClick={() => handleDistraction(cat)}
                         >
                             {cat}
-                        </Button>
+                        </button>
                     ))}
                 </div>
             </PopoverContent>
         </Popover>
     );
 }
+
 

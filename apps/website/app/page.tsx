@@ -71,7 +71,7 @@ export default function Page() {
                 <BottomNavbar />
                 
                 <div className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 md:pl-28 pb-24 z-10 relative transition-all duration-300 ease-in-out">
-                    <header className="flex items-center justify-between mb-8 gap-2">
+                    <header className="relative flex items-center justify-between mb-8 gap-2">
                         <div className="flex items-center gap-3">
                             <img src="/icon-192.png" alt="Focus Logo" className="w-8 h-8 rounded-lg object-contain shadow-sm" />
                             <h1 className="text-xl font-bold tracking-tight opacity-90 hidden sm:block">
@@ -81,6 +81,13 @@ export default function Page() {
                                 {currentView === "NOTES" && "Mood Tracker"}
                             </h1>
                         </div>
+
+                        {currentView !== "FOCUS" && (
+                            <div className="absolute left-1/2 -translate-x-1/2 z-30">
+                                <DynamicIslandTimer />
+                            </div>
+                        )}
+
                         <div className="flex items-center gap-1.5 sm:gap-2 relative z-30">
                             <MediaPlayer />
                             <button
@@ -103,8 +110,6 @@ export default function Page() {
                     </header>
 
                     <div className="w-full">
-                        {currentView !== "FOCUS" && <DynamicIslandTimer />}
-
                         {currentView === "FOCUS" && (
                             <div className="flex items-center justify-center min-h-[60vh]">
                                 <FocusTimer />

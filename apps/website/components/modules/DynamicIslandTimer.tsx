@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAppStore } from "@/lib/store";
 import { Play, Pause, CheckCircle2, Timer, Coffee, Clock } from "lucide-react";
-import { useMediaQuery } from "@/lib/hooks";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
@@ -26,11 +25,23 @@ export function DynamicIslandTimer() {
         addSession,
         setSessionStartTime,
         setDeepFocusMode,
+        todos,
+        selectedTodoId,
     } = useAppStore();
     const [isExpanded, setIsExpanded] = useState(false);
-    const isMobile = useMediaQuery("(max-width: 768px)");
-
+    const containerRef = useRef<HTMLDivElement>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);
+
+    // Close popover on outside click
+    useEffect(() => {
+        const handleClickOutside = (e: MouseEvent) => {
+            if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+                setIsExpanded(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
 
     const playSound = React.useCallback(() => {
         try {
@@ -68,19 +79,23 @@ export function DynamicIslandTimer() {
         };
     }, []);
 
-    const modeConfig: Record<string, { icon: React.ReactNode; label: string }> = {
-        POMODORO_WORK: { icon: <Timer className="w-4 h-4" />, label: "Pomodoro" },
-        POMODORO_BREAK: { icon: <Coffee className="w-4 h-4" />, label: "Break" },
-        STOPWATCH: { icon: <Clock className="w-4 h-4" />, label: "Flow" },
-    };
-    
-    const getCurrentModeKey = () => {
+    const getCurrentIcon = () => {
         if (timerMode === "POMODORO") {
-            return timerState === "WORK" ? "POMODORO_WORK" : "POMODORO_BREAK";
+            return timerState === "WORK" ? (
+                <Timer className="w-4 h-4 text-zinc-200 shrink-0" />
+            ) : (
+                <Coffee className="w-4 h-4 text-zinc-200 shrink-0" />
+            );
         }
-        return "STOPWATCH";
+        return <Clock className="w-4 h-4 text-zinc-200 shrink-0" />;
     };
-    const currentMode = modeConfig[getCurrentModeKey()];
+
+    const getCurrentModeLabel = () => {
+        if (timerMode === "POMODORO") {
+            return timerState === "WORK" ? "Pomodoro" : "Break";
+        }
+        return "Flow";
+    };
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -106,8 +121,6 @@ export function DynamicIslandTimer() {
             setSessionStartTime(null);
         }
     }, [isActive, setSessionStartTime]);
-
-
 
     const toggleTimer = () => setIsActive(!isActive);
 
@@ -139,7 +152,6 @@ export function DynamicIslandTimer() {
             });
         }
 
-        // If in WORK phase, switch to BREAK; if in BREAK, switch to WORK or back to STOPWATCH
         if (timerMode === "POMODORO" && timerState === "WORK") {
             setPreviousMode("POMODORO");
             setTimerState("BREAK");
@@ -172,182 +184,146 @@ export function DynamicIslandTimer() {
         setDeepFocusMode(false);
     };
 
+    const activeTask = todos.find((t) => t.id === selectedTodoId);
+
     return (
-        <div
-            className={cn(
-                "fixed z-50",
-                isMobile
-                    ? "top-20 left-1/2 -translate-x-1/2 w-[85%]"
-                    : "top-20 left-1/2 -translate-x-1/2 w-full max-w-md",
-            )}
-        >
-            <div
+        <div ref={containerRef} className="relative inline-flex items-center">
+            {/* 1. Compact Dark Pill matching uploaded reference image */}
+            <button
+                onClick={(e) => {
+                    e.stopPropagation();
+                    setIsExpanded(!isExpanded);
+                }}
                 className={cn(
-                    "bg-sidebar/80 backdrop-blur-xl border border-sidebar-border shadow-lg transition-all duration-300 cursor-pointer",
-                    isExpanded ? "rounded-[var(--radius)]" : "rounded-[var(--radius)]",
+                    "flex items-center gap-2.5 px-3.5 py-1.5 rounded-full",
+                    "bg-[#121214] border border-zinc-800 shadow-md",
+                    "hover:bg-zinc-800 hover:border-zinc-700 transition-all duration-200 active:scale-95 cursor-pointer text-xs select-none",
                 )}
-                onClick={() => setIsExpanded(!isExpanded)}
+                title="Click to toggle timer controls"
             >
+                {getCurrentIcon()}
+                <span className="font-mono font-bold text-xs sm:text-sm text-white tracking-wider tabular-nums">
+                    {formatTime(timeLeft)}
+                </span>
+                {isActive && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                )}
+            </button>
+
+            {/* 2. Expanded Timer Controls Popover Card */}
+            {isExpanded && (
                 <div
+                    onClick={(e) => e.stopPropagation()}
                     className={cn(
-                        "transition-all duration-300",
-                        isExpanded ? "p-4" : "py-3 px-4",
+                        "absolute z-50 w-[330px] sm:w-[370px] bg-[#121214] border border-zinc-800 rounded-2xl p-4 shadow-2xl space-y-3.5 animate-in zoom-in-95 duration-200",
+                        "top-full mt-2.5 left-1/2 -translate-x-1/2",
                     )}
                 >
-                    {!isExpanded ? (
-                        <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-2">
-                                <span className="text-lg">
-                                    {currentMode.icon}
-                                </span>
-                                <span className="text-sm font-medium">
-                                    {currentMode.label}
-                                </span>
-                            </div>
-                            <span className="text-lg font-bold tabular-nums">
-                                {formatTime(timeLeft)}
+                    {/* Header Row */}
+                    <div
+                        onClick={() => setIsExpanded(false)}
+                        className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity"
+                        title="Click to collapse widget"
+                    >
+                        <div className="flex items-center gap-2">
+                            {getCurrentIcon()}
+                            <span className="text-xs font-bold text-white tracking-tight">
+                                {getCurrentModeLabel()}
                             </span>
                         </div>
-                    ) : (
-                        <div className="space-y-3">
-                            <div className="flex items-center justify-between gap-3">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-xl">
-                                        {currentMode.icon}
-                                    </span>
-                                    <span className="font-medium">
-                                        {currentMode.label}
-                                    </span>
-                                </div>
-                                <span className="text-2xl font-bold tabular-nums">
-                                    {formatTime(timeLeft)}
-                                </span>
-                            </div>
+                        <span className="text-xl font-extrabold font-mono text-white tracking-tight tabular-nums">
+                            {formatTime(timeLeft)}
+                        </span>
+                    </div>
 
-                            <div className="flex items-center gap-2">
-                                <Button
-                                    variant={
-                                        timerMode === "POMODORO" && timerState === "WORK"
-                                            ? "default"
-                                            : "outline"
-                                    }
-                                    size="sm"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        switchMode("POMODORO", "WORK");
-                                    }}
-                                    className="rounded-[var(--radius)] text-xs"
-                                >
-                                    <Timer className="w-3 h-3 mr-1" />
-                                    Pomodoro
-                                </Button>
-                                <Button
-                                    variant={
-                                        timerMode === "POMODORO" && timerState === "BREAK"
-                                            ? "default"
-                                            : "outline"
-                                    }
-                                    size="sm"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        switchMode("POMODORO", "BREAK");
-                                    }}
-                                    className="rounded-[var(--radius)] text-xs"
-                                >
-                                    <Coffee className="w-3 h-3 mr-1" />
-                                    Break
-                                </Button>
-                                <Button
-                                    variant={
-                                        timerMode === "STOPWATCH"
-                                            ? "default"
-                                            : "outline"
-                                    }
-                                    size="sm"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        switchMode("STOPWATCH");
-                                    }}
-                                    className="rounded-[var(--radius)] text-xs"
-                                >
-                                    <Clock className="w-3 h-3 mr-1" />
-                                    Flow
-                                </Button>
-                            </div>
+                    {/* Mode Selector Tabs */}
+                    <div className="flex items-center gap-2">
+                        <Button
+                            variant={
+                                timerMode === "POMODORO" && timerState === "WORK"
+                                    ? "default"
+                                    : "outline"
+                            }
+                            size="sm"
+                            onClick={() => switchMode("POMODORO", "WORK")}
+                            className="rounded-xl text-[11px] h-7 px-2.5 flex-1"
+                        >
+                            <Timer className="w-3 h-3 mr-1" />
+                            Pomodoro
+                        </Button>
+                        <Button
+                            variant={
+                                timerMode === "POMODORO" && timerState === "BREAK"
+                                    ? "default"
+                                    : "outline"
+                            }
+                            size="sm"
+                            onClick={() => switchMode("POMODORO", "BREAK")}
+                            className="rounded-xl text-[11px] h-7 px-2.5 flex-1"
+                        >
+                            <Coffee className="w-3 h-3 mr-1" />
+                            Break
+                        </Button>
+                        <Button
+                            variant={timerMode === "STOPWATCH" ? "default" : "outline"}
+                            size="sm"
+                            onClick={() => switchMode("STOPWATCH")}
+                            className="rounded-xl text-[11px] h-7 px-2.5 flex-1"
+                        >
+                            <Clock className="w-3 h-3 mr-1" />
+                            Flow
+                        </Button>
+                    </div>
 
-                            <Progress value={progressValue} className="h-1.5" />
+                    <Progress value={progressValue} className="h-1.5" />
 
-                            {sessionName && (
-                                <p className="text-sm text-muted-foreground truncate">
-                                    {sessionName}
-                                </p>
-                            )}
-
-                            <div className="flex items-center gap-2">
-                                <span
-                                    className={cn(
-                                        "text-xs px-2 py-0.5 rounded-[var(--radius)] bg-primary/20 text-primary",
-                                    )}
-                                >
-                                    {timerState === "WORK" ? "Work" : "Break"}
-                                </span>
-                                {isActive && (
-                                    <span className="text-xs text-muted-foreground animate-pulse">
-                                        ● Running
-                                    </span>
-                                )}
-                            </div>
-
-                            <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
-
-                            <div className="flex items-center justify-center gap-2 pt-1">
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        completeSession();
-                                    }}
-                                    disabled={timeLeft === 0}
-                                    className="rounded-[var(--radius)] text-xs"
-                                    title="Complete Session"
-                                >
-                                    <CheckCircle2 className="w-3 h-3 mr-1" />
-                                    Complete
-                                </Button>
-
-                                <DistractionCounter />
-
-                                <Button
-                                    size="sm"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        toggleTimer();
-                                    }}
-                                    className={cn(
-                                        "rounded-[var(--radius)] px-4 text-xs font-medium",
-                                        isActive 
-                                            ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 border border-amber-500/50" 
-                                            : "bg-primary hover:bg-primary/90"
-                                    )}
-                                >
-                                    {isActive ? (
-                                        <>
-                                            <Pause className="w-3 h-3 mr-1" />
-                                            Pause
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Play className="w-3 h-3 mr-1" />
-                                            Start
-                                        </>
-                                    )}
-                                </Button>
-                            </div>
-                        </div>
+                    {(activeTask || sessionName) && (
+                        <p className="text-xs text-zinc-400 truncate">
+                            {activeTask ? activeTask.text : sessionName}
+                        </p>
                     )}
+
+                    <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
+
+                    {/* Controls Footer - Centered tightly without awkward blank space */}
+                    <div className="flex items-center justify-center gap-2.5 pt-1">
+                        <button
+                            onClick={completeSession}
+                            disabled={timeLeft === 0}
+                            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#18181b] border border-zinc-800 text-xs font-medium text-zinc-200 hover:bg-zinc-800 hover:border-zinc-700 transition-all disabled:opacity-50 cursor-pointer shadow-sm"
+                            title="Complete Session"
+                        >
+                            <CheckCircle2 className="w-4 h-4 text-zinc-300" />
+                            <span>Complete</span>
+                        </button>
+
+                        <DistractionCounter />
+
+                        <button
+                            onClick={toggleTimer}
+                            className={cn(
+                                "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all shadow-sm cursor-pointer",
+                                isActive
+                                    ? "bg-amber-950/40 text-amber-400 border-2 border-amber-500/80 shadow-[0_0_12px_rgba(245,158,11,0.2)] hover:bg-amber-900/50"
+                                    : "bg-zinc-100 text-zinc-950 hover:bg-zinc-200 border border-zinc-200",
+                            )}
+                        >
+                            {isActive ? (
+                                <>
+                                    <Pause className="w-3.5 h-3.5 fill-amber-400" />
+                                    <span>Pause</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Play className="w-3.5 h-3.5 fill-zinc-950 ml-0.5" />
+                                    <span>Start</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
                 </div>
-            </div>
+            )}
         </div>
     );
 }
+
