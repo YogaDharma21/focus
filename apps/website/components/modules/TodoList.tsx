@@ -467,7 +467,7 @@ export function TodoList() {
                                             updateTodo(editingTask.id, { priority: val as TodoItem["priority"] });
                                         }}
                                     >
-                                        <SelectTrigger className="bg-background/50 border-border/50 rounded-lg h-9">
+                                        <SelectTrigger className="w-full bg-background/50 border-border/50 rounded-lg h-9">
                                             <SelectValue placeholder="Select priority" />
                                         </SelectTrigger>
                                         <SelectContent>
@@ -489,7 +489,7 @@ export function TodoList() {
                                             updateTodo(editingTask.id, { groupId: val });
                                         }}
                                     >
-                                        <SelectTrigger className="bg-background/50 border-border/50 rounded-lg h-9">
+                                        <SelectTrigger className="w-full bg-background/50 border-border/50 rounded-lg h-9">
                                             <SelectValue placeholder="Select group" />
                                         </SelectTrigger>
                                         <SelectContent>
