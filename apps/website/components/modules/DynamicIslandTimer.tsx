@@ -195,8 +195,8 @@ export function DynamicIslandTimer() {
                     setIsExpanded(!isExpanded);
                 }}
                 className={cn(
-                    "flex items-center gap-2.5 px-3.5 py-2 rounded-full",
-                    "bg-[#121214] border border-zinc-800/90 shadow-md",
+                    "flex items-center gap-2.5 px-3.5 py-1.5 rounded-full",
+                    "bg-[#121214] border border-zinc-800 shadow-md",
                     "hover:bg-zinc-800 hover:border-zinc-700 transition-all duration-200 active:scale-95 cursor-pointer text-xs select-none",
                 )}
                 title="Click to toggle timer controls"
@@ -215,7 +215,7 @@ export function DynamicIslandTimer() {
                 <div
                     onClick={(e) => e.stopPropagation()}
                     className={cn(
-                        "absolute z-50 w-[320px] sm:w-[360px] bg-[#121214] border border-zinc-800 rounded-2xl p-4 shadow-2xl space-y-3.5 animate-in zoom-in-95 duration-200",
+                        "absolute z-50 w-[330px] sm:w-[370px] bg-[#121214] border border-zinc-800 rounded-2xl p-4 shadow-2xl space-y-3.5 animate-in zoom-in-95 duration-200",
                         "top-full mt-2.5 left-1/2 -translate-x-1/2",
                     )}
                 >
@@ -285,45 +285,42 @@ export function DynamicIslandTimer() {
 
                     <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
 
-                    {/* Controls Footer */}
+                    {/* Controls Footer - Matching exact user screenshot styling */}
                     <div className="flex items-center justify-between pt-1">
-                        <Button
-                            variant="outline"
-                            size="sm"
+                        <button
                             onClick={completeSession}
                             disabled={timeLeft === 0}
-                            className="rounded-xl text-[11px] h-8"
+                            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#18181b] border border-zinc-800 text-xs font-medium text-zinc-200 hover:bg-zinc-800 hover:border-zinc-700 transition-all disabled:opacity-50 cursor-pointer shadow-sm"
                             title="Complete Session"
                         >
-                            <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                            Complete
-                        </Button>
+                            <CheckCircle2 className="w-4 h-4 text-zinc-300" />
+                            <span>Complete</span>
+                        </button>
 
                         <div className="flex items-center gap-2">
                             <DistractionCounter />
 
-                            <Button
-                                size="sm"
+                            <button
                                 onClick={toggleTimer}
                                 className={cn(
-                                    "rounded-xl px-4 text-[11px] h-8 font-semibold",
+                                    "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all shadow-sm cursor-pointer",
                                     isActive
-                                        ? "bg-amber-500/20 hover:bg-amber-500/30 text-amber-500 border border-amber-500/50"
-                                        : "bg-primary hover:bg-primary/90 text-primary-foreground",
+                                        ? "bg-amber-950/40 text-amber-400 border-2 border-amber-500/80 shadow-[0_0_12px_rgba(245,158,11,0.2)] hover:bg-amber-900/50"
+                                        : "bg-zinc-100 text-zinc-950 hover:bg-zinc-200 border border-zinc-200",
                                 )}
                             >
                                 {isActive ? (
                                     <>
-                                        <Pause className="w-3.5 h-3.5 mr-1" />
-                                        Pause
+                                        <Pause className="w-3.5 h-3.5 fill-amber-400" />
+                                        <span>Pause</span>
                                     </>
                                 ) : (
                                     <>
-                                        <Play className="w-3.5 h-3.5 mr-1" />
-                                        Start
+                                        <Play className="w-3.5 h-3.5 fill-zinc-950 ml-0.5" />
+                                        <span>Start</span>
                                     </>
                                 )}
-                            </Button>
+                            </button>
                         </div>
                     </div>
                 </div>
