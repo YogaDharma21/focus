@@ -32,6 +32,18 @@ export function Blocked() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!state || !targetUrl) return;
+    const isBlockingActive =
+      state.shield.enabled &&
+      state.isActive &&
+      (state.timerState === "WORK" || state.timerState === "FLOW");
+
+    if (!isBlockingActive) {
+      window.location.href = targetUrl;
+    }
+  }, [state, targetUrl]);
+
   const pauseShieldTemporarily = async () => {
     if (!state) return;
     await saveStoredState({

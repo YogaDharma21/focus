@@ -1893,7 +1893,11 @@ export function Popup() {
                 <div>
                   <h3 className="text-xs font-bold font-mono">SITE BLOCKER SHIELD</h3>
                   <p className="text-[10px] opacity-70">
-                    {state.shield.enabled ? "Active during Work & Flow sessions" : "Shield currently OFF"}
+                    {state.shield.enabled
+                      ? (state.isActive && (state.timerState === "WORK" || state.timerState === "FLOW")
+                          ? "Active during Work & Flow sessions"
+                          : "Paused (Active during Work & Flow sessions)")
+                      : "Shield currently OFF"}
                   </p>
                 </div>
               </div>
