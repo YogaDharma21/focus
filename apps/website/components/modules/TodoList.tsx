@@ -15,12 +15,9 @@ import {
     Check,
     Sparkles,
     Timer,
-    FileText,
-    StickyNote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
     Sheet,
@@ -83,16 +80,12 @@ export function TodoList() {
     const [editingTaskName, setEditingTaskName] = useState("");
     const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
     const [editingSubtaskText, setEditingSubtaskText] = useState("");
-    const [tempDescription, setTempDescription] = useState("");
-    const [tempNotes, setTempNotes] = useState("");
     const editingTask = todos.find((t) => t.id === editingTaskId) || null;
     
     useEffect(() => {
         if (editingTask) {
             setIsEditingTaskName(false);
             setEditingTaskName(editingTask.text);
-            setTempDescription(editingTask.description || "");
-            setTempNotes(editingTask.notes || "");
         }
     }, [editingTask?.id]);
 
@@ -359,10 +352,16 @@ export function TodoList() {
                                             <CalendarIcon className="w-3 h-3" />
                                             {format(
                                                 new Date(todo.deadline),
-                                                "MMM d",
+                                                new Date(todo.deadline).getHours() !== 0 || new Date(todo.deadline).getMinutes() !== 0
+                                                    ? "MMM d, HH:mm"
+                                                    : "MMM d",
                                             )}
                                         </div>
                                     )}
+                                    <div className="flex items-center gap-1" title="Sessions (completed / estimated)">
+                                        <Timer className="w-3 h-3" />
+                                        {todo.completedPomodoros || 0}/{todo.estimatedPomodoros || 1}
+                                    </div>
                                     {todo.priority && todo.priority !== "medium" && (
                                         <div className="flex items-center gap-1">
                                             <Sparkles className="w-3 h-3" />
@@ -471,23 +470,6 @@ export function TodoList() {
 
                             <div className="space-y-2">
                                 <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1">
-                                    <FileText className="w-3 h-3" /> Description
-                                </label>
-                                <Textarea
-                                    placeholder="Add a description..."
-                                    value={tempDescription}
-                                    onChange={(e) => setTempDescription(e.target.value)}
-                                    onBlur={() => {
-                                        if (tempDescription !== (editingTask.description || "")) {
-                                            updateTodo(editingTask.id, { description: tempDescription || undefined });
-                                        }
-                                    }}
-                                    className="resize-none min-h-[80px]"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1">
                                     <Sparkles className="w-3 h-3" /> Priority
                                 </label>
                                 <Select
@@ -506,23 +488,6 @@ export function TodoList() {
                                         <SelectItem value="urgent">Urgent</SelectItem>
                                     </SelectContent>
                                 </Select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1">
-                                    <StickyNote className="w-3 h-3" /> Notes
-                                </label>
-                                <Textarea
-                                    placeholder="Add notes..."
-                                    value={tempNotes}
-                                    onChange={(e) => setTempNotes(e.target.value)}
-                                    onBlur={() => {
-                                        if (tempNotes !== (editingTask.notes || "")) {
-                                            updateTodo(editingTask.id, { notes: tempNotes || undefined });
-                                        }
-                                    }}
-                                    className="resize-none min-h-[80px]"
-                                />
                             </div>
 
                             <div className="space-y-2">
