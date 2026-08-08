@@ -3,7 +3,7 @@ import { Info, Github, ExternalLink, X, Sparkles } from 'lucide-react';
 
 const PROJECT_INFO = {
   name: "Focus Desktop",
-  version: "v1.2.0",
+  version: "v0.0.1",
   description: "A minimalist, high-performance desktop productivity suite designed to keep you in flow state. Features flexible Pomodoro & Flow timers, smart break calculation, task management with subtasks, streak & distraction analytics, mood reflections, and ambient music.",
   github: "https://github.com/YogaDharma21/focus"
 };
