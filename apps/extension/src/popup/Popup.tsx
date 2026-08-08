@@ -1440,7 +1440,7 @@ export function Popup() {
       <div className="flex-1 overflow-y-auto p-4 z-10 relative">
         {/* TIMER TAB */}
         {activeTab === "timer" && (
-          <div className="flex flex-col items-center justify-between h-full py-1">
+          <div className="flex flex-col items-center justify-between min-h-full pb-1 pt-1 gap-2">
             {/* 3-Way Mode Switcher (Pomodoro, Break, Flow - No Minutes in Toggle Labels!) */}
             <div className={`flex items-center p-1 rounded-xl border w-full max-w-[320px] ${
               isDark ? "bg-neutral-900 border-neutral-800" : "bg-neutral-100 border-neutral-300"
@@ -1478,7 +1478,7 @@ export function Popup() {
             </div>
 
             {/* Timer Display - Big Number */}
-            <div className="flex flex-col items-center justify-center my-4 py-6">
+            <div className="flex flex-col items-center justify-center my-2 py-3">
               <span className="text-7xl font-black font-mono tracking-tighter leading-none">
                 {timeFormatted}
               </span>
