@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { MoodNote } from "../../types";
 import { format, isValid, getDaysInMonth } from "date-fns";
-import { Smile, SmilePlus, Meh, Frown, Angry, Bed, ChevronLeft, ChevronRight, Sparkles, Trash2, Calendar as CalendarIcon, CalendarDays } from "lucide-react";
+import { Smile, Meh, Moon, Frown, Zap, ChevronLeft, ChevronRight, Sparkles, Trash2, Calendar as CalendarIcon, CalendarDays } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 export type MoodType = "amazing" | "ok" | "tired" | "sad" | "stressed";
@@ -10,7 +10,7 @@ export interface MoodConfig {
   key: MoodType;
   label: string;
   emoji: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: React.ReactNode;
   color: string;
   bgClass: string;
   textClass: string;
@@ -22,7 +22,7 @@ export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
     key: "amazing",
     label: "Amazing",
     emoji: "😊",
-    icon: Smile,
+    icon: <Smile className="w-5 h-5" />,
     color: "#ffffff",
     bgClass: "bg-white hover:bg-slate-100",
     textClass: "text-white font-semibold",
@@ -32,7 +32,7 @@ export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
     key: "ok",
     label: "OK",
     emoji: "🙂",
-    icon: Meh,
+    icon: <Meh className="w-5 h-5" />,
     color: "#cbd5e1",
     bgClass: "bg-slate-300 hover:bg-slate-200",
     textClass: "text-slate-300 font-semibold",
@@ -42,7 +42,7 @@ export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
     key: "tired",
     label: "Tired",
     emoji: "😴",
-    icon: Bed,
+    icon: <Moon className="w-5 h-5" />,
     color: "#64748b",
     bgClass: "bg-slate-500 hover:bg-slate-400",
     textClass: "text-slate-400 font-semibold",
@@ -52,7 +52,7 @@ export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
     key: "sad",
     label: "Sad",
     emoji: "😔",
-    icon: Frown,
+    icon: <Frown className="w-5 h-5" />,
     color: "#334155",
     bgClass: "bg-slate-700 hover:bg-slate-600",
     textClass: "text-slate-300 font-semibold",
@@ -62,7 +62,7 @@ export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
     key: "stressed",
     label: "Stressed",
     emoji: "😤",
-    icon: Angry,
+    icon: <Zap className="w-5 h-5" />,
     color: "#1e293b",
     bgClass: "bg-slate-800 hover:bg-slate-700",
     textClass: "text-slate-300 font-semibold",
@@ -220,7 +220,7 @@ export function MoodTracker({
                 )}
               >
                 <span className="transition-transform duration-200 group-hover:scale-110">
-                  <cfg.icon className="w-5 h-5" />
+                  {cfg.icon}
                 </span>
                 <span className="text-[9px] font-medium mt-0.5">
                   {cfg.label}
@@ -411,12 +411,12 @@ export function MoodTracker({
         }`}>
           <div className="flex items-center gap-1.5 flex-wrap min-w-0">
             <span className="font-bold text-xs whitespace-nowrap">{activeFormattedDate}:</span>
-            {activeMoodKey ? (() => { const Icon = MOOD_CONFIGS[activeMoodKey].icon; return (
+            {activeMoodKey ? (
               <span className={cn("font-semibold text-xs flex items-center gap-1 whitespace-nowrap", MOOD_CONFIGS[activeMoodKey].textClass)}>
-                <Icon className="w-3.5 h-3.5" />
+                <span className="w-3.5 h-3.5">{MOOD_CONFIGS[activeMoodKey].icon}</span>
                 <span>{MOOD_CONFIGS[activeMoodKey].label}</span>
               </span>
-            ); })() : (
+            ) : (
               <span className="text-neutral-500 italic text-[11px] whitespace-nowrap">No mood logged</span>
             )}
             {activeNoteObj?.text && (

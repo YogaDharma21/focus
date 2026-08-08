@@ -43,7 +43,6 @@ import {
   ListFilter,
   FileText,
   Coffee,
-  Zap,
   Check,
 } from "lucide-react";
 import { format } from "date-fns";
@@ -651,7 +650,7 @@ export function Popup() {
             title="Toggle Floating Timer Controls"
           >
             <span className="flex items-center">
-              {state.timerState === "WORK" ? <TimerIcon className="w-3 h-3" /> : state.timerState === "BREAK" ? <Coffee className="w-3 h-3" /> : <Zap className="w-3 h-3" />}
+              {state.timerState === "WORK" ? <TimerIcon className="w-3 h-3" /> : state.timerState === "BREAK" ? <Coffee className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
             </span>
             <span className="font-extrabold font-mono text-[11px] tracking-tight">
               {timeFormatted}
@@ -701,7 +700,7 @@ export function Popup() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="flex items-center">
-                {state.timerState === "WORK" ? <TimerIcon className="w-4 h-4" /> : state.timerState === "BREAK" ? <Coffee className="w-4 h-4" /> : <Zap className="w-4 h-4" />}
+                {state.timerState === "WORK" ? <TimerIcon className="w-4 h-4" /> : state.timerState === "BREAK" ? <Coffee className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
               </span>
               <span className="text-sm font-bold font-sans">
                 {state.timerState === "WORK" ? "Pomodoro" : state.timerState === "BREAK" ? "Break" : "Flow"}
@@ -746,7 +745,7 @@ export function Popup() {
                   : "text-neutral-400 hover:text-white"
               }`}
             >
-              <Zap className="w-3 h-3" />
+              <Clock className="w-3 h-3" />
               <span>Flow</span>
             </button>
           </div>
