@@ -1,6 +1,6 @@
 # Focus Mobile App
 
-[![Version](https://img.shields.io/badge/Version-v1.2.0-blue?style=for-the-badge)](https://github.com/YogaDharma21/focus)
+[![Version](https://img.shields.io/badge/Version-v0.0.1-blue?style=for-the-badge)](https://github.com/YogaDharma21/focus)
 [![Expo](https://img.shields.io/badge/Expo-v52.0.0-000000?style=for-the-badge&logo=expo&logoColor=white)](https://expo.dev/)
 [![React Native](https://img.shields.io/badge/React_Native-v0.76.7-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactnative.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
