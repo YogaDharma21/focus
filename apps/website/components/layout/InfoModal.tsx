@@ -12,7 +12,7 @@ import { useState } from "react";
 
 const PROJECT_INFO = {
     name: "Focus",
-    version: "1.2.0",
+    version: "v0.0.1",
     description:
         "A minimalist productivity app designed to help you stay in flow. Features a Pomodoro-style timer, task management, stats, and an ambient media player for focus enhancement.",
     links: [

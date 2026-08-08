@@ -1,6 +1,6 @@
 # Focus Extension
 
-[![Version](https://img.shields.io/badge/Version-v1.2.0-blue?style=for-the-badge)](https://github.com/YogaDharma21/focus)
+[![Version](https://img.shields.io/badge/Version-v0.0.1-blue?style=for-the-badge)](https://github.com/YogaDharma21/focus)
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-000000?style=for-the-badge)](https://developer.chrome.com/docs/extensions/mv3/intro/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)

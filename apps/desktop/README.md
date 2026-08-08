@@ -1,6 +1,6 @@
 # Focus Desktop
 
-[![Version](https://img.shields.io/badge/Version-v1.2.0-blue?style=for-the-badge)](https://github.com/YogaDharma21/focus)
+[![Version](https://img.shields.io/badge/Version-v0.0.1-blue?style=for-the-badge)](https://github.com/YogaDharma21/focus)
 [![Electron](https://img.shields.io/badge/Electron-v34.2.0-47848F?style=for-the-badge&logo=electron&logoColor=white)](https://www.electronjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.7-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
