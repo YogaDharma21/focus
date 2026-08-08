@@ -139,6 +139,42 @@ export function StatsJournal() {
 
     const bestStreak = calculateBestStreak();
 
+    // Calculate weekly minutes (Mon - Sun)
+    const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+    const getWeeklyMinutes = () => {
+        const weeklyMinutes: Record<string, number> = {
+            Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0, Sun: 0
+        };
+
+        const currentDayOfWeek = today.getDay();
+        const distanceToMon = (currentDayOfWeek + 6) % 7;
+        const monday = new Date(today);
+        monday.setDate(today.getDate() - distanceToMon);
+        monday.setHours(0, 0, 0, 0);
+
+        daysOfWeek.forEach((day, index) => {
+            const targetDate = new Date(monday);
+            targetDate.setDate(monday.getDate() + index);
+
+            const daySessions = sessions.filter(
+                (s) => s.date && isSameDay(parseISO(s.date), targetDate)
+            );
+            const historicalSeconds = daySessions.reduce(
+                (acc, s) => acc + s.duration,
+                0
+            );
+            const liveSeconds = isSameDay(today, targetDate) ? liveElapsed : 0;
+            const totalMinutes = Math.floor((historicalSeconds + liveSeconds) / 60);
+
+            weeklyMinutes[day] = totalMinutes;
+        });
+
+        return weeklyMinutes;
+    };
+
+    const weeklyMinutes = getWeeklyMinutes();
+    const maxWeeklyMins = Math.max(120, ...Object.values(weeklyMinutes));
+
     const now = new Date();
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
@@ -252,6 +288,50 @@ export function StatsJournal() {
                     </div>
                 </Card>
             </div>
+
+            {/* Weekly Focus Trend Chart */}
+            <Card className="p-4 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col rounded-[var(--radius)] space-y-3">
+                <div className="text-xs font-mono uppercase tracking-wider font-bold text-foreground">
+                    FOCUS TREND
+                </div>
+                <div className="space-y-2">
+                    <div className="flex items-end justify-between gap-2 h-24 pt-2">
+                        {daysOfWeek.map((day) => {
+                            const minsLogged = weeklyMinutes[day] || 0;
+                            const heightPercent =
+                                minsLogged > 0
+                                    ? Math.min(100, Math.max(12, Math.round((minsLogged / maxWeeklyMins) * 100)))
+                                    : 4;
+                            return (
+                                <div
+                                    key={day}
+                                    className="flex-1 flex flex-col items-center gap-1 h-full justify-end group relative cursor-pointer"
+                                >
+                                    <div className="absolute -top-8 px-2 py-1 rounded text-[10px] font-mono font-bold bg-popover text-popover-foreground border border-border pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap shadow-md">
+                                        {day}: {minsLogged} mins
+                                    </div>
+
+                                    <span className="text-[10px] font-mono text-muted-foreground">
+                                        {minsLogged}m
+                                    </span>
+                                    <div
+                                        className={`w-full rounded-t-md transition-all duration-300 ${
+                                            minsLogged > 0
+                                                ? "bg-foreground group-hover:bg-foreground/80"
+                                                : "bg-muted/40"
+                                        }`}
+                                        style={{ height: `${heightPercent}%` }}
+                                    />
+                                    <span className="text-xs font-mono font-bold text-foreground mt-1">
+                                        {day}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                    </div>
+                    <div className="w-full border-b border-foreground/20" />
+                </div>
+            </Card>
 
             <Card className="p-6 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-4 rounded-[var(--radius)]">
                 <div className="flex items-center justify-between">
