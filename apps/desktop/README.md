@@ -13,11 +13,24 @@
 
 ---
 
-## Screenshots
+## Screenshots Gallery
 
-| Timer | Tasks | Stats | Notes |
-| :---: | :---: | :---: | :---: |
-| ![Timer](./public/Screenshot-timer.png) | ![Tasks](./public/Screenshot-tasks.png) | ![Stats](./public/Screenshot-stats.png) | ![Notes](./public/Screenshot-notes.png) |
+<details>
+<summary>View Desktop Application Screenshots</summary>
+
+### Focus Session
+![Timer](./public/Screenshot-timer.png)
+
+### Task Management
+![Tasks](./public/Screenshot-tasks.png)
+
+### Stats & Analytics
+![Stats](./public/Screenshot-stats.png)
+
+### Mood & Notes
+![Notes](./public/Screenshot-notes.png)
+
+</details>
 
 ---
 
