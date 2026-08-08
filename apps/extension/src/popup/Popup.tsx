@@ -41,6 +41,9 @@ import {
   Calendar,
   ListChecks,
   Smile,
+  Sparkles,
+  ListFilter,
+  FileText,
 } from "lucide-react";
 import { format } from "date-fns";
 import { MoodTracker } from "./components/MoodTracker";
@@ -1085,25 +1088,24 @@ export function Popup() {
       {/* Task Detail View Modal */}
       {selectedTaskDetail && (
         <div className={`absolute inset-0 z-50 p-4 flex flex-col justify-between backdrop-blur-md overflow-y-auto animate-in fade-in duration-200 ${
-          isDark ? "bg-black/95 text-white" : "bg-white/95 text-black"
+          isDark ? "bg-[#0b0b0b] text-white" : "bg-white text-black"
         }`}>
-          <div className="flex items-center justify-between pb-3">
-            <div className="flex items-center gap-2">
-              <ListTodo className="w-4 h-4" />
-              <h2 className="text-xs font-bold font-mono uppercase tracking-wider">TASK DETAILS</h2>
-            </div>
+          {/* Header */}
+          <div className="flex items-center justify-between pb-2">
+            <h2 className="text-[11px] font-bold font-mono uppercase tracking-wider text-neutral-400">TASK DETAILS</h2>
             <button
               onClick={() => setSelectedTaskDetail(null)}
-              className={`p-1 rounded-lg border ${
-                isDark ? "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800" : "bg-neutral-100 border-neutral-300 text-black hover:bg-neutral-200"
+              className={`p-1 rounded-lg transition-colors ${
+                isDark ? "text-neutral-400 hover:text-white hover:bg-neutral-800" : "text-neutral-500 hover:text-black hover:bg-neutral-100"
               }`}
             >
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          <div className="space-y-3 my-3 text-xs overflow-y-auto pr-1">
-            <div className="flex items-center justify-between gap-2">
+          <div className="space-y-3.5 my-2 text-xs overflow-y-auto pr-1 flex-1">
+            {/* Task Title */}
+            <div>
               <input
                 type="text"
                 value={selectedTaskDetail.text}
@@ -1113,134 +1115,174 @@ export function Popup() {
                   updateState({ todos: updated });
                   setSelectedTaskDetail({ ...selectedTaskDetail, text: val });
                 }}
-                className={`flex-1 p-2 font-bold text-sm rounded-xl border focus:outline-none ${
-                  isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                className={`w-full bg-transparent text-xl font-extrabold focus:outline-none focus:border-b pb-0.5 ${
+                  isDark ? "text-white focus:border-neutral-700" : "text-black focus:border-neutral-300"
                 }`}
               />
             </div>
 
-            <button
-              onClick={() => focusOnTask(selectedTaskDetail)}
-              className={`w-full py-2.5 rounded-xl font-extrabold text-xs border flex items-center justify-center gap-2 transition-all ${
-                isDark ? "bg-white text-black border-white hover:bg-neutral-200" : "bg-black text-white border-black hover:bg-neutral-800"
-              }`}
-            >
-              <Play className="w-4 h-4 fill-current" />
-              <span>FOCUS ON THIS TASK</span>
-            </button>
-
-            <div>
-              <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Task Group</label>
-              <select
-                value={selectedTaskDetail.groupId || "current"}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, groupId: val } : t);
-                  updateState({ todos: updated });
-                  setSelectedTaskDetail({ ...selectedTaskDetail, groupId: val });
-                }}
-                className={`w-full p-2 rounded-xl border text-xs font-mono focus:outline-none ${
-                  isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
-                }`}
-              >
-                {state.groups.map(g => (
-                  <option key={g.id} value={g.id}>{g.name}</option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Priority</label>
-              <select
-                value={selectedTaskDetail.priority || "medium"}
-                onChange={(e) => {
-                  const val = e.target.value as PriorityType;
-                  const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, priority: val } : t);
-                  updateState({ todos: updated });
-                  setSelectedTaskDetail({ ...selectedTaskDetail, priority: val });
-                }}
-                className={`w-full p-2 rounded-xl border text-xs font-mono focus:outline-none ${
-                  isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
-                }`}
-              >
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </select>
-            </div>
-
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Estimated Sessions</label>
-                <input
-                  type="number"
-                  min="1"
-                  value={selectedTaskDetail.estimatedPomodoros || 1}
+            {/* Priority & Group Grid */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Priority */}
+              <div className={`p-3 rounded-2xl border ${
+                isDark ? "bg-neutral-900/60 border-neutral-800/80" : "bg-neutral-100/80 border-neutral-200"
+              }`}>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">PRIORITY</span>
+                </div>
+                <select
+                  value={selectedTaskDetail.priority || "medium"}
                   onChange={(e) => {
-                    const val = parseInt(e.target.value) || 1;
-                    const updated = state.todos.map(t => {
-                      if (t.id === selectedTaskDetail.id) {
-                        const comp = t.completedPomodoros || 0;
-                        const isFinished = comp >= val;
-                        return {
-                          ...t,
-                          estimatedPomodoros: val,
-                          completed: t.completed || isFinished,
-                          completedAt: (t.completed || isFinished) ? (t.completedAt || new Date().toISOString()) : undefined,
-                          groupId: (t.completed || isFinished) ? "finished" : t.groupId
-                        };
-                      }
-                      return t;
-                    });
-                    const completedCount = updated.filter(t => t.completed).length;
-                    updateState({ todos: updated, stats: { ...state.stats, completedTasksCount: completedCount } });
-                    const nextSelected = updated.find(t => t.id === selectedTaskDetail.id);
-                    if (nextSelected) setSelectedTaskDetail(nextSelected);
+                    const val = e.target.value as PriorityType;
+                    const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, priority: val } : t);
+                    updateState({ todos: updated });
+                    setSelectedTaskDetail({ ...selectedTaskDetail, priority: val });
                   }}
-                  className={`w-full p-2 rounded-xl border text-xs font-mono focus:outline-none ${
-                    isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                  className={`w-full p-2.5 rounded-xl border text-xs font-semibold focus:outline-none cursor-pointer ${
+                    isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white" : "bg-white border-neutral-300 text-black"
                   }`}
-                />
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
               </div>
 
-              <div>
-                <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Completed Sessions</label>
-                <input
-                  type="number"
-                  min="0"
-                  value={selectedTaskDetail.completedPomodoros || 0}
+              {/* Group */}
+              <div className={`p-3 rounded-2xl border ${
+                isDark ? "bg-neutral-900/60 border-neutral-800/80" : "bg-neutral-100/80 border-neutral-200"
+              }`}>
+                <div className="flex items-center gap-1.5 mb-2">
+                  <ListFilter className="w-3.5 h-3.5 text-blue-400" />
+                  <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">GROUP</span>
+                </div>
+                <select
+                  value={selectedTaskDetail.groupId || "current"}
                   onChange={(e) => {
-                    const val = parseInt(e.target.value) || 0;
-                    const updated = state.todos.map(t => {
-                      if (t.id === selectedTaskDetail.id) {
-                        const est = t.estimatedPomodoros || 1;
-                        const isFinished = val >= est;
-                        return {
-                          ...t,
-                          completedPomodoros: val,
-                          completed: t.completed || isFinished,
-                          completedAt: (t.completed || isFinished) ? (t.completedAt || new Date().toISOString()) : undefined,
-                          groupId: (t.completed || isFinished) ? "finished" : t.groupId
-                        };
-                      }
-                      return t;
-                    });
-                    const completedCount = updated.filter(t => t.completed).length;
-                    updateState({ todos: updated, stats: { ...state.stats, completedTasksCount: completedCount } });
-                    const nextSelected = updated.find(t => t.id === selectedTaskDetail.id);
-                    if (nextSelected) setSelectedTaskDetail(nextSelected);
+                    const val = e.target.value;
+                    const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, groupId: val } : t);
+                    updateState({ todos: updated });
+                    setSelectedTaskDetail({ ...selectedTaskDetail, groupId: val });
                   }}
-                  className={`w-full p-2 rounded-xl border text-xs font-mono focus:outline-none ${
-                    isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                  className={`w-full p-2.5 rounded-xl border text-xs font-semibold focus:outline-none cursor-pointer ${
+                    isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white" : "bg-white border-neutral-300 text-black"
                   }`}
-                />
+                >
+                  {state.groups.map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-2">
-              <div>
-                <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Deadline Date</label>
+            {/* Focus Sessions Card */}
+            <div className={`p-3.5 rounded-2xl border ${
+              isDark ? "bg-neutral-900/60 border-neutral-800/80" : "bg-neutral-100/80 border-neutral-200"
+            }`}>
+              <div className="flex items-center gap-1.5 mb-2.5">
+                <Clock className="w-3.5 h-3.5 text-emerald-400" />
+                <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">FOCUS SESSIONS</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] text-neutral-400 font-medium block mb-1">Estimated</label>
+                  <input
+                    type="number"
+                    min="1"
+                    value={selectedTaskDetail.estimatedPomodoros || 1}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 1;
+                      const updated = state.todos.map(t => {
+                        if (t.id === selectedTaskDetail.id) {
+                          const comp = t.completedPomodoros || 0;
+                          const isFinished = comp >= val;
+                          return {
+                            ...t,
+                            estimatedPomodoros: val,
+                            completed: t.completed || isFinished,
+                            completedAt: (t.completed || isFinished) ? (t.completedAt || new Date().toISOString()) : undefined,
+                            groupId: (t.completed || isFinished) ? "finished" : t.groupId
+                          };
+                        }
+                        return t;
+                      });
+                      const completedCount = updated.filter(t => t.completed).length;
+                      updateState({ todos: updated, stats: { ...state.stats, completedTasksCount: completedCount } });
+                      const nextSelected = updated.find(t => t.id === selectedTaskDetail.id);
+                      if (nextSelected) setSelectedTaskDetail(nextSelected);
+                    }}
+                    className={`w-full p-2.5 rounded-xl border text-sm font-bold focus:outline-none ${
+                      isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white" : "bg-white border-neutral-300 text-black"
+                    }`}
+                  />
+                </div>
+
+                <div>
+                  <label className="text-[10px] text-neutral-400 font-medium block mb-1">Completed</label>
+                  <input
+                    type="number"
+                    min="0"
+                    value={selectedTaskDetail.completedPomodoros || 0}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 0;
+                      const updated = state.todos.map(t => {
+                        if (t.id === selectedTaskDetail.id) {
+                          const est = t.estimatedPomodoros || 1;
+                          const isFinished = val >= est;
+                          return {
+                            ...t,
+                            completedPomodoros: val,
+                            completed: t.completed || isFinished,
+                            completedAt: (t.completed || isFinished) ? (t.completedAt || new Date().toISOString()) : undefined,
+                            groupId: (t.completed || isFinished) ? "finished" : t.groupId
+                          };
+                        }
+                        return t;
+                      });
+                      const completedCount = updated.filter(t => t.completed).length;
+                      updateState({ todos: updated, stats: { ...state.stats, completedTasksCount: completedCount } });
+                      const nextSelected = updated.find(t => t.id === selectedTaskDetail.id);
+                      if (nextSelected) setSelectedTaskDetail(nextSelected);
+                    }}
+                    className={`w-full p-2.5 rounded-xl border text-sm font-bold focus:outline-none ${
+                      isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white" : "bg-white border-neutral-300 text-black"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* Progress Bar & Percentage */}
+              {(() => {
+                const est = selectedTaskDetail.estimatedPomodoros || 1;
+                const comp = selectedTaskDetail.completedPomodoros || 0;
+                const pct = Math.min(100, Math.round((comp / Math.max(1, est)) * 100));
+                return (
+                  <div className="mt-3">
+                    <div className={`w-full h-2 rounded-full overflow-hidden ${isDark ? "bg-neutral-800" : "bg-neutral-200"}`}>
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${isDark ? "bg-white" : "bg-black"}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <div className="text-[10px] font-mono font-medium text-neutral-400 text-right mt-1">
+                      {pct}% Completed
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
+            {/* Deadline Card */}
+            <div className={`p-3.5 rounded-2xl border ${
+              isDark ? "bg-neutral-900/60 border-neutral-800/80" : "bg-neutral-100/80 border-neutral-200"
+            }`}>
+              <div className="flex items-center gap-1.5 mb-2.5">
+                <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">DEADLINE</span>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
                 <input
                   type="date"
                   value={selectedTaskDetail.dueDate || ""}
@@ -1250,14 +1292,10 @@ export function Popup() {
                     updateState({ todos: updated });
                     setSelectedTaskDetail({ ...selectedTaskDetail, dueDate: val });
                   }}
-                  className={`w-full p-2 rounded-xl border text-xs font-mono focus:outline-none ${
-                    isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                  className={`w-full p-2.5 rounded-xl border text-xs font-mono focus:outline-none ${
+                    isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white" : "bg-white border-neutral-300 text-black"
                   }`}
                 />
-              </div>
-
-              <div>
-                <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Deadline Time</label>
                 <input
                   type="time"
                   value={selectedTaskDetail.dueTime || ""}
@@ -1267,17 +1305,23 @@ export function Popup() {
                     updateState({ todos: updated });
                     setSelectedTaskDetail({ ...selectedTaskDetail, dueTime: val });
                   }}
-                  className={`w-full p-2 rounded-xl border text-xs font-mono focus:outline-none ${
-                    isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                  className={`w-full p-2.5 rounded-xl border text-xs font-mono focus:outline-none ${
+                    isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white" : "bg-white border-neutral-300 text-black"
                   }`}
                 />
               </div>
             </div>
 
-            <div>
-              <label className="text-[10px] font-mono uppercase font-bold block mb-1 opacity-70">Task Notes</label>
+            {/* Notes Card */}
+            <div className={`p-3.5 rounded-2xl border ${
+              isDark ? "bg-neutral-900/60 border-neutral-800/80" : "bg-neutral-100/80 border-neutral-200"
+            }`}>
+              <div className="flex items-center gap-1.5 mb-2.5">
+                <FileText className="w-3.5 h-3.5 text-amber-500" />
+                <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">NOTES</span>
+              </div>
               <textarea
-                rows={2}
+                rows={3}
                 value={selectedTaskDetail.notes || ""}
                 onChange={(e) => {
                   const val = e.target.value;
@@ -1285,43 +1329,51 @@ export function Popup() {
                   updateState({ todos: updated });
                   setSelectedTaskDetail({ ...selectedTaskDetail, notes: val });
                 }}
-                placeholder="Add additional task notes..."
-                className={`w-full p-2 rounded-xl border text-xs focus:outline-none ${
-                  isDark ? "bg-neutral-900 border-neutral-800 text-white placeholder-neutral-600" : "bg-neutral-100 border-neutral-300 text-black placeholder-neutral-400"
+                placeholder="Add notes or details for this task..."
+                className={`w-full p-3 rounded-xl border text-xs focus:outline-none resize-none min-h-[75px] ${
+                  isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white placeholder-neutral-500" : "bg-white border-neutral-300 text-black placeholder-neutral-400"
                 }`}
               />
             </div>
 
-            <div className="pt-2">
-              <label className="text-[10px] font-mono uppercase font-bold block mb-2 opacity-70">Subtasks Checklist</label>
+            {/* Subtasks Card */}
+            <div className={`p-3.5 rounded-2xl border ${
+              isDark ? "bg-neutral-900/60 border-neutral-800/80" : "bg-neutral-100/80 border-neutral-200"
+            }`}>
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="flex items-center gap-1.5">
+                  <CheckSquare className="w-3.5 h-3.5 text-cyan-400" />
+                  <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">SUBTASKS</span>
+                </div>
+                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
+                  isDark ? "bg-neutral-800/80 border-neutral-700/50 text-neutral-400" : "bg-neutral-200 border-neutral-300 text-neutral-600"
+                }`}>
+                  {(selectedTaskDetail.subtasks || []).filter(s => s.completed).length}/{(selectedTaskDetail.subtasks || []).length}
+                </span>
+              </div>
 
-              <form onSubmit={(e) => { e.preventDefault(); addSubtask(selectedTaskDetail.id, newSubtaskText); setNewSubtaskText(""); }} className="flex gap-2 mb-2">
+              <form onSubmit={(e) => { e.preventDefault(); if (newSubtaskText.trim()) { addSubtask(selectedTaskDetail.id, newSubtaskText); setNewSubtaskText(""); } }} className="mb-2">
                 <input
                   type="text"
                   value={newSubtaskText}
                   onChange={(e) => setNewSubtaskText(e.target.value)}
-                  placeholder="Add subtask..."
-                  className={`flex-1 p-2 rounded-xl border text-xs focus:outline-none ${
-                    isDark ? "bg-neutral-900 border-neutral-800 text-white" : "bg-neutral-100 border-neutral-300 text-black"
+                  placeholder="Add a subtask..."
+                  className={`w-full p-2.5 rounded-xl border text-xs focus:outline-none ${
+                    isDark ? "bg-neutral-800/80 border-neutral-700/50 text-white placeholder-neutral-500" : "bg-white border-neutral-300 text-black placeholder-neutral-400"
                   }`}
                 />
-                <button type="submit" className={`px-3 py-2 rounded-xl font-bold text-xs border ${
-                  isDark ? "bg-white text-black border-white" : "bg-black text-white border-black"
-                }`}>
-                  Add
-                </button>
               </form>
 
-              <div className="space-y-1.5 max-h-32 overflow-y-auto">
+              <div className="space-y-1.5 max-h-36 overflow-y-auto">
                 {(selectedTaskDetail.subtasks || []).map(sub => (
                   <div key={sub.id} className={`p-2 rounded-xl border flex items-center justify-between text-xs ${
-                    sub.completed ? "line-through opacity-50" : ""
+                    isDark ? "bg-neutral-800/40 border-neutral-700/40" : "bg-white border-neutral-200"
                   }`}>
-                    <div className="flex items-center gap-2">
-                      <button onClick={() => toggleSubtask(selectedTaskDetail.id, sub.id)}>
-                        {sub.completed ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Circle className="w-3.5 h-3.5" />}
+                    <div className="flex items-center gap-2 flex-1">
+                      <button type="button" onClick={() => toggleSubtask(selectedTaskDetail.id, sub.id)}>
+                        {sub.completed ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Circle className="w-3.5 h-3.5 text-neutral-500" />}
                       </button>
-                      <span>{sub.text}</span>
+                      <span className={sub.completed ? "line-through text-neutral-500" : (isDark ? "text-white" : "text-black")}>{sub.text}</span>
                     </div>
                   </div>
                 ))}
@@ -1329,12 +1381,24 @@ export function Popup() {
             </div>
           </div>
 
-          <div className="flex gap-2 pt-2">
+          {/* Bottom Action Bar: Focus on this task button & Delete Task */}
+          <div className="flex items-center justify-between gap-3 pt-3 mt-1 border-t border-neutral-800/60">
+            <button
+              onClick={() => focusOnTask(selectedTaskDetail)}
+              className={`py-2 px-3 rounded-xl font-extrabold text-xs border flex items-center justify-center gap-2 transition-all ${
+                isDark ? "bg-white text-black border-white hover:bg-neutral-200" : "bg-black text-white border-black hover:bg-neutral-800"
+              }`}
+            >
+              <Play className="w-3.5 h-3.5 fill-current" />
+              <span>FOCUS ON THIS TASK</span>
+            </button>
+
             <button
               onClick={() => deleteTodo(selectedTaskDetail.id)}
-              className="w-full py-2 rounded-xl border border-red-500 text-red-500 text-xs font-bold hover:bg-red-500 hover:text-white transition-all"
+              className="text-red-400 hover:text-red-300 font-medium text-xs flex items-center gap-1.5 transition-colors py-1.5 px-2.5 rounded-xl hover:bg-red-500/10"
             >
-              Delete Task
+              <Trash2 className="w-3.5 h-3.5" />
+              <span>Delete Task</span>
             </button>
           </div>
         </div>
