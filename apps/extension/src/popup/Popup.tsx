@@ -1700,7 +1700,7 @@ export function Popup() {
                     value={state.sessionName}
                     onChange={(e) => updateState({ sessionName: e.target.value })}
                     onKeyDown={handleGoalKeyDown}
-                    placeholder="Session Goal (Press Enter to create task)..."
+                    placeholder="Session Goal (Press Enter)..."
                     className="flex-1 min-w-0 bg-transparent text-xs text-center font-medium text-white placeholder-neutral-500 focus:outline-none pl-6 pr-1 py-1"
                   />
                   <button
