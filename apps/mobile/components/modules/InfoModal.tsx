@@ -38,7 +38,7 @@ export function InfoModal({ visible, onClose }: InfoModalProps) {
 
           <View style={styles.content}>
             <Text style={[styles.versionText, { color: colors.textMuted }]}>
-              Version 1.2.0
+              Version 0.0.1
             </Text>
 
             <Text style={[styles.desc, { color: colors.textMuted }]}>
