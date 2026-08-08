@@ -26,6 +26,7 @@ import {
   CheckSquare,
   Square,
   ListCheck,
+  ListTodo,
 } from 'lucide-react-native';
 
 const DISTRACTION_CATEGORIES = [
@@ -66,6 +67,10 @@ export function FocusTimer() {
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
   const [todoPickerOpen, setTodoPickerOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+
+  const [isSessionFocused, setIsSessionFocused] = useState(false);
+  const [isWorkFocused, setIsWorkFocused] = useState(false);
+  const [isBreakFocused, setIsBreakFocused] = useState(false);
 
   // Settings inputs
   const [workInput, setWorkInput] = useState(pomodoroSettings.work.toString());
@@ -294,24 +299,51 @@ export function FocusTimer() {
           {formatTime(timeLeft)}
         </Text>
 
-        {/* Input for session name */}
-        <TextInput
+        {/* Session Goal Input Bar */}
+        <View
           style={[
-            styles.sessionInput,
-            { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg },
+            styles.sessionGoalContainer,
+            {
+              backgroundColor: colors.inputBg,
+              borderColor: isSessionFocused ? colors.text : colors.border,
+            },
           ]}
-          placeholder="What are you focusing on?"
-          placeholderTextColor={colors.textMuted}
-          value={sessionName}
-          onChangeText={setSessionName}
-        />
+        >
+          <TextInput
+            style={[
+              styles.sessionGoalInput,
+              { color: colors.text },
+            ]}
+            placeholder="Session Goal (Press Enter)..."
+            placeholderTextColor={colors.textMuted}
+            value={sessionName}
+            onChangeText={setSessionName}
+            onFocus={() => setIsSessionFocused(true)}
+            onBlur={() => setIsSessionFocused(false)}
+          />
+          <TouchableOpacity
+            style={styles.taskPickerBtn}
+            onPress={() => setTodoPickerOpen(true)}
+            activeOpacity={0.7}
+            accessibilityLabel="Select from your tasks"
+          >
+            <ListTodo size={18} color={selectedTodo ? colors.text : colors.textMuted} />
+          </TouchableOpacity>
+        </View>
 
         {/* Task Tag Button */}
         <TouchableOpacity
-          style={[styles.taskTagBtn, { borderColor: colors.border, backgroundColor: colors.inputBg }]}
+          style={[
+            styles.taskTagBtn,
+            {
+              borderColor: colors.border,
+              backgroundColor: colors.inputBg,
+            },
+          ]}
           onPress={() => setTodoPickerOpen(true)}
+          activeOpacity={0.7}
         >
-          <Tag size={14} color={colors.textMuted} />
+          <Tag size={13} color={colors.textMuted} />
           <Text style={[styles.taskTagText, { color: selectedTodo ? colors.text : colors.textMuted }]} numberOfLines={1}>
             {selectedTodo ? selectedTodo.text : 'Link to a task'}
           </Text>
@@ -426,20 +458,30 @@ export function FocusTimer() {
             <View style={styles.settingGroup}>
               <Text style={[styles.settingLabel, { color: colors.text }]}>Pomodoro Work Time (mins)</Text>
               <TextInput
-                style={[styles.settingInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg }]}
+                style={[
+                  styles.settingInput,
+                  { color: colors.text, borderColor: isWorkFocused ? colors.text : colors.border, backgroundColor: colors.inputBg },
+                ]}
                 keyboardType="numeric"
                 value={workInput}
                 onChangeText={setWorkInput}
+                onFocus={() => setIsWorkFocused(true)}
+                onBlur={() => setIsWorkFocused(false)}
               />
             </View>
 
             <View style={styles.settingGroup}>
               <Text style={[styles.settingLabel, { color: colors.text }]}>Break Time (mins)</Text>
               <TextInput
-                style={[styles.settingInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg }]}
+                style={[
+                  styles.settingInput,
+                  { color: colors.text, borderColor: isBreakFocused ? colors.text : colors.border, backgroundColor: colors.inputBg },
+                ]}
                 keyboardType="numeric"
                 value={breakInput}
                 onChangeText={setBreakInput}
+                onFocus={() => setIsBreakFocused(true)}
+                onBlur={() => setIsBreakFocused(false)}
               />
             </View>
 
@@ -591,15 +633,29 @@ const styles = StyleSheet.create({
     letterSpacing: -2,
     marginVertical: 12,
   },
-  sessionInput: {
+  sessionGoalContainer: {
     width: '100%',
-    height: 44,
-    borderRadius: 12,
+    height: 46,
+    borderRadius: 16,
     borderWidth: 1,
-    paddingHorizontal: 14,
-    fontSize: 14,
-    textAlign: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 14,
+    paddingRight: 8,
     marginBottom: 10,
+  },
+  sessionGoalInput: {
+    flex: 1,
+    height: '100%',
+    fontSize: 13,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  taskPickerBtn: {
+    padding: 6,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   taskTagBtn: {
     flexDirection: 'row',
@@ -607,7 +663,7 @@ const styles = StyleSheet.create({
     gap: 6,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
     width: '100%',
     marginBottom: 12,

@@ -90,6 +90,7 @@ export function MoodTracker() {
   const [selectedDateKey, setSelectedDateKey] = useState<string>(todayStr);
   const [selectedMood, setSelectedMood] = useState<MoodType | null>(null);
   const [descriptionText, setDescriptionText] = useState('');
+  const [isNoteFocused, setIsNoteFocused] = useState(false);
 
   const lastTapRef = useRef<{ dateKey: string; timestamp: number } | null>(null);
 
@@ -230,7 +231,7 @@ export function MoodTracker() {
         <TextInput
           style={[
             styles.noteInput,
-            { color: colors.text, backgroundColor: colors.inputBg, borderColor: colors.border },
+            { color: colors.text, backgroundColor: colors.inputBg, borderColor: isNoteFocused ? colors.text : colors.border },
           ]}
           placeholder="Optional reflection: What made you feel this way?"
           placeholderTextColor={colors.textMuted}
@@ -238,6 +239,8 @@ export function MoodTracker() {
           numberOfLines={2}
           value={descriptionText}
           onChangeText={setDescriptionText}
+          onFocus={() => setIsNoteFocused(true)}
+          onBlur={() => setIsNoteFocused(false)}
         />
 
         <View style={styles.saveRow}>
