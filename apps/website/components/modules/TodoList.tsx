@@ -376,12 +376,6 @@ export function TodoList() {
                                                 /{todo.subtasks.length}
                                             </div>
                                         )}
-                                    {todo.notes && todo.notes.trim().length > 0 && (
-                                        <div className="flex items-center gap-1 text-amber-400/90" title="Has notes">
-                                            <FileText className="w-3 h-3" />
-                                            Notes
-                                        </div>
-                                    )}
                                 </div>
                             </div>
 
