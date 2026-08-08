@@ -47,6 +47,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { MoodTracker } from "./components/MoodTracker";
+import { BackgroundDisplay } from "./components/BackgroundDisplay";
 import { Progress } from "../components/ui/progress";
 import { AppStateData, TodoItem, PriorityType, BackgroundTheme } from "../types";
 import { getStoredState, saveStoredState, subscribeToStateChanges, DEFAULT_STATE } from "../lib/storage";
@@ -94,12 +95,12 @@ const DISTRACTION_CATEGORIES = [
 ];
 
 const BACKGROUND_THEMES: { id: BackgroundTheme; name: string }[] = [
-  { id: "default", name: "Solid Background" },
-  { id: "gradient", name: "Minimal Gradient" },
-  { id: "mountain", name: "Geometric Grid" },
-  { id: "library", name: "Vertical Stripe Texture" },
-  { id: "cafe", name: "Diagonal Crosshatch" },
-  { id: "anime-room", name: "Dot Matrix Pattern" }
+  { id: "dark", name: "Dark" },
+  { id: "gradient", name: "Gradient" },
+  { id: "mountain", name: "Mountain" },
+  { id: "library", name: "Library" },
+  { id: "cafe", name: "Cafe" },
+  { id: "anime-room", name: "Anime Room" }
 ];
 
 export function Popup() {
@@ -627,24 +628,11 @@ export function Popup() {
     distractionCounts[cat] = (distractionCounts[cat] || 0) + 1;
   });
 
-  // Vector Background Pattern Class computation
-  const bgClass =
-    state.background === "gradient"
-      ? (isDark ? "bg-gradient-to-br from-black via-neutral-950 to-neutral-900" : "bg-gradient-to-br from-white via-neutral-100 to-neutral-200")
-      : state.background === "mountain"
-      ? (isDark ? "bg-[radial-gradient(#262626_1px,transparent_1px)] [background-size:16px_16px] bg-black" : "bg-[radial-gradient(#d4d4d4_1px,transparent_1px)] [background-size:16px_16px] bg-white")
-      : state.background === "library"
-      ? (isDark ? "bg-[linear-gradient(to_right,#171717_1px,transparent_1px)] [background-size:24px_100%] bg-black" : "bg-[linear-gradient(to_right,#e5e5e5_1px,transparent_1px)] [background-size:24px_100%] bg-white")
-      : state.background === "cafe"
-      ? (isDark ? "bg-[repeating-linear-gradient(45deg,#171717,#171717_1px,transparent_0,transparent_16px)] bg-black" : "bg-[repeating-linear-gradient(45deg,#f5f5f5,#f5f5f5_1px,transparent_0,transparent_16px)] bg-white")
-      : state.background === "anime-room"
-      ? (isDark ? "bg-[radial-gradient(#404040_1px,transparent_1px)] [background-size:12px_12px] bg-black" : "bg-[radial-gradient(#a3a3a3_1px,transparent_1px)] [background-size:12px_12px] bg-white")
-      : (isDark ? "bg-black" : "bg-white");
-
   return (
     <div className={`w-[420px] h-[580px] flex flex-col overflow-hidden select-none font-sans relative ${
       isDark ? "text-white" : "text-black"
-    } ${bgClass}`}>
+    }`}>
+      <BackgroundDisplay theme={state.background} />
       {/* Top Header */}
       <header className={`px-4 py-3 flex items-center justify-between z-10 ${
         isDark ? "bg-neutral-950/80" : "bg-neutral-100/80"
@@ -871,26 +859,29 @@ export function Popup() {
       {/* Background Theme Selector Picker Overlay */}
       {showThemePicker && (
         <div className={`absolute top-14 right-4 z-50 p-3 rounded-xl border shadow-2xl flex flex-col gap-1 text-xs font-mono animate-in fade-in duration-150 ${
-          isDark ? "bg-neutral-950 border-neutral-700 text-white" : "bg-white border-neutral-300 text-black"
-        }`}>
-          <div className="text-[10px] font-bold uppercase opacity-60 px-2 py-1">SELECT BACKGROUND PATTERN</div>
-          {BACKGROUND_THEMES.map((theme) => (
-            <button
-              key={theme.id}
-              onClick={() => {
-                updateState({ background: theme.id });
-                setShowThemePicker(false);
-              }}
-              className={`px-3 py-1.5 rounded-lg text-left font-bold transition-all flex items-center justify-between ${
-                state.background === theme.id
-                  ? isDark ? "bg-white text-black" : "bg-black text-white"
-                  : isDark ? "hover:bg-neutral-800" : "hover:bg-neutral-100"
-              }`}
-            >
-              <span>{theme.name}</span>
-              {state.background === theme.id && <span className="text-[10px]">✓</span>}
-            </button>
-          ))}
+          isDark ? "bg-neutral-950/90 border-neutral-700 text-white" : "bg-white/90 border-neutral-300 text-black"
+        } backdrop-blur-md`}>
+          <div className="text-[10px] font-bold uppercase opacity-60 px-2 py-1">SELECT BACKGROUND THEME</div>
+          {BACKGROUND_THEMES.map((theme) => {
+            const isSelected = state.background === theme.id || (theme.id === "dark" && state.background === "default");
+            return (
+              <button
+                key={theme.id}
+                onClick={() => {
+                  updateState({ background: theme.id });
+                  setShowThemePicker(false);
+                }}
+                className={`px-3 py-1.5 rounded-lg text-left font-bold transition-all flex items-center justify-between gap-4 ${
+                  isSelected
+                    ? isDark ? "bg-white text-black" : "bg-black text-white"
+                    : isDark ? "hover:bg-neutral-800" : "hover:bg-neutral-100"
+                }`}
+              >
+                <span>{theme.name}</span>
+                {isSelected && <span className="text-[10px]">✓</span>}
+              </button>
+            );
+          })}
         </div>
       )}
 
