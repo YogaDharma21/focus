@@ -7,7 +7,6 @@ import { MediaPlayer } from "@/components/modules/MediaPlayer";
 import { FocusTimer } from "@/components/modules/FocusTimer";
 import { TodoList } from "@/components/modules/TodoList";
 import { StatsJournal } from "@/components/modules/StatsJournal";
-import { DynamicIslandTimer } from "@/components/modules/DynamicIslandTimer";
 import { DeepFocusOverlay } from "@/components/modules/DeepFocusOverlay";
 import { BackgroundDisplay } from "@/components/modules/BackgroundDisplay";
 import { BackgroundSelector } from "@/components/modules/BackgroundSelector";
@@ -103,8 +102,6 @@ export default function Page() {
                     </header>
 
                     <div className="w-full">
-                        {currentView !== "FOCUS" && <DynamicIslandTimer />}
-
                         {currentView === "FOCUS" && (
                             <div className="flex items-center justify-center min-h-[60vh]">
                                 <FocusTimer />
