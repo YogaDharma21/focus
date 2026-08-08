@@ -70,7 +70,7 @@ export default function Page() {
             )}>
                 <BottomNavbar />
                 
-                <div className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 pb-24 z-10 relative transition-all duration-300 ease-in-out">
+                <div className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 md:pl-28 pb-24 z-10 relative transition-all duration-300 ease-in-out">
                     <header className="flex items-center justify-between mb-8 gap-2">
                         <div className="flex items-center gap-3">
                             <img src="/icon-192.png" alt="Focus Logo" className="w-8 h-8 rounded-lg object-contain shadow-sm" />
