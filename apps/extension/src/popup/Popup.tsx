@@ -41,6 +41,7 @@ import {
   Smile,
 } from "lucide-react";
 import { MoodTracker } from "./components/MoodTracker";
+import { Progress } from "../components/ui/progress";
 import { AppStateData, TodoItem, PriorityType, BackgroundTheme } from "../types";
 import { getStoredState, saveStoredState, subscribeToStateChanges, DEFAULT_STATE } from "../lib/storage";
 import "../index.css";
@@ -573,6 +574,16 @@ export function Popup() {
   const secs = state.timeLeft % 60;
   const timeFormatted = `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   const totalDuration = state.timerState === "WORK" ? state.pomodoroSettings.work * 60 : state.pomodoroSettings.break * 60;
+  const progressValue =
+    state.timerState === "FLOW"
+      ? 100
+      : state.timerState === "WORK"
+      ? state.pomodoroSettings.work > 0
+        ? Math.min(100, Math.max(0, ((state.pomodoroSettings.work * 60 - state.timeLeft) / (state.pomodoroSettings.work * 60)) * 100))
+        : 100
+      : state.pomodoroSettings.break > 0
+      ? Math.min(100, Math.max(0, ((state.pomodoroSettings.break * 60 - state.timeLeft) / (state.pomodoroSettings.break * 60)) * 100))
+      : 100;
 
   // Stats Calculations
   const finishedTasksTodayCount = state.todos.filter(t => t.completed).length;
@@ -1504,15 +1515,6 @@ export function Popup() {
               <span className="text-7xl font-black font-mono tracking-tighter leading-none">
                 {timeFormatted}
               </span>
-              <span className={`text-[10px] font-mono uppercase tracking-widest mt-3 px-3 py-1 rounded-lg border ${
-                isDark
-                  ? "bg-neutral-900 text-neutral-300 border-neutral-700"
-                  : "bg-neutral-100 text-neutral-800 border-neutral-300"
-              }`}>
-                {state.isActive
-                  ? (state.timerState === "FLOW" ? "STOPWATCH FLOW" : state.timerState === "WORK" ? "WORK IN PROGRESS" : "ON BREAK")
-                  : "PAUSED"}
-              </span>
             </div>
 
             {/* Focus Session Goal / Task Selector */}
@@ -1672,6 +1674,11 @@ export function Popup() {
                 </div>
               </div>
             )}
+
+            {/* Session Progress Bar (matching website design) */}
+            <div className="w-full max-w-[280px] my-2">
+              <Progress value={progressValue} className="h-1.5" />
+            </div>
 
             {/* Control Buttons Grid */}
             <div className="flex items-center gap-2">
@@ -1985,16 +1992,7 @@ export function Popup() {
                     <span className="text-xs font-extrabold font-mono">{dayPercent}%</span>
                   </div>
 
-                  <div className={`w-full h-2 rounded-full overflow-hidden ${
-                    isDark ? "bg-neutral-800" : "bg-neutral-200"
-                  }`}>
-                    <div
-                      className={`h-full rounded-full transition-all duration-500 ${
-                        isDark ? "bg-white" : "bg-black"
-                      }`}
-                      style={{ width: `${dayPercent}%` }}
-                    />
-                  </div>
+                  <Progress value={dayPercent} className="h-2 rounded-full" />
 
                   <div className="text-[10px] font-mono opacity-60">
                     {remH}h {remM}m remaining today
