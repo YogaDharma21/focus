@@ -3,6 +3,7 @@
 import { useAppStore, ViewType } from "@/lib/store";
 import { Timer, CheckSquare, BarChart2, Smile } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DynamicIslandTimer } from "@/components/modules/DynamicIslandTimer";
 
 export function BottomNavbar() {
     const { currentView, setView } = useAppStore();
@@ -30,6 +31,9 @@ export function BottomNavbar() {
         },
     ];
 
+    const firstHalf = navItems.slice(0, 2);
+    const secondHalf = navItems.slice(2);
+
     return (
         <div
             className={cn(
@@ -44,7 +48,40 @@ export function BottomNavbar() {
                     "flex-row md:flex-col",
                 )}
             >
-                {navItems.map((item) => {
+                {firstHalf.map((item) => {
+                    const isActive = currentView === item.value;
+                    return (
+                        <button
+                            key={item.value}
+                            onClick={() => setView(item.value)}
+                            className={cn(
+                                "relative flex flex-col items-center justify-center w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 transition-all duration-300 ease-out group rounded-[var(--radius)]",
+                                isActive
+                                    ? "text-primary-foreground bg-primary shadow-lg"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+                            )}
+                        >
+                            <span
+                                className={cn(
+                                    "transform transition-transform duration-300",
+                                    isActive
+                                        ? "scale-110"
+                                        : "group-hover:scale-105",
+                                )}
+                            >
+                                {item.icon}
+                            </span>
+                        </button>
+                    );
+                })}
+
+                {currentView !== "FOCUS" && (
+                    <div className="flex items-center justify-center my-0.5">
+                        <DynamicIslandTimer />
+                    </div>
+                )}
+
+                {secondHalf.map((item) => {
                     const isActive = currentView === item.value;
                     return (
                         <button
@@ -74,4 +111,5 @@ export function BottomNavbar() {
         </div>
     );
 }
+
 
