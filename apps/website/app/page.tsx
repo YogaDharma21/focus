@@ -98,9 +98,7 @@ export default function Page() {
                                 </span>
                             </button>
                             <BackgroundSelector />
-                            <div className="scale-90">
-                                <InfoButton />
-                            </div>
+                            <InfoButton />
                         </div>
                     </header>
 
