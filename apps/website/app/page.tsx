@@ -102,7 +102,7 @@ export default function Page() {
                         </div>
                     </header>
 
-                    <div className="w-full transition-all duration-500">
+                    <div className="w-full">
                         {currentView !== "FOCUS" && <DynamicIslandTimer />}
 
                         {currentView === "FOCUS" && (
@@ -112,7 +112,7 @@ export default function Page() {
                         )}
 
                         {(currentView === "TODO" || currentView === "JOURNAL") && (
-                            <div className="max-w-2xl mx-auto w-full pb-8 pt-12 transition-all duration-300 ease-in-out">
+                            <div className="max-w-2xl mx-auto w-full pb-8 pt-12">
                                 {currentView === "TODO" ? (
                                     <TodoList />
                                 ) : (
@@ -122,7 +122,7 @@ export default function Page() {
                         )}
 
                         {currentView === "NOTES" && (
-                            <div className="max-w-2xl mx-auto w-full pb-8 pt-12 transition-all duration-300 ease-in-out">
+                            <div className="max-w-2xl mx-auto w-full pb-8 pt-12">
                                 <MoodTracker />
                             </div>
                         )}
