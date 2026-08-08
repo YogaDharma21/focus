@@ -1,22 +1,31 @@
 "use client";
 
+import React from "react";
 import { useState } from "react";
 import { useAppStore } from "@/lib/store";
-import { MoodNote } from "@/lib/store";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Trash2, NotebookPen } from "lucide-react";
+import { Trash2, NotebookPen, Smile, Sparkles, Meh, Frown, Angry, Moon } from "lucide-react";
 import { format, isToday, isYesterday } from "date-fns";
 import { cn } from "@/lib/utils";
 
+const MOOD_ICONS: Record<string, React.ReactNode> = {
+    Happy: <Smile className="w-6 h-6" />,
+    Excited: <Sparkles className="w-6 h-6" />,
+    Okay: <Meh className="w-6 h-6" />,
+    Sad: <Frown className="w-6 h-6" />,
+    Stressed: <Angry className="w-6 h-6" />,
+    Tired: <Moon className="w-6 h-6" />,
+};
+
 const MOODS = [
-    { emoji: "😊", label: "Happy" },
-    { emoji: "🤩", label: "Excited" },
-    { emoji: "😐", label: "Okay" },
-    { emoji: "😔", label: "Sad" },
-    { emoji: "😤", label: "Stressed" },
-    { emoji: "😴", label: "Tired" },
+    { value: "Happy", label: "Happy" },
+    { value: "Excited", label: "Excited" },
+    { value: "Okay", label: "Okay" },
+    { value: "Sad", label: "Sad" },
+    { value: "Stressed", label: "Stressed" },
+    { value: "Tired", label: "Tired" },
 ];
 
 export function MoodNotes() {
@@ -50,21 +59,21 @@ export function MoodNotes() {
                 <div className="flex flex-wrap gap-2">
                     {MOODS.map((mood) => (
                         <button
-                            key={mood.emoji}
+                            key={mood.value}
                             onClick={() =>
                                 setSelectedMood(
-                                    selectedMood === mood.emoji ? "" : mood.emoji,
+                                    selectedMood === mood.value ? "" : mood.value,
                                 )
                             }
                             className={cn(
                                 "text-2xl p-3 rounded-lg transition-all",
-                                selectedMood === mood.emoji
+                                selectedMood === mood.value
                                     ? "bg-primary/20 ring-2 ring-primary"
                                     : "bg-background/50 hover:bg-background",
                             )}
                             title={mood.label}
                         >
-                            {mood.emoji}
+                            {MOOD_ICONS[mood.value]}
                         </button>
                     ))}
                 </div>
@@ -96,7 +105,7 @@ export function MoodNotes() {
                                 key={note.id}
                                 className="flex items-start gap-3"
                             >
-                                <span className="text-3xl">{note.mood}</span>
+                                <span className="flex-shrink-0">{MOOD_ICONS[note.mood] || note.mood}</span>
                                 <div className="flex-1 min-w-0">
                                     <p className="text-sm text-foreground whitespace-pre-wrap break-words">
                                         {note.text}
@@ -135,8 +144,8 @@ export function MoodNotes() {
                                 >
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex items-start gap-3 min-w-0">
-                                            <span className="text-2xl flex-shrink-0">
-                                                {note.mood}
+                                            <span className="flex-shrink-0">
+                                                {MOOD_ICONS[note.mood] || note.mood}
                                             </span>
                                             <div className="flex-1 min-w-0">
                                                 <p className="text-xs text-muted-foreground mb-1">

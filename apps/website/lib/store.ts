@@ -261,11 +261,11 @@ export const useAppStore = create<AppState>()(
                     const currentMoodRaw = existing?.mood;
                     let currentMood = "";
                     if (currentMoodRaw) {
-                        if (currentMoodRaw === "amazing" || currentMoodRaw === "😊" || currentMoodRaw === "🤩") currentMood = "amazing";
-                        else if (currentMoodRaw === "ok" || currentMoodRaw === "😐") currentMood = "ok";
-                        else if (currentMoodRaw === "tired" || currentMoodRaw === "😴") currentMood = "tired";
-                        else if (currentMoodRaw === "sad" || currentMoodRaw === "😔") currentMood = "sad";
-                        else if (currentMoodRaw === "stressed" || currentMoodRaw === "😤") currentMood = "stressed";
+                        if (currentMoodRaw === "amazing" || currentMoodRaw === "😊" || currentMoodRaw === "🤩" || currentMoodRaw === "Happy" || currentMoodRaw === "Excited") currentMood = "amazing";
+                        else if (currentMoodRaw === "ok" || currentMoodRaw === "🙂" || currentMoodRaw === "😐" || currentMoodRaw === "Okay") currentMood = "ok";
+                        else if (currentMoodRaw === "tired" || currentMoodRaw === "😴" || currentMoodRaw === "Tired") currentMood = "tired";
+                        else if (currentMoodRaw === "sad" || currentMoodRaw === "😔" || currentMoodRaw === "Sad") currentMood = "sad";
+                        else if (currentMoodRaw === "stressed" || currentMoodRaw === "😤" || currentMoodRaw === "Stressed") currentMood = "stressed";
                         else currentMood = currentMoodRaw;
                     }
 
