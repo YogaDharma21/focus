@@ -1515,15 +1515,6 @@ export function Popup() {
               <span className="text-7xl font-black font-mono tracking-tighter leading-none">
                 {timeFormatted}
               </span>
-              <span className={`text-[10px] font-mono uppercase tracking-widest mt-3 px-3 py-1 rounded-lg border ${
-                isDark
-                  ? "bg-neutral-900 text-neutral-300 border-neutral-700"
-                  : "bg-neutral-100 text-neutral-800 border-neutral-300"
-              }`}>
-                {state.isActive
-                  ? (state.timerState === "FLOW" ? "STOPWATCH FLOW" : state.timerState === "WORK" ? "WORK IN PROGRESS" : "ON BREAK")
-                  : "PAUSED"}
-              </span>
             </div>
 
             {/* Focus Session Goal / Task Selector */}
