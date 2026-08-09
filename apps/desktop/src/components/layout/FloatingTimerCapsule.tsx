@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { playCompletionSound } from '../../lib/sound';
 import { 
-  Play, Pause, AlertTriangle, CheckCircle2, Coffee, Timer as TimerIcon 
+  Play, Pause, AlertTriangle, CheckCircle2, Coffee, Timer as TimerIcon, Clock 
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
@@ -69,7 +69,7 @@ export const FloatingTimerCapsule: React.FC = () => {
           });
         }
 
-        electron.showNotification("Session Complete! 🎉", `Great work finishing "${title}"! Time for a break.`);
+        electron.showNotification("Session Complete!", `Great work finishing "${title}"! Time for a break.`);
         
         setPreviousMode('POMODORO');
         setTimerState('BREAK');
@@ -80,11 +80,11 @@ export const FloatingTimerCapsule: React.FC = () => {
         }
       } else {
         if (previousMode === 'STOPWATCH') {
-          electron.showNotification("Break Complete! ⚡", "Ready to jump back into Flow state?");
+          electron.showNotification("Break Complete!", "Ready to jump back into Flow state?");
           setTimerMode('STOPWATCH');
           setFlowTimeElapsed(0);
         } else {
-          electron.showNotification("Break Complete! ⚡", "Ready to start focusing again?");
+          electron.showNotification("Break Complete!", "Ready to start focusing again?");
           setTimerState('WORK');
           setTimeLeft(pomodoroSettings.work * 60);
         }
@@ -116,7 +116,7 @@ export const FloatingTimerCapsule: React.FC = () => {
         : `${breakSecs}s`;
 
       electron.showNotification(
-        "Flow Session Complete! 🌊", 
+        "Flow Session Complete!", 
         `Focused for ${Math.floor(durationWorked / 60)}m. Earned ${breakStr} break!`
       );
       
@@ -168,9 +168,11 @@ export const FloatingTimerCapsule: React.FC = () => {
     ? 'FLOW' 
     : (timerState === 'BREAK' ? 'BREAK' : 'POMODORO');
 
-  const modeEmoji = activeTab === 'FLOW' 
-    ? '⏱️' 
-    : (activeTab === 'BREAK' ? '☕' : '🍅');
+  const renderModeIcon = () => {
+    if (activeTab === 'FLOW') return <Clock className="w-3.5 h-3.5" />;
+    if (activeTab === 'BREAK') return <Coffee className="w-3.5 h-3.5" />;
+    return <TimerIcon className="w-3.5 h-3.5" />;
+  };
 
   const handleSelectTab = (tab: 'POMODORO' | 'BREAK' | 'FLOW') => {
     setIsActive(false);
@@ -198,7 +200,7 @@ export const FloatingTimerCapsule: React.FC = () => {
           className="bg-zinc-900 border border-zinc-800 rounded-full px-3 py-1 flex items-center justify-between gap-3 shadow-md hover:bg-zinc-800 hover:border-zinc-700 transition-all active:scale-98 text-xs"
         >
           <div className="flex items-center gap-1.5 min-w-0 text-left">
-            <span className="text-xs">{modeEmoji}</span>
+            <span className="text-xs flex items-center">{renderModeIcon()}</span>
             <span className="text-[11px] font-semibold text-zinc-200 tracking-tight">{timerLabel}</span>
             {activeTask && (
               <span className="text-[10px] text-zinc-400 truncate max-w-[70px]">
@@ -237,7 +239,7 @@ export const FloatingTimerCapsule: React.FC = () => {
             title="Click to collapse widget"
           >
             <div className="flex items-center gap-2">
-              <span className="text-base">{modeEmoji}</span>
+              <span className="text-base flex items-center">{renderModeIcon()}</span>
               <span className="text-xs font-bold text-white tracking-tight">{timerLabel}</span>
             </div>
             <span className="text-xl font-extrabold font-mono text-white tracking-tight">
@@ -255,7 +257,7 @@ export const FloatingTimerCapsule: React.FC = () => {
                   : 'bg-[#1a1a1c] text-zinc-400 border border-zinc-800/80 hover:text-zinc-200'
               }`}
             >
-              <span>🍅</span>
+              <TimerIcon className="w-3 h-3" />
               <span>Pomodoro</span>
             </button>
 
@@ -279,7 +281,7 @@ export const FloatingTimerCapsule: React.FC = () => {
                   : 'bg-[#1a1a1c] text-zinc-400 border border-zinc-800/80 hover:text-zinc-200'
               }`}
             >
-              <TimerIcon className="w-3 h-3" />
+              <Clock className="w-3 h-3" />
               <span>Flow</span>
             </button>
           </div>

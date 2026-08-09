@@ -84,7 +84,7 @@ export const DeepFocusOverlay: React.FC = () => {
           });
         }
 
-        electron.showNotification("Session Complete! 🎉", `Great work finishing "${title}"! Time for a break.`);
+        electron.showNotification("Session Complete!", `Great work finishing "${title}"! Time for a break.`);
         
         setPreviousMode('POMODORO');
         setTimerState('BREAK');
@@ -95,11 +95,11 @@ export const DeepFocusOverlay: React.FC = () => {
         }
       } else {
         if (previousMode === 'STOPWATCH') {
-          electron.showNotification("Break Complete! ⚡", "Ready to jump back into Flow state?");
+          electron.showNotification("Break Complete!", "Ready to jump back into Flow state?");
           setTimerMode('STOPWATCH');
           setFlowTimeElapsed(0);
         } else {
-          electron.showNotification("Break Complete! ⚡", "Ready to start focusing again?");
+          electron.showNotification("Break Complete!", "Ready to start focusing again?");
           setTimerState('WORK');
           setTimeLeft(pomodoroSettings.work * 60);
         }
@@ -131,7 +131,7 @@ export const DeepFocusOverlay: React.FC = () => {
         : `${breakSecs}s`;
 
       electron.showNotification(
-        "Flow Session Complete! 🌊", 
+        "Flow Session Complete!", 
         `Focused for ${Math.floor(durationWorked / 60)}m. Earned ${breakStr} break!`
       );
       
