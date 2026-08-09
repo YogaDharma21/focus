@@ -2260,7 +2260,7 @@ export function Popup() {
                             "bg-neutral-800"
                           }`}>
                             <div
-                              className="h-full rounded-full bg-fuchsia-500 transition-all duration-500"
+                              className="h-full rounded-full bg-rose-500 transition-all duration-500"
                               style={{ width: `${percent}%` }}
                             />
                           </div>
