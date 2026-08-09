@@ -410,7 +410,7 @@ export const TodoList: React.FC = () => {
             </div>
 
             {/* Card 3: DEADLINE */}
-            <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 space-y-3">
+            <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-purple-400">
                   <Calendar className="w-3.5 h-3.5" />
@@ -426,71 +426,7 @@ export const TodoList: React.FC = () => {
                 )}
               </div>
 
-              {/* Quick Presets */}
-              <div className="space-y-2">
-                <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Quick Date</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {[
-                    { label: 'Today', getValue: () => new Date().toISOString().split('T')[0] },
-                    { label: 'Tomorrow', getValue: () => new Date(Date.now() + 86400000).toISOString().split('T')[0] },
-                    { label: 'Next Week', getValue: () => new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0] },
-                  ].map((preset) => {
-                    const currentDate = (activeTodoDetails.deadline || '').split('T')[0];
-                    const val = preset.getValue();
-                    const isSelected = currentDate === val;
-                    return (
-                      <button
-                        key={preset.label}
-                        type="button"
-                        onClick={() => {
-                          const currentTime = (activeTodoDetails.deadline || '').split('T')[1] || '18:00';
-                          updateTodo(activeTodoDetails.id, { deadline: `${val}T${currentTime}` });
-                        }}
-                        className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors border ${
-                          isSelected
-                            ? 'bg-purple-600/30 border-purple-500/50 text-purple-300'
-                            : 'bg-zinc-800/50 border-zinc-700/40 text-zinc-400 hover:text-zinc-200'
-                        }`}
-                      >
-                        {preset.label}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider pt-1">Quick Time</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {[
-                    { label: 'Morning', time: '09:00' },
-                    { label: 'Afternoon', time: '13:00' },
-                    { label: 'Evening', time: '18:00' },
-                    { label: 'Night', time: '21:00' },
-                    { label: 'End of Day', time: '23:59' },
-                  ].map((preset) => {
-                    const currentTime = (activeTodoDetails.deadline || '').split('T')[1] || '';
-                    const isSelected = currentTime === preset.time;
-                    return (
-                      <button
-                        key={preset.label}
-                        type="button"
-                        onClick={() => {
-                          const currentDate = (activeTodoDetails.deadline || '').split('T')[0] || new Date().toISOString().split('T')[0];
-                          updateTodo(activeTodoDetails.id, { deadline: `${currentDate}T${preset.time}` });
-                        }}
-                        className={`px-2 py-1 rounded-md text-[10px] font-medium transition-colors border ${
-                          isSelected
-                            ? 'bg-sky-600/30 border-sky-500/50 text-sky-300'
-                            : 'bg-zinc-800/50 border-zinc-700/40 text-zinc-400 hover:text-zinc-200'
-                        }`}
-                      >
-                        {preset.label} <span className="text-zinc-500 text-[9px]">{preset.time}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div className="relative flex items-center">
                   <Calendar className="w-3.5 h-3.5 text-zinc-500 absolute left-3 pointer-events-none z-10" />
                   <input
