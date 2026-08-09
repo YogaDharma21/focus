@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Clock, Activity, CheckCircle2, ListTodo, Flame, Target, BarChart2 
+  Clock, Activity, CheckCircle2, ListTodo, Flame, Target, BarChart2, TrendingUp 
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 
@@ -123,9 +123,11 @@ export const StatsJournal: React.FC = () => {
       {/* 1. Day Progress Card */}
       <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
-            <Clock className="w-4 h-4 text-zinc-400" />
-            <span>Day Progress</span>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 shrink-0">
+              <Clock className="w-4 h-4" />
+            </div>
+            <span className="text-sm font-bold text-white tracking-tight">Day Progress</span>
           </div>
           <span className="text-xs font-mono font-bold text-white">{dayProgressPercent}%</span>
         </div>
@@ -147,7 +149,7 @@ export const StatsJournal: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Minutes Today */}
         <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm text-center flex flex-col items-center justify-center space-y-2">
-          <div className="w-10 h-10 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
+          <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
             <Activity className="w-5 h-5" />
           </div>
           <span className="text-3xl font-extrabold text-white font-sans">{minutesToday}</span>
@@ -156,7 +158,7 @@ export const StatsJournal: React.FC = () => {
 
         {/* Tasks Today */}
         <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm text-center flex flex-col items-center justify-center space-y-2">
-          <div className="w-10 h-10 rounded-xl bg-emerald-950/60 border border-emerald-800/60 flex items-center justify-center text-emerald-400">
+          <div className="w-10 h-10 rounded-lg bg-emerald-950/60 border border-emerald-800/60 flex items-center justify-center text-emerald-400">
             <CheckCircle2 className="w-5 h-5" />
           </div>
           <span className="text-3xl font-extrabold text-white font-sans">{tasksTodayCount}</span>
@@ -165,7 +167,7 @@ export const StatsJournal: React.FC = () => {
 
         {/* Pending Tasks */}
         <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm text-center flex flex-col items-center justify-center space-y-2">
-          <div className="w-10 h-10 rounded-xl bg-blue-950/60 border border-blue-800/60 flex items-center justify-center text-blue-400">
+          <div className="w-10 h-10 rounded-lg bg-blue-950/60 border border-blue-800/60 flex items-center justify-center text-blue-400">
             <ListTodo className="w-5 h-5" />
           </div>
           <span className="text-3xl font-extrabold text-white font-sans">{pendingTasksCount}</span>
@@ -178,7 +180,7 @@ export const StatsJournal: React.FC = () => {
         {/* Longest Streak Card */}
         <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-amber-950/60 border border-amber-800/60 flex items-center justify-center text-amber-400">
+            <div className="w-8 h-8 rounded-lg bg-amber-950/60 border border-amber-800/60 flex items-center justify-center text-amber-400">
               <Flame className="w-4 h-4" />
             </div>
             <span className="text-sm font-bold text-white tracking-tight">Longest Streak</span>
@@ -199,7 +201,7 @@ export const StatsJournal: React.FC = () => {
         {/* Completion Rate Card */}
         <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-emerald-950/60 border border-emerald-800/60 flex items-center justify-center text-emerald-400">
+            <div className="w-8 h-8 rounded-lg bg-emerald-950/60 border border-emerald-800/60 flex items-center justify-center text-emerald-400">
               <Target className="w-4 h-4" />
             </div>
             <span className="text-sm font-bold text-white tracking-tight">Completion Rate</span>
@@ -217,8 +219,11 @@ export const StatsJournal: React.FC = () => {
 
       {/* 4. Focus Trend Card */}
       <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-3">
-        <div className="text-xs font-mono uppercase tracking-wider font-bold text-white">
-          FOCUS TREND
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-indigo-950/60 border border-indigo-800/60 flex items-center justify-center text-indigo-400">
+            <TrendingUp className="w-4 h-4" />
+          </div>
+          <h3 className="text-sm font-bold text-white tracking-tight">Focus Trend</h3>
         </div>
 
         <div className="space-y-2">
@@ -263,7 +268,7 @@ export const StatsJournal: React.FC = () => {
       {/* 5. Distraction Analysis Card (Placed under Focus Trend) */}
       <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-rose-950/60 border border-rose-800/60 flex items-center justify-center text-rose-400">
+          <div className="w-8 h-8 rounded-lg bg-rose-950/60 border border-rose-800/60 flex items-center justify-center text-rose-400">
             <BarChart2 className="w-4 h-4" />
           </div>
           <h3 className="text-sm font-bold text-white tracking-tight">Distraction Analysis</h3>

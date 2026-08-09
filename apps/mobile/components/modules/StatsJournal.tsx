@@ -11,6 +11,7 @@ import {
   Activity,
   ListFilter,
   Target,
+  TrendingUp,
 } from 'lucide-react-native';
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
@@ -230,9 +231,14 @@ export function StatsJournal() {
 
       {/* 4. FOCUS TREND Card */}
       <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.monoHeaderTitle, { color: colors.text, fontFamily: monoFont }]}>
-          FOCUS TREND
-        </Text>
+        <View style={styles.sectionHeaderRow}>
+          <View style={styles.indigoIconBadge}>
+            <TrendingUp size={18} color="#818cf8" />
+          </View>
+          <Text style={[styles.monoHeaderTitle, { color: colors.text, fontFamily: monoFont }]}>
+            FOCUS TREND
+          </Text>
+        </View>
 
         <View style={styles.chartContainer}>
           {DAYS_OF_WEEK.map((day) => {
@@ -510,6 +516,16 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(225, 29, 72, 0.15)',
     borderWidth: 1,
     borderColor: 'rgba(225, 29, 72, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  indigoIconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(99, 102, 241, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(99, 102, 241, 0.3)',
     alignItems: 'center',
     justifyContent: 'center',
   },
