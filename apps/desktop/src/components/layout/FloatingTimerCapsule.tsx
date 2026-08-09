@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
+import { cn } from '../../lib/utils';
 
 const DISTRACTION_OPTIONS = ["Phone", "Social Media", "Bathroom", "Meeting", "Other"];
 
@@ -304,7 +305,12 @@ export const FloatingTimerCapsule: React.FC = () => {
             {/* Complete Button */}
             <button
               onClick={handleCompleteSession}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#181818] border border-zinc-800 text-[11px] font-medium text-zinc-200 hover:bg-zinc-800 transition-colors"
+              disabled={!isActive}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#181818] border border-zinc-800 text-[11px] font-medium text-zinc-200 hover:bg-zinc-800 transition-colors",
+                !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
+              )}
+              title={isActive ? "Complete Session" : "Start timer to complete session"}
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
               <span>Complete</span>
@@ -314,13 +320,17 @@ export const FloatingTimerCapsule: React.FC = () => {
             <div className="relative">
               <button
                 onClick={() => setShowDistractionMenu(!showDistractionMenu)}
-                className="w-8 h-8 rounded-xl bg-[#181818] border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-rose-400 transition-colors"
-                title="Log Distraction"
+                disabled={!isActive}
+                className={cn(
+                  "w-8 h-8 rounded-xl bg-[#181818] border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-rose-400 transition-colors",
+                  !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
+                )}
+                title={isActive ? "Log Distraction" : "Start timer to log distraction"}
               >
                 <AlertTriangle className="w-3.5 h-3.5" />
               </button>
 
-              {showDistractionMenu && (
+              {isActive && showDistractionMenu && (
                 <div className="absolute bottom-11 left-1/2 -translate-x-1/2 w-40 bg-[#181818] border border-zinc-800/90 rounded-2xl shadow-2xl z-50 p-2 space-y-1 animate-in zoom-in-95 duration-150">
                   {DISTRACTION_OPTIONS.map((opt) => (
                     <button
