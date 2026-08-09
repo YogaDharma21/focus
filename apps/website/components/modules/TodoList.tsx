@@ -568,11 +568,73 @@ export function TodoList() {
                                 )}
                             </div>
 
-                            <div className="bg-muted/30 border border-border/40 rounded-xl p-4 space-y-2.5">
-                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                    <CalendarIcon className="w-3.5 h-3.5 text-indigo-500" /> Deadline
-                                </label>
-                                <div className="flex flex-wrap sm:flex-nowrap gap-2">
+                            <div className="bg-muted/30 border border-border/40 rounded-xl p-4 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
+                                        <CalendarIcon className="w-3.5 h-3.5 text-indigo-500" /> Deadline
+                                    </label>
+                                    {editingTask.deadline && (
+                                        <button
+                                            type="button"
+                                            onClick={() => updateTodo(editingTask.id, { deadline: '' })}
+                                            className="text-[10px] font-medium text-red-500 hover:text-red-400 transition-colors"
+                                        >
+                                            Clear
+                                        </button>
+                                    )}
+                                </div>
+
+                                {/* Quick Presets */}
+                                <div className="space-y-2">
+                                    <div className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider">Quick Date</div>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {[
+                                            { label: 'Today', getDate: () => new Date() },
+                                            { label: 'Tomorrow', getDate: () => new Date(Date.now() + 86400000) },
+                                            { label: 'Next Week', getDate: () => new Date(Date.now() + 7 * 86400000) },
+                                        ].map((preset) => (
+                                            <button
+                                                key={preset.label}
+                                                type="button"
+                                                onClick={() => {
+                                                    const date = preset.getDate();
+                                                    const existing = editingTask.deadline ? new Date(editingTask.deadline) : new Date();
+                                                    date.setHours(existing.getHours() || 18, existing.getMinutes() || 0, 0, 0);
+                                                    updateTodo(editingTask.id, { deadline: date.toISOString() });
+                                                }}
+                                                className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-background/50 border border-border/50 text-foreground hover:bg-accent transition-colors"
+                                            >
+                                                {preset.label}
+                                            </button>
+                                        ))}
+                                    </div>
+
+                                    <div className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider pt-1">Quick Time</div>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {[
+                                            { label: 'Morning', hours: 9, mins: 0, str: '09:00' },
+                                            { label: 'Afternoon', hours: 13, mins: 0, str: '13:00' },
+                                            { label: 'Evening', hours: 18, mins: 0, str: '18:00' },
+                                            { label: 'Night', hours: 21, mins: 0, str: '21:00' },
+                                            { label: 'End of Day', hours: 23, mins: 59, str: '23:59' },
+                                        ].map((preset) => (
+                                            <button
+                                                key={preset.label}
+                                                type="button"
+                                                onClick={() => {
+                                                    const date = editingTask.deadline ? new Date(editingTask.deadline) : new Date();
+                                                    date.setHours(preset.hours, preset.mins, 0, 0);
+                                                    updateTodo(editingTask.id, { deadline: date.toISOString() });
+                                                }}
+                                                className="px-2 py-1 rounded-md text-[10px] font-medium bg-background/50 border border-border/50 text-foreground hover:bg-accent transition-colors"
+                                            >
+                                                {preset.label} <span className="text-muted-foreground text-[9px]">{preset.str}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+
+                                <div className="flex flex-wrap sm:flex-nowrap gap-2 pt-1">
                                     <Popover>
                                         <PopoverTrigger asChild>
                                             <Button
@@ -617,7 +679,7 @@ export function TodoList() {
 
                                     <Input
                                         type="time"
-                                        className="w-full sm:w-32 h-9 bg-background/50 border-border/50 text-xs"
+                                        className="w-full sm:w-32 h-9 bg-background/50 border-border/50 text-xs [color-scheme:dark]"
                                         value={
                                             editingTask.deadline
                                                 ? format(new Date(editingTask.deadline), "HH:mm")
