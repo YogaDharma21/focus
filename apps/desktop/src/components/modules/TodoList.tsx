@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Plus, CheckCircle2, Circle, Trash2, FolderPlus, 
+  Plus, CheckCircle2, Circle, Trash2, FolderPlus, Folder,
   ListTodo, CheckSquare2, Target
 } from 'lucide-react';
 import { useDesktopStore, TodoItem } from '../../lib/store';
@@ -113,11 +113,12 @@ export const TodoList: React.FC = () => {
               <button
                 key={g.id}
                 onClick={() => setActiveGroupId(g.id)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium text-left transition-colors truncate ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium text-left transition-colors truncate flex items-center gap-1.5 ${
                   activeGroupId === g.id ? "bg-zinc-800 text-zinc-100 font-semibold border border-zinc-700" : "text-zinc-400 hover:bg-zinc-900"
                 }`}
               >
-                📁 {g.name}
+                <Folder className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                <span className="truncate">{g.name}</span>
               </button>
             ))}
           </div>

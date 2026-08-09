@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { playCompletionSound } from '../../lib/sound';
 import { 
   Play, Pause, RotateCcw, AlertTriangle, SlidersHorizontal, CheckCircle2, 
-  ChevronDown, Check, CheckSquare2
+  ChevronDown, Check, CheckSquare2, Coffee, Timer, Clock
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
@@ -83,7 +83,7 @@ export const FocusTimer: React.FC = () => {
           });
         }
 
-        electron.showNotification("Session Complete! 🎉", `Great work finishing "${title}"! Time for a break.`);
+        electron.showNotification("Session Complete!", `Great work finishing "${title}"! Time for a break.`);
         
         setPreviousMode('POMODORO');
         setTimerState('BREAK');
@@ -94,11 +94,11 @@ export const FocusTimer: React.FC = () => {
         }
       } else {
         if (previousMode === 'STOPWATCH') {
-          electron.showNotification("Break Complete! ⚡", "Ready to jump back into Flow state?");
+          electron.showNotification("Break Complete!", "Ready to jump back into Flow state?");
           setTimerMode('STOPWATCH');
           setFlowTimeElapsed(0);
         } else {
-          electron.showNotification("Break Complete! ⚡", "Ready to start focusing again?");
+          electron.showNotification("Break Complete!", "Ready to start focusing again?");
           setTimerState('WORK');
           setTimeLeft(pomodoroSettings.work * 60);
         }
@@ -130,7 +130,7 @@ export const FocusTimer: React.FC = () => {
         : `${breakSecs}s`;
 
       electron.showNotification(
-        "Flow Session Complete! 🌊", 
+        "Flow Session Complete!", 
         `Focused for ${Math.floor(durationWorked / 60)}m. Earned ${breakStr} break!`
       );
       
@@ -164,7 +164,7 @@ export const FocusTimer: React.FC = () => {
     });
 
     electron.showNotification(
-      "Flow Session Completed! 🌊",
+      "Flow Session Completed!",
       `Focused for ${Math.floor(flowTimeElapsed / 60)}m. Recommended break: ${Math.floor(breakDurationSeconds / 60)}m.`
     );
 
@@ -250,35 +250,38 @@ export const FocusTimer: React.FC = () => {
       <div className="bg-[#141414] border border-zinc-800/80 p-1 rounded-2xl flex items-center justify-between w-80 shadow-md">
         <button
           onClick={() => handleSelectTab('POMODORO')}
-          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all ${
+          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'POMODORO'
               ? 'bg-[#e6e6e6] text-zinc-950 shadow-sm'
               : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
-          Pomodoro
+          <Timer className="w-3.5 h-3.5" />
+          <span>Pomodoro</span>
         </button>
 
         <button
           onClick={() => handleSelectTab('BREAK')}
-          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all ${
+          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'BREAK'
               ? 'bg-[#e6e6e6] text-zinc-950 shadow-sm'
               : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
-          Break
+          <Coffee className="w-3.5 h-3.5" />
+          <span>Break</span>
         </button>
 
         <button
           onClick={() => handleSelectTab('FLOW')}
-          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all ${
+          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'FLOW'
               ? 'bg-[#e6e6e6] text-zinc-950 shadow-sm'
               : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
-          Flow
+          <Clock className="w-3.5 h-3.5" />
+          <span>Flow</span>
         </button>
       </div>
 
