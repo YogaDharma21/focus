@@ -2,41 +2,25 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useAppStore, BackgroundType } from '@/lib/store';
-import { useTheme } from '@/context/ThemeContext';
 
 export function BackgroundDisplay() {
   const { background } = useAppStore();
-  const { colors, activeScheme } = useTheme();
 
   const getGradientColors = (bg: BackgroundType): [string, string, ...string[]] => {
-    const isDark = activeScheme === 'dark';
-
     switch (bg) {
       case 'gradient':
-        return isDark
-          ? ['#09090b', '#1c1917', '#09090b']
-          : ['#ffffff', '#f4f4f5', '#e4e4e7'];
+        return ['#09090b', '#1c1917', '#09090b'];
       case 'mountain':
-        return isDark
-          ? ['#0f172a', '#1e293b', '#09090b']
-          : ['#f8fafc', '#e2e8f0', '#cbd5e1'];
+        return ['#0f172a', '#1e293b', '#09090b'];
       case 'library':
-        return isDark
-          ? ['#1c1917', '#292524', '#09090b']
-          : ['#fafaf9', '#f5f5f4', '#e7e5e4'];
+        return ['#1c1917', '#292524', '#09090b'];
       case 'cafe':
-        return isDark
-          ? ['#181512', '#26221d', '#09090b']
-          : ['#fdfbf7', '#f7f2ea', '#eae0d5'];
+        return ['#181512', '#26221d', '#09090b'];
       case 'anime-room':
-        return isDark
-          ? ['#130f1e', '#211936', '#09090b']
-          : ['#faf7fd', '#f0e8fa', '#e1d4f5'];
+        return ['#130f1e', '#211936', '#09090b'];
       case 'dark':
       default:
-        return isDark
-          ? ['#09090b', '#09090b']
-          : ['#ffffff', '#ffffff'];
+        return ['#09090b', '#09090b'];
     }
   };
 

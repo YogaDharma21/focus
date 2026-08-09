@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePathname } from 'expo-router';
 import { useTheme } from '@/context/ThemeContext';
 import { useAppStore } from '@/lib/store';
-import { Focus, Sun, Moon, Image as ImageIcon, Info } from 'lucide-react-native';
+import { Focus, Image as ImageIcon, Info } from 'lucide-react-native';
 
 interface HeaderProps {
   onOpenBackgrounds: () => void;
@@ -14,7 +14,7 @@ interface HeaderProps {
 export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
-  const { colors, themeMode, toggleTheme } = useTheme();
+  const { colors } = useTheme();
   const { deepFocusMode, setDeepFocusMode } = useAppStore();
 
   const getTitle = () => {
@@ -61,18 +61,6 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
           activeOpacity={0.7}
         >
           <Focus size={18} color={deepFocusMode ? colors.primaryForeground : colors.text} />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.iconBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-          onPress={toggleTheme}
-          activeOpacity={0.7}
-        >
-          {themeMode === 'dark' ? (
-            <Moon size={18} color={colors.text} />
-          ) : (
-            <Sun size={18} color={colors.text} />
-          )}
         </TouchableOpacity>
 
         <TouchableOpacity
