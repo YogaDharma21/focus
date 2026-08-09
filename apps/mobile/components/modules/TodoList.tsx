@@ -309,9 +309,10 @@ export function TodoList() {
                     </Text>
 
                     <View style={styles.badgeRow}>
-                      <View style={[styles.badge, { backgroundColor: colors.border }]}>
+                      <View style={[styles.badge, { backgroundColor: colors.border, flexDirection: 'row', alignItems: 'center' }]}>
+                        <Target size={12} color={colors.text} style={{ marginRight: 4 }} />
                         <Text style={[styles.badgeText, { color: colors.text }]}>
-                          🎯 {todo.completedPomodoros || 0}/{todo.estimatedPomodoros || 1} sessions
+                          {todo.completedPomodoros || 0}/{todo.estimatedPomodoros || 1} sessions
                         </Text>
                       </View>
                       {todo.priority && (
@@ -329,9 +330,10 @@ export function TodoList() {
                         </View>
                       )}
                       {todo.deadline ? (
-                        <View style={[styles.badge, { backgroundColor: colors.border }]}>
+                        <View style={[styles.badge, { backgroundColor: colors.border, flexDirection: 'row', alignItems: 'center' }]}>
+                          <Calendar size={12} color={colors.textMuted} style={{ marginRight: 4 }} />
                           <Text style={[styles.badgeText, { color: colors.textMuted }]}>
-                            📅 {todo.deadline}
+                            {todo.deadline}
                           </Text>
                         </View>
                       ) : null}

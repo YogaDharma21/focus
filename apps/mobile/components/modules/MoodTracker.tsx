@@ -9,14 +9,14 @@ import {
 } from 'react-native';
 import { useAppStore, MoodNote } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
-import { Smile, Sparkles, Trash2, Calendar, ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { Smile, Meh, Moon, Frown, Zap, Sparkles, Trash2, Calendar, ChevronLeft, ChevronRight } from 'lucide-react-native';
 
 export type MoodType = 'amazing' | 'ok' | 'tired' | 'sad' | 'stressed';
 
 export interface MoodConfig {
   key: MoodType;
   label: string;
-  emoji: string;
+  icon: React.ComponentType<{ size?: number; color?: string; style?: any }>;
   bg: string;
   text: string;
 }
@@ -25,35 +25,35 @@ export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
   amazing: {
     key: 'amazing',
     label: 'Amazing',
-    emoji: '😊',
+    icon: Smile,
     bg: '#ffffff',
     text: '#09090b',
   },
   ok: {
     key: 'ok',
     label: 'OK',
-    emoji: '🙂',
+    icon: Meh,
     bg: '#cbd5e1',
     text: '#09090b',
   },
   tired: {
     key: 'tired',
     label: 'Tired',
-    emoji: '😴',
+    icon: Moon,
     bg: '#64748b',
     text: '#ffffff',
   },
   sad: {
     key: 'sad',
     label: 'Sad',
-    emoji: '😔',
+    icon: Frown,
     bg: '#334155',
     text: '#ffffff',
   },
   stressed: {
     key: 'stressed',
     label: 'Stressed',
-    emoji: '😤',
+    icon: Zap,
     bg: '#1e293b',
     text: '#ffffff',
   },
@@ -201,6 +201,7 @@ export function MoodTracker() {
           {(Object.keys(MOOD_CONFIGS) as MoodType[]).map((key) => {
             const cfg = MOOD_CONFIGS[key];
             const isSelected = selectedMood === key;
+            const Icon = cfg.icon;
             return (
               <TouchableOpacity
                 key={key}
@@ -213,7 +214,7 @@ export function MoodTracker() {
                 onPress={() => setSelectedMood(key)}
                 activeOpacity={0.8}
               >
-                <Text style={styles.moodEmoji}>{cfg.emoji}</Text>
+                <Icon size={20} color={isSelected ? cfg.text : colors.text} style={{ marginBottom: 4 }} />
                 <Text
                   style={[
                     styles.moodLabel,
@@ -246,10 +247,15 @@ export function MoodTracker() {
         <View style={styles.saveRow}>
           {selectedDateNote ? (
             <View style={styles.loggedInfo}>
-              <Text style={[styles.loggedText, { color: colors.textMuted }]}>
-                Logged: {MOOD_CONFIGS[currentSelectedMoodKey || 'amazing'].label}{' '}
-                {MOOD_CONFIGS[currentSelectedMoodKey || 'amazing'].emoji}
-              </Text>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                <Text style={[styles.loggedText, { color: colors.textMuted }]}>
+                  Logged: {MOOD_CONFIGS[currentSelectedMoodKey || 'amazing'].label}
+                </Text>
+                {(() => {
+                  const Icon = MOOD_CONFIGS[currentSelectedMoodKey || 'amazing'].icon;
+                  return <Icon size={14} color={colors.textMuted} />;
+                })()}
+              </View>
               <TouchableOpacity onPress={() => {
                 deleteMoodNote(selectedDateNote.id);
                 setSelectedMood(null);
@@ -369,9 +375,21 @@ export function MoodTracker() {
             {activeFormattedDate}:
           </Text>
           {activeMoodKey ? (
-            <Text style={[styles.infoBannerMood, { color: MOOD_CONFIGS[activeMoodKey].bg === '#ffffff' ? '#38bdf8' : MOOD_CONFIGS[activeMoodKey].bg }]}>
-              {MOOD_CONFIGS[activeMoodKey].emoji} {MOOD_CONFIGS[activeMoodKey].label}
-            </Text>
+            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+              {(() => {
+                const cfg = MOOD_CONFIGS[activeMoodKey];
+                const Icon = cfg.icon;
+                const activeColor = cfg.bg === '#ffffff' ? '#38bdf8' : cfg.bg;
+                return (
+                  <>
+                    <Icon size={16} color={activeColor} />
+                    <Text style={[styles.infoBannerMood, { color: activeColor }]}>
+                      {cfg.label}
+                    </Text>
+                  </>
+                );
+              })()}
+            </View>
           ) : (
             <Text style={[styles.infoBannerEmpty, { color: colors.textMuted }]}>No mood logged</Text>
           )}
