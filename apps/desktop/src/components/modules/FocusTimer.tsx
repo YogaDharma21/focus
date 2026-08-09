@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { playCompletionSound } from '../../lib/sound';
 import { 
   Play, Pause, RotateCcw, AlertTriangle, SlidersHorizontal, CheckCircle2, 
-  ChevronDown, Check, CheckSquare2
+  ChevronDown, Check, CheckSquare2, Coffee, Timer, Clock
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
@@ -250,35 +250,38 @@ export const FocusTimer: React.FC = () => {
       <div className="bg-[#141414] border border-zinc-800/80 p-1 rounded-2xl flex items-center justify-between w-80 shadow-md">
         <button
           onClick={() => handleSelectTab('POMODORO')}
-          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all ${
+          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'POMODORO'
               ? 'bg-[#e6e6e6] text-zinc-950 shadow-sm'
               : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
-          Pomodoro
+          <Timer className="w-3.5 h-3.5" />
+          <span>Pomodoro</span>
         </button>
 
         <button
           onClick={() => handleSelectTab('BREAK')}
-          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all ${
+          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'BREAK'
               ? 'bg-[#e6e6e6] text-zinc-950 shadow-sm'
               : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
-          Break
+          <Coffee className="w-3.5 h-3.5" />
+          <span>Break</span>
         </button>
 
         <button
           onClick={() => handleSelectTab('FLOW')}
-          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all ${
+          className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
             activeTab === 'FLOW'
               ? 'bg-[#e6e6e6] text-zinc-950 shadow-sm'
               : 'text-zinc-400 hover:text-zinc-200'
           }`}
         >
-          Flow
+          <Clock className="w-3.5 h-3.5" />
+          <span>Flow</span>
         </button>
       </div>
 
