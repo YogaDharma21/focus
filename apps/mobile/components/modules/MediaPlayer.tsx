@@ -134,7 +134,7 @@ export function MediaPlayer() {
           {isPlaying ? (
             <Pause size={16} color={colors.primaryForeground} />
           ) : (
-            <Play size={16} color={colors.primaryForeground} style={{ marginLeft: 2 }} />
+            <Play size={16} color={colors.primaryForeground} fill={colors.primaryForeground} style={{ marginLeft: 2 }} />
           )}
         </TouchableOpacity>
 
