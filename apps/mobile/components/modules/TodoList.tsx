@@ -16,6 +16,7 @@ import { useTheme } from '@/context/ThemeContext';
 import {
   CheckSquare,
   Square,
+  Target,
   Plus,
   Trash2,
   FolderPlus,
@@ -342,26 +343,25 @@ export function TodoList() {
                       ) : null}
                     </View>
 
-                    {!todo.completed && (
-                      <TouchableOpacity
-                        style={[styles.focusTaskBtn, { backgroundColor: colors.primary }]}
-                        onPress={() => handleFocusOnTask(todo)}
-                        activeOpacity={0.8}
-                      >
-                        <Play size={12} color={colors.primaryForeground} style={{ marginRight: 4 }} />
-                        <Text style={[styles.focusTaskBtnText, { color: colors.primaryForeground }]}>
-                          Focus on this task
-                        </Text>
-                      </TouchableOpacity>
-                    )}
                   </View>
 
-                  <TouchableOpacity
-                    onPress={() => deleteTodo(todo.id)}
-                    style={{ padding: 6 }}
-                  >
-                    <Trash2 size={18} color={colors.textMuted} />
-                  </TouchableOpacity>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <TouchableOpacity
+                      onPress={() => handleFocusOnTask(todo)}
+                      style={{ padding: 6 }}
+                      accessibilityLabel="Focus on this task"
+                    >
+                      <Target size={18} color={colors.textMuted} />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => deleteTodo(todo.id)}
+                      style={{ padding: 6 }}
+                      accessibilityLabel="Delete task"
+                    >
+                      <Trash2 size={18} color={colors.textMuted} />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </TouchableOpacity>
             );
