@@ -1967,15 +1967,14 @@ export function Popup() {
 
                         <div className="flex items-center gap-1.5 flex-shrink-0">
                           <button
-                            onClick={() => focusOnTask(todo)}
-                            className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold flex items-center gap-1 border ${
-                              state.selectedTodoId === todo.id
-                                ? "bg-white text-black border-white"
-                                : "bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700"
-                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              focusOnTask(todo);
+                            }}
+                            className="p-1 text-neutral-400 hover:text-white transition-colors rounded-md hover:bg-neutral-800"
+                            title="Focus on this task"
                           >
-                            <span>Focus</span>
-                            <ArrowRight className="w-2.5 h-2.5" />
+                            <Target className="w-3.5 h-3.5" />
                           </button>
 
                           <button onClick={() => setSelectedTaskDetail(todo)} className={`p-1 ${"text-neutral-500 hover:text-white"}`}>
