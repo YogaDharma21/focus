@@ -14,14 +14,14 @@ const BACKGROUND_OPTIONS: {
   id: BackgroundType;
   name: string;
   desc: string;
-  previewColors: [string, string];
+  previewColors: [string, string, ...string[]];
 }[] = [
-  { id: 'dark', name: 'Monochrome Dark', desc: 'Minimalist clean theme', previewColors: ['#09090b', '#18181b'] },
-  { id: 'gradient', name: 'Soft Gradient', desc: 'Subtle ambient contrast', previewColors: ['#09090b', '#27272a'] },
-  { id: 'mountain', name: 'Mountain Mist', desc: 'Cool slate blue tones', previewColors: ['#0f172a', '#1e293b'] },
-  { id: 'library', name: 'Quiet Library', desc: 'Warm espresso wood tones', previewColors: ['#1c1917', '#292524'] },
-  { id: 'cafe', name: 'Cozy Cafe', desc: 'Warm mocha bronze tones', previewColors: ['#181512', '#26221d'] },
-  { id: 'anime-room', name: 'Lo-Fi Room', desc: 'Twilight violet dusk tones', previewColors: ['#130f1e', '#211936'] },
+  { id: 'dark', name: 'Dark (Default)', desc: 'Minimalist solid dark theme', previewColors: ['#0a0a0f', '#0a0a0f'] },
+  { id: 'gradient', name: 'Gradient', desc: 'Purple & blue ambient glow', previewColors: ['#0f0c29', '#302b63', '#24243e'] },
+  { id: 'mountain', name: 'Mountain', desc: 'Cool slate blue mountain curves', previewColors: ['#0f172a', '#1e293b', '#0f172a'] },
+  { id: 'library', name: 'Library', desc: 'Warm espresso wood & bookshelf', previewColors: ['#1a1510', '#2c2416', '#1a1510'] },
+  { id: 'cafe', name: 'Cafe', desc: 'Warm mocha amber & window light', previewColors: ['#1a1410', '#2c1f14', '#1a1410'] },
+  { id: 'anime-room', name: 'Anime Room', desc: 'Twilight violet & sunset window', previewColors: ['#1a1a2e', '#16213e', '#0f3460'] },
 ];
 
 export function BackgroundSelector({ visible, onClose }: BackgroundSelectorProps) {
