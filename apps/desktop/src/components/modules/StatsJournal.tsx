@@ -123,9 +123,11 @@ export const StatsJournal: React.FC = () => {
       {/* 1. Day Progress Card */}
       <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs font-semibold text-zinc-200">
-            <Clock className="w-4 h-4 text-zinc-400" />
-            <span>Day Progress</span>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 shrink-0">
+              <Clock className="w-4 h-4" />
+            </div>
+            <span className="text-sm font-bold text-white tracking-tight">Day Progress</span>
           </div>
           <span className="text-xs font-mono font-bold text-white">{dayProgressPercent}%</span>
         </div>
