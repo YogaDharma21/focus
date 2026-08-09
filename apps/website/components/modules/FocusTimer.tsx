@@ -360,7 +360,7 @@ export function FocusTimer() {
                                     <button
                                         type="button"
                                         className={cn(
-                                            "w-full px-4 py-2.5 rounded-2xl border transition-all flex items-center justify-between gap-2 shadow-sm",
+                                            "w-full px-4 py-2.5 rounded-[var(--radius)] border transition-all flex items-center justify-between gap-2 shadow-sm",
                                             "bg-neutral-900/90 border-neutral-800 hover:border-neutral-700 text-white cursor-pointer group relative",
                                         )}
                                         title="Click to select another task or custom focus"
@@ -407,7 +407,7 @@ export function FocusTimer() {
                                         }}
                                         placeholder="Session Goal (Press Enter)..."
                                         className={cn(
-                                            "w-full pl-9 pr-9 py-2.5 rounded-2xl text-sm text-center font-medium border transition-colors focus:outline-none shadow-sm",
+                                            "w-full pl-9 pr-9 py-2.5 rounded-[var(--radius)] text-sm text-center font-medium border transition-colors focus:outline-none shadow-sm",
                                             "bg-neutral-900 border-neutral-800 text-white placeholder:text-neutral-500 focus:border-neutral-700",
                                         )}
                                     />
@@ -424,7 +424,7 @@ export function FocusTimer() {
                             )}
                         </div>
 
-                        <PopoverContent className="w-[--radix-popover-trigger-width] min-w-[280px] max-h-80 overflow-y-auto p-1.5 bg-neutral-900 border-neutral-800 text-white shadow-xl rounded-2xl">
+                        <PopoverContent className="w-[--radix-popover-trigger-width] min-w-[280px] max-h-80 overflow-y-auto p-1.5 bg-neutral-900 border-neutral-800 text-white shadow-xl rounded-[var(--radius)]">
                             <div className="flex flex-col gap-0.5">
                                 <button
                                     onClick={() => {
