@@ -31,6 +31,7 @@ import {
   Clock,
   Play,
 } from 'lucide-react-native';
+import DatePickerModal, { formatDeadlineDisplay } from './DatePickerModal';
 
 const PRIORITIES: ('low' | 'medium' | 'high' | 'urgent')[] = ['low', 'medium', 'high', 'urgent'];
 
@@ -48,6 +49,7 @@ export function TodoList() {
     deleteGroup,
     addSubtask,
     toggleSubtask,
+    deleteSubtask,
     selectedTodoId,
     setSelectedTodoId,
     setSessionName,
@@ -65,9 +67,14 @@ export function TodoList() {
   const [detailNotes, setDetailNotes] = useState('');
   const [detailPriority, setDetailPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
   const [detailPomoEst, setDetailPomoEst] = useState('1');
+  const [detailPomoComp, setDetailPomoComp] = useState('0');
   const [detailDeadline, setDetailDeadline] = useState('');
   const [detailGroupId, setDetailGroupId] = useState('current');
   const [newSubtaskText, setNewSubtaskText] = useState('');
+
+  // Date & Time Picker Modal State
+  const [datePickerModalOpen, setDatePickerModalOpen] = useState(false);
+  const [datePickerInitialMode, setDatePickerInitialMode] = useState<'date' | 'time'>('date');
 
   // Dropdown states
   const [priorityPickerOpen, setPriorityPickerOpen] = useState(false);
@@ -106,6 +113,7 @@ export function TodoList() {
     setDetailNotes(todo.notes || '');
     setDetailPriority(todo.priority || 'medium');
     setDetailPomoEst((todo.estimatedPomodoros || 1).toString());
+    setDetailPomoComp((todo.completedPomodoros || 0).toString());
     setDetailDeadline(todo.deadline || '');
     setDetailGroupId(todo.groupId || 'current');
     setNewSubtaskText('');
@@ -119,7 +127,8 @@ export function TodoList() {
       text: detailTitle.trim() || detailTodo.text,
       notes: detailNotes.trim(),
       priority: detailPriority,
-      estimatedPomodoros: parseInt(detailPomoEst, 10) || 1,
+      estimatedPomodoros: Math.max(1, parseInt(detailPomoEst, 10) || 1),
+      completedPomodoros: Math.max(0, parseInt(detailPomoComp, 10) || 0),
       deadline: detailDeadline.trim(),
       groupId: detailGroupId,
     });
@@ -337,7 +346,10 @@ export function TodoList() {
                         <View style={[styles.badge, { backgroundColor: colors.border, flexDirection: 'row', alignItems: 'center' }]}>
                           <Calendar size={12} color={colors.textMuted} style={{ marginRight: 4 }} />
                           <Text style={[styles.badgeText, { color: colors.textMuted }]}>
-                            {todo.deadline}
+                            {(() => {
+                              const d = formatDeadlineDisplay(todo.deadline);
+                              return `${d.dateStr}${d.timeStr !== 'No time set' ? ' • ' + d.timeStr : ''}`;
+                            })()}
                           </Text>
                         </View>
                       ) : null}
@@ -526,25 +538,28 @@ export function TodoList() {
                       style={styles.cardInput}
                       keyboardType="numeric"
                       value={detailPomoEst}
-                      onChangeText={setDetailPomoEst}
+                      onChangeText={(val) => setDetailPomoEst(val.replace(/[^0-9]/g, ''))}
                       placeholder="1"
                       placeholderTextColor="#71717a"
                     />
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.inputSubLabel}>Completed</Text>
-                    <View style={styles.cardDisplayBox}>
-                      <Text style={styles.cardDisplayText}>
-                        {activeDetailTodo?.completedPomodoros || 0}
-                      </Text>
-                    </View>
+                    <TextInput
+                      style={styles.cardInput}
+                      keyboardType="numeric"
+                      value={detailPomoComp}
+                      onChangeText={(val) => setDetailPomoComp(val.replace(/[^0-9]/g, ''))}
+                      placeholder="0"
+                      placeholderTextColor="#71717a"
+                    />
                   </View>
                 </View>
 
                 {/* Progress Bar */}
                 {(() => {
                   const est = Math.max(1, parseInt(detailPomoEst, 10) || 1);
-                  const comp = activeDetailTodo?.completedPomodoros || 0;
+                  const comp = Math.max(0, parseInt(detailPomoComp, 10) || 0);
                   const pct = Math.min(100, Math.round((comp / est) * 100));
                   return (
                     <View style={{ marginTop: 14 }}>
@@ -563,35 +578,38 @@ export function TodoList() {
                   <Calendar size={14} color="#8b5cf6" style={{ marginRight: 6 }} />
                   <Text style={[styles.cardHeaderLabel, { color: '#8b5cf6' }]}>DEADLINE</Text>
                 </View>
-                <View style={styles.gridRow}>
-                  <View style={[styles.iconInputBox, { flex: 1 }]}>
-                    <Calendar size={14} color="#71717a" style={{ marginRight: 8 }} />
-                    <TextInput
-                      style={styles.iconInputText}
-                      placeholder="Pick a date"
-                      placeholderTextColor="#71717a"
-                      value={detailDeadline ? detailDeadline.split(' ')[0] : ''}
-                      onChangeText={(val) => {
-                        const timePart = detailDeadline.split(' ')[1] || '';
-                        setDetailDeadline(val + (timePart ? ' ' + timePart : ''));
-                      }}
-                    />
-                  </View>
+                {(() => {
+                  const { dateStr, timeStr } = formatDeadlineDisplay(detailDeadline);
+                  return (
+                    <View style={styles.gridRow}>
+                      <TouchableOpacity
+                        style={[styles.iconInputBox, { flex: 1 }]}
+                        onPress={() => {
+                          setDatePickerInitialMode('date');
+                          setDatePickerModalOpen(true);
+                        }}
+                      >
+                        <Calendar size={14} color="#a78bfa" style={{ marginRight: 8 }} />
+                        <Text style={{ color: detailDeadline ? '#ffffff' : '#71717a', fontSize: 13, flex: 1 }}>
+                          {dateStr}
+                        </Text>
+                      </TouchableOpacity>
 
-                  <View style={[styles.iconInputBox, { flex: 1 }]}>
-                    <TextInput
-                      style={[styles.iconInputText, { textAlign: 'right' }]}
-                      placeholder="--:-- --"
-                      placeholderTextColor="#71717a"
-                      value={detailDeadline ? detailDeadline.split(' ')[1] || '' : ''}
-                      onChangeText={(val) => {
-                        const datePart = detailDeadline.split(' ')[0] || '';
-                        setDetailDeadline((datePart || new Date().toISOString().slice(0, 10)) + ' ' + val);
-                      }}
-                    />
-                    <Clock size={14} color="#71717a" style={{ marginLeft: 8 }} />
-                  </View>
-                </View>
+                      <TouchableOpacity
+                        style={[styles.iconInputBox, { flex: 1 }]}
+                        onPress={() => {
+                          setDatePickerInitialMode('time');
+                          setDatePickerModalOpen(true);
+                        }}
+                      >
+                        <Text style={{ color: detailDeadline ? '#ffffff' : '#71717a', fontSize: 13, flex: 1, textAlign: 'right' }}>
+                          {timeStr}
+                        </Text>
+                        <Clock size={14} color="#38bdf8" style={{ marginLeft: 8 }} />
+                      </TouchableOpacity>
+                    </View>
+                  );
+                })()}
               </View>
 
               {/* Card 4: NOTES */}
@@ -691,6 +709,15 @@ export function TodoList() {
           </View>
         </View>
       </Modal>
+
+      {/* Date & Time Picker Modal */}
+      <DatePickerModal
+        visible={datePickerModalOpen}
+        onClose={() => setDatePickerModalOpen(false)}
+        value={detailDeadline}
+        onChange={(newVal) => setDetailDeadline(newVal)}
+        initialMode={datePickerInitialMode}
+      />
 
       {/* Add Group Modal */}
       <Modal visible={addGroupModalOpen} transparent animationType="fade" onRequestClose={() => setAddGroupModalOpen(false)}>
