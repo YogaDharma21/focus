@@ -75,10 +75,7 @@ export default function Page() {
                         <div className="flex items-center gap-3">
                             <img src="/icon-192.png" alt="Focus Logo" className="w-8 h-8 rounded-lg object-contain shadow-sm" />
                             <h1 className="text-xl font-bold tracking-tight opacity-90 hidden sm:block">
-                                {currentView === "FOCUS" && "Focus Session"}
-                                {currentView === "TODO" && "Tasks"}
-                                {currentView === "JOURNAL" && "Stats"}
-                                {currentView === "NOTES" && "Mood Tracker"}
+                                Focus
                             </h1>
                         </div>
 
