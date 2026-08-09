@@ -47,7 +47,7 @@ export function TodoList() {
     deleteGroup,
     addSubtask,
     toggleSubtask,
-    deleteSubtask,
+    selectedTodoId,
     setSelectedTodoId,
     setSessionName,
     setView,
@@ -273,15 +273,22 @@ export function TodoList() {
           filteredTodos.map((todo) => {
             const subtaskCount = todo.subtasks?.length || 0;
             const completedSubtasks = todo.subtasks?.filter((s) => s.completed).length || 0;
+            const isSelected = selectedTodoId === todo.id || detailTodo?.id === todo.id;
 
             return (
               <TouchableOpacity
                 key={todo.id}
                 style={[
                   styles.todoCard,
-                  { backgroundColor: colors.card, borderColor: colors.border },
+                  {
+                    backgroundColor: isSelected ? "#27272a" : colors.card,
+                    borderColor: isSelected ? "#3f3f46" : colors.border,
+                  },
                 ]}
-                onPress={() => handleOpenDetail(todo)}
+                onPress={() => {
+                  setSelectedTodoId(todo.id);
+                  handleOpenDetail(todo);
+                }}
                 activeOpacity={0.7}
               >
                 <View style={styles.todoMainRow}>
