@@ -31,6 +31,9 @@ import {
   X,
   ChevronDown,
   FileText,
+  Timer,
+  Coffee,
+  Clock,
 } from 'lucide-react-native';
 
 const DISTRACTION_CATEGORIES = [
@@ -292,6 +295,10 @@ export function FocusTimer() {
           onPress={selectPomodoroWork}
           activeOpacity={0.8}
         >
+          <Timer
+            size={14}
+            color={isWorkActive ? colors.primaryForeground : colors.textMuted}
+          />
           <Text
             style={[
               styles.modeText,
@@ -310,6 +317,10 @@ export function FocusTimer() {
           onPress={selectPomodoroBreak}
           activeOpacity={0.8}
         >
+          <Coffee
+            size={14}
+            color={isBreakActive ? colors.primaryForeground : colors.textMuted}
+          />
           <Text
             style={[
               styles.modeText,
@@ -328,6 +339,10 @@ export function FocusTimer() {
           onPress={selectFlow}
           activeOpacity={0.8}
         >
+          <Clock
+            size={14}
+            color={isFlowActive ? colors.primaryForeground : colors.textMuted}
+          />
           <Text
             style={[
               styles.modeText,
@@ -765,8 +780,10 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: 10,
     borderRadius: 12,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 6,
   },
   modeText: {
     fontSize: 14,

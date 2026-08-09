@@ -1550,33 +1550,36 @@ export function Popup() {
             }`}>
               <button
                 onClick={() => switchTimerModeAndState("POMODORO", "WORK")}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                   state.timerState === "WORK"
                     ? "bg-white text-black shadow-md"
                     : "text-neutral-400 hover:text-white"
                 }`}
               >
-                Pomodoro
+                <TimerIcon className="w-3.5 h-3.5" />
+                <span>Pomodoro</span>
               </button>
               <button
                 onClick={() => switchTimerModeAndState("POMODORO", "BREAK")}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                   state.timerState === "BREAK"
                     ? "bg-white text-black shadow-md"
                     : "text-neutral-400 hover:text-white"
                 }`}
               >
-                Break
+                <Coffee className="w-3.5 h-3.5" />
+                <span>Break</span>
               </button>
               <button
                 onClick={() => switchTimerModeAndState("FLOW", "FLOW")}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                   state.timerState === "FLOW"
                     ? "bg-white text-black shadow-md"
                     : "text-neutral-400 hover:text-white"
                 }`}
               >
-                Flow
+                <Clock className="w-3.5 h-3.5" />
+                <span>Flow</span>
               </button>
             </div>
 
