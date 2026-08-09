@@ -313,26 +313,38 @@ export function TodoList() {
                         </div>
                     )}
 
-                    {filteredTodos.map((todo) => (
-                        <div
-                            key={todo.id}
-                            className="group flex items-start gap-3 p-3 rounded-[var(--radius)] hover:bg-white/5 transition-all border border-transparent hover:border-white/5"
-                        >
-                            <button
-                                onClick={() => toggleTodo(todo.id)}
-                                className="mt-0.5 shrink-0 transition-colors"
-                            >
-                                {todo.completed ? (
-                                    <CheckSquare2 className="w-5 h-5 text-white shrink-0" />
-                                ) : (
-                                    <Square className="w-5 h-5 text-muted-foreground/60 hover:text-foreground shrink-0" />
-                                )}
-                            </button>
-
+                    {filteredTodos.map((todo) => {
+                        const isSelected = selectedTodoId === todo.id || editingTaskId === todo.id;
+                        return (
                             <div
-                                className="flex-1 space-y-1 cursor-pointer"
-                                onClick={() => setEditingTaskId(todo.id)}
+                                key={todo.id}
+                                className={cn(
+                                    "group flex items-start gap-3 p-3 rounded-lg transition-all border",
+                                    isSelected
+                                        ? "bg-zinc-800 border-zinc-700 text-zinc-100 font-medium"
+                                        : todo.completed
+                                          ? "bg-zinc-950/40 border-zinc-800/80 text-muted-foreground opacity-60"
+                                          : "bg-zinc-900/60 border-zinc-800/80 hover:border-zinc-700 text-foreground",
+                                )}
                             >
+                                <button
+                                    onClick={() => toggleTodo(todo.id)}
+                                    className="mt-0.5 shrink-0 transition-colors"
+                                >
+                                    {todo.completed ? (
+                                        <CheckSquare2 className="w-5 h-5 text-white shrink-0" />
+                                    ) : (
+                                        <Square className="w-5 h-5 text-muted-foreground/60 hover:text-foreground shrink-0" />
+                                    )}
+                                </button>
+
+                                <div
+                                    className="flex-1 space-y-1 cursor-pointer"
+                                    onClick={() => {
+                                        setSelectedTodoId(todo.id);
+                                        setEditingTaskId(todo.id);
+                                    }}
+                                >
                                 <p
                                     className={cn(
                                         "text-sm transition-all",
@@ -405,7 +417,7 @@ export function TodoList() {
                                 </Button>
                             </div>
                         </div>
-                    ))}
+                    })}
                 </div>
             </ScrollArea>
 

@@ -1908,17 +1908,21 @@ export function Popup() {
                     const hasSubtasks = Boolean(todo.subtasks && todo.subtasks.length > 0);
                     const hasMetadata = hasDueDate || hasPomodoros || hasSubtasks;
 
+                    const isSelected = state.selectedTodoId === todo.id || selectedTaskDetail?.id === todo.id;
                     return (
                       <div
                         key={todo.id}
-                        className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 transition-all ${
-                          todo.completed
-                            ? "bg-neutral-950 border-neutral-900 opacity-50 text-neutral-500"
-                            : "bg-neutral-900 border-neutral-800 hover:border-neutral-700"
+                        onClick={() => updateState({ selectedTodoId: todo.id, sessionName: todo.text })}
+                        className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-neutral-800 border-neutral-700 text-white font-medium"
+                            : todo.completed
+                            ? "bg-neutral-950/40 border-neutral-900 opacity-50 text-neutral-500"
+                            : "bg-neutral-900/60 border-neutral-800 hover:border-neutral-700 text-neutral-200"
                         }`}
                       >
                         <div className="flex items-start gap-2.5 flex-1 min-w-0">
-                          <button onClick={() => toggleTodo(todo.id)} className="flex-shrink-0 mt-0.5">
+                          <button onClick={(e) => { e.stopPropagation(); toggleTodo(todo.id); }} className="flex-shrink-0 mt-0.5">
                             {todo.completed ? (
                               <CheckSquare2 className="w-4 h-4 text-white shrink-0" />
                             ) : (
