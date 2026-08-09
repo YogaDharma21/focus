@@ -9,21 +9,47 @@ import {
 } from 'react-native';
 import { useAppStore, MoodNote } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
-import { Smile, Send, Trash2, Calendar } from 'lucide-react-native';
+import { Smile, Sparkles, Meh, Moon, Zap, Frown, Send, Trash2, Calendar } from 'lucide-react-native';
 
 const MOOD_OPTIONS = [
-  { emoji: '🚀', label: 'Energetic' },
-  { emoji: '😊', label: 'Happy' },
-  { emoji: '😐', label: 'Calm' },
-  { emoji: '😫', label: 'Tired' },
-  { emoji: '🤯', label: 'Stressed' },
+  { key: 'Energetic', label: 'Energetic', icon: Sparkles },
+  { key: 'Happy', label: 'Happy', icon: Smile },
+  { key: 'Calm', label: 'Calm', icon: Meh },
+  { key: 'Tired', label: 'Tired', icon: Moon },
+  { key: 'Stressed', label: 'Stressed', icon: Zap },
 ];
+
+const MOOD_ICON_MAP: Record<string, React.ComponentType<{ size?: number; color?: string }>> = {
+  Energetic: Sparkles,
+  energetic: Sparkles,
+  '🚀': Sparkles,
+  Happy: Smile,
+  happy: Smile,
+  amazing: Smile,
+  '😊': Smile,
+  Calm: Meh,
+  calm: Meh,
+  ok: Meh,
+  '😐': Meh,
+  '🙂': Meh,
+  Tired: Moon,
+  tired: Moon,
+  '😫': Moon,
+  '😴': Moon,
+  Stressed: Zap,
+  stressed: Zap,
+  '🤯': Zap,
+  '😤': Zap,
+  Sad: Frown,
+  sad: Frown,
+  '😔': Frown,
+};
 
 export function MoodNotes() {
   const { colors } = useTheme();
   const { moodNotes, addMoodNote, deleteMoodNote } = useAppStore();
 
-  const [selectedMood, setSelectedMood] = useState('😊');
+  const [selectedMood, setSelectedMood] = useState('Happy');
   const [noteText, setNoteText] = useState('');
   const [isNoteFocused, setIsNoteFocused] = useState(false);
 
@@ -59,10 +85,11 @@ export function MoodNotes() {
         {/* Mood Selector Row */}
         <View style={styles.moodRow}>
           {MOOD_OPTIONS.map((m) => {
-            const active = selectedMood === m.emoji;
+            const active = selectedMood === m.key;
+            const Icon = m.icon;
             return (
               <TouchableOpacity
-                key={m.emoji}
+                key={m.key}
                 style={[
                   styles.moodBtn,
                   {
@@ -70,10 +97,10 @@ export function MoodNotes() {
                     borderColor: colors.border,
                   },
                 ]}
-                onPress={() => setSelectedMood(m.emoji)}
+                onPress={() => setSelectedMood(m.key)}
                 activeOpacity={0.8}
               >
-                <Text style={styles.moodEmoji}>{m.emoji}</Text>
+                <Icon size={20} color={active ? colors.primaryForeground : colors.text} style={{ marginBottom: 4 }} />
                 <Text
                   style={[
                     styles.moodLabel,
@@ -139,30 +166,33 @@ export function MoodNotes() {
           </Text>
         ) : (
           <View style={styles.notesList}>
-            {moodNotes.slice().reverse().map((item) => (
-              <View
-                key={item.id}
-                style={[
-                  styles.noteItem,
-                  { backgroundColor: colors.inputBg, borderColor: colors.border },
-                ]}
-              >
-                <View style={styles.noteTopRow}>
-                  <View style={styles.noteMoodBadge}>
-                    <Text style={styles.noteEmoji}>{item.mood}</Text>
-                    <Text style={[styles.noteDate, { color: colors.textMuted }]}>
-                      {formatDate(item.date)}
-                    </Text>
+            {moodNotes.slice().reverse().map((item) => {
+              const MoodIcon = MOOD_ICON_MAP[item.mood] || Smile;
+              return (
+                <View
+                  key={item.id}
+                  style={[
+                    styles.noteItem,
+                    { backgroundColor: colors.inputBg, borderColor: colors.border },
+                  ]}
+                >
+                  <View style={styles.noteTopRow}>
+                    <View style={styles.noteMoodBadge}>
+                      <MoodIcon size={16} color={colors.text} />
+                      <Text style={[styles.noteDate, { color: colors.textMuted, marginLeft: 6 }]}>
+                        {formatDate(item.date)}
+                      </Text>
+                    </View>
+
+                    <TouchableOpacity onPress={() => deleteMoodNote(item.id)}>
+                      <Trash2 size={16} color={colors.textMuted} />
+                    </TouchableOpacity>
                   </View>
 
-                  <TouchableOpacity onPress={() => deleteMoodNote(item.id)}>
-                    <Trash2 size={16} color={colors.textMuted} />
-                  </TouchableOpacity>
+                  <Text style={[styles.noteContent, { color: colors.text }]}>{item.text}</Text>
                 </View>
-
-                <Text style={[styles.noteContent, { color: colors.text }]}>{item.text}</Text>
-              </View>
-            ))}
+              );
+            })}
           </View>
         )}
       </View>
