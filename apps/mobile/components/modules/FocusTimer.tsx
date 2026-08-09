@@ -26,6 +26,9 @@ import {
   Square,
   ListCheck,
   ListTodo,
+  Pencil,
+  Check,
+  X,
 } from 'lucide-react-native';
 
 const DISTRACTION_CATEGORIES = [
@@ -504,41 +507,96 @@ export function FocusTimer() {
         </TouchableOpacity>
       </Modal>
 
-      {/* Todo Selector Modal */}
+      {/* Todo Selector Modal (Matches Reference Popover Image) */}
       <Modal visible={todoPickerOpen} transparent animationType="fade" onRequestClose={() => setTodoPickerOpen(false)}>
         <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setTodoPickerOpen(false)}>
-          <TouchableOpacity activeOpacity={1} style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => {}}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Select Task for Session</Text>
-            <ScrollView style={{ maxHeight: 300 }}>
-              <TouchableOpacity
-                style={[styles.todoOption, !selectedTodoId && { backgroundColor: colors.border }]}
-                onPress={() => {
-                  setSelectedTodoId(null);
-                  setTodoPickerOpen(false);
-                }}
-              >
-                <Text style={{ color: colors.text }}>None (Standalone Session)</Text>
+          <TouchableOpacity
+            activeOpacity={1}
+            style={[styles.taskPickerModalBox, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => {}}
+          >
+            {/* Top Header */}
+            <View style={styles.taskPickerHeader}>
+              <Text style={[styles.taskPickerSectionTitle, { color: colors.textMuted }]}>FOCUS TOPIC</Text>
+              <TouchableOpacity onPress={() => setTodoPickerOpen(false)} style={styles.closeBtn} accessibilityLabel="Close">
+                <X size={16} color={colors.textMuted} />
               </TouchableOpacity>
-              {todos.map((todo) => (
-                <TouchableOpacity
-                  key={todo.id}
-                  style={[styles.todoOption, selectedTodoId === todo.id && { backgroundColor: colors.border }]}
-                  onPress={() => {
-                    setSelectedTodoId(todo.id);
-                    setSessionName(todo.text);
-                    setTodoPickerOpen(false);
-                  }}
-                >
-                  <Text style={{ color: colors.text, fontWeight: '500' }}>{todo.text}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+            </View>
+
+            {/* Custom Focus Item */}
             <TouchableOpacity
-              style={[styles.closeModalBtn, { backgroundColor: colors.border }]}
-              onPress={() => setTodoPickerOpen(false)}
+              style={[
+                styles.customFocusOption,
+                {
+                  backgroundColor: !selectedTodoId ? (colors.border || '#27272a') : colors.inputBg,
+                  borderColor: colors.border,
+                },
+              ]}
+              onPress={() => {
+                setSelectedTodoId(null);
+                setTodoPickerOpen(false);
+              }}
+              activeOpacity={0.8}
             >
-              <Text style={{ color: colors.text, fontWeight: '600' }}>Close</Text>
+              <View style={styles.customFocusLeft}>
+                <Pencil size={18} color={colors.text} style={{ marginTop: 2 }} />
+                <View style={styles.customFocusTextCol}>
+                  <Text style={[styles.customFocusTitle, { color: colors.text }]}>Custom Focus</Text>
+                  <Text style={[styles.customFocusSub, { color: colors.textMuted }]}>Type custom goal</Text>
+                </View>
+              </View>
+              {!selectedTodoId && <Check size={18} color={colors.text} />}
             </TouchableOpacity>
+
+            {/* My Tasks Section Header */}
+            <Text style={[styles.taskPickerSectionTitle, { color: colors.textMuted, marginTop: 14, marginBottom: 8 }]}>
+              MY TASKS
+            </Text>
+
+            {/* Tasks List */}
+            <ScrollView style={{ maxHeight: 220 }} contentContainerStyle={{ gap: 6 }}>
+              {todos.filter((t) => !t.completed).length === 0 ? (
+                <Text style={[styles.emptyTasksText, { color: colors.textMuted }]}>No pending tasks</Text>
+              ) : (
+                todos
+                  .filter((t) => !t.completed)
+                  .map((todo) => {
+                    const isSelected = selectedTodoId === todo.id;
+                    return (
+                      <TouchableOpacity
+                        key={todo.id}
+                        style={[
+                          styles.taskPickerOption,
+                          {
+                            backgroundColor: isSelected ? (colors.border || '#27272a') : colors.inputBg,
+                            borderColor: colors.border,
+                          },
+                        ]}
+                        onPress={() => {
+                          setSelectedTodoId(todo.id);
+                          setSessionName(todo.text);
+                          setTodoPickerOpen(false);
+                        }}
+                        activeOpacity={0.8}
+                      >
+                        <View style={styles.taskOptionLeft}>
+                          <ListTodo size={16} color={colors.text} />
+                          <Text
+                            style={[
+                              styles.taskOptionText,
+                              { color: colors.text, fontWeight: isSelected ? '700' : '500' },
+                            ]}
+                            numberOfLines={1}
+                          >
+                            {todo.text}
+                          </Text>
+                        </View>
+                        {isSelected && <Check size={16} color={colors.text} />}
+                      </TouchableOpacity>
+                    );
+                  })
+              )}
+            </ScrollView>
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
@@ -770,6 +828,77 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     marginVertical: 4,
+  },
+  taskPickerModalBox: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 16,
+  },
+  taskPickerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  closeBtn: {
+    padding: 4,
+  },
+  taskPickerSectionTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  customFocusOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  customFocusLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  customFocusTextCol: {
+    flexDirection: 'column',
+  },
+  customFocusTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  customFocusSub: {
+    fontSize: 11,
+    marginTop: 1,
+  },
+  taskPickerOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  taskOptionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  taskOptionText: {
+    fontSize: 14,
+    flex: 1,
+  },
+  emptyTasksText: {
+    fontSize: 12,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    paddingVertical: 12,
   },
   distractionItem: {
     flexDirection: 'row',
