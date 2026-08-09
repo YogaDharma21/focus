@@ -161,6 +161,30 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
   const isBreakActive = timerMode === 'POMODORO' && timerState === 'BREAK';
   const isFlowActive = timerMode === 'STOPWATCH';
 
+  const progressValue =
+    timerMode === 'POMODORO'
+      ? timerState === 'WORK'
+        ? Math.min(
+            100,
+            Math.max(
+              0,
+              (((pomodoroSettings.work || 25) * 60 - timeLeft) /
+                ((pomodoroSettings.work || 25) * 60)) *
+                100
+            )
+          )
+        : Math.min(
+            100,
+            Math.max(
+              0,
+              (((pomodoroSettings.break || 5) * 60 - timeLeft) /
+                ((pomodoroSettings.break || 5) * 60)) *
+                100
+            )
+          )
+      : 100;
+
+
   const getModeTitle = () => {
     if (timerMode === 'POMODORO') {
       return timerState === 'WORK' ? 'Pomodoro' : 'Break';
@@ -350,6 +374,16 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
                 Flow
               </Text>
             </TouchableOpacity>
+          </View>
+
+          {/* Progress Bar */}
+          <View style={[styles.progressTrack, { backgroundColor: colors.border }]}>
+            <View
+              style={[
+                styles.progressFill,
+                { backgroundColor: colors.primary, width: `${progressValue}%` },
+              ]}
+            />
           </View>
 
           {/* Horizontal Divider */}
@@ -578,6 +612,17 @@ const styles = StyleSheet.create({
   modeBtnText: {
     fontSize: 13,
     fontWeight: '600',
+  },
+  progressTrack: {
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+    width: '100%',
+    marginBottom: 12,
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 3,
   },
   divider: {
     height: 1,
