@@ -708,7 +708,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 360,
     flexDirection: 'row',
-    borderRadius: 24,
+    borderRadius: 16,
     borderWidth: 1,
     padding: 4,
     marginBottom: 20,
@@ -716,7 +716,7 @@ const styles = StyleSheet.create({
   modeBtn: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 18,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -728,7 +728,7 @@ const styles = StyleSheet.create({
   timerCard: {
     width: '100%',
     maxWidth: 360,
-    borderRadius: 24,
+    borderRadius: 16,
     borderWidth: 1,
     padding: 24,
     alignItems: 'center',
@@ -855,7 +855,7 @@ const styles = StyleSheet.create({
   modalBox: {
     width: '100%',
     maxWidth: 360,
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1,
     padding: 20,
   },
@@ -920,7 +920,7 @@ const styles = StyleSheet.create({
   taskPickerModalBox: {
     width: '100%',
     maxWidth: 340,
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1,
     padding: 16,
   },
