@@ -672,6 +672,20 @@ export function TodoList() {
                                 </div>
 
                                 <div className="space-y-2">
+                                    <div className="flex gap-2 pb-1">
+                                        <Input
+                                            placeholder="Add a subtask..."
+                                            className="h-8 text-xs bg-background/50 border-border/40 focus:bg-background"
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter" && e.currentTarget.value.trim()) {
+                                                    const text = e.currentTarget.value.trim();
+                                                    addSubtask(editingTask.id, text);
+                                                    e.currentTarget.value = "";
+                                                }
+                                            }}
+                                        />
+                                    </div>
+
                                     {editingTask.subtasks?.map((subtask) => (
                                         <div
                                             key={subtask.id}
@@ -741,20 +755,6 @@ export function TodoList() {
                                             </Button>
                                         </div>
                                     ))}
-
-                                    <div className="flex gap-2 pt-1">
-                                        <Input
-                                            placeholder="Add a subtask..."
-                                            className="h-8 text-xs bg-background/50 border-border/40 focus:bg-background"
-                                            onKeyDown={(e) => {
-                                                if (e.key === "Enter" && e.currentTarget.value.trim()) {
-                                                    const text = e.currentTarget.value.trim();
-                                                    addSubtask(editingTask.id, text);
-                                                    e.currentTarget.value = "";
-                                                }
-                                            }}
-                                        />
-                                    </div>
                                 </div>
                             </div>
 
