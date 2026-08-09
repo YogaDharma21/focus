@@ -762,11 +762,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   timeDisplay: {
-    fontSize: 72,
+    fontSize: 88,
     fontWeight: '800',
     letterSpacing: -2,
     fontVariant: ['tabular-nums'],
-    marginVertical: 16,
+    marginVertical: 12,
   },
   selectedTaskCardContainer: {
     width: '100%',
