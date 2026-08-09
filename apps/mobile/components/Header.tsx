@@ -63,21 +63,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
   const isTimerScreen =
     !pathname || pathname === '/' || pathname.endsWith('index') || currentView === 'FOCUS';
 
-  const getTitle = () => {
-    if (isTimerScreen) {
-      return 'Timer';
-    }
-    if (pathname.includes('tasks')) {
-      return 'Tasks';
-    }
-    if (pathname.includes('journal')) {
-      return 'Stats';
-    }
-    if (pathname.includes('notes')) {
-      return 'Notes';
-    }
-    return 'Timer';
-  };
+
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -210,7 +196,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
             style={styles.logoIcon}
             resizeMode="contain"
           />
-          <Text style={[styles.title, { color: colors.text }]}>{getTitle()}</Text>
+          <Text style={[styles.title, { color: colors.text }]}>Focus</Text>
         </View>
 
         {/* Center Pill - Only shown on non-timer tabs */}

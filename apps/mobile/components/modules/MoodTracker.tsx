@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
+  Pressable,
   StyleSheet,
   ScrollView,
 } from 'react-native';
@@ -60,10 +61,6 @@ export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
 };
 
 const MONTH_LABELS = ['J', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
-const FULL_MONTH_NAMES = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
-];
 
 function normalizeMoodKey(rawMood: string | undefined): MoodType | null {
   if (!rawMood) return null;
@@ -79,12 +76,155 @@ function getDaysInMonth(year: number, monthZeroBased: number): number {
   return new Date(year, monthZeroBased + 1, 0).getDate();
 }
 
+function formatDateShort(dateKey: string) {
+  try {
+    const parts = dateKey.split('-').map(Number);
+    const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
+    return dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch {
+    return dateKey;
+  }
+}
+
+interface GridCellProps {
+  dateKey: string;
+  moodKey: MoodType | null;
+  isSelectedCell: boolean;
+  isCellToday: boolean;
+  isValidDay: boolean;
+  inputBg: string;
+  borderColor: string;
+  primaryColor: string;
+  onPress: (dateKey: string) => void;
+}
+
+const GridCell = React.memo(function GridCell({
+  dateKey,
+  moodKey,
+  isSelectedCell,
+  isCellToday,
+  isValidDay,
+  inputBg,
+  borderColor,
+  primaryColor,
+  onPress,
+}: GridCellProps) {
+  if (!isValidDay) {
+    return <View style={[styles.gridCell, styles.invalidCell]} />;
+  }
+
+  const cfg = moodKey ? MOOD_CONFIGS[moodKey] : null;
+
+  return (
+    <Pressable
+      style={[
+        styles.gridCell,
+        cfg
+          ? { backgroundColor: cfg.bg }
+          : { backgroundColor: inputBg, borderColor, borderWidth: 0.5 },
+        isSelectedCell && { borderColor: '#ffffff', borderWidth: 2 },
+        isCellToday && !isSelectedCell && { borderColor: primaryColor, borderWidth: 1.5 },
+      ]}
+      onPress={() => onPress(dateKey)}
+    />
+  );
+});
+
+interface YearlyMoodGridProps {
+  selectedYear: number;
+  selectedDateKey: string;
+  todayYear: number;
+  todayMonth: number;
+  todayDate: number;
+  moodNotesMap: Record<string, MoodNote>;
+  inputBg: string;
+  borderColor: string;
+  textMutedColor: string;
+  primaryColor: string;
+  onCellPress: (dateKey: string) => void;
+}
+
+const DAYS_1_TO_31 = Array.from({ length: 31 }, (_, i) => i + 1);
+const MONTHS_0_TO_11 = Array.from({ length: 12 }, (_, i) => i);
+
+const YearlyMoodGrid = React.memo(function YearlyMoodGrid({
+  selectedYear,
+  selectedDateKey,
+  todayYear,
+  todayMonth,
+  todayDate,
+  moodNotesMap,
+  inputBg,
+  borderColor,
+  textMutedColor,
+  primaryColor,
+  onCellPress,
+}: YearlyMoodGridProps) {
+  return (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.gridScrollView}>
+      <View style={styles.gridContainer}>
+        {/* Header Row J F M A M J J A S O N D */}
+        <View style={styles.monthHeaderRow}>
+          <View style={styles.dayLabelCell} />
+          {MONTH_LABELS.map((m, idx) => (
+            <Text key={idx} style={[styles.monthHeaderCell, { color: textMutedColor }]}>
+              {m}
+            </Text>
+          ))}
+        </View>
+
+        {/* Rows 1..31 */}
+        {DAYS_1_TO_31.map((dayNum) => (
+          <View key={dayNum} style={styles.dayRow}>
+            <Text style={[styles.dayLabelCell, { color: textMutedColor }]}>
+              {dayNum < 10 ? `0${dayNum}` : dayNum}
+            </Text>
+
+            {MONTHS_0_TO_11.map((monthIdx) => {
+              const monthDaysCount = getDaysInMonth(selectedYear, monthIdx);
+              const isValidDay = dayNum <= monthDaysCount;
+
+              const monthStr = (monthIdx + 1).toString().padStart(2, '0');
+              const dayStr = dayNum.toString().padStart(2, '0');
+              const dateKey = `${selectedYear}-${monthStr}-${dayStr}`;
+
+              const noteObj = moodNotesMap[dateKey];
+              const moodKey = normalizeMoodKey(noteObj?.mood);
+
+              const isSelectedCell = selectedDateKey === dateKey;
+              const isCellToday =
+                selectedYear === todayYear &&
+                monthIdx === todayMonth &&
+                dayNum === todayDate;
+
+              return (
+                <GridCell
+                  key={monthIdx}
+                  dateKey={dateKey}
+                  moodKey={moodKey}
+                  isSelectedCell={isSelectedCell}
+                  isCellToday={isCellToday}
+                  isValidDay={isValidDay}
+                  inputBg={inputBg}
+                  borderColor={borderColor}
+                  primaryColor={primaryColor}
+                  onPress={onCellPress}
+                />
+              );
+            })}
+          </View>
+        ))}
+      </View>
+    </ScrollView>
+  );
+});
+
 export function MoodTracker() {
   const { colors } = useTheme();
   const { moodNotes, setMoodForDate, cycleMoodForDate, deleteMoodNote } = useAppStore();
 
-  const today = new Date();
-  const todayStr = today.toISOString().split('T')[0];
+  const today = useMemo(() => new Date(), []);
+  const todayStr = useMemo(() => today.toISOString().split('T')[0], [today]);
 
   const [selectedYear, setSelectedYear] = useState<number>(today.getFullYear());
   const [selectedDateKey, setSelectedDateKey] = useState<string>(todayStr);
@@ -94,74 +234,88 @@ export function MoodTracker() {
 
   const lastTapRef = useRef<{ dateKey: string; timestamp: number } | null>(null);
 
-  const selectedDateNote = moodNotes.find((n) => n.date.slice(0, 10) === selectedDateKey);
+  // Fast O(1) lookup map for mood notes
+  const moodNotesMap = useMemo(() => {
+    const map: Record<string, MoodNote> = {};
+    if (moodNotes && moodNotes.length > 0) {
+      for (let i = 0; i < moodNotes.length; i++) {
+        const n = moodNotes[i];
+        if (n?.date) {
+          map[n.date.slice(0, 10)] = n;
+        }
+      }
+    }
+    return map;
+  }, [moodNotes]);
+
+  const selectedDateNote = moodNotesMap[selectedDateKey];
   const currentSelectedMoodKey = normalizeMoodKey(selectedDateNote?.mood);
 
   useEffect(() => {
     setSelectedMood(currentSelectedMoodKey);
     setDescriptionText(selectedDateNote?.text || '');
-  }, [selectedDateKey, selectedDateNote?.mood, selectedDateNote?.text]);
+  }, [selectedDateKey, currentSelectedMoodKey, selectedDateNote?.text]);
 
-  const handleSaveMood = () => {
+  const handleSaveMood = useCallback(() => {
     const moodToSave = selectedMood || currentSelectedMoodKey || 'amazing';
     setMoodForDate(selectedDateKey, moodToSave, descriptionText.trim());
-  };
+  }, [selectedMood, currentSelectedMoodKey, setMoodForDate, selectedDateKey, descriptionText]);
 
   const isTodaySelected = selectedDateKey === todayStr;
 
-  const formatDateShort = (dateKey: string) => {
-    try {
-      const parts = dateKey.split('-').map(Number);
-      const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
-      return dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-    } catch {
-      return dateKey;
-    }
-  };
-
-  const handleCellPress = (dateKey: string) => {
-    const now = Date.now();
-    if (
-      lastTapRef.current &&
-      lastTapRef.current.dateKey === dateKey &&
-      now - lastTapRef.current.timestamp < 350
-    ) {
-      // Double tap detected -> cycle mood
-      cycleMoodForDate(dateKey);
-      lastTapRef.current = null;
-    } else {
-      // Single tap -> select date
-      setSelectedDateKey(dateKey);
-      lastTapRef.current = { dateKey, timestamp: now };
-    }
-  };
+  const handleCellPress = useCallback(
+    (dateKey: string) => {
+      const now = Date.now();
+      if (
+        lastTapRef.current &&
+        lastTapRef.current.dateKey === dateKey &&
+        now - lastTapRef.current.timestamp < 350
+      ) {
+        // Double tap detected -> cycle mood
+        cycleMoodForDate(dateKey);
+        lastTapRef.current = null;
+      } else {
+        // Single tap -> select date
+        setSelectedDateKey(dateKey);
+        lastTapRef.current = { dateKey, timestamp: now };
+      }
+    },
+    [cycleMoodForDate]
+  );
 
   const activeDateKey = selectedDateKey;
-  const activeNoteObj = moodNotes.find((n) => n.date.slice(0, 10) === activeDateKey);
+  const activeNoteObj = moodNotesMap[activeDateKey];
   const activeMoodKey = normalizeMoodKey(activeNoteObj?.mood);
   const activeFormattedDate = formatDateShort(activeDateKey);
 
-  const yearNotes = moodNotes.filter((n) => {
-    const year = parseInt(n.date.slice(0, 4), 10);
-    return year === selectedYear;
-  });
+  const stats = useMemo(() => {
+    const counts: Record<MoodType, number> = {
+      amazing: 0,
+      ok: 0,
+      tired: 0,
+      sad: 0,
+      stressed: 0,
+    };
 
-  const stats: Record<MoodType, number> = {
-    amazing: 0,
-    ok: 0,
-    tired: 0,
-    sad: 0,
-    stressed: 0,
-  };
-
-  yearNotes.forEach((n) => {
-    const key = normalizeMoodKey(n.mood);
-    if (key) {
-      stats[key]++;
+    if (moodNotes) {
+      moodNotes.forEach((n) => {
+        const year = parseInt(n.date.slice(0, 4), 10);
+        if (year === selectedYear) {
+          const key = normalizeMoodKey(n.mood);
+          if (key) {
+            counts[key]++;
+          }
+        }
+      });
     }
-  });
 
-  const totalTrackedDays = Object.values(stats).reduce((a, b) => a + b, 0);
+    return counts;
+  }, [moodNotes, selectedYear]);
+
+  const totalTrackedDays = useMemo(
+    () => Object.values(stats).reduce((a, b) => a + b, 0),
+    [stats]
+  );
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -305,69 +459,19 @@ export function MoodTracker() {
         </Text>
 
         {/* 12 Months x 31 Days Grid */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.gridScrollView}>
-          <View style={styles.gridContainer}>
-            {/* Header Row J F M A M J J A S O N D */}
-            <View style={styles.monthHeaderRow}>
-              <View style={styles.dayLabelCell} />
-              {MONTH_LABELS.map((m, idx) => (
-                <Text key={idx} style={[styles.monthHeaderCell, { color: colors.textMuted }]}>
-                  {m}
-                </Text>
-              ))}
-            </View>
-
-            {/* Rows 1..31 */}
-            {Array.from({ length: 31 }, (_, dayIdx) => {
-              const dayNum = dayIdx + 1;
-              return (
-                <View key={dayNum} style={styles.dayRow}>
-                  <Text style={[styles.dayLabelCell, { color: colors.textMuted }]}>
-                    {dayNum < 10 ? `0${dayNum}` : dayNum}
-                  </Text>
-
-                  {Array.from({ length: 12 }, (_, monthIdx) => {
-                    const monthDaysCount = getDaysInMonth(selectedYear, monthIdx);
-                    const isValidDay = dayNum <= monthDaysCount;
-
-                    const monthStr = (monthIdx + 1).toString().padStart(2, '0');
-                    const dayStr = dayNum.toString().padStart(2, '0');
-                    const dateKey = `${selectedYear}-${monthStr}-${dayStr}`;
-
-                    const noteObj = moodNotes.find((n) => n.date.slice(0, 10) === dateKey);
-                    const moodKey = normalizeMoodKey(noteObj?.mood);
-                    const cfg = moodKey ? MOOD_CONFIGS[moodKey] : null;
-
-                    const isSelectedCell = selectedDateKey === dateKey;
-                    const isCellToday = selectedYear === today.getFullYear() &&
-                      monthIdx === today.getMonth() &&
-                      dayNum === today.getDate();
-
-                    if (!isValidDay) {
-                      return <View key={monthIdx} style={[styles.gridCell, styles.invalidCell]} />;
-                    }
-
-                    return (
-                      <TouchableOpacity
-                        key={monthIdx}
-                        style={[
-                          styles.gridCell,
-                          cfg
-                            ? { backgroundColor: cfg.bg }
-                            : { backgroundColor: colors.inputBg, borderColor: colors.border, borderWidth: 0.5 },
-                          isSelectedCell && { borderColor: '#ffffff', borderWidth: 2 },
-                          isCellToday && !isSelectedCell && { borderColor: colors.primary, borderWidth: 1.5 },
-                        ]}
-                        onPress={() => handleCellPress(dateKey)}
-                        activeOpacity={0.7}
-                      />
-                    );
-                  })}
-                </View>
-              );
-            })}
-          </View>
-        </ScrollView>
+        <YearlyMoodGrid
+          selectedYear={selectedYear}
+          selectedDateKey={selectedDateKey}
+          todayYear={today.getFullYear()}
+          todayMonth={today.getMonth()}
+          todayDate={today.getDate()}
+          moodNotesMap={moodNotesMap}
+          inputBg={colors.inputBg}
+          borderColor={colors.border}
+          textMutedColor={colors.textMuted}
+          primaryColor={colors.primary}
+          onCellPress={handleCellPress}
+        />
 
         {/* Selected Date Info Banner */}
         <View style={[styles.infoBanner, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
@@ -486,9 +590,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  moodEmoji: {
-    fontSize: 20,
   },
   moodLabel: {
     fontSize: 9,
