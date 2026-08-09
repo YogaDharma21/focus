@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, CheckCircle2, Circle, Trash2, FolderPlus, Folder,
-  ListTodo, CheckSquare2, Target
+  ListTodo, CheckSquare2, Target, X, Sparkles, List,
+  Timer, Calendar, Clock, FileText, ListChecks
 } from 'lucide-react';
 import { useDesktopStore, TodoItem } from '../../lib/store';
 
@@ -16,10 +17,21 @@ export const TodoList: React.FC = () => {
   const [activeGroupId, setActiveGroupId] = useState<string>("all");
   const [newGroupInput, setNewGroupInput] = useState("");
   const [showAddGroupModal, setShowAddGroupModal] = useState(false);
+  const [detailTodoId, setDetailTodoId] = useState<string | null>(null);
 
   // Simplified new task form state (only task name)
   const [textInput, setTextInput] = useState("");
   const [newSubtaskInput, setNewSubtaskInput] = useState("");
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && detailTodoId) {
+        setDetailTodoId(null);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [detailTodoId]);
 
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +49,7 @@ export const TodoList: React.FC = () => {
     };
 
     addTodo(newTask);
-    setSelectedTodoId(newTask.id);
+    setDetailTodoId(newTask.id);
     setTextInput("");
   };
 
@@ -56,7 +68,7 @@ export const TodoList: React.FC = () => {
     return todo.groupId === activeGroupId;
   });
 
-  const activeTodoDetails = todos.find(t => t.id === selectedTodoId);
+  const activeTodoDetails = todos.find(t => t.id === detailTodoId);
 
   const getPriorityBadgeClass = (priority?: string) => {
     switch (priority) {
@@ -144,195 +156,336 @@ export const TodoList: React.FC = () => {
         </form>
       </div>
 
-      {/* Middle & Right Column: Tasks List & Comprehensive Task Details Panel */}
-      <div className="flex-1 flex flex-col md:flex-row gap-4 overflow-hidden">
-        {/* Task List */}
-        <div className="flex-1 shadcn-card p-4 flex flex-col overflow-hidden">
-          <div className="flex items-center justify-between pb-3 mb-2 border-b border-zinc-800">
-            <span className="text-xs font-semibold text-zinc-200">Tasks</span>
-            <span className="text-[10px] text-zinc-500">{filteredTodos.length} Items</span>
-          </div>
-
-          <div className="flex-1 overflow-y-auto space-y-2 pr-1">
-            {filteredTodos.length === 0 ? (
-              <div className="h-48 flex flex-col items-center justify-center text-zinc-500 text-xs space-y-1">
-                <ListTodo className="w-8 h-8 stroke-1 text-zinc-600" />
-                <p>No tasks found.</p>
-              </div>
-            ) : (
-              filteredTodos.map((todo) => {
-                const isSelected = selectedTodoId === todo.id;
-                return (
-                  <div
-                    key={todo.id}
-                    onClick={() => setSelectedTodoId(todo.id)}
-                    className={`p-3 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-3 ${
-                      isSelected
-                        ? "bg-zinc-800 border-zinc-700 text-zinc-100 font-medium"
-                        : todo.completed
-                        ? "bg-zinc-950/40 border-zinc-800 text-zinc-500 opacity-60"
-                        : "bg-zinc-900/60 border-zinc-800/80 hover:border-zinc-700 text-zinc-200"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2.5 flex-1 min-w-0">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          toggleTodo(todo.id);
-                        }}
-                        className="text-zinc-400 hover:text-zinc-100 transition-colors shrink-0"
-                      >
-                        {todo.completed ? (
-                          <CheckCircle2 className="w-4 h-4 text-emerald-400 fill-emerald-400/20" />
-                        ) : (
-                          <Circle className="w-4 h-4" />
-                        )}
-                      </button>
-                      <span className={`text-xs ${todo.completed ? "line-through text-zinc-500" : ""}`}>
-                        {todo.text}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2 shrink-0">
-                      {/* Focus on this task button */}
-                      {!todo.completed && (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedTodoId(todo.id);
-                            setView("FOCUS");
-                          }}
-                          className="px-2 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 text-[10px] font-medium text-zinc-200 flex items-center gap-1 border border-zinc-700 transition-colors"
-                          title="Focus on this task"
-                        >
-                          <Target className="w-3 h-3 text-zinc-100" />
-                          <span>Focus</span>
-                        </button>
-                      )}
-
-                      <span className={`text-[9px] px-2 py-0.5 rounded-full border uppercase font-bold tracking-wider ${getPriorityBadgeClass(todo.priority)}`}>
-                        {todo.priority || 'medium'}
-                      </span>
-
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteTodo(todo.id);
-                          if (selectedTodoId === todo.id) setSelectedTodoId(null);
-                        }}
-                        className="p-1 text-zinc-500 hover:text-rose-400 transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
+      {/* Main Task List */}
+      <div className="flex-1 shadcn-card p-4 flex flex-col overflow-hidden">
+        <div className="flex items-center justify-between pb-3 mb-2 border-b border-zinc-800">
+          <span className="text-xs font-semibold text-zinc-200">Tasks</span>
+          <span className="text-[10px] text-zinc-500">{filteredTodos.length} Items</span>
         </div>
 
-        {/* Editable Task Details Panel */}
-        {activeTodoDetails && (
-          <div className="w-full md:w-96 shadcn-card p-4 flex flex-col space-y-4 overflow-y-auto shrink-0 border border-zinc-800">
-            <div className="flex items-center justify-between pb-2 border-b border-zinc-800">
-              <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wider">Task Details</span>
-              <select
-                value={activeTodoDetails.priority || 'medium'}
-                onChange={(e: any) => updateTodo(activeTodoDetails.id, { priority: e.target.value })}
-                className="bg-zinc-900 border border-zinc-800 text-[10px] font-semibold uppercase text-zinc-300 rounded-lg px-2 py-0.5 focus:outline-none"
+        <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+          {filteredTodos.length === 0 ? (
+            <div className="h-48 flex flex-col items-center justify-center text-zinc-500 text-xs space-y-1">
+              <ListTodo className="w-8 h-8 stroke-1 text-zinc-600" />
+              <p>No tasks found.</p>
+            </div>
+          ) : (
+            filteredTodos.map((todo) => {
+              const isSelected = detailTodoId === todo.id || selectedTodoId === todo.id;
+              return (
+                <div
+                  key={todo.id}
+                  onClick={() => setDetailTodoId(todo.id)}
+                  className={`p-3 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                    isSelected
+                      ? "bg-zinc-800 border-zinc-700 text-zinc-100 font-medium"
+                      : todo.completed
+                      ? "bg-zinc-950/40 border-zinc-800 text-zinc-500 opacity-60"
+                      : "bg-zinc-900/60 border-zinc-800/80 hover:border-zinc-700 text-zinc-200"
+                  }`}
+                >
+                  <div className="flex items-start gap-2.5 flex-1 min-w-0">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleTodo(todo.id);
+                      }}
+                      className="text-zinc-400 hover:text-zinc-100 transition-colors shrink-0 mt-0.5"
+                    >
+                      {todo.completed ? (
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 fill-emerald-400/20" />
+                      ) : (
+                        <Circle className="w-4 h-4" />
+                      )}
+                    </button>
+
+                    <div className="flex flex-col flex-1 min-w-0 gap-0.5">
+                      <span className={`text-xs font-semibold ${todo.completed ? "line-through text-zinc-500" : "text-zinc-100"}`}>
+                        {todo.text}
+                      </span>
+
+                      {(() => {
+                        const hasDeadline = Boolean(todo.deadline);
+                        const hasSessions = Boolean((todo.estimatedPomodoros && todo.estimatedPomodoros > 0) || (todo.completedPomodoros && todo.completedPomodoros > 0));
+                        const hasSubtasks = Boolean(todo.subtasks && todo.subtasks.length > 0);
+                        const hasPriority = Boolean(todo.priority && todo.priority !== 'medium');
+                        const hasMetadata = hasDeadline || hasSessions || hasSubtasks || hasPriority;
+
+                        if (!hasMetadata) return null;
+
+                        return (
+                          <div className="flex items-center gap-3 text-[10px] font-mono text-zinc-400 flex-wrap">
+                            {hasDeadline && (
+                              <div className="flex items-center gap-1 text-orange-500 font-medium">
+                                <Calendar className="w-3 h-3" />
+                                <span>
+                                  {(() => {
+                                    const dl = todo.deadline || '';
+                                    const datePart = dl.split('T')[0];
+                                    const timePart = dl.split('T')[1] || '';
+                                    if (!datePart) return '';
+                                    const d = new Date(datePart);
+                                    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                                    const formatted = `${months[d.getMonth()]} ${d.getDate()}`;
+                                    return timePart ? `${formatted}, ${timePart}` : formatted;
+                                  })()}
+                                </span>
+                              </div>
+                            )}
+                            {hasSessions && (
+                              <div className="flex items-center gap-1 text-zinc-400">
+                                <Timer className="w-3 h-3" />
+                                <span>{todo.completedPomodoros || 0}/{todo.estimatedPomodoros || 1}</span>
+                              </div>
+                            )}
+                            {hasPriority && (
+                              <div className="flex items-center gap-1 text-zinc-400">
+                                <Sparkles className="w-3 h-3" />
+                                <span>{todo.priority}</span>
+                              </div>
+                            )}
+                            {hasSubtasks && (
+                              <div className="flex items-center gap-1 text-zinc-400">
+                                <ListChecks className="w-3 h-3" />
+                                <span>{todo.subtasks!.filter(s => s.completed).length}/{todo.subtasks!.length}</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {/* Focus on this task */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedTodoId(todo.id);
+                        setView("FOCUS");
+                      }}
+                      className="p-1.5 text-zinc-500 hover:text-zinc-200 transition-colors rounded-md hover:bg-zinc-800/60"
+                      title="Focus on this task"
+                    >
+                      <Target className="w-3.5 h-3.5" />
+                    </button>
+
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteTodo(todo.id);
+                        if (detailTodoId === todo.id) setDetailTodoId(null);
+                      }}
+                      className="p-1.5 text-zinc-500 hover:text-rose-400 transition-colors rounded-md hover:bg-zinc-800/60"
+                      title="Delete task"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+      </div>
+
+      {/* Task Details Dialog Modal */}
+      {activeTodoDetails && (
+        <div 
+          className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+          onClick={() => setDetailTodoId(null)}
+        >
+          <div 
+            className="w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-2xl p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto select-text"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">TASK DETAILS</span>
+              <button
+                onClick={() => setDetailTodoId(null)}
+                className="p-1 text-zinc-400 hover:text-zinc-100 rounded-lg hover:bg-zinc-800/60 transition-colors"
+                title="Close"
               >
-                <option value="low">LOW</option>
-                <option value="medium">MEDIUM</option>
-                <option value="high">HIGH</option>
-                <option value="urgent">URGENT</option>
-              </select>
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            {/* 1. Name */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block">Task Name</label>
+            {/* Task Name Header */}
+            <div>
               <input
                 type="text"
                 value={activeTodoDetails.text}
                 onChange={(e) => updateTodo(activeTodoDetails.id, { text: e.target.value })}
-                className="w-full h-9 shadcn-input px-3 text-xs font-semibold text-zinc-100"
+                className="w-full text-xl font-bold text-zinc-100 bg-transparent border-b border-transparent focus:border-zinc-800 focus:outline-none py-1"
+                placeholder="Task title..."
               />
             </div>
 
-            {/* 2. Description */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block">Description</label>
-              <textarea
-                rows={2}
-                placeholder="Add task description..."
-                value={activeTodoDetails.description || ''}
-                onChange={(e) => updateTodo(activeTodoDetails.id, { description: e.target.value })}
-                className="w-full shadcn-input p-3 text-xs text-zinc-300 resize-none"
-              />
-            </div>
-
-            {/* 3. Sessions Estimated & Completed */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block">Sessions Est.</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={100}
-                  value={activeTodoDetails.estimatedPomodoros || 1}
-                  onChange={(e) => updateTodo(activeTodoDetails.id, { estimatedPomodoros: Number(e.target.value) || 1 })}
-                  className="w-full h-9 shadcn-input px-3 text-xs text-center font-mono"
-                />
+            {/* Card 1: PRIORITY & GROUP (2-column Grid) */}
+            <div className="grid grid-cols-2 gap-3">
+              {/* Priority Card */}
+              <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 space-y-2">
+                <div className="flex items-center gap-1.5 text-amber-500">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">PRIORITY</span>
+                </div>
+                <select
+                  value={activeTodoDetails.priority || 'medium'}
+                  onChange={(e: any) => updateTodo(activeTodoDetails.id, { priority: e.target.value })}
+                  className="w-full bg-zinc-900 border border-zinc-800 text-xs font-medium text-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-700"
+                >
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                  <option value="urgent">Urgent</option>
+                </select>
               </div>
 
-              <div className="space-y-1">
-                <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block">Sessions Done</label>
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={activeTodoDetails.completedPomodoros || 0}
-                  onChange={(e) => updateTodo(activeTodoDetails.id, { completedPomodoros: Number(e.target.value) || 0 })}
-                  className="w-full h-9 shadcn-input px-3 text-xs text-center font-mono"
-                />
+              {/* Group Card */}
+              <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 space-y-2">
+                <div className="flex items-center gap-1.5 text-sky-400">
+                  <List className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">GROUP</span>
+                </div>
+                <select
+                  value={activeTodoDetails.groupId || 'current'}
+                  onChange={(e: any) => updateTodo(activeTodoDetails.id, { groupId: e.target.value })}
+                  className="w-full bg-zinc-900 border border-zinc-800 text-xs font-medium text-zinc-200 rounded-lg px-3 py-2 focus:outline-none focus:border-zinc-700"
+                >
+                  <option value="current">Current Tasks</option>
+                  {groups.filter(g => g.type === 'custom').map(g => (
+                    <option key={g.id} value={g.id}>{g.name}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
-            {/* 4. Deadline (Date & Time) */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block">Deadline (Date & Time)</label>
-              <input
-                type="datetime-local"
-                value={activeTodoDetails.deadline || ''}
-                onChange={(e) => updateTodo(activeTodoDetails.id, { deadline: e.target.value })}
-                className="w-full h-9 shadcn-input px-3 text-xs text-zinc-300 font-mono"
-              />
+            {/* Card 2: FOCUS SESSIONS */}
+            <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 space-y-3">
+              <div className="flex items-center gap-1.5 text-emerald-400">
+                <Timer className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">FOCUS SESSIONS</span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[11px] text-zinc-400 font-medium block mb-1">Estimated</label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={100}
+                    value={activeTodoDetails.estimatedPomodoros || 1}
+                    onChange={(e) => updateTodo(activeTodoDetails.id, { estimatedPomodoros: Number(e.target.value) || 1 })}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs font-semibold text-zinc-100 text-left focus:outline-none focus:border-zinc-700 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] text-zinc-400 font-medium block mb-1">Completed</label>
+                  <input
+                    type="number"
+                    min={0}
+                    max={100}
+                    value={activeTodoDetails.completedPomodoros || 0}
+                    onChange={(e) => updateTodo(activeTodoDetails.id, { completedPomodoros: Number(e.target.value) || 0 })}
+                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs font-semibold text-zinc-100 text-left focus:outline-none focus:border-zinc-700 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                </div>
+              </div>
+
+              {/* Progress Bar */}
+              <div>
+                <div className="h-1.5 w-full bg-zinc-800/80 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                    style={{
+                      width: `${Math.min(100, Math.round(((activeTodoDetails.completedPomodoros || 0) / (activeTodoDetails.estimatedPomodoros || 1)) * 100))}%`
+                    }}
+                  />
+                </div>
+                <div className="text-[10px] text-zinc-400 font-medium text-right mt-1.5">
+                  {Math.min(100, Math.round(((activeTodoDetails.completedPomodoros || 0) / (activeTodoDetails.estimatedPomodoros || 1)) * 100))}% Completed
+                </div>
+              </div>
             </div>
 
-            {/* 5. Notes */}
-            <div className="space-y-1">
-              <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block">Task Notes</label>
+            {/* Card 3: DEADLINE */}
+            <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 space-y-2">
+              <div className="flex items-center gap-1.5 text-purple-400">
+                <Calendar className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">DEADLINE</span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="relative flex items-center">
+                  <Calendar className="w-3.5 h-3.5 text-zinc-500 absolute left-3 pointer-events-none z-10" />
+                  <input
+                    type="date"
+                    value={(activeTodoDetails.deadline || '').split('T')[0] || ''}
+                    placeholder="Pick a date"
+                    onChange={(e) => {
+                      const dateVal = e.target.value;
+                      const timeVal = (activeTodoDetails.deadline || '').split('T')[1] || '';
+                      updateTodo(activeTodoDetails.id, {
+                        deadline: dateVal ? (timeVal ? `${dateVal}T${timeVal}` : dateVal) : ''
+                      });
+                    }}
+                    className="w-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 rounded-lg pl-9 pr-3 py-2 focus:outline-none focus:border-zinc-700 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                  />
+                </div>
+                <div className="relative flex items-center">
+                  <input
+                    type="time"
+                    value={(activeTodoDetails.deadline || '').split('T')[1] || ''}
+                    onChange={(e) => {
+                      const timeVal = e.target.value;
+                      const dateVal = (activeTodoDetails.deadline || '').split('T')[0] || new Date().toISOString().split('T')[0];
+                      updateTodo(activeTodoDetails.id, {
+                        deadline: timeVal ? `${dateVal}T${timeVal}` : dateVal
+                      });
+                    }}
+                    className="w-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 rounded-lg pl-3 pr-8 py-2 focus:outline-none focus:border-zinc-700 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                  />
+                  <Clock className="w-3.5 h-3.5 text-zinc-500 absolute right-3 pointer-events-none z-10" />
+                </div>
+              </div>
+            </div>
+
+            {/* Card 4: NOTES */}
+            <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 space-y-2">
+              <div className="flex items-center gap-1.5 text-amber-500">
+                <FileText className="w-3.5 h-3.5" />
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">NOTES</span>
+              </div>
               <textarea
                 rows={3}
-                placeholder="Add task notes or reflections..."
+                placeholder="Add notes or details for this task..."
                 value={activeTodoDetails.notes || ''}
                 onChange={(e) => updateTodo(activeTodoDetails.id, { notes: e.target.value })}
-                className="w-full shadcn-input p-3 text-xs text-zinc-300 resize-none"
+                className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-3 text-xs text-zinc-200 placeholder-zinc-500 resize-none focus:outline-none focus:border-zinc-700"
               />
             </div>
 
-            {/* 6. Subtasks Checklist */}
-            <div className="space-y-2 pt-2 border-t border-zinc-800">
-              <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block">Subtasks</span>
-              <div className="space-y-1.5">
+            {/* Card 5: SUBTASKS */}
+            <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 space-y-2.5">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-teal-400">
+                  <CheckSquare2 className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">SUBTASKS</span>
+                </div>
+                <span className="text-[10px] font-bold text-zinc-400 bg-zinc-800/80 px-2 py-0.5 rounded-full">
+                  {activeTodoDetails.subtasks?.filter(s => s.completed).length || 0}/{activeTodoDetails.subtasks?.length || 0}
+                </span>
+              </div>
+
+              <div className="space-y-1.5 max-h-40 overflow-y-auto pr-0.5">
                 {activeTodoDetails.subtasks?.map((sub) => (
-                  <div key={sub.id} className="flex items-center gap-2 text-xs bg-zinc-900 p-2.5 rounded-xl border border-zinc-800">
+                  <div key={sub.id} className="flex items-center gap-2 text-xs bg-zinc-900 p-2 rounded-lg border border-zinc-800">
                     <button
                       onClick={() => toggleSubtask(activeTodoDetails.id, sub.id)}
                       className="text-zinc-400 hover:text-zinc-100 shrink-0"
                     >
-                      <CheckSquare2 className={`w-3.5 h-3.5 ${sub.completed ? "text-zinc-100" : "text-zinc-500"}`} />
+                      <CheckSquare2 className={`w-3.5 h-3.5 ${sub.completed ? "text-teal-400" : "text-zinc-500"}`} />
                     </button>
                     <input
                       type="text"
@@ -350,13 +503,13 @@ export const TodoList: React.FC = () => {
                 ))}
               </div>
 
-              <div className="flex items-center gap-2 pt-1">
+              <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  placeholder="Add subtask..."
+                  placeholder="Add a subtask..."
                   value={newSubtaskInput}
                   onChange={(e) => setNewSubtaskInput(e.target.value)}
-                  className="flex-1 h-9 shadcn-input px-3 text-xs"
+                  className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-zinc-700"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && newSubtaskInput.trim()) {
                       e.preventDefault();
@@ -365,22 +518,25 @@ export const TodoList: React.FC = () => {
                     }
                   }}
                 />
-                <button
-                  onClick={() => {
-                    if (newSubtaskInput.trim()) {
-                      addSubtask(activeTodoDetails.id, newSubtaskInput.trim());
-                      setNewSubtaskInput("");
-                    }
-                  }}
-                  className="h-9 px-4 rounded-xl bg-zinc-100 text-zinc-950 font-semibold text-xs hover:bg-zinc-200 transition-colors shrink-0 flex items-center justify-center"
-                >
-                  Add
-                </button>
               </div>
             </div>
+
+            {/* Footer / Delete Task Button */}
+            <div className="pt-2 border-t border-zinc-800/80 flex justify-end">
+              <button
+                onClick={() => {
+                  deleteTodo(activeTodoDetails.id);
+                  setDetailTodoId(null);
+                }}
+                className="text-rose-500 hover:text-rose-400 text-xs font-semibold flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-rose-500/10 transition-colors"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Delete Task</span>
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Add Folder Modal */}
       {showAddGroupModal && (
@@ -415,3 +571,4 @@ export const TodoList: React.FC = () => {
     </div>
   );
 };
+
