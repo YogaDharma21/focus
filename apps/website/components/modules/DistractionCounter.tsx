@@ -8,6 +8,7 @@ import {
     PopoverTrigger,
 } from "@/components/ui/popover";
 import { AlertTriangle } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 const DISTRACTION_CATEGORIES = [
@@ -36,9 +37,11 @@ export function DistractionCounter({ className }: DistractionCounterProps) {
     return (
         <Popover open={open} onOpenChange={setOpen}>
             <PopoverTrigger asChild>
-                <button
+                <Button
+                    variant="outline"
+                    size="icon"
                     className={cn(
-                        "w-9 h-9 rounded-xl bg-[#18181b] border border-zinc-800 flex items-center justify-center text-zinc-300 hover:text-rose-400 hover:border-zinc-700 transition-all shrink-0 cursor-pointer shadow-sm",
+                        "w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 hover:text-rose-400 transition-all shrink-0 cursor-pointer",
                         !isActive && "opacity-50 cursor-not-allowed",
                         className
                     )}
@@ -46,8 +49,8 @@ export function DistractionCounter({ className }: DistractionCounterProps) {
                     title="Log Distraction"
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <AlertTriangle className="w-4 h-4" />
-                </button>
+                    <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
+                </Button>
             </PopoverTrigger>
             <PopoverContent
                 className="w-44 p-1.5 bg-[#18181b] border border-zinc-800 rounded-xl shadow-2xl z-[200]"

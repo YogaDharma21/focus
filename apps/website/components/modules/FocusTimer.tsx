@@ -4,7 +4,7 @@ import { useAppStore, TodoItem } from "@/lib/store";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Play, Pause, RotateCcw, CheckCircle2, Settings2, ChevronDown, ListTodo, FileText, Check, Square, CheckSquare2 } from "lucide-react";
+import { Play, Pause, RotateCcw, CheckCircle2, Settings, ChevronDown, ListTodo, FileText, Check, Square, CheckSquare2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import {
     Dialog,
@@ -360,7 +360,7 @@ export function FocusTimer() {
                                     <button
                                         type="button"
                                         className={cn(
-                                            "w-full px-4 py-2.5 rounded-2xl border transition-all flex items-center justify-between gap-2 shadow-sm",
+                                            "w-full px-4 py-2.5 rounded-[var(--radius)] border transition-all flex items-center justify-between gap-2 shadow-sm",
                                             "bg-neutral-900/90 border-neutral-800 hover:border-neutral-700 text-white cursor-pointer group relative",
                                         )}
                                         title="Click to select another task or custom focus"
@@ -407,7 +407,7 @@ export function FocusTimer() {
                                         }}
                                         placeholder="Session Goal (Press Enter)..."
                                         className={cn(
-                                            "w-full pl-9 pr-9 py-2.5 rounded-2xl text-sm text-center font-medium border transition-colors focus:outline-none shadow-sm",
+                                            "w-full pl-9 pr-9 py-2.5 rounded-[var(--radius)] text-sm text-center font-medium border transition-colors focus:outline-none shadow-sm",
                                             "bg-neutral-900 border-neutral-800 text-white placeholder:text-neutral-500 focus:border-neutral-700",
                                         )}
                                     />
@@ -424,7 +424,7 @@ export function FocusTimer() {
                             )}
                         </div>
 
-                        <PopoverContent className="w-[--radix-popover-trigger-width] min-w-[280px] max-h-80 overflow-y-auto p-1.5 bg-neutral-900 border-neutral-800 text-white shadow-xl rounded-2xl">
+                        <PopoverContent className="w-[--radix-popover-trigger-width] min-w-[280px] max-h-80 overflow-y-auto p-1.5 bg-neutral-900 border-neutral-800 text-white shadow-xl rounded-[var(--radius)]">
                             <div className="flex flex-col gap-0.5">
                                 <button
                                     onClick={() => {
@@ -539,8 +539,9 @@ export function FocusTimer() {
                     <Button
                         variant="outline"
                         size="icon"
-                        className="w-10 h-10 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 transition-all"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 transition-all cursor-pointer"
                         onClick={resetTimer}
+                        title="Reset Timer"
                     >
                         <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
                     </Button>
@@ -552,7 +553,7 @@ export function FocusTimer() {
                     <Button
                         size="icon"
                         className={cn(
-                            "w-16 h-16 sm:w-20 sm:h-20 rounded-[var(--radius)] shadow-md hover:shadow active:scale-95 transition-all duration-300",
+                            "w-16 h-16 sm:w-20 sm:h-20 rounded-[var(--radius)] shadow-md hover:shadow active:scale-95 transition-all duration-300 cursor-pointer",
                             isActive
                                 ? "bg-white text-black hover:bg-gray-200"
                                 : "bg-primary text-primary-foreground",
@@ -560,23 +561,39 @@ export function FocusTimer() {
                         onClick={toggleTimer}
                     >
                         {isActive ? (
-                            <Pause className="w-6 h-6 sm:w-8 sm:h-8 fill-current" />
+                            <Pause className="w-9 h-9 sm:w-12 sm:h-12 fill-current" />
                         ) : (
-                            <Play className="w-6 h-6 sm:w-8 sm:h-8 fill-current ml-0.5 sm:ml-1" />
+                            <Play className="w-9 h-9 sm:w-12 sm:h-12 fill-current ml-1 sm:ml-1.5" />
                         )}
                     </Button>
                 </div>
 
                 <div className="flex items-center gap-2 sm:gap-3 justify-end">
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className={cn(
+                            "w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 transition-all cursor-pointer",
+                            isActive
+                                ? "hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50"
+                                : "opacity-50 cursor-not-allowed",
+                        )}
+                        onClick={handleCompleteSession}
+                        disabled={!isActive}
+                        title="Complete Session"
+                    >
+                        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </Button>
+
                     <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
                         <DialogTrigger asChild>
                             <Button
                                 variant="outline"
                                 size="icon"
-                                className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 transition-all"
+                                className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 transition-all cursor-pointer"
                                 title="Timer Settings"
                             >
-                                <Settings2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                                <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
                             </Button>
                         </DialogTrigger>
                         <DialogContent>
@@ -683,22 +700,6 @@ export function FocusTimer() {
                             </div>
                         </DialogContent>
                     </Dialog>
-
-                    <Button
-                        variant="outline"
-                        size="icon"
-                        className={cn(
-                            "w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 transition-all",
-                            isActive
-                                ? "hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50"
-                                : "opacity-50 cursor-not-allowed",
-                        )}
-                        onClick={handleCompleteSession}
-                        disabled={!isActive}
-                        title="Complete Session"
-                    >
-                        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </Button>
                 </div>
             </div>
         </div>
