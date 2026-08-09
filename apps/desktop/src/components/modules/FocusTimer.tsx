@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { playCompletionSound } from '../../lib/sound';
 import { 
   Play, Pause, RotateCcw, AlertTriangle, SlidersHorizontal, CheckCircle2, 
-  ChevronDown, Check, CheckSquare2, Coffee, Timer, Clock
+  ChevronDown, Check, CheckSquare2, Coffee, Timer, Clock, ListTodo, Edit3, X
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
+import { cn } from '../../lib/utils';
 
 const DISTRACTION_OPTIONS = ["Phone", "Social Media", "Bathroom", "Meeting", "Other"];
 
@@ -44,6 +45,22 @@ export const FocusTimer: React.FC = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [showTaskDropdown, setShowTaskDropdown] = useState(false);
   const [showDistractionMenu, setShowDistractionMenu] = useState(false);
+
+  const taskSelectorRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (taskSelectorRef.current && !taskSelectorRef.current.contains(e.target as Node)) {
+        setShowTaskDropdown(false);
+      }
+    };
+    if (showTaskDropdown) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showTaskDropdown]);
 
   const toggleTimer = () => {
     const nextActive = !isActive;
@@ -293,62 +310,139 @@ export const FocusTimer: React.FC = () => {
       </div>
 
       {/* 3. Task & Custom Focus Input Container */}
-      <div className="w-full max-w-sm space-y-2 relative">
-        {/* Dashed Border Focus Button / Dropdown */}
-        <button
-          onClick={() => setShowTaskDropdown(!showTaskDropdown)}
-          className="w-full border border-dashed border-zinc-800 hover:border-zinc-700 bg-zinc-950/40 rounded-2xl px-4 py-3 text-xs text-zinc-300 flex items-center justify-between transition-colors shadow-sm"
-        >
-          <span className="truncate">
-            {activeTask ? activeTask.text : "What are you focusing on?"}
-          </span>
-          <ChevronDown className="w-4 h-4 text-zinc-500 shrink-0 ml-2" />
-        </button>
-
-        {/* Task Selection Dropdown Popover */}
+      <div className="w-full max-w-sm relative space-y-2" ref={taskSelectorRef}>
+        {/* Task Selection Dropdown Popover (Matching reference design from website & extension) */}
         {showTaskDropdown && (
-          <div className="absolute top-12 left-0 w-full bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl z-50 p-2 space-y-1">
-            <p className="px-3 py-1.5 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Select Task</p>
+          <div className="absolute bottom-full left-0 right-0 mb-2 z-50 p-2.5 rounded-2xl border border-neutral-800 bg-neutral-900/95 text-white shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-1">
+            {/* Header: FOCUS TOPIC with X close button */}
+            <div className="flex items-center justify-between px-2 pt-0.5 pb-1">
+              <span className="text-[10px] font-mono font-bold uppercase text-neutral-400 opacity-70 tracking-wider">
+                FOCUS TOPIC
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowTaskDropdown(false)}
+                className="p-1 rounded-lg text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer"
+                title="Close task selector"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Custom Focus Card Option */}
             <button
+              type="button"
               onClick={() => {
                 setSelectedTodoId(null);
+                setSessionName("");
                 setShowTaskDropdown(false);
               }}
-              className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-colors ${
-                !selectedTodoId ? "bg-zinc-800 text-white font-medium" : "text-zinc-300 hover:bg-zinc-800/50"
-              }`}
+              className={cn(
+                "w-full p-2.5 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all cursor-pointer",
+                !activeTask
+                  ? "bg-neutral-800 text-white font-semibold"
+                  : "hover:bg-neutral-800/60 text-neutral-300 hover:text-white"
+              )}
             >
-              None (General Focus)
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Edit3 className="w-4 h-4 text-white shrink-0" />
+                <div className="flex flex-col">
+                  <span className="font-semibold text-xs leading-tight">Custom Focus</span>
+                  <span className="text-[10px] font-mono text-neutral-400">Type custom goal</span>
+                </div>
+              </div>
+              {!activeTask && <Check className="w-4 h-4 text-white shrink-0" />}
             </button>
 
-            {todos.filter(t => !t.completed).map((t) => (
-              <button
-                key={t.id}
-                onClick={() => {
-                  setSelectedTodoId(t.id);
-                  setShowTaskDropdown(false);
-                }}
-                className={`w-full text-left px-3 py-2 rounded-xl text-xs transition-colors flex items-center justify-between ${
-                  selectedTodoId === t.id ? "bg-zinc-800 text-white font-medium" : "text-zinc-300 hover:bg-zinc-800/50"
-                }`}
-              >
-                <span className="truncate">{t.text}</span>
-                {selectedTodoId === t.id && <Check className="w-3.5 h-3.5 text-zinc-100 shrink-0 ml-1" />}
-              </button>
-            ))}
+            {/* Section Header: MY TASKS */}
+            <div className="px-2 pt-2 pb-1 text-[10px] font-mono font-bold uppercase text-neutral-400 opacity-70 tracking-wider">
+              MY TASKS
+            </div>
+
+            {/* Tasks List */}
+            <div className="max-h-40 overflow-y-auto space-y-1 pr-0.5">
+              {todos.filter((t) => !t.completed).length === 0 ? (
+                <div className="px-3 py-2 text-xs text-neutral-500 italic text-center">
+                  No pending tasks
+                </div>
+              ) : (
+                todos.filter((t) => !t.completed).map((todo) => {
+                  const isSelected = selectedTodoId === todo.id;
+                  return (
+                    <button
+                      key={todo.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedTodoId(todo.id);
+                        setSessionName(todo.text);
+                        setShowTaskDropdown(false);
+                      }}
+                      className={cn(
+                        "w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all cursor-pointer",
+                        isSelected
+                          ? "bg-neutral-800 text-white font-semibold"
+                          : "hover:bg-neutral-800/60 text-neutral-300 hover:text-white"
+                      )}
+                    >
+                      <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
+                        <ListTodo className="w-4 h-4 text-white shrink-0" />
+                        <span className="truncate">{todo.text}</span>
+                      </div>
+                      {isSelected && <Check className="w-4 h-4 text-white shrink-0" />}
+                    </button>
+                  );
+                })
+              )}
+            </div>
           </div>
         )}
 
-        {/* Custom Focus Title Textbox (Shown only when no task is selected) */}
-        {!activeTask && (
-          <input
-            type="text"
-            placeholder="Or type a custom focus... (Press Enter)"
-            value={sessionName}
-            onChange={(e) => setSessionName(e.target.value)}
-            onKeyDown={handleCustomFocusSubmit}
-            className="w-full bg-[#181818] border border-zinc-800/80 rounded-2xl px-4 py-2.5 text-xs text-zinc-200 text-center focus:outline-none focus:border-zinc-700 placeholder:text-zinc-600 shadow-inner"
-          />
+        {/* Selected Task Capsule OR Custom Focus Pill Input */}
+        {activeTask ? (
+          /* Task Selected Mode: Pill showing task name + dropdown trigger */
+          <button
+            type="button"
+            onClick={() => setShowTaskDropdown(!showTaskDropdown)}
+            className={cn(
+              "w-full px-4 py-2.5 rounded-2xl border transition-all flex items-center justify-between gap-2 shadow-sm cursor-pointer group relative",
+              "bg-neutral-900/90 text-white",
+              showTaskDropdown ? "border-white" : "border-neutral-800 hover:border-neutral-700"
+            )}
+            title="Click to select another task or custom focus"
+          >
+            <div className="flex items-center justify-center gap-2 min-w-0 flex-1 mx-auto">
+              <ListTodo className="w-4 h-4 text-white shrink-0" />
+              <span className="font-semibold text-sm tracking-tight truncate max-w-[220px] text-white">
+                {activeTask.text}
+              </span>
+              <ChevronDown className="w-3.5 h-3.5 opacity-60 transition-transform duration-200 text-white shrink-0 group-hover:opacity-100" />
+            </div>
+          </button>
+        ) : (
+          /* Custom Focus Mode: Pill input container matching reference image */
+          <div
+            className={cn(
+              "w-full flex items-center rounded-2xl border bg-neutral-900 transition-colors shadow-sm px-3 py-1.5 relative",
+              showTaskDropdown ? "border-white" : "border-neutral-800 focus-within:border-white"
+            )}
+          >
+            <input
+              type="text"
+              value={sessionName}
+              onChange={(e) => setSessionName(e.target.value)}
+              onKeyDown={handleCustomFocusSubmit}
+              placeholder="Session Goal (Press Enter)..."
+              className="flex-1 min-w-0 bg-transparent text-sm text-center font-medium text-white placeholder-neutral-500 focus:outline-none pl-6 pr-1 py-1"
+            />
+            <button
+              type="button"
+              onClick={() => setShowTaskDropdown(!showTaskDropdown)}
+              className="shrink-0 p-1.5 rounded-lg hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+              title="Select from your tasks"
+            >
+              <ListTodo className="w-4 h-4 text-white" />
+            </button>
+          </div>
         )}
 
         {/* Subtasks checklist for selected active task */}
@@ -364,7 +458,7 @@ export const FocusTimer: React.FC = () => {
                 <button
                   key={sub.id}
                   onClick={() => toggleSubtask(activeTask.id, sub.id)}
-                  className="w-full flex items-center gap-2.5 p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/60 hover:bg-zinc-800/80 transition-colors text-left text-xs"
+                  className="w-full flex items-center gap-2.5 p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/60 hover:bg-zinc-800/80 transition-colors text-left text-xs cursor-pointer"
                 >
                   <CheckSquare2 className={`w-3.5 h-3.5 shrink-0 ${sub.completed ? "text-emerald-400" : "text-zinc-500"}`} />
                   <span className={`truncate ${sub.completed ? "line-through text-zinc-500" : "text-zinc-200"}`}>
