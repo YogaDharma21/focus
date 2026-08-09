@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Plus, CheckCircle2, Circle, Trash2, FolderPlus, Folder,
   ListTodo, CheckSquare2, Target, X, Sparkles, List,
-  Timer, Calendar, Clock, FileText, Settings, ListChecks
+  Timer, Calendar, Clock, FileText, ListChecks
 } from 'lucide-react';
 import { useDesktopStore, TodoItem } from '../../lib/store';
 
@@ -256,16 +256,17 @@ export const TodoList: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-1.5 shrink-0">
-                    {/* Open task details */}
+                    {/* Focus on this task */}
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedTodoId(todo.id);
+                        setView("FOCUS");
                       }}
                       className="p-1.5 text-zinc-500 hover:text-zinc-200 transition-colors rounded-md hover:bg-zinc-800/60"
-                      title="Task details"
+                      title="Focus on this task"
                     >
-                      <Settings className="w-3.5 h-3.5" />
+                      <Target className="w-3.5 h-3.5" />
                     </button>
 
                     <button
