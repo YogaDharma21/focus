@@ -320,14 +320,13 @@ export function TodoList() {
                         >
                             <button
                                 onClick={() => toggleTodo(todo.id)}
-                                className={cn(
-                                    "mt-0.5 shrink-0 w-5 h-5 rounded-[var(--radius)] border flex items-center justify-center transition-all",
-                                    todo.completed
-                                        ? "bg-primary border-primary text-primary-foreground"
-                                        : "border-muted-foreground/30 hover:border-primary/50 text-transparent",
-                                )}
+                                className="mt-0.5 shrink-0 transition-colors"
                             >
-                                <CheckSquare className="w-3.5 h-3.5" />
+                                {todo.completed ? (
+                                    <CheckSquare2 className="w-5 h-5 text-white shrink-0" />
+                                ) : (
+                                    <Square className="w-5 h-5 text-muted-foreground/60 hover:text-foreground shrink-0" />
+                                )}
                             </button>
 
                             <div

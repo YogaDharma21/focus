@@ -1920,9 +1920,9 @@ export function Popup() {
                         <div className="flex items-start gap-2.5 flex-1 min-w-0">
                           <button onClick={() => toggleTodo(todo.id)} className="flex-shrink-0 mt-0.5">
                             {todo.completed ? (
-                              <CheckCircle2 className={`w-4 h-4 ${"text-white"}`} />
+                              <CheckSquare2 className="w-4 h-4 text-white shrink-0" />
                             ) : (
-                              <Circle className={`w-4 h-4 ${"text-neutral-500"}`} />
+                              <Square className="w-4 h-4 text-neutral-500 hover:text-neutral-400 shrink-0" />
                             )}
                           </button>
                           

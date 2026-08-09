@@ -193,9 +193,9 @@ export const TodoList: React.FC = () => {
                       className="text-zinc-400 hover:text-zinc-100 transition-colors shrink-0 mt-0.5"
                     >
                       {todo.completed ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 fill-emerald-400/20" />
+                        <CheckSquare2 className="w-4 h-4 text-white shrink-0" />
                       ) : (
-                        <Circle className="w-4 h-4" />
+                        <Square className="w-4 h-4 text-zinc-500 hover:text-zinc-400 shrink-0" />
                       )}
                     </button>
 
