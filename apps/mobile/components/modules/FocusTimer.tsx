@@ -59,6 +59,7 @@ export function FocusTimer() {
     selectedTodoId,
     setSelectedTodoId,
     addTodo,
+    updateTodo,
     addSession,
     addDistraction,
     pomodoroSettings,

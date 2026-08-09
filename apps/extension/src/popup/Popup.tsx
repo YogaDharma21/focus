@@ -1248,10 +1248,26 @@ export function Popup() {
             <div className={`p-3.5 rounded-2xl border ${
               "bg-neutral-900/60 border-neutral-800/80"
             }`}>
-              <div className="flex items-center gap-1.5 mb-2.5">
-                <Calendar className="w-3.5 h-3.5 text-indigo-400" />
-                <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">DEADLINE</span>
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                  <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">DEADLINE</span>
+                </div>
+                {(selectedTaskDetail.dueDate || selectedTaskDetail.dueTime) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, dueDate: '', dueTime: '' } : t);
+                      updateState({ todos: updated });
+                      setSelectedTaskDetail({ ...selectedTaskDetail, dueDate: '', dueTime: '' });
+                    }}
+                    className="text-[10px] font-mono text-red-400 hover:text-red-300 transition-colors"
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
+
               <div className="grid grid-cols-2 gap-3">
                 <input
                   type="date"

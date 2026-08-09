@@ -569,9 +569,21 @@ export function TodoList() {
                             </div>
 
                             <div className="bg-muted/30 border border-border/40 rounded-xl p-4 space-y-2.5">
-                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                    <CalendarIcon className="w-3.5 h-3.5 text-indigo-500" /> Deadline
-                                </label>
+                                <div className="flex items-center justify-between">
+                                    <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
+                                        <CalendarIcon className="w-3.5 h-3.5 text-indigo-500" /> Deadline
+                                    </label>
+                                    {editingTask.deadline && (
+                                        <button
+                                            type="button"
+                                            onClick={() => updateTodo(editingTask.id, { deadline: '' })}
+                                            className="text-[10px] font-medium text-red-500 hover:text-red-400 transition-colors"
+                                        >
+                                            Clear
+                                        </button>
+                                    )}
+                                </div>
+
                                 <div className="flex flex-wrap sm:flex-nowrap gap-2">
                                     <Popover>
                                         <PopoverTrigger asChild>
@@ -617,7 +629,7 @@ export function TodoList() {
 
                                     <Input
                                         type="time"
-                                        className="w-full sm:w-32 h-9 bg-background/50 border-border/50 text-xs"
+                                        className="w-full sm:w-32 h-9 bg-background/50 border-border/50 text-xs [color-scheme:dark]"
                                         value={
                                             editingTask.deadline
                                                 ? format(new Date(editingTask.deadline), "HH:mm")

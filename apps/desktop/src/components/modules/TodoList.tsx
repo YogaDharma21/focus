@@ -411,9 +411,19 @@ export const TodoList: React.FC = () => {
 
             {/* Card 3: DEADLINE */}
             <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 space-y-2">
-              <div className="flex items-center gap-1.5 text-purple-400">
-                <Calendar className="w-3.5 h-3.5" />
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">DEADLINE</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5 text-purple-400">
+                  <Calendar className="w-3.5 h-3.5" />
+                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">DEADLINE</span>
+                </div>
+                {activeTodoDetails.deadline && (
+                  <button
+                    onClick={() => updateTodo(activeTodoDetails.id, { deadline: '' })}
+                    className="text-[10px] font-medium text-red-400 hover:text-red-300 transition-colors"
+                  >
+                    Clear
+                  </button>
+                )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
@@ -422,7 +432,6 @@ export const TodoList: React.FC = () => {
                   <input
                     type="date"
                     value={(activeTodoDetails.deadline || '').split('T')[0] || ''}
-                    placeholder="Pick a date"
                     onChange={(e) => {
                       const dateVal = e.target.value;
                       const timeVal = (activeTodoDetails.deadline || '').split('T')[1] || '';
@@ -430,7 +439,7 @@ export const TodoList: React.FC = () => {
                         deadline: dateVal ? (timeVal ? `${dateVal}T${timeVal}` : dateVal) : ''
                       });
                     }}
-                    className="w-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 rounded-lg pl-9 pr-3 py-2 focus:outline-none focus:border-zinc-700 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                    className="w-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 rounded-lg pl-9 pr-3 py-2 focus:outline-none focus:border-zinc-700 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [color-scheme:dark]"
                   />
                 </div>
                 <div className="relative flex items-center">
@@ -444,7 +453,7 @@ export const TodoList: React.FC = () => {
                         deadline: timeVal ? `${dateVal}T${timeVal}` : dateVal
                       });
                     }}
-                    className="w-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 rounded-lg pl-3 pr-8 py-2 focus:outline-none focus:border-zinc-700 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer"
+                    className="w-full bg-zinc-900 border border-zinc-800 text-xs text-zinc-300 rounded-lg pl-3 pr-8 py-2 focus:outline-none focus:border-zinc-700 [&::-webkit-calendar-picker-indicator]:opacity-0 [&::-webkit-calendar-picker-indicator]:absolute [&::-webkit-calendar-picker-indicator]:right-0 [&::-webkit-calendar-picker-indicator]:w-full [&::-webkit-calendar-picker-indicator]:h-full [&::-webkit-calendar-picker-indicator]:cursor-pointer [color-scheme:dark]"
                   />
                   <Clock className="w-3.5 h-3.5 text-zinc-500 absolute right-3 pointer-events-none z-10" />
                 </div>
