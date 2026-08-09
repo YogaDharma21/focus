@@ -1245,10 +1245,10 @@ export function Popup() {
             </div>
 
             {/* Deadline Card */}
-            <div className={`p-3.5 rounded-2xl border space-y-3 ${
+            <div className={`p-3.5 rounded-2xl border ${
               "bg-neutral-900/60 border-neutral-800/80"
             }`}>
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between mb-2.5">
                 <div className="flex items-center gap-1.5">
                   <Calendar className="w-3.5 h-3.5 text-indigo-400" />
                   <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">DEADLINE</span>
@@ -1268,57 +1268,7 @@ export function Popup() {
                 )}
               </div>
 
-              {/* Quick Presets */}
-              <div className="space-y-2 font-mono">
-                <div className="text-[10px] text-neutral-500 uppercase tracking-wider">Quick Date</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {[
-                    { label: 'Today', getValue: () => new Date().toISOString().split('T')[0] },
-                    { label: 'Tomorrow', getValue: () => new Date(Date.now() + 86400000).toISOString().split('T')[0] },
-                    { label: 'Next Week', getValue: () => new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0] },
-                  ].map((preset) => (
-                    <button
-                      key={preset.label}
-                      type="button"
-                      onClick={() => {
-                        const val = preset.getValue();
-                        const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, dueDate: val } : t);
-                        updateState({ todos: updated });
-                        setSelectedTaskDetail({ ...selectedTaskDetail, dueDate: val });
-                      }}
-                      className="px-2.5 py-1 rounded-lg text-[11px] bg-neutral-800/80 border border-neutral-700/50 text-neutral-300 hover:bg-neutral-700/60 transition-colors"
-                    >
-                      {preset.label}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="text-[10px] text-neutral-500 uppercase tracking-wider pt-1">Quick Time</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {[
-                    { label: 'Morning', time: '09:00' },
-                    { label: 'Afternoon', time: '13:00' },
-                    { label: 'Evening', time: '18:00' },
-                    { label: 'Night', time: '21:00' },
-                    { label: 'End of Day', time: '23:59' },
-                  ].map((preset) => (
-                    <button
-                      key={preset.label}
-                      type="button"
-                      onClick={() => {
-                        const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, dueTime: preset.time } : t);
-                        updateState({ todos: updated });
-                        setSelectedTaskDetail({ ...selectedTaskDetail, dueTime: preset.time });
-                      }}
-                      className="px-2 py-1 rounded-lg text-[10px] bg-neutral-800/80 border border-neutral-700/50 text-neutral-300 hover:bg-neutral-700/60 transition-colors"
-                    >
-                      {preset.label} <span className="text-neutral-500 text-[9px]">{preset.time}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 pt-1">
+              <div className="grid grid-cols-2 gap-3">
                 <input
                   type="date"
                   value={selectedTaskDetail.dueDate || ""}
