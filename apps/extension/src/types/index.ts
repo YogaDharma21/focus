@@ -96,6 +96,7 @@ export interface AppStateData {
     weeklyMinutes: { [day: string]: number };
   };
 
+  deepFocusMode?: boolean;
   isMusicPlaying?: boolean;
   musicVolume?: number;
 }

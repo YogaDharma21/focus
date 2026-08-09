@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Timer as TimerIcon,
   CheckSquare,
@@ -47,10 +47,12 @@ import {
   Coffee,
   Check,
   TrendingUp,
+  Focus,
 } from "lucide-react";
 import { format } from "date-fns";
 import { MoodTracker } from "./components/MoodTracker";
 import { BackgroundDisplay } from "./components/BackgroundDisplay";
+import { DeepFocusOverlay } from "./components/DeepFocusOverlay";
 import { Progress } from "../components/ui/progress";
 import { AppStateData, TodoItem, PriorityType, BackgroundTheme } from "../types";
 import { getStoredState, saveStoredState, subscribeToStateChanges, DEFAULT_STATE } from "../lib/storage";
@@ -117,6 +119,9 @@ export function Popup() {
   const [showTaskDropdown, setShowTaskDropdown] = useState(false);
   const [selectedTaskDetail, setSelectedTaskDetail] = useState<TodoItem | null>(null);
 
+  // Deep Focus Mode: auto-activate when timer starts
+  const prevIsActiveRef = useRef(state?.isActive ?? false);
+
   // Local inputs
   const [newTaskText, setNewTaskText] = useState("");
   const [activeGroupId, setActiveGroupId] = useState<string>("current");
@@ -180,6 +185,15 @@ export function Popup() {
 
     return () => unsubscribe();
   }, []);
+
+  // Auto-activate deep focus when timer starts
+  useEffect(() => {
+    if (!state) return;
+    if (state.isActive && !prevIsActiveRef.current && !state.deepFocusMode) {
+      updateState({ deepFocusMode: true });
+    }
+    prevIsActiveRef.current = state.isActive;
+  }, [state?.isActive]);
 
   // No local timer tick — the background service worker is the single source
   // of truth. Timer state updates arrive via subscribeToStateChanges above.
@@ -665,8 +679,21 @@ export function Popup() {
           </button>
         )}
 
-        {/* Action Controls: Theme Mode Toggle + Background Switcher (Paintbrush icon) + Info */}
+        {/* Action Controls: Deep Focus + Background Switcher (Paintbrush icon) + Info */}
         <div className="flex items-center gap-1.5">
+          {/* Deep Focus Mode Toggle Button */}
+          <button
+            onClick={() => updateState({ deepFocusMode: !state.deepFocusMode })}
+            className={`p-1.5 rounded-lg border transition-all flex items-center justify-center ${
+              state.deepFocusMode
+                ? "bg-white text-black border-white"
+                : "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800"
+            }`}
+            title="Toggle Deep Focus Mode"
+          >
+            <Focus className="w-4 h-4" />
+          </button>
+
           {/* Background Theme Selector Button with Paintbrush Icon */}
           <button
             onClick={() => setShowThemePicker(!showThemePicker)}
@@ -2312,6 +2339,23 @@ export function Popup() {
           </div>
         )}
       </div>
+
+      {/* Deep Focus Mode Overlay */}
+      {state.deepFocusMode && (
+        <DeepFocusOverlay
+          state={state}
+          onToggleTimer={toggleTimer}
+          onCompleteSession={() => {
+            completeSession();
+            updateState({ deepFocusMode: false });
+          }}
+          onSelectDistraction={(category) => {
+            selectDistractionCategory(category);
+            updateState({ deepFocusMode: false });
+          }}
+          onExit={() => updateState({ deepFocusMode: false })}
+        />
+      )}
     </div>
   );
 }
