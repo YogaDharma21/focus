@@ -36,13 +36,13 @@ export function StatsJournal() {
 
     const getCategoryColor = (category: string) => {
         const colors: Record<string, string> = {
-            "Phone": "bg-blue-500",
-            "Social Media": "bg-purple-500",
-            "Bathroom": "bg-green-500",
-            "Meeting": "bg-amber-500",
-            "Other": "bg-gray-500",
+            "Phone": "bg-rose-500",
+            "Social Media": "bg-rose-500",
+            "Bathroom": "bg-rose-500",
+            "Meeting": "bg-rose-500",
+            "Other": "bg-rose-500",
         };
-        return colors[category] || "bg-gray-500";
+        return colors[category] || "bg-rose-500";
     };
 
     useEffect(() => {

@@ -287,7 +287,7 @@ export const StatsJournal: React.FC = () => {
               </div>
               <div className="w-full h-1.5 bg-zinc-800/80 rounded-full overflow-hidden">
                 <div 
-                  className="bg-purple-500 h-full rounded-full transition-all duration-500"
+                  className="bg-rose-500 h-full rounded-full transition-all duration-500"
                   style={{ width: `${cat.percent}%` }}
                 />
               </div>
