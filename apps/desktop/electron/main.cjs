@@ -54,7 +54,33 @@ function createWindow() {
     const devUrl = process.env.VITE_DEV_SERVER_URL || "http://localhost:5173";
 
     if (isDev) {
-        mainWindow.loadURL(devUrl);
+        let isLoaded = false;
+        const loadDevServer = () => {
+            if (isLoaded || !mainWindow) return;
+            mainWindow.loadURL(devUrl).catch(() => {
+                if (!isLoaded && mainWindow) {
+                    setTimeout(loadDevServer, 500);
+                }
+            });
+        };
+
+        mainWindow.webContents.on(
+            "did-fail-load",
+            (_event, _errorCode, _errorDescription, _validatedURL, isMainFrame) => {
+                if (isMainFrame && !isLoaded && mainWindow) {
+                    setTimeout(loadDevServer, 500);
+                }
+            }
+        );
+
+        mainWindow.webContents.on("did-finish-load", () => {
+            isLoaded = true;
+            if (mainWindow && !mainWindow.isVisible()) {
+                mainWindow.show();
+            }
+        });
+
+        loadDevServer();
     } else {
         mainWindow.loadFile(path.join(__dirname, "../dist/index.html"));
     }
