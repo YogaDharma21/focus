@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { playCompletionSound } from '../../lib/sound';
 import { 
   Play, Pause, RotateCcw, AlertTriangle, SlidersHorizontal, CheckCircle2, 
-  ChevronDown, Check, CheckSquare2, Square, Coffee, Timer, Clock, ListTodo, Edit3, X
+  ChevronDown, Check, CheckSquare2, Square, Coffee, Timer, Clock, ListTodo, Edit3, X, FileText
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
@@ -471,6 +471,19 @@ export const FocusTimer: React.FC = () => {
                 </button>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Task Notes for selected active task */}
+        {activeTask && activeTask.notes && activeTask.notes.trim().length > 0 && (
+          <div className="w-full bg-[#141414] border border-zinc-800/80 rounded-2xl p-3 space-y-1.5 text-xs shadow-md mt-3 animate-in fade-in duration-200">
+            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
+              <FileText className="w-3.5 h-3.5 text-amber-500" />
+              <span>Task Notes</span>
+            </div>
+            <p className="text-zinc-200 whitespace-pre-wrap leading-relaxed text-xs">
+              {activeTask.notes}
+            </p>
           </div>
         )}
       </div>
