@@ -2,7 +2,7 @@ import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Svg, { Path, G, Rect, Defs, RadialGradient, Stop } from 'react-native-svg';
-import { useAppStore, BackgroundType } from '@/lib/store';
+import { useAppStore } from '@/lib/store';
 
 export function BackgroundDisplay() {
   const { background } = useAppStore();
