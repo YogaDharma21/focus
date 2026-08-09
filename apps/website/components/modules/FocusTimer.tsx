@@ -493,37 +493,22 @@ export function FocusTimer() {
                                 <button
                                     key={subtask.id}
                                     onClick={() => {
-                                        if (selectedSubtaskId === subtask.id) {
-                                            setSelectedSubtaskId(null);
-                                        } else {
-                                            setSelectedSubtaskId(subtask.id);
+                                        if (selectedTodo) {
+                                            toggleSubtask(selectedTodo.id, subtask.id);
                                         }
                                     }}
                                     className={cn(
-                                        "w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors border-b border-border/20 last:border-b-0",
+                                        "w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors border-b border-border/20 last:border-b-0 cursor-pointer",
                                         subtask.completed
                                             ? "opacity-50"
-                                            : selectedSubtaskId === subtask.id
-                                              ? "bg-primary/10 text-primary"
-                                              : "hover:bg-accent/50",
+                                            : "hover:bg-accent/50",
                                     )}
                                 >
-                                    <button
-                                        type="button"
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            if (selectedTodo) {
-                                                toggleSubtask(selectedTodo.id, subtask.id);
-                                            }
-                                        }}
-                                        className="shrink-0 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                                    >
-                                        {subtask.completed ? (
-                                            <CheckSquare2 className="w-4 h-4 text-white shrink-0" />
-                                        ) : (
-                                            <Square className="w-4 h-4 text-muted-foreground/60 shrink-0" />
-                                        )}
-                                    </button>
+                                    {subtask.completed ? (
+                                        <CheckSquare2 className="w-4 h-4 text-white shrink-0" />
+                                    ) : (
+                                        <Square className="w-4 h-4 text-muted-foreground/60 shrink-0" />
+                                    )}
                                     <span className={cn(subtask.completed && "line-through")}>
                                         {subtask.text}
                                     </span>
