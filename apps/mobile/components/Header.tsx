@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal, Image } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePathname } from 'expo-router';
 import { useTheme } from '@/context/ThemeContext';
@@ -195,6 +195,11 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
         ]}
       >
         <View style={styles.titleRow}>
+          <Image
+            source={require('@/assets/images/icon.png')}
+            style={styles.logoIcon}
+            resizeMode="contain"
+          />
           <Text style={[styles.title, { color: colors.text }]}>{getTitle()}</Text>
         </View>
 
@@ -482,6 +487,12 @@ const styles = StyleSheet.create({
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
+    gap: 8,
+  },
+  logoIcon: {
+    width: 24,
+    height: 24,
+    borderRadius: 6,
   },
   title: {
     fontSize: 20,
