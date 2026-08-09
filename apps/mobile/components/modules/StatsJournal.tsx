@@ -144,7 +144,7 @@ export function StatsJournal() {
         <View style={styles.cardHeaderBetween}>
           <View style={styles.iconTitleRow}>
             <View style={[styles.iconBadge, { backgroundColor: colors.border }]}>
-              <Clock size={16} color={colors.text} />
+              <Clock size={15} color={colors.text} />
             </View>
             <Text style={[styles.cardTitle, { color: colors.text }]}>Day Progress</Text>
           </View>
@@ -163,7 +163,7 @@ export function StatsJournal() {
         {/* Minutes Today */}
         <View style={[styles.grid3Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={[styles.iconBadgeSquare, { backgroundColor: colors.border }]}>
-            <Activity size={18} color={colors.text} />
+            <Activity size={15} color={colors.text} />
           </View>
           <Text style={[styles.largeNumValue, { color: colors.text }]}>{minutesToday}</Text>
           <Text style={[styles.grid3Label, { color: colors.textMuted }]}>MINUTES TODAY</Text>
@@ -172,7 +172,7 @@ export function StatsJournal() {
         {/* Tasks Today */}
         <View style={[styles.grid3Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={[styles.iconBadgeSquare, { backgroundColor: 'rgba(34, 197, 94, 0.15)' }]}>
-            <CheckCircle2 size={18} color="#22c55e" />
+            <CheckCircle2 size={15} color="#22c55e" />
           </View>
           <Text style={[styles.largeNumValue, { color: colors.text }]}>{tasksTodayFinished}</Text>
           <Text style={[styles.grid3Label, { color: colors.textMuted }]}>TASKS TODAY</Text>
@@ -181,7 +181,7 @@ export function StatsJournal() {
         {/* Pending Tasks */}
         <View style={[styles.grid3Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={[styles.iconBadgeSquare, { backgroundColor: 'rgba(59, 130, 246, 0.15)' }]}>
-            <ListFilter size={18} color="#3b82f6" />
+            <ListFilter size={15} color="#3b82f6" />
           </View>
           <Text style={[styles.largeNumValue, { color: colors.text }]}>{pendingTasksCount}</Text>
           <Text style={[styles.grid3Label, { color: colors.textMuted }]}>PENDING TASKS</Text>
@@ -233,7 +233,7 @@ export function StatsJournal() {
       <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.sectionHeaderRow}>
           <View style={styles.indigoIconBadge}>
-            <TrendingUp size={18} color="#818cf8" />
+            <TrendingUp size={15} color="#818cf8" />
           </View>
           <Text style={[styles.monoHeaderTitle, { color: colors.text, fontFamily: monoFont }]}>
             FOCUS TREND
@@ -280,7 +280,7 @@ export function StatsJournal() {
       <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.sectionHeaderRow}>
           <View style={styles.redIconBadge}>
-            <BarChart2 size={18} color="#f43f5e" />
+            <BarChart2 size={15} color="#f43f5e" />
           </View>
           <Text style={[styles.monoHeaderTitle, { color: colors.text, fontFamily: monoFont }]}>
             DISTRACTION ANALYSIS
@@ -389,9 +389,9 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   iconBadgeSquare: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
+    width: 28,
+    height: 28,
+    borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -510,9 +510,9 @@ const styles = StyleSheet.create({
     gap: 10,
   },
   redIconBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 28,
+    height: 28,
+    borderRadius: 8,
     backgroundColor: 'rgba(225, 29, 72, 0.15)',
     borderWidth: 1,
     borderColor: 'rgba(225, 29, 72, 0.3)',
@@ -520,9 +520,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   indigoIconBadge: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
+    width: 28,
+    height: 28,
+    borderRadius: 8,
     backgroundColor: 'rgba(99, 102, 241, 0.15)',
     borderWidth: 1,
     borderColor: 'rgba(99, 102, 241, 0.3)',
