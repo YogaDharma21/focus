@@ -29,6 +29,7 @@ import {
   Pencil,
   Check,
   X,
+  ChevronDown,
 } from 'lucide-react-native';
 
 const DISTRACTION_CATEGORIES = [
@@ -301,37 +302,62 @@ export function FocusTimer() {
           {formatTime(timeLeft)}
         </Text>
 
-        {/* Session Goal Input Bar */}
-        <View
-          style={[
-            styles.sessionGoalContainer,
-            {
-              backgroundColor: colors.inputBg,
-              borderColor: isSessionFocused ? colors.text : colors.border,
-            },
-          ]}
-        >
-          <TextInput
-            style={[
-              styles.sessionGoalInput,
-              { color: colors.text },
-            ]}
-            placeholder="Session Goal (Press Enter)..."
-            placeholderTextColor={colors.textMuted}
-            value={sessionName}
-            onChangeText={setSessionName}
-            onFocus={() => setIsSessionFocused(true)}
-            onBlur={() => setIsSessionFocused(false)}
-          />
+        {/* Session Goal / Selected Task Bar */}
+        {selectedTodo ? (
+          /* Task Selected (Locked Mode - Matches Reference Image) */
           <TouchableOpacity
-            style={styles.taskPickerBtn}
+            style={[
+              styles.selectedTaskCardContainer,
+              {
+                backgroundColor: colors.inputBg,
+                borderColor: colors.border,
+              },
+            ]}
             onPress={() => setTodoPickerOpen(true)}
-            activeOpacity={0.7}
-            accessibilityLabel="Select from your tasks"
+            activeOpacity={0.8}
+            accessibilityLabel="Click to select another task or custom focus"
           >
-            <ListTodo size={18} color={selectedTodo ? colors.text : colors.textMuted} />
+            <View style={styles.selectedTaskCardMain}>
+              <ListTodo size={16} color={colors.text} />
+              <Text style={[styles.selectedTaskCardText, { color: colors.text }]} numberOfLines={1}>
+                {selectedTodo.text}
+              </Text>
+            </View>
+            <ChevronDown size={14} color={colors.textMuted} style={{ opacity: 0.7 }} />
           </TouchableOpacity>
-        </View>
+        ) : (
+          /* Custom Focus Mode (Editable Input Bar) */
+          <View
+            style={[
+              styles.sessionGoalContainer,
+              {
+                backgroundColor: colors.inputBg,
+                borderColor: isSessionFocused ? colors.text : colors.border,
+              },
+            ]}
+          >
+            <TextInput
+              style={[
+                styles.sessionGoalInput,
+                { color: colors.text },
+              ]}
+              placeholder="Session Goal (Press Enter)..."
+              placeholderTextColor={colors.textMuted}
+              value={sessionName}
+              onChangeText={setSessionName}
+              onFocus={() => setIsSessionFocused(true)}
+              onBlur={() => setIsSessionFocused(false)}
+            />
+            <TouchableOpacity
+              style={styles.taskPickerBtn}
+              onPress={() => setTodoPickerOpen(true)}
+              activeOpacity={0.7}
+              accessibilityLabel="Select from your tasks"
+            >
+              <ListTodo size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+        )}
 
 
         {/* Selected Task Subtasks Checklist */}
@@ -672,6 +698,28 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: -2,
     marginVertical: 12,
+  },
+  selectedTaskCardContainer: {
+    width: '100%',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 16,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    marginBottom: 10,
+  },
+  selectedTaskCardMain: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    maxWidth: '90%',
+  },
+  selectedTaskCardText: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   sessionGoalContainer: {
     width: '100%',
