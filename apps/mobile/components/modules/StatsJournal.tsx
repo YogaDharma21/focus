@@ -166,8 +166,10 @@ export function StatsJournal() {
         {/* Longest Streak Card */}
         <View style={[styles.grid2Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.iconTitleRow}>
-            <Flame size={18} color="#f97316" />
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Longest Streak</Text>
+            <View style={[styles.iconBadgeSmallSquare, { backgroundColor: 'rgba(249, 115, 22, 0.15)', borderWidth: 1, borderColor: 'rgba(249, 115, 22, 0.4)' }]}>
+              <Flame size={15} color="#f97316" />
+            </View>
+            <Text style={[styles.cardTitleSmall, { color: colors.text }]}>Longest Streak</Text>
           </View>
 
           <View style={styles.streakRowsContainer}>
@@ -185,14 +187,16 @@ export function StatsJournal() {
         {/* Completion Rate Card */}
         <View style={[styles.grid2Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.iconTitleRow}>
-            <Target size={18} color="#22c55e" />
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Completion Rate</Text>
+            <View style={[styles.iconBadgeSmallSquare, { backgroundColor: 'rgba(34, 197, 94, 0.15)', borderWidth: 1, borderColor: 'rgba(34, 197, 94, 0.4)' }]}>
+              <Target size={15} color="#22c55e" />
+            </View>
+            <Text style={[styles.cardTitleSmall, { color: colors.text }]}>Completion Rate</Text>
           </View>
 
           <Text style={[styles.bigPercentText, { color: colors.text }]}>{completionRate}%</Text>
 
           <View style={styles.iconSubtextRow}>
-            <CheckCircle2 size={13} color={colors.textMuted} />
+            <CheckCircle2 size={13} color="#22c55e" />
             <Text style={[styles.subtext, { color: colors.textMuted }]}>Tasks Finished</Text>
           </View>
         </View>
@@ -290,6 +294,11 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
   },
+  cardTitleSmall: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    flex: 1,
+  },
   headerPercentText: {
     fontSize: 16,
     fontWeight: '800',
@@ -329,6 +338,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  iconBadgeSmallSquare: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   largeNumValue: {
     fontSize: 26,
     fontWeight: '800',
@@ -348,7 +364,8 @@ const styles = StyleSheet.create({
     flex: 1,
     borderRadius: 16,
     borderWidth: 1,
-    padding: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 12,
     justifyContent: 'space-between',
     minHeight: 120,
   },
