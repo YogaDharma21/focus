@@ -369,12 +369,12 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
           {/* Horizontal Divider */}
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-          {/* Action Buttons Row with Centered Start/Pause Control */}
+          {/* Action Buttons Row with Centered Distraction Button and Equal Sized Action Buttons */}
           <View style={styles.cardActionsRow}>
-            {/* Complete Session Button (LEFT) */}
+            {/* Complete Session Button (LEFT - flex: 1) */}
             <TouchableOpacity
               style={[
-                styles.completeBtn,
+                styles.actionPillBtn,
                 { backgroundColor: colors.inputBg, borderColor: colors.border },
               ]}
               onPress={handleCompleteSession}
@@ -386,9 +386,21 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
               </Text>
             </TouchableOpacity>
 
-            {/* Start / Pause Main Action Button (CENTER) */}
+            {/* Distraction Alert Button (CENTER) */}
             <TouchableOpacity
-              style={[styles.centerStartBtn, { backgroundColor: colors.text }]}
+              style={[
+                styles.distractionBtn,
+                { backgroundColor: colors.inputBg, borderColor: colors.border },
+              ]}
+              onPress={() => setDistractionModalOpen(true)}
+              activeOpacity={0.8}
+            >
+              <AlertTriangle size={16} color={colors.textMuted} />
+            </TouchableOpacity>
+
+            {/* Start / Pause Main Action Button (RIGHT - flex: 1) */}
+            <TouchableOpacity
+              style={[styles.actionPillBtn, { backgroundColor: colors.text }]}
               onPress={toggleTimer}
               activeOpacity={0.8}
             >
@@ -407,18 +419,6 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
                   </Text>
                 </>
               )}
-            </TouchableOpacity>
-
-            {/* Distraction Alert Button (RIGHT) */}
-            <TouchableOpacity
-              style={[
-                styles.distractionBtn,
-                { backgroundColor: colors.inputBg, borderColor: colors.border },
-              ]}
-              onPress={() => setDistractionModalOpen(true)}
-              activeOpacity={0.8}
-            >
-              <AlertTriangle size={16} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
         </View>
@@ -604,29 +604,19 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     gap: 8,
   },
-  completeBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 14,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  centerStartBtn: {
+  actionPillBtn: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
     paddingVertical: 10,
-    paddingHorizontal: 16,
     borderRadius: 20,
+    borderWidth: 1,
   },
   distractionBtn: {
-    width: 40,
-    height: 40,
+    width: 42,
+    height: 42,
     borderRadius: 12,
     borderWidth: 1,
     justifyContent: 'center',
