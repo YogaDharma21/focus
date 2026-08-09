@@ -182,6 +182,16 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
     return 'Flow';
   };
 
+  const renderModeIcon = (size: number, color: string) => {
+    if (timerMode === 'POMODORO') {
+      if (timerState === 'WORK') {
+        return <Timer size={size} color={color} />;
+      }
+      return <Coffee size={size} color={color} />;
+    }
+    return <Clock size={size} color={color} />;
+  };
+
   return (
     <View style={styles.headerWrapper}>
       <View
@@ -216,7 +226,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
             onPress={() => setIsExpanded(!isExpanded)}
             activeOpacity={0.8}
           >
-            <Timer size={14} color={colors.text} />
+            {renderModeIcon(14, colors.text)}
             <Text style={[styles.pillTime, { color: colors.text }]}>
               {formatTime(timeLeft)}
             </Text>
@@ -271,7 +281,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
           {/* Card Top Row: Title + Time */}
           <View style={styles.cardHeader}>
             <View style={styles.cardHeaderTitleRow}>
-              <Timer size={18} color={colors.text} />
+              {renderModeIcon(18, colors.text)}
               <Text style={[styles.cardTitle, { color: colors.text }]}>
                 {getModeTitle()}
               </Text>
@@ -359,8 +369,9 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
           {/* Horizontal Divider */}
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
-          {/* Action Buttons Row */}
-          <View style={styles.actionsRow}>
+          {/* Action Buttons Row with Centered Start/Pause Control */}
+          <View style={styles.cardActionsRow}>
+            {/* Complete Session Button (LEFT) */}
             <TouchableOpacity
               style={[
                 styles.completeBtn,
@@ -375,19 +386,9 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
               </Text>
             </TouchableOpacity>
 
+            {/* Start / Pause Main Action Button (CENTER) */}
             <TouchableOpacity
-              style={[
-                styles.distractionBtn,
-                { backgroundColor: colors.inputBg, borderColor: colors.border },
-              ]}
-              onPress={() => setDistractionModalOpen(true)}
-              activeOpacity={0.8}
-            >
-              <AlertTriangle size={16} color={colors.textMuted} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.startBtn, { backgroundColor: colors.text }]}
+              style={[styles.centerStartBtn, { backgroundColor: colors.text }]}
               onPress={toggleTimer}
               activeOpacity={0.8}
             >
@@ -406,6 +407,18 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
                   </Text>
                 </>
               )}
+            </TouchableOpacity>
+
+            {/* Distraction Alert Button (RIGHT) */}
+            <TouchableOpacity
+              style={[
+                styles.distractionBtn,
+                { backgroundColor: colors.inputBg, borderColor: colors.border },
+              ]}
+              onPress={() => setDistractionModalOpen(true)}
+              activeOpacity={0.8}
+            >
+              <AlertTriangle size={16} color={colors.textMuted} />
             </TouchableOpacity>
           </View>
         </View>
@@ -585,6 +598,12 @@ const styles = StyleSheet.create({
     width: '100%',
     marginBottom: 14,
   },
+  cardActionsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 8,
+  },
   completeBtn: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -595,6 +614,16 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 1,
   },
+  centerStartBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 20,
+  },
   distractionBtn: {
     width: 40,
     height: 40,
@@ -602,15 +631,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  startBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
   },
   actionBtnText: {
     fontSize: 13,
