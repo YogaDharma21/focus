@@ -19,7 +19,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
 
   const getTitle = () => {
     if (!pathname || pathname === '/' || pathname.includes('index')) {
-      return 'Focus';
+      return 'Timer';
     }
     if (pathname.includes('tasks')) {
       return 'Tasks';
@@ -30,7 +30,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
     if (pathname.includes('notes')) {
       return 'Notes';
     }
-    return 'Focus';
+    return 'Timer';
   };
 
   return (

@@ -120,7 +120,7 @@ export default function TabLayout() {
           <Tabs.Screen
             name="index"
             options={{
-              title: 'Focus',
+              title: 'Timer',
               tabBarIcon: ({ color }) => <Clock size={22} color={color} />,
             }}
           />
