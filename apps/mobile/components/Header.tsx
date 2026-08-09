@@ -433,7 +433,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
                 </>
               ) : (
                 <>
-                  <Play size={16} color={colors.background} style={{ marginLeft: 2 }} />
+                  <Play size={16} color={colors.background} fill={colors.background} style={{ marginLeft: 2 }} />
                   <Text style={[styles.startBtnText, { color: colors.background }]}>
                     Start
                   </Text>

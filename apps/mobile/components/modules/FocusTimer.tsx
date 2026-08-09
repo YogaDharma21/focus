@@ -522,7 +522,7 @@ export function FocusTimer() {
             {isActive ? (
               <Pause size={24} color={colors.primaryForeground} />
             ) : (
-              <Play size={24} color={colors.primaryForeground} style={{ marginLeft: 3 }} />
+              <Play size={24} color={colors.primaryForeground} fill={colors.primaryForeground} style={{ marginLeft: 3 }} />
             )}
           </TouchableOpacity>
 
