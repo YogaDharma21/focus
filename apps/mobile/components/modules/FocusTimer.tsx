@@ -337,13 +337,8 @@ export function FocusTimer() {
         </TouchableOpacity>
       </View>
 
-      {/* Timer Circle Card */}
-      <View
-        style={[
-          styles.timerCard,
-          { backgroundColor: colors.card, borderColor: colors.border },
-        ]}
-      >
+      {/* Timer Content Container (No Card Box) */}
+      <View style={styles.timerContent}>
         <Text style={[styles.timeDisplay, { color: colors.text }]}>
           {formatTime(timeLeft)}
         </Text>
@@ -761,19 +756,17 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
-  timerCard: {
+  timerContent: {
     width: '100%',
     maxWidth: 360,
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 24,
     alignItems: 'center',
   },
   timeDisplay: {
-    fontSize: 54,
+    fontSize: 72,
     fontWeight: '800',
     letterSpacing: -2,
-    marginVertical: 12,
+    fontVariant: ['tabular-nums'],
+    marginVertical: 16,
   },
   selectedTaskCardContainer: {
     width: '100%',
