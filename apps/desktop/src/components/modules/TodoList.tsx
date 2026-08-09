@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Plus, CheckCircle2, Circle, Trash2, FolderPlus, Folder,
-  ListTodo, CheckSquare2, Target, X, Sparkles, List,
+  ListTodo, CheckSquare2, Square, Target, X, Sparkles, List,
   Timer, Calendar, Clock, FileText, ListChecks
 } from 'lucide-react';
 import { useDesktopStore, TodoItem } from '../../lib/store';
@@ -193,9 +193,9 @@ export const TodoList: React.FC = () => {
                       className="text-zinc-400 hover:text-zinc-100 transition-colors shrink-0 mt-0.5"
                     >
                       {todo.completed ? (
-                        <CheckCircle2 className="w-4 h-4 text-emerald-400 fill-emerald-400/20" />
+                        <CheckSquare2 className="w-4 h-4 text-white shrink-0" />
                       ) : (
-                        <Circle className="w-4 h-4" />
+                        <Square className="w-4 h-4 text-zinc-500 hover:text-zinc-400 shrink-0" />
                       )}
                     </button>
 
@@ -485,7 +485,11 @@ export const TodoList: React.FC = () => {
                       onClick={() => toggleSubtask(activeTodoDetails.id, sub.id)}
                       className="text-zinc-400 hover:text-zinc-100 shrink-0"
                     >
-                      <CheckSquare2 className={`w-3.5 h-3.5 ${sub.completed ? "text-teal-400" : "text-zinc-500"}`} />
+                      {sub.completed ? (
+                        <CheckSquare2 className="w-3.5 h-3.5 text-white" />
+                      ) : (
+                        <Square className="w-3.5 h-3.5 text-zinc-500" />
+                      )}
                     </button>
                     <input
                       type="text"

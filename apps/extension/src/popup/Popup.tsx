@@ -15,6 +15,8 @@ import {
   Clock,
   CheckCircle2,
   Circle,
+  Square,
+  CheckSquare2,
   ShieldAlert,
   ShieldCheck,
   Info,
@@ -1339,7 +1341,7 @@ export function Popup() {
                   }`}>
                     <div className="flex items-center gap-2 flex-1">
                       <button type="button" onClick={() => toggleSubtask(selectedTaskDetail.id, sub.id)}>
-                        {sub.completed ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Circle className="w-3.5 h-3.5 text-neutral-500" />}
+                        {sub.completed ? <CheckSquare2 className="w-3.5 h-3.5 text-white" /> : <Square className="w-3.5 h-3.5 text-neutral-500" />}
                       </button>
                       <span className={sub.completed ? "line-through text-neutral-500" : ("text-white")}>{sub.text}</span>
                     </div>
@@ -1740,7 +1742,7 @@ export function Popup() {
                   {selectedTask.subtasks!.map(s => (
                     <div key={s.id} className="flex items-center gap-1.5">
                       <button onClick={() => toggleSubtask(selectedTask.id, s.id)}>
-                        {s.completed ? <CheckCircle2 className="w-3 h-3 text-emerald-500" /> : <Circle className="w-3 h-3 opacity-60" />}
+                        {s.completed ? <CheckSquare2 className="w-3 h-3 text-white" /> : <Square className="w-3 h-3 opacity-60" />}
                       </button>
                       <span className={s.completed ? "line-through opacity-50" : ""}>{s.text}</span>
                     </div>
@@ -1906,21 +1908,25 @@ export function Popup() {
                     const hasSubtasks = Boolean(todo.subtasks && todo.subtasks.length > 0);
                     const hasMetadata = hasDueDate || hasPomodoros || hasSubtasks;
 
+                    const isSelected = state.selectedTodoId === todo.id || selectedTaskDetail?.id === todo.id;
                     return (
                       <div
                         key={todo.id}
-                        className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 transition-all ${
-                          todo.completed
-                            ? "bg-neutral-950 border-neutral-900 opacity-50 text-neutral-500"
-                            : "bg-neutral-900 border-neutral-800 hover:border-neutral-700"
+                        onClick={() => updateState({ selectedTodoId: todo.id, sessionName: todo.text })}
+                        className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 transition-all cursor-pointer ${
+                          isSelected
+                            ? "bg-neutral-800 border-neutral-700 text-white font-medium"
+                            : todo.completed
+                            ? "bg-neutral-950/40 border-neutral-900 opacity-50 text-neutral-500"
+                            : "bg-neutral-900/60 border-neutral-800 hover:border-neutral-700 text-neutral-200"
                         }`}
                       >
                         <div className="flex items-start gap-2.5 flex-1 min-w-0">
-                          <button onClick={() => toggleTodo(todo.id)} className="flex-shrink-0 mt-0.5">
+                          <button onClick={(e) => { e.stopPropagation(); toggleTodo(todo.id); }} className="flex-shrink-0 mt-0.5">
                             {todo.completed ? (
-                              <CheckCircle2 className={`w-4 h-4 ${"text-white"}`} />
+                              <CheckSquare2 className="w-4 h-4 text-white shrink-0" />
                             ) : (
-                              <Circle className={`w-4 h-4 ${"text-neutral-500"}`} />
+                              <Square className="w-4 h-4 text-neutral-500 hover:text-neutral-400 shrink-0" />
                             )}
                           </button>
                           
@@ -1961,15 +1967,14 @@ export function Popup() {
 
                         <div className="flex items-center gap-1.5 flex-shrink-0">
                           <button
-                            onClick={() => focusOnTask(todo)}
-                            className={`px-2 py-0.5 rounded text-[9px] font-mono font-bold flex items-center gap-1 border ${
-                              state.selectedTodoId === todo.id
-                                ? "bg-white text-black border-white"
-                                : "bg-neutral-800 text-neutral-300 border-neutral-700 hover:bg-neutral-700"
-                            }`}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              focusOnTask(todo);
+                            }}
+                            className="p-1 text-neutral-400 hover:text-white transition-colors rounded-md hover:bg-neutral-800"
+                            title="Focus on this task"
                           >
-                            <span>Focus</span>
-                            <ArrowRight className="w-2.5 h-2.5" />
+                            <Target className="w-3.5 h-3.5" />
                           </button>
 
                           <button onClick={() => setSelectedTaskDetail(todo)} className={`p-1 ${"text-neutral-500 hover:text-white"}`}>

@@ -16,6 +16,7 @@ import { useTheme } from '@/context/ThemeContext';
 import {
   CheckSquare,
   Square,
+  Target,
   Plus,
   Trash2,
   FolderPlus,
@@ -47,7 +48,7 @@ export function TodoList() {
     deleteGroup,
     addSubtask,
     toggleSubtask,
-    deleteSubtask,
+    selectedTodoId,
     setSelectedTodoId,
     setSessionName,
     setView,
@@ -273,15 +274,22 @@ export function TodoList() {
           filteredTodos.map((todo) => {
             const subtaskCount = todo.subtasks?.length || 0;
             const completedSubtasks = todo.subtasks?.filter((s) => s.completed).length || 0;
+            const isSelected = selectedTodoId === todo.id || detailTodo?.id === todo.id;
 
             return (
               <TouchableOpacity
                 key={todo.id}
                 style={[
                   styles.todoCard,
-                  { backgroundColor: colors.card, borderColor: colors.border },
+                  {
+                    backgroundColor: isSelected ? "#27272a" : colors.card,
+                    borderColor: isSelected ? "#3f3f46" : colors.border,
+                  },
                 ]}
-                onPress={() => handleOpenDetail(todo)}
+                onPress={() => {
+                  setSelectedTodoId(todo.id);
+                  handleOpenDetail(todo);
+                }}
                 activeOpacity={0.7}
               >
                 <View style={styles.todoMainRow}>
@@ -335,26 +343,25 @@ export function TodoList() {
                       ) : null}
                     </View>
 
-                    {!todo.completed && (
-                      <TouchableOpacity
-                        style={[styles.focusTaskBtn, { backgroundColor: colors.primary }]}
-                        onPress={() => handleFocusOnTask(todo)}
-                        activeOpacity={0.8}
-                      >
-                        <Play size={12} color={colors.primaryForeground} style={{ marginRight: 4 }} />
-                        <Text style={[styles.focusTaskBtnText, { color: colors.primaryForeground }]}>
-                          Focus on this task
-                        </Text>
-                      </TouchableOpacity>
-                    )}
                   </View>
 
-                  <TouchableOpacity
-                    onPress={() => deleteTodo(todo.id)}
-                    style={{ padding: 6 }}
-                  >
-                    <Trash2 size={18} color={colors.textMuted} />
-                  </TouchableOpacity>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <TouchableOpacity
+                      onPress={() => handleFocusOnTask(todo)}
+                      style={{ padding: 6 }}
+                      accessibilityLabel="Focus on this task"
+                    >
+                      <Target size={18} color={colors.textMuted} />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity
+                      onPress={() => deleteTodo(todo.id)}
+                      style={{ padding: 6 }}
+                      accessibilityLabel="Delete task"
+                    >
+                      <Trash2 size={18} color={colors.textMuted} />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </TouchableOpacity>
             );

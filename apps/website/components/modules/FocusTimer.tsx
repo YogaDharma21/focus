@@ -4,7 +4,7 @@ import { useAppStore, TodoItem } from "@/lib/store";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Play, Pause, RotateCcw, CheckCircle2, Settings2, ChevronDown, ListTodo, FileText, Check } from "lucide-react";
+import { Play, Pause, RotateCcw, CheckCircle2, Settings2, ChevronDown, ListTodo, FileText, Check, Square, CheckSquare2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import {
     Dialog,
@@ -493,35 +493,22 @@ export function FocusTimer() {
                                 <button
                                     key={subtask.id}
                                     onClick={() => {
-                                        if (selectedSubtaskId === subtask.id) {
-                                            setSelectedSubtaskId(null);
-                                        } else {
-                                            setSelectedSubtaskId(subtask.id);
+                                        if (selectedTodo) {
+                                            toggleSubtask(selectedTodo.id, subtask.id);
                                         }
                                     }}
                                     className={cn(
-                                        "w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors border-b border-border/20 last:border-b-0",
+                                        "w-full text-left px-3 py-2 text-sm flex items-center gap-2 transition-colors border-b border-border/20 last:border-b-0 cursor-pointer",
                                         subtask.completed
                                             ? "opacity-50"
-                                            : selectedSubtaskId === subtask.id
-                                              ? "bg-primary/10 text-primary"
-                                              : "hover:bg-accent/50",
+                                            : "hover:bg-accent/50",
                                     )}
                                 >
-                                    <div
-                                        className={cn(
-                                            "w-4 h-4 rounded-sm border flex items-center justify-center shrink-0 transition-colors",
-                                            subtask.completed
-                                                ? "bg-primary border-primary"
-                                                : selectedSubtaskId === subtask.id
-                                                  ? "border-primary bg-primary/20"
-                                                  : "border-border",
-                                        )}
-                                    >
-                                        {subtask.completed && (
-                                            <CheckCircle2 className="w-3 h-3 text-primary-foreground" />
-                                        )}
-                                    </div>
+                                    {subtask.completed ? (
+                                        <CheckSquare2 className="w-4 h-4 text-white shrink-0" />
+                                    ) : (
+                                        <Square className="w-4 h-4 text-muted-foreground/60 shrink-0" />
+                                    )}
                                     <span className={cn(subtask.completed && "line-through")}>
                                         {subtask.text}
                                     </span>
