@@ -512,14 +512,14 @@ export function FocusTimer() {
                                         className={cn(
                                             "w-4 h-4 rounded-sm border flex items-center justify-center shrink-0 transition-colors",
                                             subtask.completed
-                                                ? "bg-primary border-primary"
+                                                ? "bg-white border-white text-black"
                                                 : selectedSubtaskId === subtask.id
-                                                  ? "border-primary bg-primary/20"
+                                                  ? "border-white/60 bg-white/10"
                                                   : "border-border",
                                         )}
                                     >
                                         {subtask.completed && (
-                                            <CheckCircle2 className="w-3 h-3 text-primary-foreground" />
+                                            <Check className="w-3 h-3 text-black stroke-[3]" />
                                         )}
                                     </div>
                                     <span className={cn(subtask.completed && "line-through")}>

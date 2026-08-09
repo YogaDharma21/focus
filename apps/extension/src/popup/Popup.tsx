@@ -15,6 +15,8 @@ import {
   Clock,
   CheckCircle2,
   Circle,
+  Square,
+  CheckSquare2,
   ShieldAlert,
   ShieldCheck,
   Info,
@@ -1339,7 +1341,7 @@ export function Popup() {
                   }`}>
                     <div className="flex items-center gap-2 flex-1">
                       <button type="button" onClick={() => toggleSubtask(selectedTaskDetail.id, sub.id)}>
-                        {sub.completed ? <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> : <Circle className="w-3.5 h-3.5 text-neutral-500" />}
+                        {sub.completed ? <CheckSquare2 className="w-3.5 h-3.5 text-white" /> : <Square className="w-3.5 h-3.5 text-neutral-500" />}
                       </button>
                       <span className={sub.completed ? "line-through text-neutral-500" : ("text-white")}>{sub.text}</span>
                     </div>
@@ -1740,7 +1742,7 @@ export function Popup() {
                   {selectedTask.subtasks!.map(s => (
                     <div key={s.id} className="flex items-center gap-1.5">
                       <button onClick={() => toggleSubtask(selectedTask.id, s.id)}>
-                        {s.completed ? <CheckCircle2 className="w-3 h-3 text-emerald-500" /> : <Circle className="w-3 h-3 opacity-60" />}
+                        {s.completed ? <CheckSquare2 className="w-3 h-3 text-white" /> : <Square className="w-3 h-3 opacity-60" />}
                       </button>
                       <span className={s.completed ? "line-through opacity-50" : ""}>{s.text}</span>
                     </div>
