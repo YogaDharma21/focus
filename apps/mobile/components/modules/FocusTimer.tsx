@@ -269,7 +269,7 @@ export function FocusTimer() {
           <Text
             style={[
               styles.modeText,
-              { color: isWorkActive ? colors.primaryForeground : colors.text },
+              { color: isWorkActive ? colors.primaryForeground : colors.textMuted },
             ]}
           >
             Pomodoro
@@ -287,7 +287,7 @@ export function FocusTimer() {
           <Text
             style={[
               styles.modeText,
-              { color: isBreakActive ? colors.primaryForeground : colors.text },
+              { color: isBreakActive ? colors.primaryForeground : colors.textMuted },
             ]}
           >
             Break
@@ -305,7 +305,7 @@ export function FocusTimer() {
           <Text
             style={[
               styles.modeText,
-              { color: isFlowActive ? colors.primaryForeground : colors.text },
+              { color: isFlowActive ? colors.primaryForeground : colors.textMuted },
             ]}
           >
             Flow
@@ -705,25 +705,30 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   modeBar: {
+    width: '100%',
+    maxWidth: 360,
     flexDirection: 'row',
-    borderRadius: 24,
+    borderRadius: 16,
     borderWidth: 1,
     padding: 4,
     marginBottom: 20,
   },
   modeBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modeText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
+    textAlign: 'center',
   },
   timerCard: {
     width: '100%',
     maxWidth: 360,
-    borderRadius: 24,
+    borderRadius: 16,
     borderWidth: 1,
     padding: 24,
     alignItems: 'center',
@@ -850,7 +855,7 @@ const styles = StyleSheet.create({
   modalBox: {
     width: '100%',
     maxWidth: 360,
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1,
     padding: 20,
   },
@@ -915,7 +920,7 @@ const styles = StyleSheet.create({
   taskPickerModalBox: {
     width: '100%',
     maxWidth: 340,
-    borderRadius: 20,
+    borderRadius: 16,
     borderWidth: 1,
     padding: 16,
   },
