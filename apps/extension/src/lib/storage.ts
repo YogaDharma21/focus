@@ -53,6 +53,7 @@ export const DEFAULT_STATE: AppStateData = {
       "Sat": 0
     }
   },
+  deepFocusMode: false,
   isMusicPlaying: false,
   musicVolume: 0.8
 };
