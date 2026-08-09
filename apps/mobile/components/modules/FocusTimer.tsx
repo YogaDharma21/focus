@@ -254,6 +254,30 @@ export function FocusTimer() {
   const isBreakActive = timerMode === 'POMODORO' && timerState === 'BREAK';
   const isFlowActive = timerMode === 'STOPWATCH';
 
+  const progressValue =
+    timerMode === 'POMODORO'
+      ? timerState === 'WORK'
+        ? Math.min(
+            100,
+            Math.max(
+              0,
+              (((pomodoroSettings.work || 25) * 60 - timeLeft) /
+                ((pomodoroSettings.work || 25) * 60)) *
+                100
+            )
+          )
+        : Math.min(
+            100,
+            Math.max(
+              0,
+              (((pomodoroSettings.break || 5) * 60 - timeLeft) /
+                ((pomodoroSettings.break || 5) * 60)) *
+                100
+            )
+          )
+      : 100;
+
+
   return (
     <View style={styles.container}>
       {/* 3-Option Mode Switcher */}
@@ -421,6 +445,18 @@ export function FocusTimer() {
             </View>
           </View>
         )}
+
+        {/* Timer Progress Bar */}
+        <View style={styles.progressContainer}>
+          <View style={[styles.progressTrack, { backgroundColor: colors.border }]}>
+            <View
+              style={[
+                styles.progressFill,
+                { backgroundColor: colors.primary, width: `${progressValue}%` },
+              ]}
+            />
+          </View>
+        </View>
 
         {/* 5 Control Buttons Row */}
         <View style={styles.controlsRow}>
@@ -821,6 +857,21 @@ const styles = StyleSheet.create({
   subtaskCompletedText: {
     textDecorationLine: 'line-through',
     opacity: 0.5,
+  },
+  progressContainer: {
+    width: '100%',
+    marginVertical: 14,
+    alignItems: 'center',
+  },
+  progressTrack: {
+    width: '100%',
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 3,
   },
   controlsRow: {
     flexDirection: 'row',
