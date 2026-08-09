@@ -12,6 +12,7 @@ import {
     Flame,
     Target,
     BarChart3,
+    TrendingUp,
 } from "lucide-react";
 import { isSameDay, parseISO } from "date-fns";
 
@@ -291,8 +292,11 @@ export function StatsJournal() {
 
             {/* Weekly Focus Trend Chart */}
             <Card className="p-4 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col rounded-[var(--radius)] space-y-3">
-                <div className="text-xs font-mono uppercase tracking-wider font-bold text-foreground">
-                    FOCUS TREND
+                <div className="flex items-center gap-3">
+                    <div className="w-9 h-9 rounded-[var(--radius)] bg-indigo-500/10 border border-indigo-500/30 text-indigo-500 flex items-center justify-center shrink-0 shadow-sm">
+                        <TrendingUp className="w-4 h-4" />
+                    </div>
+                    <h3 className="text-sm font-bold tracking-tight text-foreground">Focus Trend</h3>
                 </div>
                 <div className="space-y-2">
                     <div className="flex items-end justify-between gap-2 h-24 pt-2">

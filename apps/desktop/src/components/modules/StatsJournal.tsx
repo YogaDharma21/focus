@@ -1,6 +1,6 @@
 import React from 'react';
 import { 
-  Clock, Activity, CheckCircle2, ListTodo, Flame, Target, BarChart2 
+  Clock, Activity, CheckCircle2, ListTodo, Flame, Target, BarChart2, TrendingUp 
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 
@@ -219,8 +219,11 @@ export const StatsJournal: React.FC = () => {
 
       {/* 4. Focus Trend Card */}
       <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-3">
-        <div className="text-xs font-mono uppercase tracking-wider font-bold text-white">
-          FOCUS TREND
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-indigo-950/60 border border-indigo-800/60 flex items-center justify-center text-indigo-400">
+            <TrendingUp className="w-4 h-4" />
+          </div>
+          <h3 className="text-sm font-bold text-white tracking-tight">Focus Trend</h3>
         </div>
 
         <div className="space-y-2">
