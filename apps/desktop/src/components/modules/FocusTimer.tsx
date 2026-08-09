@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { playCompletionSound } from '../../lib/sound';
 import { 
   Play, Pause, RotateCcw, AlertTriangle, SlidersHorizontal, CheckCircle2, 
-  ChevronDown, Check, CheckSquare2, Coffee, Timer, Clock, ListTodo, Edit3, X
+  ChevronDown, Check, CheckSquare2, Square, Coffee, Timer, Clock, ListTodo, Edit3, X
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
@@ -460,7 +460,11 @@ export const FocusTimer: React.FC = () => {
                   onClick={() => toggleSubtask(activeTask.id, sub.id)}
                   className="w-full flex items-center gap-2.5 p-2 rounded-xl bg-zinc-900/60 border border-zinc-800/60 hover:bg-zinc-800/80 transition-colors text-left text-xs cursor-pointer"
                 >
-                  <CheckSquare2 className={`w-3.5 h-3.5 shrink-0 ${sub.completed ? "text-emerald-400" : "text-zinc-500"}`} />
+                  {sub.completed ? (
+                    <CheckSquare2 className="w-3.5 h-3.5 shrink-0 text-white" />
+                  ) : (
+                    <Square className="w-3.5 h-3.5 shrink-0 text-zinc-500" />
+                  )}
                   <span className={`truncate ${sub.completed ? "line-through text-zinc-500" : "text-zinc-200"}`}>
                     {sub.text}
                   </span>
