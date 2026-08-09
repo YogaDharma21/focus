@@ -395,7 +395,7 @@ export function MoodTracker() {
           )}
           {activeNoteObj?.text && (
             <Text style={[styles.infoBannerText, { color: colors.textMuted }]} numberOfLines={1}>
-              "{activeNoteObj.text}"
+              {`"${activeNoteObj.text}"`}
             </Text>
           )}
         </View>
