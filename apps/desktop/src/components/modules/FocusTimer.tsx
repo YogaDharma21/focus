@@ -493,14 +493,18 @@ export const FocusTimer: React.FC = () => {
         <div className="relative">
           <button
             onClick={() => setShowDistractionMenu(!showDistractionMenu)}
-            className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-rose-400 transition-all flex items-center justify-center shadow-md active:scale-95 relative"
-            title="Log Distraction"
+            disabled={!isActive}
+            className={cn(
+              "w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-rose-400 transition-all flex items-center justify-center shadow-md active:scale-95 relative",
+              !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
+            )}
+            title={isActive ? "Log Distraction" : "Start timer to log distraction"}
           >
             <AlertTriangle className="w-4 h-4" />
           </button>
 
           {/* Distraction Reason Popover matching user mockup */}
-          {showDistractionMenu && (
+          {isActive && showDistractionMenu && (
             <div className="absolute bottom-16 left-1/2 -translate-x-1/2 w-48 bg-[#181818] border border-zinc-800/90 rounded-2xl shadow-2xl z-50 p-2 space-y-1 animate-in zoom-in-95 duration-150">
               {DISTRACTION_OPTIONS.map((opt) => (
                 <button
@@ -540,8 +544,12 @@ export const FocusTimer: React.FC = () => {
 
         <button
           onClick={handleCompleteSession}
-          className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-emerald-400 transition-all flex items-center justify-center shadow-md active:scale-95"
-          title="Finish / Complete Session"
+          disabled={!isActive}
+          className={cn(
+            "w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-emerald-400 transition-all flex items-center justify-center shadow-md active:scale-95",
+            !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
+          )}
+          title={isActive ? "Finish / Complete Session" : "Start timer to complete session"}
         >
           <CheckCircle2 className="w-4 h-4" />
         </button>

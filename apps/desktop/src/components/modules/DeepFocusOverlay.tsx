@@ -3,6 +3,7 @@ import { playCompletionSound } from '../../lib/sound';
 import { X, Play, Pause, AlertTriangle, CheckCircle2 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
+import { cn } from '../../lib/utils';
 
 const DISTRACTION_OPTIONS = ["Phone", "Social Media", "Bathroom", "Meeting", "Other"];
 
@@ -175,13 +176,17 @@ export const DeepFocusOverlay: React.FC = () => {
           <div className="relative">
             <button
               onClick={() => setShowDistractionMenu(!showDistractionMenu)}
-              className="w-11 h-11 rounded-xl bg-[#141414] border border-zinc-800/80 flex items-center justify-center text-zinc-400 hover:text-rose-400 transition-colors shadow-sm"
-              title="Log Distraction"
+              disabled={!isActive}
+              className={cn(
+                "w-11 h-11 rounded-xl bg-[#141414] border border-zinc-800/80 flex items-center justify-center text-zinc-400 hover:text-rose-400 transition-colors shadow-sm",
+                !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
+              )}
+              title={isActive ? "Log Distraction" : "Start timer to log distraction"}
             >
               <AlertTriangle className="w-4 h-4" />
             </button>
 
-            {showDistractionMenu && (
+            {isActive && showDistractionMenu && (
               <div className="absolute bottom-14 left-1/2 -translate-x-1/2 w-48 bg-[#181818] border border-zinc-800/90 rounded-2xl shadow-2xl z-50 p-2 space-y-1 animate-in zoom-in-95 duration-150">
                 {DISTRACTION_OPTIONS.map((opt) => (
                   <button
@@ -215,8 +220,12 @@ export const DeepFocusOverlay: React.FC = () => {
           {/* Finish / Complete Task */}
           <button
             onClick={handleCompleteSession}
-            className="w-11 h-11 flex items-center justify-center text-zinc-400 hover:text-emerald-400 transition-colors"
-            title="Complete Session"
+            disabled={!isActive}
+            className={cn(
+              "w-11 h-11 flex items-center justify-center text-zinc-400 hover:text-emerald-400 transition-colors",
+              !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
+            )}
+            title={isActive ? "Complete Session" : "Start timer to complete session"}
           >
             <CheckCircle2 className="w-4 h-4" />
           </button>
