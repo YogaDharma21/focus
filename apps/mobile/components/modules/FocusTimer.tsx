@@ -269,7 +269,7 @@ export function FocusTimer() {
           <Text
             style={[
               styles.modeText,
-              { color: isWorkActive ? colors.primaryForeground : colors.text },
+              { color: isWorkActive ? colors.primaryForeground : colors.textMuted },
             ]}
           >
             Pomodoro
@@ -287,7 +287,7 @@ export function FocusTimer() {
           <Text
             style={[
               styles.modeText,
-              { color: isBreakActive ? colors.primaryForeground : colors.text },
+              { color: isBreakActive ? colors.primaryForeground : colors.textMuted },
             ]}
           >
             Break
@@ -305,7 +305,7 @@ export function FocusTimer() {
           <Text
             style={[
               styles.modeText,
-              { color: isFlowActive ? colors.primaryForeground : colors.text },
+              { color: isFlowActive ? colors.primaryForeground : colors.textMuted },
             ]}
           >
             Flow
@@ -705,6 +705,8 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   modeBar: {
+    width: '100%',
+    maxWidth: 360,
     flexDirection: 'row',
     borderRadius: 24,
     borderWidth: 1,
@@ -712,13 +714,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   modeBtn: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 18,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modeText: {
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
+    textAlign: 'center',
   },
   timerCard: {
     width: '100%',
