@@ -49,6 +49,46 @@ export const StatsJournal: React.FC = () => {
 
 
 
+  // 5. Weekly Focus Trend Calculation (Sunday to Saturday)
+  const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const getWeeklyMinutes = () => {
+    const weeklyMinutes: Record<string, number> = {
+      Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0
+    };
+
+    const todayDate = new Date();
+    const currentDayOfWeek = todayDate.getDay();
+    const sunday = new Date(todayDate);
+    sunday.setDate(todayDate.getDate() - currentDayOfWeek);
+    sunday.setHours(0, 0, 0, 0);
+
+    daysOfWeek.forEach((day, index) => {
+      const targetDate = new Date(sunday);
+      targetDate.setDate(sunday.getDate() + index);
+
+      const daySessions = sessions.filter((s) => {
+        if (!s.date) return false;
+        const sDate = new Date(s.date);
+        return (
+          sDate.getFullYear() === targetDate.getFullYear() &&
+          sDate.getMonth() === targetDate.getMonth() &&
+          sDate.getDate() === targetDate.getDate()
+        );
+      });
+
+      const historicalSeconds = daySessions.reduce(
+        (acc, s) => acc + s.duration,
+        0
+      );
+      weeklyMinutes[day] = Math.round(historicalSeconds / 60);
+    });
+
+    return weeklyMinutes;
+  };
+
+  const weeklyMinutes = getWeeklyMinutes();
+  const maxWeeklyMins = Math.max(120, ...Object.values(weeklyMinutes));
+
   // 6. Distraction Analysis Calculation
   const distractionCounts: Record<string, number> = {};
   if (distractions.length > 0) {
@@ -175,7 +215,50 @@ export const StatsJournal: React.FC = () => {
         </div>
       </div>
 
+      {/* 4. Focus Trend Card */}
+      <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-3">
+        <div className="text-xs font-mono uppercase tracking-wider font-bold text-white">
+          FOCUS TREND
+        </div>
 
+        <div className="space-y-2">
+          <div className="flex items-end justify-between gap-2 h-24 pt-2">
+            {daysOfWeek.map((day) => {
+              const minsLogged = weeklyMinutes[day] || 0;
+              const heightPercent =
+                minsLogged > 0
+                  ? Math.min(100, Math.max(12, Math.round((minsLogged / maxWeeklyMins) * 100)))
+                  : 4;
+              return (
+                <div
+                  key={day}
+                  className="flex-1 flex flex-col items-center gap-1 h-full justify-end group relative cursor-pointer"
+                >
+                  {/* Tooltip on hover */}
+                  <div className="absolute -top-8 px-2 py-1 rounded text-[10px] font-mono font-bold bg-zinc-900 text-white border border-zinc-700 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap shadow-md">
+                    {day}: {minsLogged} mins
+                  </div>
+
+                  <span className="text-[10px] font-mono text-zinc-400 font-medium">
+                    {minsLogged}m
+                  </span>
+                  <div
+                    className={`w-full rounded-t-md transition-all duration-300 ${
+                      minsLogged > 0
+                        ? "bg-white group-hover:bg-zinc-200"
+                        : "bg-zinc-800/80"
+                    }`}
+                    style={{ height: `${heightPercent}%` }}
+                  />
+                  <span className="text-xs font-mono font-bold text-white">
+                    {day}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
 
       {/* 5. Distraction Analysis Card (Placed under Focus Trend) */}
       <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
