@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useDesktopStore } from "../../lib/store";
 import { format, isValid, getDaysInMonth } from "date-fns";
-import { Smile, ChevronLeft, ChevronRight, Sparkles, Trash2, Calendar as CalendarIcon, CalendarDays } from "lucide-react";
+import { Smile, Meh, Moon, Frown, Zap, ChevronLeft, ChevronRight, Sparkles, Trash2, Calendar as CalendarIcon, CalendarDays } from "lucide-react";
 import { cn } from "../../lib/utils";
 
 export type MoodType = "amazing" | "ok" | "tired" | "sad" | "stressed";
@@ -9,7 +9,7 @@ export type MoodType = "amazing" | "ok" | "tired" | "sad" | "stressed";
 export interface MoodConfig {
   key: MoodType;
   label: string;
-  emoji: string;
+  icon: React.ComponentType<{ className?: string }>;
   color: string;
   bgClass: string;
   textClass: string;
@@ -20,7 +20,7 @@ export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
   amazing: {
     key: "amazing",
     label: "Amazing",
-    emoji: "😊",
+    icon: Smile,
     color: "#ffffff",
     bgClass: "bg-white hover:bg-slate-100",
     textClass: "text-white font-semibold",
@@ -29,7 +29,7 @@ export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
   ok: {
     key: "ok",
     label: "OK",
-    emoji: "🙂",
+    icon: Meh,
     color: "#cbd5e1",
     bgClass: "bg-slate-300 hover:bg-slate-200",
     textClass: "text-slate-300 font-semibold",
@@ -38,7 +38,7 @@ export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
   tired: {
     key: "tired",
     label: "Tired",
-    emoji: "😴",
+    icon: Moon,
     color: "#64748b",
     bgClass: "bg-slate-500 hover:bg-slate-400",
     textClass: "text-slate-400 font-semibold",
@@ -47,7 +47,7 @@ export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
   sad: {
     key: "sad",
     label: "Sad",
-    emoji: "😔",
+    icon: Frown,
     color: "#334155",
     bgClass: "bg-slate-700 hover:bg-slate-600",
     textClass: "text-slate-300 font-semibold",
@@ -56,7 +56,7 @@ export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
   stressed: {
     key: "stressed",
     label: "Stressed",
-    emoji: "😤",
+    icon: Zap,
     color: "#1e293b",
     bgClass: "bg-slate-800 hover:bg-slate-700",
     textClass: "text-slate-300 font-semibold",
@@ -194,6 +194,7 @@ export const MoodTracker: React.FC = () => {
           {(Object.keys(MOOD_CONFIGS) as MoodType[]).map((key) => {
             const cfg = MOOD_CONFIGS[key];
             const isSelected = selectedMood === key;
+            const IconComp = cfg.icon;
             return (
               <button
                 key={key}
@@ -206,9 +207,7 @@ export const MoodTracker: React.FC = () => {
                     : "bg-neutral-800/40 hover:bg-neutral-800 border-neutral-700/60 text-white"
                 )}
               >
-                <span className="text-2xl sm:text-3xl transition-transform duration-200 group-hover:scale-110">
-                  {cfg.emoji}
-                </span>
+                <IconComp className="w-5 h-5 my-0.5 transition-transform duration-200 group-hover:scale-110" />
                 <span className={cn(
                   "text-xs font-medium mt-1.5",
                   isSelected ? "font-bold" : "text-neutral-400 group-hover:text-white"
@@ -230,7 +229,7 @@ export const MoodTracker: React.FC = () => {
         <div className="flex items-center justify-between pt-1">
           {selectedDateNote ? (
             <div className="flex items-center gap-2 text-xs text-neutral-400">
-              <span>Logged as <strong className={MOOD_CONFIGS[currentSelectedMoodKey || "amazing"].textClass}>{MOOD_CONFIGS[currentSelectedMoodKey || "amazing"].label} {MOOD_CONFIGS[currentSelectedMoodKey || "amazing"].emoji}</strong></span>
+              <span>Logged as <strong className={cn("inline-flex items-center gap-1", MOOD_CONFIGS[currentSelectedMoodKey || "amazing"].textClass)}>{React.createElement(MOOD_CONFIGS[currentSelectedMoodKey || "amazing"].icon, { className: "w-3.5 h-3.5 inline" })} {MOOD_CONFIGS[currentSelectedMoodKey || "amazing"].label}</strong></span>
               {selectedDateNote.text && <span className="italic truncate max-w-[200px]">"{selectedDateNote.text}"</span>}
               <button
                 onClick={() => {
@@ -384,7 +383,7 @@ export const MoodTracker: React.FC = () => {
                           isSelectedCell && "ring-2 ring-white border-2 border-white scale-110 z-30 shadow-md",
                           isCellToday && !isSelectedCell && "ring-2 ring-indigo-400/80 ring-offset-1 ring-offset-black z-20"
                         )}
-                        title={`${formatDateShort(dateKey)}${cfg ? `: ${cfg.label} ${cfg.emoji}` : ": Empty (1 click: Select | 2 clicks: Cycle)"}`}
+                        title={`${formatDateShort(dateKey)}${cfg ? `: ${cfg.label}` : ": Empty (1 click: Select | 2 clicks: Cycle)"}`}
                       />
                     );
                   })}
@@ -401,7 +400,7 @@ export const MoodTracker: React.FC = () => {
               <span className="font-bold text-white text-sm">{activeFormattedDate}:</span>
               {activeMoodKey ? (
                 <span className={cn("font-semibold text-sm flex items-center gap-1.5", MOOD_CONFIGS[activeMoodKey].textClass)}>
-                  <span className="text-base">{MOOD_CONFIGS[activeMoodKey].emoji}</span>
+                  {React.createElement(MOOD_CONFIGS[activeMoodKey].icon, { className: "w-4 h-4" })}
                   <span>{MOOD_CONFIGS[activeMoodKey].label}</span>
                 </span>
               ) : (

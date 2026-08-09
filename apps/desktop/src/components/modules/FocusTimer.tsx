@@ -83,7 +83,7 @@ export const FocusTimer: React.FC = () => {
           });
         }
 
-        electron.showNotification("Session Complete! 🎉", `Great work finishing "${title}"! Time for a break.`);
+        electron.showNotification("Session Complete!", `Great work finishing "${title}"! Time for a break.`);
         
         setPreviousMode('POMODORO');
         setTimerState('BREAK');
@@ -94,11 +94,11 @@ export const FocusTimer: React.FC = () => {
         }
       } else {
         if (previousMode === 'STOPWATCH') {
-          electron.showNotification("Break Complete! ⚡", "Ready to jump back into Flow state?");
+          electron.showNotification("Break Complete!", "Ready to jump back into Flow state?");
           setTimerMode('STOPWATCH');
           setFlowTimeElapsed(0);
         } else {
-          electron.showNotification("Break Complete! ⚡", "Ready to start focusing again?");
+          electron.showNotification("Break Complete!", "Ready to start focusing again?");
           setTimerState('WORK');
           setTimeLeft(pomodoroSettings.work * 60);
         }
@@ -130,7 +130,7 @@ export const FocusTimer: React.FC = () => {
         : `${breakSecs}s`;
 
       electron.showNotification(
-        "Flow Session Complete! 🌊", 
+        "Flow Session Complete!", 
         `Focused for ${Math.floor(durationWorked / 60)}m. Earned ${breakStr} break!`
       );
       
@@ -164,7 +164,7 @@ export const FocusTimer: React.FC = () => {
     });
 
     electron.showNotification(
-      "Flow Session Completed! 🌊",
+      "Flow Session Completed!",
       `Focused for ${Math.floor(flowTimeElapsed / 60)}m. Recommended break: ${Math.floor(breakDurationSeconds / 60)}m.`
     );
 

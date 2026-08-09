@@ -1,20 +1,36 @@
 import React, { useState } from 'react';
-import { NotebookPen, Trash2, Plus } from 'lucide-react';
+import { NotebookPen, Trash2, Plus, Target, Smile, Wind, Zap, Moon } from 'lucide-react';
 import { useDesktopStore, MoodNote } from '../../lib/store';
 
 export const MoodNotes: React.FC = () => {
   const { moodNotes, addMoodNote, deleteMoodNote } = useDesktopStore();
 
-  const [selectedMood, setSelectedMood] = useState("🎯 Focused");
+  const [selectedMood, setSelectedMood] = useState("Focused");
   const [noteText, setNoteText] = useState("");
 
   const moodOptions = [
-    { label: "🎯 Focused", emoji: "🎯" },
-    { label: "😃 Happy", emoji: "😃" },
-    { label: "🧘 Calm", emoji: "🧘" },
-    { label: "⚡ Stressed", emoji: "⚡" },
-    { label: "😴 Tired", emoji: "😴" },
+    { label: "Focused", icon: Target, key: "Focused" },
+    { label: "Happy", icon: Smile, key: "Happy" },
+    { label: "Calm", icon: Wind, key: "Calm" },
+    { label: "Stressed", icon: Zap, key: "Stressed" },
+    { label: "Tired", icon: Moon, key: "Tired" },
   ];
+
+  const renderMoodBadge = (moodStr: string) => {
+    const cleanMood = moodStr.replace(/^[^\w\s]+\s*/, '');
+    let IconComponent = Target;
+    if (cleanMood.includes("Happy")) IconComponent = Smile;
+    else if (cleanMood.includes("Calm")) IconComponent = Wind;
+    else if (cleanMood.includes("Stressed")) IconComponent = Zap;
+    else if (cleanMood.includes("Tired")) IconComponent = Moon;
+
+    return (
+      <span className="px-2.5 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-200 text-xs font-medium inline-flex items-center gap-1.5">
+        <IconComponent className="w-3 h-3 text-zinc-300" />
+        <span>{cleanMood}</span>
+      </span>
+    );
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,20 +59,24 @@ export const MoodNotes: React.FC = () => {
         <div className="space-y-2">
           <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block">How are you feeling?</label>
           <div className="flex flex-wrap gap-1.5">
-            {moodOptions.map((m) => (
-              <button
-                type="button"
-                key={m.label}
-                onClick={() => setSelectedMood(m.label)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                  selectedMood === m.label
-                    ? "bg-zinc-800 text-zinc-100 font-semibold border border-zinc-700"
-                    : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800/60"
-                }`}
-              >
-                {m.label}
-              </button>
-            ))}
+            {moodOptions.map((m) => {
+              const IconComp = m.icon;
+              return (
+                <button
+                  type="button"
+                  key={m.key}
+                  onClick={() => setSelectedMood(m.key)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex items-center gap-1.5 ${
+                    selectedMood === m.key
+                      ? "bg-zinc-800 text-zinc-100 font-semibold border border-zinc-700"
+                      : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800/60"
+                  }`}
+                >
+                  <IconComp className="w-3.5 h-3.5" />
+                  <span>{m.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -96,9 +116,7 @@ export const MoodNotes: React.FC = () => {
             moodNotes.slice().reverse().map((note) => (
               <div key={note.id} className="p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 space-y-2 relative group hover:border-zinc-700 transition-colors">
                 <div className="flex items-center justify-between">
-                  <span className="px-2.5 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-200 text-xs font-medium">
-                    {note.mood}
-                  </span>
+                  {renderMoodBadge(note.mood)}
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] text-zinc-500 font-mono">
                       {new Date(note.date).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
