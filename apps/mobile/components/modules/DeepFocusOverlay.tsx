@@ -172,7 +172,7 @@ export function DeepFocusOverlay() {
               {isActive ? (
                 <Pause size={32} color={colors.primaryForeground} />
               ) : (
-                <Play size={32} color={colors.primaryForeground} style={{ marginLeft: 3 }} />
+                <Play size={32} color={colors.primaryForeground} fill={colors.primaryForeground} style={{ marginLeft: 3 }} />
               )}
             </TouchableOpacity>
 
