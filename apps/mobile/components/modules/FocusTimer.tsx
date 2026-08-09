@@ -10,7 +10,7 @@ import {
   Alert,
   Switch,
 } from 'react-native';
-import { useAppStore } from '@/lib/store';
+import { useAppStore, TodoItem } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
 import { playCompletionSound } from '@/lib/sound';
 import {
@@ -58,6 +58,7 @@ export function FocusTimer() {
     todos,
     selectedTodoId,
     setSelectedTodoId,
+    addTodo,
     addSession,
     addDistraction,
     pomodoroSettings,
@@ -81,6 +82,27 @@ export function FocusTimer() {
   const [autoBreak, setAutoBreak] = useState(pomodoroSettings.autoStartBreak);
 
 
+
+  const handleCustomFocusSubmit = () => {
+    if (!sessionName.trim()) return;
+    const taskText = sessionName.trim();
+    const newTaskId = Date.now().toString();
+
+    const newTodo: TodoItem = {
+      id: newTaskId,
+      text: taskText,
+      completed: false,
+      priority: 'medium',
+      groupId: 'current',
+      estimatedPomodoros: 1,
+      completedPomodoros: 0,
+      subtasks: [],
+    };
+
+    addTodo(newTodo);
+    setSelectedTodoId(newTaskId);
+    setSessionName(taskText);
+  };
 
   const toggleTimer = () => {
     setIsActive(!isActive);
@@ -347,6 +369,8 @@ export function FocusTimer() {
               onChangeText={setSessionName}
               onFocus={() => setIsSessionFocused(true)}
               onBlur={() => setIsSessionFocused(false)}
+              onSubmitEditing={handleCustomFocusSubmit}
+              returnKeyType="done"
             />
             <TouchableOpacity
               style={styles.taskPickerBtn}
