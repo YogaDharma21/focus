@@ -17,6 +17,7 @@ export const TodoList: React.FC = () => {
   const [activeGroupId, setActiveGroupId] = useState<string>("all");
   const [newGroupInput, setNewGroupInput] = useState("");
   const [showAddGroupModal, setShowAddGroupModal] = useState(false);
+  const [detailTodoId, setDetailTodoId] = useState<string | null>(null);
 
   // Simplified new task form state (only task name)
   const [textInput, setTextInput] = useState("");
@@ -24,13 +25,13 @@ export const TodoList: React.FC = () => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && selectedTodoId) {
-        setSelectedTodoId(null);
+      if (e.key === 'Escape' && detailTodoId) {
+        setDetailTodoId(null);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedTodoId, setSelectedTodoId]);
+  }, [detailTodoId]);
 
   const handleCreateTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,7 +49,7 @@ export const TodoList: React.FC = () => {
     };
 
     addTodo(newTask);
-    setSelectedTodoId(newTask.id);
+    setDetailTodoId(newTask.id);
     setTextInput("");
   };
 
@@ -67,7 +68,7 @@ export const TodoList: React.FC = () => {
     return todo.groupId === activeGroupId;
   });
 
-  const activeTodoDetails = todos.find(t => t.id === selectedTodoId);
+  const activeTodoDetails = todos.find(t => t.id === detailTodoId);
 
   const getPriorityBadgeClass = (priority?: string) => {
     switch (priority) {
@@ -170,11 +171,11 @@ export const TodoList: React.FC = () => {
             </div>
           ) : (
             filteredTodos.map((todo) => {
-              const isSelected = selectedTodoId === todo.id;
+              const isSelected = detailTodoId === todo.id || selectedTodoId === todo.id;
               return (
                 <div
                   key={todo.id}
-                  onClick={() => setSelectedTodoId(todo.id)}
+                  onClick={() => setDetailTodoId(todo.id)}
                   className={`p-3 rounded-lg border transition-all cursor-pointer flex items-center justify-between gap-3 ${
                     isSelected
                       ? "bg-zinc-800 border-zinc-700 text-zinc-100 font-medium"
@@ -273,7 +274,7 @@ export const TodoList: React.FC = () => {
                       onClick={(e) => {
                         e.stopPropagation();
                         deleteTodo(todo.id);
-                        if (selectedTodoId === todo.id) setSelectedTodoId(null);
+                        if (detailTodoId === todo.id) setDetailTodoId(null);
                       }}
                       className="p-1.5 text-zinc-500 hover:text-rose-400 transition-colors rounded-md hover:bg-zinc-800/60"
                       title="Delete task"
@@ -292,7 +293,7 @@ export const TodoList: React.FC = () => {
       {activeTodoDetails && (
         <div 
           className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50 p-4"
-          onClick={() => setSelectedTodoId(null)}
+          onClick={() => setDetailTodoId(null)}
         >
           <div 
             className="w-full max-w-lg bg-zinc-950 border border-zinc-800 rounded-2xl p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto select-text"
@@ -302,7 +303,7 @@ export const TodoList: React.FC = () => {
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">TASK DETAILS</span>
               <button
-                onClick={() => setSelectedTodoId(null)}
+                onClick={() => setDetailTodoId(null)}
                 className="p-1 text-zinc-400 hover:text-zinc-100 rounded-lg hover:bg-zinc-800/60 transition-colors"
                 title="Close"
               >
@@ -525,7 +526,7 @@ export const TodoList: React.FC = () => {
               <button
                 onClick={() => {
                   deleteTodo(activeTodoDetails.id);
-                  setSelectedTodoId(null);
+                  setDetailTodoId(null);
                 }}
                 className="text-rose-500 hover:text-rose-400 text-xs font-semibold flex items-center gap-1.5 px-3 py-1.5 rounded-lg hover:bg-rose-500/10 transition-colors"
               >
