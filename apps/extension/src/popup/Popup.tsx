@@ -44,6 +44,7 @@ import {
   FileText,
   Coffee,
   Check,
+  TrendingUp,
 } from "lucide-react";
 import { format } from "date-fns";
 import { MoodTracker } from "./components/MoodTracker";
@@ -2182,7 +2183,12 @@ export function Popup() {
             <div className={`p-3 rounded-xl border ${
               "bg-neutral-900 border-neutral-800"
             }`}>
-              <div className="text-[10px] font-mono uppercase tracking-wider font-bold mb-3">FOCUS TREND</div>
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-7 h-7 rounded-lg bg-indigo-900/50 border border-indigo-700 flex items-center justify-center">
+                  <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
+                </div>
+                <span className="text-[10px] font-mono uppercase tracking-wider font-bold">Focus Trend</span>
+              </div>
               <div className="flex items-end justify-between gap-2 h-24 pt-2">
                 {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => {
                   const minsLogged = state.stats.weeklyMinutes[day] || 0;
