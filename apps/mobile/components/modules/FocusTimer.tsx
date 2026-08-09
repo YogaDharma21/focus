@@ -19,7 +19,6 @@ import {
   RotateCcw,
   AlertTriangle,
   Plus,
-  Minus,
   CheckCircle2,
   Settings,
   Trash2,
@@ -366,32 +365,7 @@ export function FocusTimer() {
                 {selectedTodo.text}
               </Text>
             </View>
-            <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-              <TouchableOpacity
-                style={[styles.smallStepperBtn, { backgroundColor: colors.border }]}
-                onPress={(e) => {
-                  e.stopPropagation();
-                  const curr = selectedTodo.completedPomodoros || 0;
-                  updateTodo(selectedTodo.id, { completedPomodoros: Math.max(0, curr - 1) });
-                }}
-              >
-                <Minus size={12} color={colors.text} />
-              </TouchableOpacity>
-              <Text style={{ fontSize: 12, color: colors.textMuted, fontWeight: '600' }}>
-                {selectedTodo.completedPomodoros || 0}/{selectedTodo.estimatedPomodoros || 1}
-              </Text>
-              <TouchableOpacity
-                style={[styles.smallStepperBtn, { backgroundColor: colors.border }]}
-                onPress={(e) => {
-                  e.stopPropagation();
-                  const curr = selectedTodo.completedPomodoros || 0;
-                  updateTodo(selectedTodo.id, { completedPomodoros: curr + 1 });
-                }}
-              >
-                <Plus size={12} color={colors.text} />
-              </TouchableOpacity>
-              <ChevronDown size={14} color={colors.textMuted} style={{ opacity: 0.7, marginLeft: 4 }} />
-            </View>
+            <ChevronDown size={14} color={colors.textMuted} style={{ opacity: 0.7 }} />
           </TouchableOpacity>
         ) : (
           /* Custom Focus Mode (Editable Input Bar) */
@@ -1071,12 +1045,5 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     alignItems: 'center',
-  },
-  smallStepperBtn: {
-    width: 26,
-    height: 26,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });

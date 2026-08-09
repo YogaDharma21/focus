@@ -18,7 +18,6 @@ import {
   Square,
   Target,
   Plus,
-  Minus,
   Trash2,
   FolderPlus,
   ListCheck,
@@ -546,34 +545,14 @@ export function TodoList() {
                   </View>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.inputSubLabel}>Completed</Text>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                      <TouchableOpacity
-                        style={styles.stepperBtn}
-                        onPress={() => {
-                          const curr = Math.max(0, parseInt(detailPomoComp, 10) || 0);
-                          setDetailPomoComp(Math.max(0, curr - 1).toString());
-                        }}
-                      >
-                        <Minus size={14} color="#ffffff" />
-                      </TouchableOpacity>
-                      <TextInput
-                        style={[styles.cardInput, { flex: 1, textAlign: 'center' }]}
-                        keyboardType="numeric"
-                        value={detailPomoComp}
-                        onChangeText={(val) => setDetailPomoComp(val.replace(/[^0-9]/g, ''))}
-                        placeholder="0"
-                        placeholderTextColor="#71717a"
-                      />
-                      <TouchableOpacity
-                        style={styles.stepperBtn}
-                        onPress={() => {
-                          const curr = Math.max(0, parseInt(detailPomoComp, 10) || 0);
-                          setDetailPomoComp((curr + 1).toString());
-                        }}
-                      >
-                        <Plus size={14} color="#ffffff" />
-                      </TouchableOpacity>
-                    </View>
+                    <TextInput
+                      style={styles.cardInput}
+                      keyboardType="numeric"
+                      value={detailPomoComp}
+                      onChangeText={(val) => setDetailPomoComp(val.replace(/[^0-9]/g, ''))}
+                      placeholder="0"
+                      placeholderTextColor="#71717a"
+                    />
                   </View>
                 </View>
 
@@ -1175,15 +1154,5 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     fontSize: 14,
     marginVertical: 14,
-  },
-  stepperBtn: {
-    width: 32,
-    height: 38,
-    backgroundColor: '#27272a',
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: '#3f3f46',
   },
 });
