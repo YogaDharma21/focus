@@ -35,7 +35,6 @@ export interface SubTask {
 export interface TodoItem {
   id: string;
   text: string;
-  description?: string;
   completed: boolean;
   category?: string;
   priority?: 'low' | 'medium' | 'high' | 'urgent';
@@ -46,7 +45,6 @@ export interface TodoItem {
   notes?: string;
   estimatedPomodoros?: number;
   completedPomodoros?: number;
-  recurring?: 'none' | 'daily' | 'weekly' | 'monthly';
   reminders?: string[];
   link?: string;
   groupId?: string;
