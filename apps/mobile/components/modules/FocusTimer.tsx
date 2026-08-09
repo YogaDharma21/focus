@@ -30,6 +30,7 @@ import {
   Check,
   X,
   ChevronDown,
+  FileText,
 } from 'lucide-react-native';
 
 const DISTRACTION_CATEGORIES = [
@@ -439,6 +440,21 @@ export function FocusTimer() {
                 </TouchableOpacity>
               ))}
             </View>
+          </View>
+        )}
+
+        {/* Selected Task Notes */}
+        {selectedTodo && selectedTodo.notes && selectedTodo.notes.trim().length > 0 && (
+          <View style={[styles.subtaskFocusCard, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+            <View style={styles.subtaskFocusHeader}>
+              <FileText size={14} color="#f59e0b" />
+              <Text style={[styles.subtaskFocusTitle, { color: colors.text }]}>
+                Task Notes
+              </Text>
+            </View>
+            <Text style={[styles.taskNotesText, { color: colors.text }]}>
+              {selectedTodo.notes}
+            </Text>
           </View>
         )}
 
@@ -1045,5 +1061,11 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     alignItems: 'center',
+  },
+  taskNotesText: {
+    fontSize: 12,
+    lineHeight: 18,
+    opacity: 0.9,
+    marginTop: 2,
   },
 });

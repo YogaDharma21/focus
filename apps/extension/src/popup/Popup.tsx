@@ -1767,6 +1767,21 @@ export function Popup() {
               </div>
             )}
 
+            {/* Task Notes Section for Selected Task */}
+            {selectedTask && selectedTask.notes && selectedTask.notes.trim().length > 0 && (
+              <div className={`w-full max-w-[280px] p-2.5 mb-2 rounded-xl border flex flex-col gap-1 ${
+                "bg-neutral-900/90 border-neutral-800"
+              }`}>
+                <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-70">
+                  <FileText className="w-3.5 h-3.5 text-amber-500" />
+                  <span>TASK NOTES</span>
+                </div>
+                <p className="text-xs text-neutral-200 whitespace-pre-wrap leading-relaxed">
+                  {selectedTask.notes}
+                </p>
+              </div>
+            )}
+
             {/* Control Buttons Grid */}
             <div className="flex items-center gap-2">
               {/* Log Distraction Button */}
