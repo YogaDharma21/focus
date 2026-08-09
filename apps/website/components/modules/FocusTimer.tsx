@@ -4,7 +4,7 @@ import { useAppStore, TodoItem } from "@/lib/store";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Play, Pause, RotateCcw, CheckCircle2, Settings, ChevronDown, ListTodo, FileText, Check, Square, CheckSquare2 } from "lucide-react";
+import { Play, Pause, RotateCcw, CheckCircle2, Settings, ChevronDown, ListTodo, FileText, Check, Square, CheckSquare2, Timer, Coffee, Clock } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import {
     Dialog,
@@ -306,13 +306,14 @@ export function FocusTimer() {
                         setTimeLeft(pomodoroSettings.work * 60);
                     }}
                     className={cn(
-                        "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
+                        "px-5 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300 flex items-center justify-center gap-1.5",
                         timerMode === "POMODORO" && timerState === "WORK"
                             ? "bg-primary text-primary-foreground shadow-md"
                             : "text-muted-foreground hover:text-foreground",
                     )}
                 >
-                    Pomodoro
+                    <Timer className="w-3.5 h-3.5" />
+                    <span>Pomodoro</span>
                 </button>
                 <button
                     onClick={() => {
@@ -322,13 +323,14 @@ export function FocusTimer() {
                         setTimeLeft(pomodoroSettings.break * 60);
                     }}
                     className={cn(
-                        "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
+                        "px-5 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300 flex items-center justify-center gap-1.5",
                         timerMode === "POMODORO" && timerState === "BREAK"
                             ? "bg-primary text-primary-foreground shadow-md"
                             : "text-muted-foreground hover:text-foreground",
                     )}
                 >
-                    Break
+                    <Coffee className="w-3.5 h-3.5" />
+                    <span>Break</span>
                 </button>
                 <button
                     onClick={() => {
@@ -337,13 +339,14 @@ export function FocusTimer() {
                         setTimeLeft(0);
                     }}
                     className={cn(
-                        "px-6 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300",
+                        "px-5 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300 flex items-center justify-center gap-1.5",
                         timerMode === "STOPWATCH"
                             ? "bg-primary text-primary-foreground shadow-md"
                             : "text-muted-foreground hover:text-foreground",
                     )}
                 >
-                    Flow
+                    <Clock className="w-3.5 h-3.5" />
+                    <span>Flow</span>
                 </button>
             </div>
 
