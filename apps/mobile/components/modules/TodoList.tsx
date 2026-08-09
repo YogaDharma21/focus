@@ -8,6 +8,7 @@ import {
   ScrollView,
   Modal,
   Alert,
+  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAppStore, TodoItem } from '@/lib/store';
@@ -368,23 +369,16 @@ export function TodoList() {
         animationType="fade"
         onRequestClose={() => setDetailTodo(null)}
       >
-        <TouchableOpacity
-          style={styles.modalBackdrop}
-          activeOpacity={1}
-          onPress={() => {
-            setPriorityPickerOpen(false);
-            setGroupPickerOpen(false);
-            setDetailTodo(null);
-          }}
-        >
-          <TouchableOpacity
-            activeOpacity={1}
-            style={styles.detailModalCard}
+        <View style={styles.modalBackdrop}>
+          <Pressable
+            style={StyleSheet.absoluteFill}
             onPress={() => {
               setPriorityPickerOpen(false);
               setGroupPickerOpen(false);
+              setDetailTodo(null);
             }}
-          >
+          />
+          <View style={styles.detailModalCard}>
             {/* Modal Header */}
             <View style={styles.modalHeaderRow}>
               <Text style={styles.modalHeaderLabel}>TASK DETAILS</Text>
@@ -406,7 +400,12 @@ export function TodoList() {
               placeholderTextColor="#71717a"
             />
 
-            <ScrollView contentContainerStyle={styles.detailContent}>
+            <ScrollView
+              contentContainerStyle={styles.detailContent}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={true}
+              nestedScrollEnabled={true}
+            >
               {/* Row 1: Priority & Group Cards */}
               <View style={styles.gridRow}>
                 {/* Priority Card */}
@@ -682,8 +681,8 @@ export function TodoList() {
                 </TouchableOpacity>
               </View>
             </ScrollView>
-          </TouchableOpacity>
-        </TouchableOpacity>
+          </View>
+        </View>
       </Modal>
 
       {/* Add Group Modal */}
