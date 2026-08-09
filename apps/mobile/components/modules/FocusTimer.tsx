@@ -435,8 +435,13 @@ export function FocusTimer() {
 
           {/* 2. Log Distraction Button */}
           <TouchableOpacity
-            style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+            style={[
+              styles.secondaryActionBtn,
+              { backgroundColor: colors.card, borderColor: colors.border },
+              !isActive && { opacity: 0.5 },
+            ]}
             onPress={() => setDistractionModalOpen(true)}
+            disabled={!isActive}
             activeOpacity={0.7}
           >
             <AlertTriangle size={20} color={colors.text} />
@@ -474,8 +479,13 @@ export function FocusTimer() {
 
           {/* 5. Complete Session Button */}
           <TouchableOpacity
-            style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+            style={[
+              styles.secondaryActionBtn,
+              { backgroundColor: colors.card, borderColor: colors.border },
+              !isActive && { opacity: 0.5 },
+            ]}
             onPress={handleCompleteSession}
+            disabled={!isActive}
             activeOpacity={0.7}
           >
             <CheckCircle2 size={20} color={colors.text} />
