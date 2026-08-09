@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Platform } from 'react-native';
 import { useAppStore, Session } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
+import { Fonts } from '@/constants/theme';
 import {
   Clock,
   CheckCircle2,
-  AlertTriangle,
-  Calendar,
+  BarChart2,
   Flame,
   Activity,
   ListFilter,
   Target,
 } from 'lucide-react-native';
+
+const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 
 export function StatsJournal() {
   const { colors } = useTheme();
@@ -100,15 +102,39 @@ export function StatsJournal() {
     return acc;
   }, {});
 
-  const formatDate = (isoStr: string) => {
-    const d = new Date(isoStr);
-    return d.toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
+  // Weekly Focus Trend Calculation (Sunday to Saturday)
+  const now = new Date();
+  const currentDayIdx = now.getDay(); // 0 = Sun, 6 = Sat
+  const sunday = new Date(now);
+  sunday.setDate(now.getDate() - currentDayIdx);
+  sunday.setHours(0, 0, 0, 0);
+
+  const saturday = new Date(sunday);
+  saturday.setDate(sunday.getDate() + 6);
+  saturday.setHours(23, 59, 59, 999);
+
+  const weeklyMinutes: Record<string, number> = {
+    Sun: 0,
+    Mon: 0,
+    Tue: 0,
+    Wed: 0,
+    Thu: 0,
+    Fri: 0,
+    Sat: 0,
   };
+
+  sessions.forEach((s) => {
+    const sessionDate = new Date(s.date);
+    if (sessionDate >= sunday && sessionDate <= saturday) {
+      const dayName = DAYS_OF_WEEK[sessionDate.getDay()];
+      const mins = Math.round(s.duration / 60);
+      weeklyMinutes[dayName] = (weeklyMinutes[dayName] || 0) + mins;
+    }
+  });
+
+  const maxWeeklyMins = Math.max(60, ...Object.values(weeklyMinutes));
+
+  const monoFont = Fonts?.mono || Platform.select({ ios: 'ui-monospace', default: 'monospace' });
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -202,58 +228,83 @@ export function StatsJournal() {
         </View>
       </View>
 
-      {/* Distraction Breakdown */}
+      {/* 4. FOCUS TREND Card */}
+      <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Text style={[styles.monoHeaderTitle, { color: colors.text, fontFamily: monoFont }]}>
+          FOCUS TREND
+        </Text>
+
+        <View style={styles.chartContainer}>
+          {DAYS_OF_WEEK.map((day) => {
+            const minsLogged = weeklyMinutes[day] || 0;
+            const barHeight = minsLogged > 0
+              ? Math.min(44, Math.max(14, Math.round((minsLogged / maxWeeklyMins) * 44)))
+              : 4;
+
+            return (
+              <View key={day} style={styles.chartColumn}>
+                <Text
+                  style={[
+                    styles.chartValueText,
+                    {
+                      color: minsLogged > 0 ? colors.text : colors.textMuted,
+                      fontFamily: monoFont,
+                    },
+                  ]}
+                >
+                  {minsLogged}m
+                </Text>
+                <View style={styles.barWrapper}>
+                  {minsLogged > 0 ? (
+                    <View style={[styles.activeBar, { height: barHeight }]} />
+                  ) : (
+                    <View style={[styles.emptyBar, { backgroundColor: colors.border }]} />
+                  )}
+                </View>
+                <Text style={[styles.chartDayLabel, { color: colors.text, fontFamily: monoFont }]}>
+                  {day}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      </View>
+
+      {/* 5. DISTRACTION ANALYSIS Card */}
       <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.sectionHeaderRow}>
-          <AlertTriangle size={18} color={colors.text} />
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Distractions ({totalDistractions})</Text>
+          <View style={styles.redIconBadge}>
+            <BarChart2 size={18} color="#f43f5e" />
+          </View>
+          <Text style={[styles.monoHeaderTitle, { color: colors.text, fontFamily: monoFont }]}>
+            DISTRACTION ANALYSIS
+          </Text>
         </View>
-        {Object.keys(distractionCategoryCounts).length === 0 ? (
-          <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-            No distractions recorded yet. Great focus!
+
+        {totalDistractions === 0 ? (
+          <Text style={[styles.monoEmptyText, { color: colors.textMuted, fontFamily: monoFont }]}>
+            No distractions logged yet.
           </Text>
         ) : (
           <View style={styles.categoryList}>
-            {Object.entries(distractionCategoryCounts).map(([cat, count]) => (
-              <View key={cat} style={[styles.categoryRow, { borderColor: colors.border }]}>
-                <Text style={[styles.categoryName, { color: colors.text }]}>{cat}</Text>
-                <View style={[styles.categoryBadge, { backgroundColor: colors.border }]}>
-                  <Text style={[styles.categoryCount, { color: colors.text }]}>{count} times</Text>
+            {Object.entries(distractionCategoryCounts).map(([cat, count]) => {
+              const percent = Math.round((count / totalDistractions) * 100);
+              return (
+                <View key={cat} style={styles.distractionItemContainer}>
+                  <View style={styles.distractionItemHeader}>
+                    <Text style={[styles.categoryName, { color: colors.text, fontFamily: monoFont }]}>
+                      {cat}
+                    </Text>
+                    <Text style={[styles.categoryCountText, { color: colors.textMuted, fontFamily: monoFont }]}>
+                      {count} ({percent}%)
+                    </Text>
+                  </View>
+                  <View style={[styles.distractionTrack, { backgroundColor: colors.border }]}>
+                    <View style={[styles.distractionFill, { width: `${percent}%` }]} />
+                  </View>
                 </View>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
-
-      {/* Focus History */}
-      <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={styles.sectionHeaderRow}>
-          <Calendar size={18} color={colors.text} />
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Focus History</Text>
-        </View>
-
-        {sessions.length === 0 ? (
-          <Text style={[styles.emptyText, { color: colors.textMuted }]}>
-            No completed sessions yet. Start the timer to log your focus!
-          </Text>
-        ) : (
-          <View style={styles.historyList}>
-            {sessions.slice().reverse().map((session) => (
-              <View key={session.id} style={[styles.historyRow, { borderColor: colors.border }]}>
-                <View style={{ flex: 1 }}>
-                  <Text style={[styles.historyDate, { color: colors.text }]}>
-                    {formatDate(session.date)}
-                  </Text>
-                  <Text style={[styles.historyMode, { color: colors.textMuted }]}>
-                    {session.mode === 'STOPWATCH' ? 'Flow Mode' : 'Pomodoro'}
-                  </Text>
-                </View>
-                <Text style={[styles.historyDuration, { color: colors.text }]}>
-                  {Math.round(session.duration / 60)} mins
-                </Text>
-              </View>
-            ))}
+              );
+            })}
           </View>
         )}
       </View>
@@ -402,65 +453,99 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 16,
   },
+  monoHeaderTitle: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+  },
+  chartContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+    marginTop: 18,
+    marginBottom: 4,
+    height: 90,
+  },
+  chartColumn: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    height: '100%',
+  },
+  chartValueText: {
+    fontSize: 10.5,
+    fontWeight: '600',
+    marginBottom: 6,
+  },
+  barWrapper: {
+    height: 48,
+    width: '100%',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  emptyBar: {
+    width: '80%',
+    height: 4,
+    borderRadius: 2,
+  },
+  activeBar: {
+    width: '85%',
+    borderRadius: 6,
+    backgroundColor: '#ffffff',
+  },
+  chartDayLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 12,
+    gap: 10,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '700',
+  redIconBadge: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(225, 29, 72, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(225, 29, 72, 0.3)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  emptyText: {
-    fontSize: 13,
-    marginVertical: 6,
+  monoEmptyText: {
+    fontSize: 13.5,
+    marginTop: 14,
   },
   categoryList: {
-    gap: 8,
-    marginTop: 4,
+    gap: 10,
+    marginTop: 14,
   },
-  categoryRow: {
+  distractionItemContainer: {
+    gap: 4,
+  },
+  distractionItemHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 8,
-    borderBottomWidth: 1,
+    alignItems: 'center',
   },
   categoryName: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  categoryBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  categoryCount: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: '600',
   },
-  historyList: {
-    gap: 8,
-    marginTop: 4,
-  },
-  historyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-  },
-  historyDate: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  historyMode: {
+  categoryCountText: {
     fontSize: 12,
-    marginTop: 2,
   },
-  historyDuration: {
-    fontSize: 14,
-    fontWeight: '700',
+  distractionTrack: {
+    width: '100%',
+    height: 6,
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  distractionFill: {
+    height: '100%',
+    borderRadius: 3,
+    backgroundColor: '#f43f5e',
   },
 });
+
