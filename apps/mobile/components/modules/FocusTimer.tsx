@@ -19,7 +19,6 @@ import {
   RotateCcw,
   AlertTriangle,
   Plus,
-  Tag,
   CheckCircle2,
   Settings,
   Trash2,
@@ -331,23 +330,6 @@ export function FocusTimer() {
           </TouchableOpacity>
         </View>
 
-        {/* Task Tag Button */}
-        <TouchableOpacity
-          style={[
-            styles.taskTagBtn,
-            {
-              borderColor: colors.border,
-              backgroundColor: colors.inputBg,
-            },
-          ]}
-          onPress={() => setTodoPickerOpen(true)}
-          activeOpacity={0.7}
-        >
-          <Tag size={13} color={colors.textMuted} />
-          <Text style={[styles.taskTagText, { color: selectedTodo ? colors.text : colors.textMuted }]} numberOfLines={1}>
-            {selectedTodo ? selectedTodo.text : 'Link to a task'}
-          </Text>
-        </TouchableOpacity>
 
         {/* Selected Task Subtasks Checklist */}
         {selectedTodo && selectedTodo.subtasks && selectedTodo.subtasks.length > 0 && (
@@ -656,21 +638,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  taskTagBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    width: '100%',
-    marginBottom: 12,
-  },
-  taskTagText: {
-    fontSize: 13,
-    flex: 1,
   },
   subtaskFocusCard: {
     width: '100%',
