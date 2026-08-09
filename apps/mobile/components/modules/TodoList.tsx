@@ -68,6 +68,13 @@ export function TodoList() {
   const [detailGroupId, setDetailGroupId] = useState('current');
   const [newSubtaskText, setNewSubtaskText] = useState('');
 
+  const [isAddFocused, setIsAddFocused] = useState(false);
+  const [isGroupInputFocused, setIsGroupInputFocused] = useState(false);
+  const [isTitleFocused, setIsTitleFocused] = useState(false);
+  const [isDescFocused, setIsDescFocused] = useState(false);
+  const [isEstFocused, setIsEstFocused] = useState(false);
+  const [isSubtaskFocused, setIsSubtaskFocused] = useState(false);
+
   const handleFocusOnTask = (todo: TodoItem) => {
     setSelectedTodoId(todo.id);
     setSessionName(todo.text);
@@ -230,12 +237,21 @@ export function TodoList() {
         <View style={[styles.addCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.addInputRow}>
             <TextInput
-              style={[styles.addInput, { color: colors.text, backgroundColor: colors.inputBg, borderColor: colors.border }]}
+              style={[
+                styles.addInput,
+                {
+                  color: colors.text,
+                  backgroundColor: colors.inputBg,
+                  borderColor: isAddFocused ? colors.text : colors.border,
+                },
+              ]}
               placeholder="Add a new task..."
               placeholderTextColor={colors.textMuted}
               value={newTodoText}
               onChangeText={setNewTodoText}
               onSubmitEditing={handleAddTodo}
+              onFocus={() => setIsAddFocused(true)}
+              onBlur={() => setIsAddFocused(false)}
             />
             <TouchableOpacity
               style={[styles.addBtn, { backgroundColor: colors.primary }]}
@@ -365,9 +381,18 @@ export function TodoList() {
               <View style={styles.fieldBlock}>
                 <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Task Name</Text>
                 <TextInput
-                  style={[styles.titleInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg }]}
+                  style={[
+                    styles.titleInput,
+                    {
+                      color: colors.text,
+                      borderColor: isTitleFocused ? colors.text : colors.border,
+                      backgroundColor: colors.inputBg,
+                    },
+                  ]}
                   value={detailTitle}
                   onChangeText={setDetailTitle}
+                  onFocus={() => setIsTitleFocused(true)}
+                  onBlur={() => setIsTitleFocused(false)}
                 />
                 {activeDetailTodo && !activeDetailTodo.completed && (
                   <TouchableOpacity
@@ -393,13 +418,22 @@ export function TodoList() {
                   <Text style={[styles.fieldLabel, { color: colors.textMuted }]}>Description</Text>
                 </View>
                 <TextInput
-                  style={[styles.multilineInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg }]}
+                  style={[
+                    styles.multilineInput,
+                    {
+                      color: colors.text,
+                      borderColor: isDescFocused ? colors.text : colors.border,
+                      backgroundColor: colors.inputBg,
+                    },
+                  ]}
                   multiline
                   numberOfLines={2}
                   placeholder="Add a detailed description..."
                   placeholderTextColor={colors.textMuted}
                   value={detailDesc}
                   onChangeText={setDetailDesc}
+                  onFocus={() => setIsDescFocused(true)}
+                  onBlur={() => setIsDescFocused(false)}
                 />
               </View>
 
@@ -445,12 +479,21 @@ export function TodoList() {
                   </Text>
                 </View>
                 <TextInput
-                  style={[styles.singleInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg }]}
+                  style={[
+                    styles.singleInput,
+                    {
+                      color: colors.text,
+                      borderColor: isEstFocused ? colors.text : colors.border,
+                      backgroundColor: colors.inputBg,
+                    },
+                  ]}
                   keyboardType="numeric"
                   placeholder="Estimated sessions..."
                   placeholderTextColor={colors.textMuted}
                   value={detailPomoEst}
                   onChangeText={setDetailPomoEst}
+                  onFocus={() => setIsEstFocused(true)}
+                  onBlur={() => setIsEstFocused(false)}
                 />
               </View>
 
@@ -579,12 +622,21 @@ export function TodoList() {
 
                 <View style={styles.subtaskAddRow}>
                   <TextInput
-                    style={[styles.subtaskInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg }]}
+                    style={[
+                      styles.subtaskInput,
+                      {
+                        color: colors.text,
+                        borderColor: isSubtaskFocused ? colors.text : colors.border,
+                        backgroundColor: colors.inputBg,
+                      },
+                    ]}
                     placeholder="Add new subtask..."
                     placeholderTextColor={colors.textMuted}
                     value={newSubtaskText}
                     onChangeText={setNewSubtaskText}
                     onSubmitEditing={handleAddDetailSubtask}
+                    onFocus={() => setIsSubtaskFocused(true)}
+                    onBlur={() => setIsSubtaskFocused(false)}
                   />
                   <TouchableOpacity
                     style={[styles.subtaskAddBtn, { backgroundColor: colors.primary }]}
@@ -626,12 +678,21 @@ export function TodoList() {
           <TouchableOpacity activeOpacity={1} style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => {}}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>Add Task Group</Text>
             <TextInput
-              style={[styles.groupModalInput, { color: colors.text, backgroundColor: colors.inputBg, borderColor: colors.border }]}
+              style={[
+                styles.groupModalInput,
+                {
+                  color: colors.text,
+                  backgroundColor: colors.inputBg,
+                  borderColor: isGroupInputFocused ? colors.text : colors.border,
+                },
+              ]}
               placeholder="Group name (e.g., Work, Personal)"
               placeholderTextColor={colors.textMuted}
               value={newGroupName}
               onChangeText={setNewGroupName}
               onSubmitEditing={handleCreateGroup}
+              onFocus={() => setIsGroupInputFocused(true)}
+              onBlur={() => setIsGroupInputFocused(false)}
               autoFocus
             />
             <View style={{ flexDirection: 'row', gap: 10, justifyContent: 'flex-end' }}>
@@ -693,15 +754,15 @@ const styles = StyleSheet.create({
   addInput: {
     flex: 1,
     height: 42,
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 1,
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     fontSize: 14,
   },
   addBtn: {
     width: 42,
     height: 42,
-    borderRadius: 10,
+    borderRadius: 14,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -838,7 +899,7 @@ const styles = StyleSheet.create({
   },
   titleInput: {
     height: 42,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
     paddingHorizontal: 12,
     fontSize: 15,
@@ -846,13 +907,13 @@ const styles = StyleSheet.create({
   },
   singleInput: {
     height: 40,
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
     paddingHorizontal: 12,
     fontSize: 13,
   },
   multilineInput: {
-    borderRadius: 10,
+    borderRadius: 12,
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 8,
@@ -882,16 +943,16 @@ const styles = StyleSheet.create({
   },
   subtaskInput: {
     flex: 1,
-    height: 36,
-    borderRadius: 8,
+    height: 38,
+    borderRadius: 12,
     borderWidth: 1,
     paddingHorizontal: 10,
     fontSize: 13,
   },
   subtaskAddBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
+    width: 38,
+    height: 38,
+    borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
   },

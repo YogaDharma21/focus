@@ -25,6 +25,7 @@ export function MoodNotes() {
 
   const [selectedMood, setSelectedMood] = useState('😊');
   const [noteText, setNoteText] = useState('');
+  const [isNoteFocused, setIsNoteFocused] = useState(false);
 
   const handleSaveNote = () => {
     if (!noteText.trim()) return;
@@ -90,7 +91,7 @@ export function MoodNotes() {
         <TextInput
           style={[
             styles.noteInput,
-            { color: colors.text, backgroundColor: colors.inputBg, borderColor: colors.border },
+            { color: colors.text, backgroundColor: colors.inputBg, borderColor: isNoteFocused ? colors.text : colors.border },
           ]}
           placeholder="Write down any thoughts, mindset updates, or session notes..."
           placeholderTextColor={colors.textMuted}
@@ -98,6 +99,8 @@ export function MoodNotes() {
           numberOfLines={3}
           value={noteText}
           onChangeText={setNoteText}
+          onFocus={() => setIsNoteFocused(true)}
+          onBlur={() => setIsNoteFocused(false)}
         />
 
         <TouchableOpacity

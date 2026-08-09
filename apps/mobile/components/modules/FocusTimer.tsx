@@ -19,13 +19,17 @@ import {
   RotateCcw,
   AlertTriangle,
   Plus,
-  Tag,
   CheckCircle2,
   Settings,
   Trash2,
   CheckSquare,
   Square,
   ListCheck,
+  ListTodo,
+  Pencil,
+  Check,
+  X,
+  ChevronDown,
 } from 'lucide-react-native';
 
 const DISTRACTION_CATEGORIES = [
@@ -66,6 +70,10 @@ export function FocusTimer() {
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
   const [todoPickerOpen, setTodoPickerOpen] = useState(false);
   const [settingsModalOpen, setSettingsModalOpen] = useState(false);
+
+  const [isSessionFocused, setIsSessionFocused] = useState(false);
+  const [isWorkFocused, setIsWorkFocused] = useState(false);
+  const [isBreakFocused, setIsBreakFocused] = useState(false);
 
   // Settings inputs
   const [workInput, setWorkInput] = useState(pomodoroSettings.work.toString());
@@ -294,28 +302,63 @@ export function FocusTimer() {
           {formatTime(timeLeft)}
         </Text>
 
-        {/* Input for session name */}
-        <TextInput
-          style={[
-            styles.sessionInput,
-            { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg },
-          ]}
-          placeholder="What are you focusing on?"
-          placeholderTextColor={colors.textMuted}
-          value={sessionName}
-          onChangeText={setSessionName}
-        />
+        {/* Session Goal / Selected Task Bar */}
+        {selectedTodo ? (
+          /* Task Selected (Locked Mode - Matches Reference Image) */
+          <TouchableOpacity
+            style={[
+              styles.selectedTaskCardContainer,
+              {
+                backgroundColor: colors.inputBg,
+                borderColor: colors.border,
+              },
+            ]}
+            onPress={() => setTodoPickerOpen(true)}
+            activeOpacity={0.8}
+            accessibilityLabel="Click to select another task or custom focus"
+          >
+            <View style={styles.selectedTaskCardMain}>
+              <ListTodo size={16} color={colors.text} />
+              <Text style={[styles.selectedTaskCardText, { color: colors.text }]} numberOfLines={1}>
+                {selectedTodo.text}
+              </Text>
+            </View>
+            <ChevronDown size={14} color={colors.textMuted} style={{ opacity: 0.7 }} />
+          </TouchableOpacity>
+        ) : (
+          /* Custom Focus Mode (Editable Input Bar) */
+          <View
+            style={[
+              styles.sessionGoalContainer,
+              {
+                backgroundColor: colors.inputBg,
+                borderColor: isSessionFocused ? colors.text : colors.border,
+              },
+            ]}
+          >
+            <TextInput
+              style={[
+                styles.sessionGoalInput,
+                { color: colors.text },
+              ]}
+              placeholder="Session Goal (Press Enter)..."
+              placeholderTextColor={colors.textMuted}
+              value={sessionName}
+              onChangeText={setSessionName}
+              onFocus={() => setIsSessionFocused(true)}
+              onBlur={() => setIsSessionFocused(false)}
+            />
+            <TouchableOpacity
+              style={styles.taskPickerBtn}
+              onPress={() => setTodoPickerOpen(true)}
+              activeOpacity={0.7}
+              accessibilityLabel="Select from your tasks"
+            >
+              <ListTodo size={18} color={colors.textMuted} />
+            </TouchableOpacity>
+          </View>
+        )}
 
-        {/* Task Tag Button */}
-        <TouchableOpacity
-          style={[styles.taskTagBtn, { borderColor: colors.border, backgroundColor: colors.inputBg }]}
-          onPress={() => setTodoPickerOpen(true)}
-        >
-          <Tag size={14} color={colors.textMuted} />
-          <Text style={[styles.taskTagText, { color: selectedTodo ? colors.text : colors.textMuted }]} numberOfLines={1}>
-            {selectedTodo ? selectedTodo.text : 'Link to a task'}
-          </Text>
-        </TouchableOpacity>
 
         {/* Selected Task Subtasks Checklist */}
         {selectedTodo && selectedTodo.subtasks && selectedTodo.subtasks.length > 0 && (
@@ -426,20 +469,30 @@ export function FocusTimer() {
             <View style={styles.settingGroup}>
               <Text style={[styles.settingLabel, { color: colors.text }]}>Pomodoro Work Time (mins)</Text>
               <TextInput
-                style={[styles.settingInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg }]}
+                style={[
+                  styles.settingInput,
+                  { color: colors.text, borderColor: isWorkFocused ? colors.text : colors.border, backgroundColor: colors.inputBg },
+                ]}
                 keyboardType="numeric"
                 value={workInput}
                 onChangeText={setWorkInput}
+                onFocus={() => setIsWorkFocused(true)}
+                onBlur={() => setIsWorkFocused(false)}
               />
             </View>
 
             <View style={styles.settingGroup}>
               <Text style={[styles.settingLabel, { color: colors.text }]}>Break Time (mins)</Text>
               <TextInput
-                style={[styles.settingInput, { color: colors.text, borderColor: colors.border, backgroundColor: colors.inputBg }]}
+                style={[
+                  styles.settingInput,
+                  { color: colors.text, borderColor: isBreakFocused ? colors.text : colors.border, backgroundColor: colors.inputBg },
+                ]}
                 keyboardType="numeric"
                 value={breakInput}
                 onChangeText={setBreakInput}
+                onFocus={() => setIsBreakFocused(true)}
+                onBlur={() => setIsBreakFocused(false)}
               />
             </View>
 
@@ -480,41 +533,97 @@ export function FocusTimer() {
         </TouchableOpacity>
       </Modal>
 
-      {/* Todo Selector Modal */}
+      {/* Todo Selector Modal (Matches Reference Popover Image) */}
       <Modal visible={todoPickerOpen} transparent animationType="fade" onRequestClose={() => setTodoPickerOpen(false)}>
         <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setTodoPickerOpen(false)}>
-          <TouchableOpacity activeOpacity={1} style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => {}}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Select Task for Session</Text>
-            <ScrollView style={{ maxHeight: 300 }}>
-              <TouchableOpacity
-                style={[styles.todoOption, !selectedTodoId && { backgroundColor: colors.border }]}
-                onPress={() => {
-                  setSelectedTodoId(null);
-                  setTodoPickerOpen(false);
-                }}
-              >
-                <Text style={{ color: colors.text }}>None (Standalone Session)</Text>
+          <TouchableOpacity
+            activeOpacity={1}
+            style={[styles.taskPickerModalBox, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => {}}
+          >
+            {/* Top Header */}
+            <View style={styles.taskPickerHeader}>
+              <Text style={[styles.taskPickerSectionTitle, { color: colors.textMuted }]}>FOCUS TOPIC</Text>
+              <TouchableOpacity onPress={() => setTodoPickerOpen(false)} style={styles.closeBtn} accessibilityLabel="Close">
+                <X size={16} color={colors.textMuted} />
               </TouchableOpacity>
-              {todos.map((todo) => (
-                <TouchableOpacity
-                  key={todo.id}
-                  style={[styles.todoOption, selectedTodoId === todo.id && { backgroundColor: colors.border }]}
-                  onPress={() => {
-                    setSelectedTodoId(todo.id);
-                    setSessionName(todo.text);
-                    setTodoPickerOpen(false);
-                  }}
-                >
-                  <Text style={{ color: colors.text, fontWeight: '500' }}>{todo.text}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
+            </View>
+
+            {/* Custom Focus Item */}
             <TouchableOpacity
-              style={[styles.closeModalBtn, { backgroundColor: colors.border }]}
-              onPress={() => setTodoPickerOpen(false)}
+              style={[
+                styles.customFocusOption,
+                {
+                  backgroundColor: !selectedTodoId ? (colors.border || '#27272a') : colors.inputBg,
+                  borderColor: colors.border,
+                },
+              ]}
+              onPress={() => {
+                setSelectedTodoId(null);
+                setSessionName('');
+                setTodoPickerOpen(false);
+              }}
+              activeOpacity={0.8}
             >
-              <Text style={{ color: colors.text, fontWeight: '600' }}>Close</Text>
+              <View style={styles.customFocusLeft}>
+                <Pencil size={18} color={colors.text} style={{ marginTop: 2 }} />
+                <View style={styles.customFocusTextCol}>
+                  <Text style={[styles.customFocusTitle, { color: colors.text }]}>Custom Focus</Text>
+                  <Text style={[styles.customFocusSub, { color: colors.textMuted }]}>Type custom goal</Text>
+                </View>
+              </View>
+              {!selectedTodoId && <Check size={18} color={colors.text} />}
             </TouchableOpacity>
+
+            {/* My Tasks Section Header */}
+            <Text style={[styles.taskPickerSectionTitle, { color: colors.textMuted, marginTop: 14, marginBottom: 8 }]}>
+              MY TASKS
+            </Text>
+
+            {/* Tasks List */}
+            <ScrollView style={{ maxHeight: 220 }} contentContainerStyle={{ gap: 6 }}>
+              {todos.filter((t) => !t.completed).length === 0 ? (
+                <Text style={[styles.emptyTasksText, { color: colors.textMuted }]}>No pending tasks</Text>
+              ) : (
+                todos
+                  .filter((t) => !t.completed)
+                  .map((todo) => {
+                    const isSelected = selectedTodoId === todo.id;
+                    return (
+                      <TouchableOpacity
+                        key={todo.id}
+                        style={[
+                          styles.taskPickerOption,
+                          {
+                            backgroundColor: isSelected ? (colors.border || '#27272a') : colors.inputBg,
+                            borderColor: colors.border,
+                          },
+                        ]}
+                        onPress={() => {
+                          setSelectedTodoId(todo.id);
+                          setSessionName(todo.text);
+                          setTodoPickerOpen(false);
+                        }}
+                        activeOpacity={0.8}
+                      >
+                        <View style={styles.taskOptionLeft}>
+                          <ListTodo size={16} color={colors.text} />
+                          <Text
+                            style={[
+                              styles.taskOptionText,
+                              { color: colors.text, fontWeight: isSelected ? '700' : '500' },
+                            ]}
+                            numberOfLines={1}
+                          >
+                            {todo.text}
+                          </Text>
+                        </View>
+                        {isSelected && <Check size={16} color={colors.text} />}
+                      </TouchableOpacity>
+                    );
+                  })
+              )}
+            </ScrollView>
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
@@ -591,30 +700,51 @@ const styles = StyleSheet.create({
     letterSpacing: -2,
     marginVertical: 12,
   },
-  sessionInput: {
+  selectedTaskCardContainer: {
     width: '100%',
-    height: 44,
-    borderRadius: 12,
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 16,
     borderWidth: 1,
-    paddingHorizontal: 14,
-    fontSize: 14,
-    textAlign: 'center',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
     marginBottom: 10,
   },
-  taskTagBtn: {
+  selectedTaskCardMain: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    width: '100%',
-    marginBottom: 12,
+    justifyContent: 'center',
+    gap: 8,
+    maxWidth: '90%',
   },
-  taskTagText: {
-    fontSize: 13,
+  selectedTaskCardText: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  sessionGoalContainer: {
+    width: '100%',
+    height: 46,
+    borderRadius: 16,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingLeft: 14,
+    paddingRight: 8,
+    marginBottom: 10,
+  },
+  sessionGoalInput: {
     flex: 1,
+    height: '100%',
+    fontSize: 13,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  taskPickerBtn: {
+    padding: 6,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   subtaskFocusCard: {
     width: '100%',
@@ -747,6 +877,77 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 8,
     marginVertical: 4,
+  },
+  taskPickerModalBox: {
+    width: '100%',
+    maxWidth: 340,
+    borderRadius: 20,
+    borderWidth: 1,
+    padding: 16,
+  },
+  taskPickerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  closeBtn: {
+    padding: 4,
+  },
+  taskPickerSectionTitle: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  customFocusOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  customFocusLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  customFocusTextCol: {
+    flexDirection: 'column',
+  },
+  customFocusTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  customFocusSub: {
+    fontSize: 11,
+    marginTop: 1,
+  },
+  taskPickerOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  taskOptionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  taskOptionText: {
+    fontSize: 14,
+    flex: 1,
+  },
+  emptyTasksText: {
+    fontSize: 12,
+    fontStyle: 'italic',
+    textAlign: 'center',
+    paddingVertical: 12,
   },
   distractionItem: {
     flexDirection: 'row',
