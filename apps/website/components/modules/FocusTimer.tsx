@@ -4,7 +4,7 @@ import { useAppStore, TodoItem } from "@/lib/store";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Play, Pause, RotateCcw, CheckCircle2, Settings2, ChevronDown, ListTodo, FileText, Check } from "lucide-react";
+import { Play, Pause, RotateCcw, CheckCircle2, Settings2, ChevronDown, ListTodo, FileText, Check, Square, CheckSquare2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import {
     Dialog,
@@ -508,20 +508,22 @@ export function FocusTimer() {
                                               : "hover:bg-accent/50",
                                     )}
                                 >
-                                    <div
-                                        className={cn(
-                                            "w-4 h-4 rounded-sm border flex items-center justify-center shrink-0 transition-colors",
-                                            subtask.completed
-                                                ? "bg-white border-white text-black"
-                                                : selectedSubtaskId === subtask.id
-                                                  ? "border-white/60 bg-white/10"
-                                                  : "border-border",
-                                        )}
+                                    <button
+                                        type="button"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (selectedTodo) {
+                                                toggleSubtask(selectedTodo.id, subtask.id);
+                                            }
+                                        }}
+                                        className="shrink-0 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                                     >
-                                        {subtask.completed && (
-                                            <Check className="w-3 h-3 text-black stroke-[3]" />
+                                        {subtask.completed ? (
+                                            <CheckSquare2 className="w-4 h-4 text-white shrink-0" />
+                                        ) : (
+                                            <Square className="w-4 h-4 text-muted-foreground/60 shrink-0" />
                                         )}
-                                    </div>
+                                    </button>
                                     <span className={cn(subtask.completed && "line-through")}>
                                         {subtask.text}
                                     </span>

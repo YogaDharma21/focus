@@ -16,6 +16,8 @@ import {
     Sparkles,
     Timer,
     FileText,
+    Square,
+    CheckSquare2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -651,7 +653,7 @@ export function TodoList() {
                             <div className="bg-muted/30 border border-border/40 rounded-xl p-4 space-y-3">
                                 <div className="flex items-center justify-between">
                                     <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                        <CheckSquare className="w-3.5 h-3.5 text-teal-500" /> Subtasks
+                                        <CheckSquare className="w-3.5 h-3.5 text-foreground" /> Subtasks
                                     </label>
                                     <span className="text-[11px] text-muted-foreground font-medium bg-background/50 px-2 py-0.5 rounded-full border border-border/40">
                                         {editingTask.subtasks?.filter((s) => s.completed).length || 0}/
@@ -666,18 +668,16 @@ export function TodoList() {
                                             className="flex items-center gap-2 group/sub bg-background/40 hover:bg-background/70 p-2 rounded-lg border border-border/30 transition-colors"
                                         >
                                             <button
+                                                type="button"
                                                 onClick={() =>
                                                     toggleSubtask(editingTask.id, subtask.id)
                                                 }
-                                                className={cn(
-                                                    "w-4 h-4 rounded border flex items-center justify-center transition-all",
-                                                    subtask.completed
-                                                        ? "bg-white border-white text-black"
-                                                        : "border-muted-foreground/30 hover:border-white/50",
-                                                )}
+                                                className="shrink-0 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                                             >
-                                                {subtask.completed && (
-                                                    <Check className="w-2.5 h-2.5 text-black stroke-[3]" />
+                                                {subtask.completed ? (
+                                                    <CheckSquare2 className="w-4 h-4 text-white shrink-0" />
+                                                ) : (
+                                                    <Square className="w-4 h-4 text-muted-foreground/60 shrink-0" />
                                                 )}
                                             </button>
                                             {editingSubtaskId === subtask.id ? (
