@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Plus, CheckCircle2, Circle, Trash2, FolderPlus, Folder,
   ListTodo, CheckSquare2, Target, X, Sparkles, List,
-  Timer, Calendar, Clock, FileText
+  Timer, Calendar, Clock, FileText, Settings, ListChecks
 } from 'lucide-react';
 import { useDesktopStore, TodoItem } from '../../lib/store';
 
@@ -183,13 +183,13 @@ export const TodoList: React.FC = () => {
                       : "bg-zinc-900/60 border-zinc-800/80 hover:border-zinc-700 text-zinc-200"
                   }`}
                 >
-                  <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                  <div className="flex items-start gap-2.5 flex-1 min-w-0">
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleTodo(todo.id);
                       }}
-                      className="text-zinc-400 hover:text-zinc-100 transition-colors shrink-0"
+                      className="text-zinc-400 hover:text-zinc-100 transition-colors shrink-0 mt-0.5"
                     >
                       {todo.completed ? (
                         <CheckCircle2 className="w-4 h-4 text-emerald-400 fill-emerald-400/20" />
@@ -197,31 +197,76 @@ export const TodoList: React.FC = () => {
                         <Circle className="w-4 h-4" />
                       )}
                     </button>
-                    <span className={`text-xs ${todo.completed ? "line-through text-zinc-500" : ""}`}>
-                      {todo.text}
-                    </span>
+
+                    <div className="flex flex-col flex-1 min-w-0 gap-0.5">
+                      <span className={`text-xs font-semibold ${todo.completed ? "line-through text-zinc-500" : "text-zinc-100"}`}>
+                        {todo.text}
+                      </span>
+
+                      {(() => {
+                        const hasDeadline = Boolean(todo.deadline);
+                        const hasSessions = Boolean((todo.estimatedPomodoros && todo.estimatedPomodoros > 0) || (todo.completedPomodoros && todo.completedPomodoros > 0));
+                        const hasSubtasks = Boolean(todo.subtasks && todo.subtasks.length > 0);
+                        const hasPriority = Boolean(todo.priority && todo.priority !== 'medium');
+                        const hasMetadata = hasDeadline || hasSessions || hasSubtasks || hasPriority;
+
+                        if (!hasMetadata) return null;
+
+                        return (
+                          <div className="flex items-center gap-3 text-[10px] font-mono text-zinc-400 flex-wrap">
+                            {hasDeadline && (
+                              <div className="flex items-center gap-1 text-orange-500 font-medium">
+                                <Calendar className="w-3 h-3" />
+                                <span>
+                                  {(() => {
+                                    const dl = todo.deadline || '';
+                                    const datePart = dl.split('T')[0];
+                                    const timePart = dl.split('T')[1] || '';
+                                    if (!datePart) return '';
+                                    const d = new Date(datePart);
+                                    const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+                                    const formatted = `${months[d.getMonth()]} ${d.getDate()}`;
+                                    return timePart ? `${formatted}, ${timePart}` : formatted;
+                                  })()}
+                                </span>
+                              </div>
+                            )}
+                            {hasSessions && (
+                              <div className="flex items-center gap-1 text-zinc-400">
+                                <Timer className="w-3 h-3" />
+                                <span>{todo.completedPomodoros || 0}/{todo.estimatedPomodoros || 1}</span>
+                              </div>
+                            )}
+                            {hasPriority && (
+                              <div className="flex items-center gap-1 text-zinc-400">
+                                <Sparkles className="w-3 h-3" />
+                                <span>{todo.priority}</span>
+                              </div>
+                            )}
+                            {hasSubtasks && (
+                              <div className="flex items-center gap-1 text-zinc-400">
+                                <ListChecks className="w-3 h-3" />
+                                <span>{todo.subtasks!.filter(s => s.completed).length}/{todo.subtasks!.length}</span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
+                    </div>
                   </div>
 
-                  <div className="flex items-center gap-2 shrink-0">
-                    {/* Focus on this task button */}
-                    {!todo.completed && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedTodoId(todo.id);
-                          setView("FOCUS");
-                        }}
-                        className="px-2 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 text-[10px] font-medium text-zinc-200 flex items-center gap-1 border border-zinc-700 transition-colors"
-                        title="Focus on this task"
-                      >
-                        <Target className="w-3 h-3 text-zinc-100" />
-                        <span>Focus</span>
-                      </button>
-                    )}
-
-                    <span className={`text-[9px] px-2 py-0.5 rounded-full border uppercase font-bold tracking-wider ${getPriorityBadgeClass(todo.priority)}`}>
-                      {todo.priority || 'medium'}
-                    </span>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    {/* Open task details */}
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedTodoId(todo.id);
+                      }}
+                      className="p-1.5 text-zinc-500 hover:text-zinc-200 transition-colors rounded-md hover:bg-zinc-800/60"
+                      title="Task details"
+                    >
+                      <Settings className="w-3.5 h-3.5" />
+                    </button>
 
                     <button
                       onClick={(e) => {
@@ -229,7 +274,8 @@ export const TodoList: React.FC = () => {
                         deleteTodo(todo.id);
                         if (selectedTodoId === todo.id) setSelectedTodoId(null);
                       }}
-                      className="p-1 text-zinc-500 hover:text-rose-400 transition-colors"
+                      className="p-1.5 text-zinc-500 hover:text-rose-400 transition-colors rounded-md hover:bg-zinc-800/60"
+                      title="Delete task"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
