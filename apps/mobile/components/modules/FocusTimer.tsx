@@ -560,6 +560,7 @@ export function FocusTimer() {
               ]}
               onPress={() => {
                 setSelectedTodoId(null);
+                setSessionName('');
                 setTodoPickerOpen(false);
               }}
               activeOpacity={0.8}
