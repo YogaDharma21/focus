@@ -672,12 +672,12 @@ export function TodoList() {
                                                 className={cn(
                                                     "w-4 h-4 rounded border flex items-center justify-center transition-all",
                                                     subtask.completed
-                                                        ? "bg-primary border-primary text-primary-foreground"
-                                                        : "border-muted-foreground/30 hover:border-primary/50",
+                                                        ? "bg-white border-white text-black"
+                                                        : "border-muted-foreground/30 hover:border-white/50",
                                                 )}
                                             >
                                                 {subtask.completed && (
-                                                    <CheckCircle2 className="w-2.5 h-2.5" />
+                                                    <Check className="w-2.5 h-2.5 text-black stroke-[3]" />
                                                 )}
                                             </button>
                                             {editingSubtaskId === subtask.id ? (
