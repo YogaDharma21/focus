@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { playCompletionSound } from '../../lib/sound';
 import { 
-  Play, Pause, AlertTriangle, CheckCircle2, Coffee, Timer as TimerIcon, Target 
+  Play, Pause, AlertTriangle, CheckCircle2, Coffee, Timer as TimerIcon, Clock 
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
@@ -169,9 +169,9 @@ export const FloatingTimerCapsule: React.FC = () => {
     : (timerState === 'BREAK' ? 'BREAK' : 'POMODORO');
 
   const renderModeIcon = () => {
-    if (activeTab === 'FLOW') return <TimerIcon className="w-3.5 h-3.5" />;
+    if (activeTab === 'FLOW') return <Clock className="w-3.5 h-3.5" />;
     if (activeTab === 'BREAK') return <Coffee className="w-3.5 h-3.5" />;
-    return <Target className="w-3.5 h-3.5" />;
+    return <TimerIcon className="w-3.5 h-3.5" />;
   };
 
   const handleSelectTab = (tab: 'POMODORO' | 'BREAK' | 'FLOW') => {
@@ -257,7 +257,7 @@ export const FloatingTimerCapsule: React.FC = () => {
                   : 'bg-[#1a1a1c] text-zinc-400 border border-zinc-800/80 hover:text-zinc-200'
               }`}
             >
-              <Target className="w-3 h-3" />
+              <TimerIcon className="w-3 h-3" />
               <span>Pomodoro</span>
             </button>
 
@@ -281,7 +281,7 @@ export const FloatingTimerCapsule: React.FC = () => {
                   : 'bg-[#1a1a1c] text-zinc-400 border border-zinc-800/80 hover:text-zinc-200'
               }`}
             >
-              <TimerIcon className="w-3 h-3" />
+              <Clock className="w-3 h-3" />
               <span>Flow</span>
             </button>
           </div>
