@@ -147,11 +147,11 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
 
   // Time Quick Presets
   const timePresets = [
-    { label: 'Morning', time: '09:00', icon: '🌅' },
-    { label: 'Afternoon', time: '13:00', icon: '☀️' },
-    { label: 'Evening', time: '18:00', icon: '🌆' },
-    { label: 'Night', time: '21:00', icon: '🌙' },
-    { label: 'End of Day', time: '23:59', icon: '⏰' },
+    { label: 'Morning', time: '09:00' },
+    { label: 'Afternoon', time: '13:00' },
+    { label: 'Evening', time: '18:00' },
+    { label: 'Night', time: '21:00' },
+    { label: 'End of Day', time: '23:59' },
   ];
 
   const handleNativeChange = (event: DateTimePickerEvent, date?: Date) => {
@@ -309,7 +309,6 @@ export const DatePickerModal: React.FC<DatePickerModalProps> = ({
                         style={[styles.timeChip, isSelected && styles.activeTimeChip]}
                         onPress={() => setSelectedTimeStr(preset.time)}
                       >
-                        <Text style={{ marginRight: 6 }}>{preset.icon}</Text>
                         <Text style={[styles.timeChipText, isSelected && styles.activeTimeChipText]}>
                           {preset.label}
                         </Text>
