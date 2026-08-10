@@ -80,10 +80,10 @@ export const TodoList: React.FC = () => {
   };
 
   return (
-    <div className="h-full flex flex-col md:flex-row gap-4 p-4 md:p-6 max-w-6xl mx-auto w-full select-none overflow-hidden">
+    <div className="min-h-full lg:h-full flex flex-col lg:flex-row gap-4 p-4 lg:p-6 max-w-6xl mx-auto w-full select-none overflow-y-auto lg:overflow-hidden">
       {/* Left Column: Folders & Simplified New Task Form */}
-      <div className="w-full md:w-72 flex flex-col space-y-4 shrink-0">
-        <div className="shadcn-card p-4 space-y-2">
+      <div className="w-full lg:w-72 flex flex-col sm:flex-row lg:flex-col gap-4 shrink-0">
+        <div className="shadcn-card p-4 space-y-2 flex-1">
           <div className="flex items-center justify-between px-1">
             <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Folders</span>
             <button
@@ -95,7 +95,7 @@ export const TodoList: React.FC = () => {
             </button>
           </div>
 
-          <div className="flex md:flex-col gap-1 overflow-x-auto pb-1 md:pb-0">
+          <div className="flex sm:flex-col gap-1 overflow-x-auto pb-1 sm:pb-0">
             <button
               onClick={() => setActiveGroupId("all")}
               className={`px-3 py-1.5 rounded-lg text-xs font-medium text-left transition-colors whitespace-nowrap ${
@@ -137,7 +137,7 @@ export const TodoList: React.FC = () => {
         </div>
 
         {/* Simplified Quick Add Task Form (Name Only) */}
-        <form onSubmit={handleCreateTask} className="shadcn-card p-4 space-y-3">
+        <form onSubmit={handleCreateTask} className="shadcn-card p-4 space-y-3 flex-1">
           <h4 className="text-xs font-semibold text-zinc-200">New Task</h4>
           <input
             type="text"
@@ -157,7 +157,7 @@ export const TodoList: React.FC = () => {
       </div>
 
       {/* Main Task List */}
-      <div className="flex-1 shadcn-card p-4 flex flex-col overflow-hidden">
+      <div className="flex-1 shadcn-card p-4 flex flex-col overflow-hidden min-h-[350px] lg:min-h-0">
         <div className="flex items-center justify-between pb-3 mb-2 border-b border-zinc-800">
           <span className="text-xs font-semibold text-zinc-200">Tasks</span>
           <span className="text-[10px] text-zinc-500">{filteredTodos.length} Items</span>
