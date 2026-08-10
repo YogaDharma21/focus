@@ -303,14 +303,11 @@ export const FloatingTimerCapsule: React.FC = () => {
           {/* Horizontal Line Divider */}
           <div className="border-t border-zinc-800/80 pt-1" />
 
-          {/* Focus Item Text & Work Category Badge */}
-          <div className="space-y-1.5">
+          {/* Focus Item Text */}
+          <div>
             <p className="text-xs font-semibold text-zinc-200 truncate">
               {activeTask ? activeTask.text : (sessionName || "General Focus")}
             </p>
-            <span className="inline-block px-2.5 py-0.5 rounded-full bg-zinc-800/80 border border-zinc-700/80 text-[10px] font-medium text-zinc-300">
-              Work
-            </span>
           </div>
 
           {/* Bottom Controls Bar */}
