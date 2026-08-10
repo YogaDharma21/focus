@@ -246,6 +246,21 @@ export const FloatingTimerCapsule: React.FC = () => {
       {/* 2. Expanded Card Popup dropdown rendered UNDER the compact pill when active */}
       {isExpanded && (
         <div className="w-[360px] bg-[#121214] border border-zinc-800 rounded-2xl p-4 shadow-2xl space-y-3 animate-in fade-in slide-in-from-top-2 zoom-in-95 duration-200 relative mt-1.5">
+          {/* Header Row (Clicking collapses back to default compact pill) */}
+          <div 
+            onClick={() => setIsExpanded(false)}
+            className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity pb-0.5"
+            title="Click to collapse widget"
+          >
+            <div className="flex items-center gap-2">
+              <span className="text-base flex items-center text-zinc-200">{renderModeIcon()}</span>
+              <span className="text-xs font-bold text-white tracking-tight">{timerLabel}</span>
+            </div>
+            <span className="text-xl font-extrabold font-mono text-white tracking-tight">
+              {timeString}
+            </span>
+          </div>
+
           {/* Mode Selector Capsule Tabs - Fill full width with grid */}
           <div className="grid grid-cols-3 gap-2 w-full">
             <button
