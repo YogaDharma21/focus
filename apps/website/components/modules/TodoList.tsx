@@ -473,7 +473,7 @@ export function TodoList() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                                 <div className="bg-muted/30 border border-border/40 rounded-xl p-3.5 space-y-2">
                                     <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                        <Sparkles className="w-3.5 h-3.5 text-amber-500" /> Priority
+                                        <Sparkles className="w-3.5 h-3.5 text-muted-foreground" /> Priority
                                     </label>
                                     <Select
                                         defaultValue={editingTask.priority || "medium"}
@@ -495,7 +495,7 @@ export function TodoList() {
 
                                 <div className="bg-muted/30 border border-border/40 rounded-xl p-3.5 space-y-2">
                                     <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                        <List className="w-3.5 h-3.5 text-blue-500" /> Group
+                                        <List className="w-3.5 h-3.5 text-muted-foreground" /> Group
                                     </label>
                                     <Select
                                         defaultValue={editingTask.groupId || "inbox"}
@@ -519,7 +519,7 @@ export function TodoList() {
 
                             <div className="bg-muted/30 border border-border/40 rounded-xl p-4 space-y-3">
                                 <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                    <Timer className="w-3.5 h-3.5 text-emerald-500" /> Focus Sessions
+                                    <Timer className="w-3.5 h-3.5 text-muted-foreground" /> Focus Sessions
                                 </label>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
@@ -571,7 +571,7 @@ export function TodoList() {
                             <div className="bg-muted/30 border border-border/40 rounded-xl p-4 space-y-2.5">
                                 <div className="flex items-center justify-between">
                                     <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                        <CalendarIcon className="w-3.5 h-3.5 text-indigo-500" /> Deadline
+                                        <CalendarIcon className="w-3.5 h-3.5 text-muted-foreground" /> Deadline
                                     </label>
                                     {editingTask.deadline && (
                                         <button
@@ -660,7 +660,7 @@ export function TodoList() {
 
                             <div className="bg-muted/30 border border-border/40 rounded-xl p-4 space-y-2.5">
                                 <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                    <FileText className="w-3.5 h-3.5 text-amber-500" /> Notes
+                                    <FileText className="w-3.5 h-3.5 text-muted-foreground" /> Notes
                                 </label>
                                 <Textarea
                                     placeholder="Add notes or details for this task..."
@@ -675,7 +675,7 @@ export function TodoList() {
                             <div className="bg-muted/30 border border-border/40 rounded-xl p-4 space-y-3">
                                 <div className="flex items-center justify-between">
                                     <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                        <CheckSquare className="w-3.5 h-3.5 text-foreground" /> Subtasks
+                                        <CheckSquare className="w-3.5 h-3.5 text-muted-foreground" /> Subtasks
                                     </label>
                                     <span className="text-[11px] text-muted-foreground font-medium bg-background/50 px-2 py-0.5 rounded-full border border-border/40">
                                         {editingTask.subtasks?.filter((s) => s.completed).length || 0}/

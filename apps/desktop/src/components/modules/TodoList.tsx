@@ -326,7 +326,7 @@ export const TodoList: React.FC = () => {
             <div className="grid grid-cols-2 gap-3">
               {/* Priority Card */}
               <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 space-y-2">
-                <div className="flex items-center gap-1.5 text-amber-500">
+                <div className="flex items-center gap-1.5 text-zinc-400">
                   <Sparkles className="w-3.5 h-3.5" />
                   <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">PRIORITY</span>
                 </div>
@@ -344,7 +344,7 @@ export const TodoList: React.FC = () => {
 
               {/* Group Card */}
               <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 space-y-2">
-                <div className="flex items-center gap-1.5 text-sky-400">
+                <div className="flex items-center gap-1.5 text-zinc-400">
                   <List className="w-3.5 h-3.5" />
                   <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">GROUP</span>
                 </div>
@@ -363,7 +363,7 @@ export const TodoList: React.FC = () => {
 
             {/* Card 2: FOCUS SESSIONS */}
             <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 space-y-3">
-              <div className="flex items-center gap-1.5 text-emerald-400">
+              <div className="flex items-center gap-1.5 text-zinc-400">
                 <Timer className="w-3.5 h-3.5" />
                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">FOCUS SESSIONS</span>
               </div>
@@ -397,7 +397,7 @@ export const TodoList: React.FC = () => {
               <div>
                 <div className="h-1.5 w-full bg-zinc-800/80 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-emerald-500 rounded-full transition-all duration-300"
+                    className="h-full bg-zinc-400 rounded-full transition-all duration-300"
                     style={{
                       width: `${Math.min(100, Math.round(((activeTodoDetails.completedPomodoros || 0) / (activeTodoDetails.estimatedPomodoros || 1)) * 100))}%`
                     }}
@@ -412,7 +412,7 @@ export const TodoList: React.FC = () => {
             {/* Card 3: DEADLINE */}
             <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 space-y-2">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-purple-400">
+                <div className="flex items-center gap-1.5 text-zinc-400">
                   <Calendar className="w-3.5 h-3.5" />
                   <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">DEADLINE</span>
                 </div>
@@ -462,7 +462,7 @@ export const TodoList: React.FC = () => {
 
             {/* Card 4: NOTES */}
             <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 space-y-2">
-              <div className="flex items-center gap-1.5 text-amber-500">
+              <div className="flex items-center gap-1.5 text-zinc-400">
                 <FileText className="w-3.5 h-3.5" />
                 <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">NOTES</span>
               </div>
@@ -478,7 +478,7 @@ export const TodoList: React.FC = () => {
             {/* Card 5: SUBTASKS */}
             <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 space-y-2.5">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 text-teal-400">
+                <div className="flex items-center gap-1.5 text-zinc-400">
                   <CheckSquare2 className="w-3.5 h-3.5" />
                   <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">SUBTASKS</span>
                 </div>
