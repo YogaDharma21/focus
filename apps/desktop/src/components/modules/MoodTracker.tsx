@@ -163,8 +163,10 @@ export const MoodTracker: React.FC = () => {
       {/* Input & Detail Inspector Card */}
       <div className="p-6 bg-neutral-900/60 border border-neutral-800 shadow-md backdrop-blur-xl rounded-2xl space-y-4">
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Smile className="w-5 h-5 text-indigo-400" />
+          <div className="flex items-center gap-2.5">
+            <div className="w-9 h-9 rounded-lg bg-neutral-800 border border-neutral-700/80 flex items-center justify-center text-zinc-300 shrink-0">
+              <Smile className="w-4 h-4" />
+            </div>
             <h2 className="font-semibold text-lg text-white">
               Log Mood {isTodaySelected ? "(Today)" : `for ${formatDateShort(selectedDateKey)}`}
             </h2>
@@ -261,8 +263,10 @@ export const MoodTracker: React.FC = () => {
       <div className="p-6 bg-neutral-900/60 border border-neutral-800 shadow-md backdrop-blur-xl rounded-2xl space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-neutral-800 pb-4">
           <div>
-            <h3 className="font-semibold text-lg text-white flex items-center gap-2">
-              <CalendarIcon className="w-5 h-5 text-indigo-400" />
+            <h3 className="font-semibold text-lg text-white flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-lg bg-neutral-800 border border-neutral-700/80 flex items-center justify-center text-zinc-300 shrink-0">
+                <CalendarIcon className="w-4 h-4" />
+              </div>
               Yearly Mood Tracker
             </h3>
             <p className="text-xs text-neutral-400 mt-0.5">
