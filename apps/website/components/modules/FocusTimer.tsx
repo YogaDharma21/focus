@@ -524,7 +524,7 @@ export function FocusTimer() {
                 {selectedTodo && selectedTodo.notes && selectedTodo.notes.trim().length > 0 && (
                     <div className="w-full max-w-sm border border-border/40 rounded-[var(--radius)] bg-card/30 backdrop-blur-sm overflow-hidden p-3 text-xs space-y-1">
                         <div className="text-muted-foreground font-medium flex items-center gap-1.5 text-[11px] uppercase tracking-wider">
-                            <FileText className="w-3 h-3 text-amber-500" /> Task Notes
+                            <FileText className="w-3 h-3 text-muted-foreground" /> Task Notes
                         </div>
                         <p className="text-foreground/90 whitespace-pre-wrap leading-relaxed text-xs">
                             {selectedTodo.notes}

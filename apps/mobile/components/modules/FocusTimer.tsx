@@ -462,7 +462,7 @@ export function FocusTimer() {
         {selectedTodo && selectedTodo.notes && selectedTodo.notes.trim().length > 0 && (
           <View style={[styles.subtaskFocusCard, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
             <View style={styles.subtaskFocusHeader}>
-              <FileText size={14} color="#f59e0b" />
+              <FileText size={14} color="#a1a1aa" />
               <Text style={[styles.subtaskFocusTitle, { color: colors.text }]}>
                 Task Notes
               </Text>
