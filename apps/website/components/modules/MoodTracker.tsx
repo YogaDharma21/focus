@@ -186,8 +186,10 @@ export function MoodTracker() {
             {/* Input & Detail Inspector Card for Selected Date */}
             <Card className="p-6 bg-card/50 border-0 shadow-md backdrop-blur-xl rounded-[var(--radius)] space-y-4">
                 <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2">
-                        <Smile className="w-5 h-5 text-primary" />
+                    <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 shrink-0">
+                            <Smile className="w-4 h-4" />
+                        </div>
                         <h2 className="font-semibold text-lg">
                             Log Mood {isTodaySelected ? "(Today)" : `for ${formatDateStr(selectedDateKey)}`}
                         </h2>
@@ -286,8 +288,10 @@ export function MoodTracker() {
             <Card className="p-6 bg-card/50 border-0 shadow-md backdrop-blur-xl rounded-[var(--radius)] space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/40 pb-4">
                     <div>
-                        <h3 className="font-semibold text-lg flex items-center gap-2">
-                            <CalendarIcon className="w-5 h-5 text-primary" />
+                        <h3 className="font-semibold text-lg flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 shrink-0">
+                                <CalendarIcon className="w-4 h-4" />
+                            </div>
                             Yearly Mood Tracker
                         </h3>
                         <p className="text-xs text-muted-foreground mt-0.5">
