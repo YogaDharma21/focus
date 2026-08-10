@@ -1814,6 +1814,17 @@ export function Popup() {
 
             {/* Control Buttons Grid */}
             <div className="flex items-center gap-2">
+              {/* Reset Timer */}
+              <button
+                onClick={resetTimer}
+                className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
+                  "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
+                }`}
+                title="Reset Timer"
+              >
+                <RotateCcw className="w-4 h-4" />
+              </button>
+
               {/* Log Distraction Button */}
               <button
                 disabled={!state.isActive}
@@ -1829,17 +1840,6 @@ export function Popup() {
                 title={state.isActive ? "Log Distraction" : "Start timer to log distraction"}
               >
                 <AlertTriangle className="w-4 h-4" />
-              </button>
-
-              {/* Reset Timer */}
-              <button
-                onClick={resetTimer}
-                className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
-                  "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
-                }`}
-                title="Reset Timer"
-              >
-                <RotateCcw className="w-4 h-4" />
               </button>
 
               {/* Main Play / Pause Button */}

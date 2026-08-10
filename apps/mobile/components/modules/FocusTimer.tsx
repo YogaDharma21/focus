@@ -526,21 +526,7 @@ export function FocusTimer() {
             )}
           </TouchableOpacity>
 
-          {/* 4. Settings Button */}
-          <TouchableOpacity
-            style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => {
-              setWorkInput(pomodoroSettings.work.toString());
-              setBreakInput(pomodoroSettings.break.toString());
-              setAutoBreak(pomodoroSettings.autoStartBreak);
-              setSettingsModalOpen(true);
-            }}
-            activeOpacity={0.7}
-          >
-            <Settings size={20} color={colors.text} />
-          </TouchableOpacity>
-
-          {/* 5. Complete Session Button */}
+          {/* 4. Complete Session Button */}
           <TouchableOpacity
             style={[
               styles.secondaryActionBtn,
@@ -552,6 +538,20 @@ export function FocusTimer() {
             activeOpacity={0.7}
           >
             <CheckCircle2 size={20} color={colors.text} />
+          </TouchableOpacity>
+
+          {/* 5. Settings Button */}
+          <TouchableOpacity
+            style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => {
+              setWorkInput(pomodoroSettings.work.toString());
+              setBreakInput(pomodoroSettings.break.toString());
+              setAutoBreak(pomodoroSettings.autoStartBreak);
+              setSettingsModalOpen(true);
+            }}
+            activeOpacity={0.7}
+          >
+            <Settings size={20} color={colors.text} />
           </TouchableOpacity>
         </View>
       </View>
