@@ -1125,7 +1125,7 @@ export function Popup() {
                 "bg-neutral-900/60 border-neutral-800/80"
               }`}>
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+                  <Sparkles className="w-3.5 h-3.5 text-neutral-400" />
                   <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">PRIORITY</span>
                 </div>
                 <select
@@ -1152,7 +1152,7 @@ export function Popup() {
                 "bg-neutral-900/60 border-neutral-800/80"
               }`}>
                 <div className="flex items-center gap-1.5 mb-2">
-                  <ListFilter className="w-3.5 h-3.5 text-blue-400" />
+                  <ListFilter className="w-3.5 h-3.5 text-neutral-400" />
                   <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">GROUP</span>
                 </div>
                 <select
@@ -1179,7 +1179,7 @@ export function Popup() {
               "bg-neutral-900/60 border-neutral-800/80"
             }`}>
               <div className="flex items-center gap-1.5 mb-2.5">
-                <Clock className="w-3.5 h-3.5 text-emerald-400" />
+                <Clock className="w-3.5 h-3.5 text-neutral-400" />
                 <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">FOCUS SESSIONS</span>
               </div>
               <div className="grid grid-cols-2 gap-3">
@@ -1277,7 +1277,7 @@ export function Popup() {
             }`}>
               <div className="flex items-center justify-between mb-2.5">
                 <div className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-indigo-400" />
+                  <Calendar className="w-3.5 h-3.5 text-neutral-400" />
                   <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">DEADLINE</span>
                 </div>
                 {(selectedTaskDetail.dueDate || selectedTaskDetail.dueTime) && (
@@ -1330,7 +1330,7 @@ export function Popup() {
               "bg-neutral-900/60 border-neutral-800/80"
             }`}>
               <div className="flex items-center gap-1.5 mb-2.5">
-                <FileText className="w-3.5 h-3.5 text-amber-500" />
+                <FileText className="w-3.5 h-3.5 text-neutral-400" />
                 <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">NOTES</span>
               </div>
               <textarea
@@ -1355,7 +1355,7 @@ export function Popup() {
             }`}>
               <div className="flex items-center justify-between mb-2.5">
                 <div className="flex items-center gap-1.5">
-                  <CheckSquare className="w-3.5 h-3.5 text-cyan-400" />
+                  <CheckSquare className="w-3.5 h-3.5 text-neutral-400" />
                   <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">SUBTASKS</span>
                 </div>
                 <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
@@ -1803,7 +1803,7 @@ export function Popup() {
                 "bg-neutral-900/90 border-neutral-800"
               }`}>
                 <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-70">
-                  <FileText className="w-3.5 h-3.5 text-amber-500" />
+                  <FileText className="w-3.5 h-3.5 text-neutral-400" />
                   <span>TASK NOTES</span>
                 </div>
                 <p className="text-xs text-neutral-200 whitespace-pre-wrap leading-relaxed">

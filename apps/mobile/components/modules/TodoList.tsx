@@ -430,8 +430,8 @@ export function TodoList() {
                 {/* Priority Card */}
                 <View style={[styles.cardBlock, { flex: 1, zIndex: priorityPickerOpen ? 999 : 1 }]}>
                   <View style={styles.cardHeaderRow}>
-                    <Sparkles size={14} color="#f59e0b" style={{ marginRight: 6 }} />
-                    <Text style={[styles.cardHeaderLabel, { color: '#f59e0b' }]}>PRIORITY</Text>
+                    <Sparkles size={14} color="#a1a1aa" style={{ marginRight: 6 }} />
+                    <Text style={styles.cardHeaderLabel}>PRIORITY</Text>
                   </View>
                   <TouchableOpacity
                     style={styles.dropdownBtn}
@@ -478,8 +478,8 @@ export function TodoList() {
                 {/* Group Card */}
                 <View style={[styles.cardBlock, { flex: 1, zIndex: groupPickerOpen ? 999 : 1 }]}>
                   <View style={styles.cardHeaderRow}>
-                    <List size={14} color="#3b82f6" style={{ marginRight: 6 }} />
-                    <Text style={[styles.cardHeaderLabel, { color: '#3b82f6' }]}>GROUP</Text>
+                    <List size={14} color="#a1a1aa" style={{ marginRight: 6 }} />
+                    <Text style={styles.cardHeaderLabel}>GROUP</Text>
                   </View>
                   <TouchableOpacity
                     style={styles.dropdownBtn}
@@ -528,8 +528,8 @@ export function TodoList() {
               {/* Card 2: FOCUS SESSIONS */}
               <View style={styles.cardBlock}>
                 <View style={styles.cardHeaderRow}>
-                  <Timer size={14} color="#10b981" style={{ marginRight: 6 }} />
-                  <Text style={[styles.cardHeaderLabel, { color: '#10b981' }]}>FOCUS SESSIONS</Text>
+                  <Timer size={14} color="#a1a1aa" style={{ marginRight: 6 }} />
+                  <Text style={styles.cardHeaderLabel}>FOCUS SESSIONS</Text>
                 </View>
                 <View style={styles.gridRow}>
                   <View style={{ flex: 1 }}>
@@ -575,8 +575,8 @@ export function TodoList() {
               {/* Card 3: DEADLINE */}
               <View style={styles.cardBlock}>
                 <View style={styles.cardHeaderRow}>
-                  <Calendar size={14} color="#8b5cf6" style={{ marginRight: 6 }} />
-                  <Text style={[styles.cardHeaderLabel, { color: '#8b5cf6' }]}>DEADLINE</Text>
+                  <Calendar size={14} color="#a1a1aa" style={{ marginRight: 6 }} />
+                  <Text style={styles.cardHeaderLabel}>DEADLINE</Text>
                 </View>
                 {(() => {
                   const { dateStr, timeStr } = formatDeadlineDisplay(detailDeadline);
@@ -589,7 +589,7 @@ export function TodoList() {
                           setDatePickerModalOpen(true);
                         }}
                       >
-                        <Calendar size={14} color="#a78bfa" style={{ marginRight: 8 }} />
+                        <Calendar size={14} color="#a1a1aa" style={{ marginRight: 8 }} />
                         <Text style={{ color: detailDeadline ? '#ffffff' : '#71717a', fontSize: 13, flex: 1 }}>
                           {dateStr}
                         </Text>
@@ -605,7 +605,7 @@ export function TodoList() {
                         <Text style={{ color: detailDeadline ? '#ffffff' : '#71717a', fontSize: 13, flex: 1, textAlign: 'right' }}>
                           {timeStr}
                         </Text>
-                        <Clock size={14} color="#38bdf8" style={{ marginLeft: 8 }} />
+                        <Clock size={14} color="#a1a1aa" style={{ marginLeft: 8 }} />
                       </TouchableOpacity>
                     </View>
                   );
@@ -615,8 +615,8 @@ export function TodoList() {
               {/* Card 4: NOTES */}
               <View style={styles.cardBlock}>
                 <View style={styles.cardHeaderRow}>
-                  <FileText size={14} color="#f59e0b" style={{ marginRight: 6 }} />
-                  <Text style={[styles.cardHeaderLabel, { color: '#f59e0b' }]}>NOTES</Text>
+                  <FileText size={14} color="#a1a1aa" style={{ marginRight: 6 }} />
+                  <Text style={styles.cardHeaderLabel}>NOTES</Text>
                 </View>
                 <TextInput
                   style={styles.notesArea}
@@ -633,8 +633,8 @@ export function TodoList() {
               <View style={styles.cardBlock}>
                 <View style={styles.cardHeaderBetween}>
                   <View style={styles.cardHeaderRow}>
-                    <CheckSquare size={14} color="#14b8a6" style={{ marginRight: 6 }} />
-                    <Text style={[styles.cardHeaderLabel, { color: '#14b8a6' }]}>SUBTASKS</Text>
+                    <CheckSquare size={14} color="#a1a1aa" style={{ marginRight: 6 }} />
+                    <Text style={styles.cardHeaderLabel}>SUBTASKS</Text>
                   </View>
                   <View style={styles.badgeSmall}>
                     <Text style={styles.badgeSmallText}>
@@ -948,6 +948,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
+    color: '#a1a1aa',
   },
   dropdownBtn: {
     backgroundColor: '#27272a',

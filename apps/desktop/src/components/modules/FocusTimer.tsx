@@ -478,7 +478,7 @@ export const FocusTimer: React.FC = () => {
         {activeTask && activeTask.notes && activeTask.notes.trim().length > 0 && (
           <div className="w-full bg-[#141414] border border-zinc-800/80 rounded-2xl p-3 space-y-1.5 text-xs shadow-md mt-3 animate-in fade-in duration-200">
             <div className="flex items-center gap-1.5 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
-              <FileText className="w-3.5 h-3.5 text-amber-500" />
+              <FileText className="w-3.5 h-3.5 text-zinc-500" />
               <span>Task Notes</span>
             </div>
             <p className="text-zinc-200 whitespace-pre-wrap leading-relaxed text-xs">
