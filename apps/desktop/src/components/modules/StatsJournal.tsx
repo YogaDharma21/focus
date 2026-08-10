@@ -114,7 +114,7 @@ export const StatsJournal: React.FC = () => {
   const mostCommonPercent = distractionCategories[0]?.percent || 100;
 
   return (
-    <div className="h-full flex flex-col p-4 md:p-6 max-w-4xl mx-auto w-full select-none overflow-y-auto space-y-6">
+    <div className="w-full max-w-4xl mx-auto flex flex-col select-none space-y-6 pb-12">
       {/* Title Header */}
       <div>
         <h2 className="text-xl font-bold text-white tracking-tight">Journal & Stats</h2>

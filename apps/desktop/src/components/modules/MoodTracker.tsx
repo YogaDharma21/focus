@@ -159,7 +159,7 @@ export const MoodTracker: React.FC = () => {
   const totalTrackedDays = Object.values(stats).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="h-full flex flex-col gap-6 max-w-4xl mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
+    <div className="w-full max-w-4xl mx-auto flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-12">
       {/* Input & Detail Inspector Card */}
       <div className="p-6 bg-neutral-900/60 border border-neutral-800 shadow-md backdrop-blur-xl rounded-2xl space-y-4">
         <div className="flex items-center justify-between gap-2">
