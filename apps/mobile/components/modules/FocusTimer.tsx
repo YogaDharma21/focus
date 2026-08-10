@@ -487,7 +487,16 @@ export function FocusTimer() {
 
         {/* 5 Control Buttons Row */}
         <View style={styles.controlsRow}>
-          {/* 1. Log Distraction Button */}
+          {/* 1. Reset Button */}
+          <TouchableOpacity
+            style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={resetTimer}
+            activeOpacity={0.7}
+          >
+            <RotateCcw size={20} color={colors.text} />
+          </TouchableOpacity>
+
+          {/* 2. Log Distraction Button */}
           <TouchableOpacity
             style={[
               styles.secondaryActionBtn,
@@ -499,15 +508,6 @@ export function FocusTimer() {
             activeOpacity={0.7}
           >
             <AlertTriangle size={20} color={colors.text} />
-          </TouchableOpacity>
-
-          {/* 2. Reset Button */}
-          <TouchableOpacity
-            style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={resetTimer}
-            activeOpacity={0.7}
-          >
-            <RotateCcw size={20} color={colors.text} />
           </TouchableOpacity>
 
           {/* 3. Play / Pause Button (CENTER) */}
