@@ -173,8 +173,10 @@ export function MoodTracker({
       }`}>
         {/* Clean Header */}
         <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-1.5 font-bold font-mono text-xs whitespace-nowrap min-w-0">
-            <Smile className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+          <div className="flex items-center gap-2 font-bold font-mono text-xs whitespace-nowrap min-w-0">
+            <div className="w-7 h-7 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center text-white shrink-0">
+              <Smile className="w-3.5 h-3.5" />
+            </div>
             <span className="truncate">LOG MOOD</span>
           </div>
 
@@ -280,8 +282,10 @@ export function MoodTracker({
         "bg-neutral-900 border-neutral-800"
       }`}>
         <div className="flex items-center justify-between pb-2">
-          <div className="flex items-center gap-1.5 text-xs font-bold font-mono">
-            <CalendarIcon className="w-3.5 h-3.5 text-primary" />
+          <div className="flex items-center gap-2 text-xs font-bold font-mono">
+            <div className="w-7 h-7 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center text-white shrink-0">
+              <CalendarIcon className="w-3.5 h-3.5" />
+            </div>
             <span>YEARLY MOOD TRACKER</span>
           </div>
 

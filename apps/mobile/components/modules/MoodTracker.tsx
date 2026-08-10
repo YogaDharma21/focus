@@ -323,7 +323,9 @@ export function MoodTracker() {
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.cardHeaderRow}>
           <View style={styles.titleWithIcon}>
-            <Smile size={20} color={colors.primary} />
+            <View style={[styles.iconBox, { backgroundColor: colors.inputBg, borderColor: colors.border, borderWidth: 1 }]}>
+              <Smile size={16} color={colors.text} />
+            </div>
             <Text style={[styles.cardTitle, { color: colors.text }]}>
               Log Mood {isTodaySelected ? '(Today)' : ''}
             </Text>
@@ -437,7 +439,9 @@ export function MoodTracker() {
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.gridHeaderRow}>
           <View style={styles.titleWithIcon}>
-            <Calendar size={18} color={colors.primary} />
+            <View style={[styles.iconBox, { backgroundColor: colors.inputBg, borderColor: colors.border, borderWidth: 1 }]}>
+              <Calendar size={16} color={colors.text} />
+            </div>
             <Text style={[styles.cardTitle, { color: colors.text }]}>Yearly Mood Grid</Text>
           </View>
 
@@ -548,6 +552,13 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  iconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   cardTitle: {
     fontSize: 16,
