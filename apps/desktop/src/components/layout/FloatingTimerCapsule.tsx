@@ -200,7 +200,7 @@ export const FloatingTimerCapsule: React.FC = () => {
           /* Active Playing State (Image 2 style: green border, timer icon, time, green dot) */
           <button
             onClick={() => setIsExpanded(true)}
-            className="bg-zinc-900 border border-emerald-500/80 rounded-full px-3.5 py-1 flex items-center gap-2.5 shadow-md hover:bg-zinc-850 hover:border-emerald-400 transition-all active:scale-98 text-xs group"
+            className="bg-zinc-900 border border-emerald-500/80 rounded-full px-2.5 py-1 flex items-center gap-1.5 shadow-md hover:bg-zinc-850 hover:border-emerald-400 transition-all active:scale-98 text-xs group"
           >
             <span className="text-xs flex items-center text-zinc-200">{renderModeIcon()}</span>
             <span className="text-[11px] font-mono font-bold text-white tracking-wider">
@@ -211,7 +211,7 @@ export const FloatingTimerCapsule: React.FC = () => {
                 e.stopPropagation();
                 handleToggleTimer();
               }}
-              className="w-2.5 h-2.5 rounded-full bg-emerald-500 group-hover:bg-emerald-400 transition-all shrink-0 shadow-sm"
+              className="w-2 h-2 rounded-full bg-emerald-500 group-hover:bg-emerald-400 transition-all shrink-0 shadow-sm"
               title="Pause Timer"
             />
           </button>
@@ -361,7 +361,7 @@ export const FloatingTimerCapsule: React.FC = () => {
             {/* Play/Pause Button */}
             <button
               onClick={handleToggleTimer}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-zinc-100 text-zinc-950 font-semibold text-[11px] hover:bg-zinc-200 transition-colors shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-zinc-100 text-zinc-950 font-semibold text-[11px] hover:bg-zinc-200 transition-colors shadow-sm"
             >
               {isActive ? (
                 <>
