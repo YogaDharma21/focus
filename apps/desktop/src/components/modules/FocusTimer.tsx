@@ -262,7 +262,7 @@ export const FocusTimer: React.FC = () => {
     : (timerState === 'BREAK' ? 'BREAK' : 'POMODORO');
 
   return (
-    <div className="flex flex-col items-center justify-center h-full p-4 md:p-8 max-w-2xl mx-auto w-full select-none space-y-6">
+    <div className="flex flex-col items-center justify-center min-h-full max-w-2xl mx-auto w-full select-none space-y-6">
       {/* 1. Top Segmented Capsule Tab Bar */}
       <div className="bg-[#141414] border border-zinc-800/80 p-1 rounded-2xl flex items-center justify-between w-80 shadow-md">
         <button
