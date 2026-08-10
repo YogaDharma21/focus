@@ -323,7 +323,7 @@ export function MoodTracker() {
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.cardHeaderRow}>
           <View style={styles.titleWithIcon}>
-            <View style={[styles.iconBox, { backgroundColor: colors.inputBg, borderColor: colors.border, borderWidth: 1 }]}>
+            <View style={[styles.iconBox, { backgroundColor: colors.border }]}>
               <Smile size={16} color={colors.text} />
             </View>
             <Text style={[styles.cardTitle, { color: colors.text }]}>
@@ -439,7 +439,7 @@ export function MoodTracker() {
       <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.gridHeaderRow}>
           <View style={styles.titleWithIcon}>
-            <View style={[styles.iconBox, { backgroundColor: colors.inputBg, borderColor: colors.border, borderWidth: 1 }]}>
+            <View style={[styles.iconBox, { backgroundColor: colors.border }]}>
               <Calendar size={16} color={colors.text} />
             </View>
             <Text style={[styles.cardTitle, { color: colors.text }]}>Yearly Mood Grid</Text>
