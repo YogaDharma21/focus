@@ -193,21 +193,36 @@ export const FloatingTimerCapsule: React.FC = () => {
   };
 
   return (
-    <div ref={containerRef} className="fixed top-1 left-1/2 -translate-x-1/2 z-50 select-none no-drag">
-      {/* 1. Compact Pill inside TitleBar (When not expanded) */}
-      {!isExpanded ? (
+    <div ref={containerRef} className="fixed top-1 left-1/2 -translate-x-1/2 z-50 select-none no-drag flex flex-col items-center">
+      {/* 1. Compact Pill inside TitleBar (Always rendered at top) */}
+      {isActive ? (
+        /* Active Playing State (Image 2 style: green border, timer icon, time, green dot) */
         <button
-          onClick={() => setIsExpanded(true)}
+          onClick={() => setIsExpanded(!isExpanded)}
+          className="bg-zinc-900 border border-emerald-500/80 rounded-full px-3.5 py-1 flex items-center gap-2.5 shadow-md hover:bg-zinc-850 hover:border-emerald-400 transition-all active:scale-98 text-xs group"
+        >
+          <span className="text-xs flex items-center text-zinc-200">{renderModeIcon()}</span>
+          <span className="text-[11px] font-mono font-bold text-white tracking-wider">
+            {timeString}
+          </span>
+          <div
+            onClick={(e) => {
+              e.stopPropagation();
+              handleToggleTimer();
+            }}
+            className="w-2.5 h-2.5 rounded-full bg-emerald-500 group-hover:bg-emerald-400 transition-all shrink-0 shadow-sm"
+            title="Pause Timer"
+          />
+        </button>
+      ) : (
+        /* Inactive / Paused State (Clean look: mode icon, timer label, time, play button) */
+        <button
+          onClick={() => setIsExpanded(!isExpanded)}
           className="bg-zinc-900 border border-zinc-800 rounded-full px-3 py-1 flex items-center justify-between gap-3 shadow-md hover:bg-zinc-800 hover:border-zinc-700 transition-all active:scale-98 text-xs"
         >
           <div className="flex items-center gap-1.5 min-w-0 text-left">
             <span className="text-xs flex items-center">{renderModeIcon()}</span>
             <span className="text-[11px] font-semibold text-zinc-200 tracking-tight">{timerLabel}</span>
-            {activeTask && (
-              <span className="text-[10px] text-zinc-400 truncate max-w-[70px]">
-                · {activeTask.text}
-              </span>
-            )}
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
@@ -220,27 +235,25 @@ export const FloatingTimerCapsule: React.FC = () => {
                 handleToggleTimer();
               }}
               className="w-5 h-5 rounded-full bg-zinc-100 text-zinc-950 hover:bg-zinc-200 transition-all flex items-center justify-center shrink-0 shadow-sm"
-              title={isActive ? "Pause Timer" : "Start Timer"}
+              title="Start Timer"
             >
-              {isActive ? (
-                <Pause className="w-3 h-3 fill-zinc-950" />
-              ) : (
-                <Play className="w-3 h-3 fill-zinc-950 ml-0.5" />
-              )}
+              <Play className="w-3 h-3 fill-zinc-950 ml-0.5" />
             </div>
           </div>
         </button>
-      ) : (
-        /* 2. Expanded Card Popup dropdown matching user image mockup */
-        <div className="w-[380px] bg-[#121214] border border-zinc-800 rounded-2xl p-4 shadow-2xl space-y-3.5 animate-in zoom-in-95 duration-200 relative mt-1">
+      )}
+
+      {/* 2. Expanded Card Popup dropdown rendered UNDER the compact pill when active */}
+      {isExpanded && (
+        <div className="w-[360px] bg-[#121214] border border-zinc-800 rounded-2xl p-4 shadow-2xl space-y-3 animate-in fade-in slide-in-from-top-2 zoom-in-95 duration-200 relative mt-1.5">
           {/* Header Row (Clicking collapses back to default compact pill) */}
           <div 
             onClick={() => setIsExpanded(false)}
-            className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity"
+            className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity pb-0.5"
             title="Click to collapse widget"
           >
             <div className="flex items-center gap-2">
-              <span className="text-base flex items-center">{renderModeIcon()}</span>
+              <span className="text-base flex items-center text-zinc-200">{renderModeIcon()}</span>
               <span className="text-xs font-bold text-white tracking-tight">{timerLabel}</span>
             </div>
             <span className="text-xl font-extrabold font-mono text-white tracking-tight">
@@ -248,11 +261,11 @@ export const FloatingTimerCapsule: React.FC = () => {
             </span>
           </div>
 
-          {/* Mode Selector Capsule Tabs */}
-          <div className="flex items-center gap-2">
+          {/* Mode Selector Capsule Tabs - Fill full width with grid */}
+          <div className="grid grid-cols-3 gap-2 w-full">
             <button
               onClick={() => handleSelectTab('POMODORO')}
-              className={`px-3 py-1 rounded-xl text-[11px] font-semibold flex items-center gap-1.5 transition-all ${
+              className={`py-1.5 px-2 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all ${
                 activeTab === 'POMODORO'
                   ? 'bg-zinc-100 text-zinc-950 shadow-sm'
                   : 'bg-[#1a1a1c] text-zinc-400 border border-zinc-800/80 hover:text-zinc-200'
@@ -264,7 +277,7 @@ export const FloatingTimerCapsule: React.FC = () => {
 
             <button
               onClick={() => handleSelectTab('BREAK')}
-              className={`px-3 py-1 rounded-xl text-[11px] font-semibold flex items-center gap-1.5 transition-all ${
+              className={`py-1.5 px-2 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all ${
                 activeTab === 'BREAK'
                   ? 'bg-zinc-100 text-zinc-950 shadow-sm'
                   : 'bg-[#1a1a1c] text-zinc-400 border border-zinc-800/80 hover:text-zinc-200'
@@ -276,7 +289,7 @@ export const FloatingTimerCapsule: React.FC = () => {
 
             <button
               onClick={() => handleSelectTab('FLOW')}
-              className={`px-3 py-1 rounded-xl text-[11px] font-semibold flex items-center gap-1.5 transition-all ${
+              className={`py-1.5 px-2 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all ${
                 activeTab === 'FLOW'
                   ? 'bg-zinc-100 text-zinc-950 shadow-sm'
                   : 'bg-[#1a1a1c] text-zinc-400 border border-zinc-800/80 hover:text-zinc-200'
@@ -288,26 +301,23 @@ export const FloatingTimerCapsule: React.FC = () => {
           </div>
 
           {/* Horizontal Line Divider */}
-          <div className="border-t border-zinc-800/80 pt-1" />
+          <div className="border-t border-zinc-800/80 pt-0.5" />
 
-          {/* Focus Item Text & Work Category Badge */}
-          <div className="space-y-1.5">
+          {/* Focus Item Text */}
+          <div>
             <p className="text-xs font-semibold text-zinc-200 truncate">
               {activeTask ? activeTask.text : (sessionName || "General Focus")}
             </p>
-            <span className="inline-block px-2.5 py-0.5 rounded-full bg-zinc-800/80 border border-zinc-700/80 text-[10px] font-medium text-zinc-300">
-              Work
-            </span>
           </div>
 
-          {/* Bottom Controls Bar */}
-          <div className="flex items-center justify-end gap-2 pt-1 relative">
+          {/* Bottom Controls Bar - Fill full width */}
+          <div className="flex items-center justify-between gap-2 pt-1 relative">
             {/* Complete Button */}
             <button
               onClick={handleCompleteSession}
               disabled={!isActive}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#181818] border border-zinc-800 text-[11px] font-medium text-zinc-200 hover:bg-zinc-800 transition-colors",
+                "flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#181818] border border-zinc-800 text-[11px] font-medium text-zinc-200 hover:bg-zinc-800 transition-colors",
                 !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
               )}
               title={isActive ? "Complete Session" : "Start timer to complete session"}
@@ -351,7 +361,7 @@ export const FloatingTimerCapsule: React.FC = () => {
             {/* Play/Pause Button */}
             <button
               onClick={handleToggleTimer}
-              className="flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-zinc-100 text-zinc-950 font-semibold text-[11px] hover:bg-zinc-200 transition-colors shadow-sm"
+              className="flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-xl bg-zinc-100 text-zinc-950 font-semibold text-[11px] hover:bg-zinc-200 transition-colors shadow-sm"
             >
               {isActive ? (
                 <>
