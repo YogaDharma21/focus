@@ -325,7 +325,7 @@ export function MoodTracker() {
           <View style={styles.titleWithIcon}>
             <View style={[styles.iconBox, { backgroundColor: colors.inputBg, borderColor: colors.border, borderWidth: 1 }]}>
               <Smile size={16} color={colors.text} />
-            </div>
+            </View>
             <Text style={[styles.cardTitle, { color: colors.text }]}>
               Log Mood {isTodaySelected ? '(Today)' : ''}
             </Text>
@@ -441,7 +441,7 @@ export function MoodTracker() {
           <View style={styles.titleWithIcon}>
             <View style={[styles.iconBox, { backgroundColor: colors.inputBg, borderColor: colors.border, borderWidth: 1 }]}>
               <Calendar size={16} color={colors.text} />
-            </div>
+            </View>
             <Text style={[styles.cardTitle, { color: colors.text }]}>Yearly Mood Grid</Text>
           </View>
 
