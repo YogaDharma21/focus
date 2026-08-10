@@ -2189,7 +2189,7 @@ export function Popup() {
               <div className={`p-3 rounded-xl border flex flex-col items-center text-center ${
                 "bg-neutral-900 border-neutral-800"
               }`}>
-                <div className="w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 bg-emerald-900/50 border-emerald-700 text-emerald-400">
+                <div className="w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 bg-neutral-800 border-neutral-700 text-white">
                   <CheckCircle className="w-4 h-4" />
                 </div>
                 <span className="text-lg font-extrabold font-mono">{finishedTasksTodayCount}</span>
@@ -2199,7 +2199,7 @@ export function Popup() {
               <div className={`p-3 rounded-xl border flex flex-col items-center text-center ${
                 "bg-neutral-900 border-neutral-800"
               }`}>
-                <div className="w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 bg-blue-900/50 border-blue-700 text-blue-400">
+                <div className="w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 bg-neutral-800 border-neutral-700 text-white">
                   <ListTodo className="w-4 h-4" />
                 </div>
                 <span className="text-lg font-extrabold font-mono">{pendingTasksCount}</span>
@@ -2212,8 +2212,8 @@ export function Popup() {
               <div className={`p-3 rounded-xl border flex items-start gap-3 ${
                 "bg-neutral-900 border-neutral-800"
               }`}>
-                <div className="w-8 h-8 rounded-lg bg-amber-900/50 border border-amber-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Flame className="w-4 h-4 text-amber-400" />
+                <div className="w-8 h-8 rounded-lg bg-neutral-800 border border-neutral-700 text-white flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Flame className="w-4 h-4 text-white" />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-xs font-bold font-sans mb-1">Longest Streak</span>
@@ -2231,14 +2231,14 @@ export function Popup() {
               <div className={`p-3 rounded-xl border flex items-start gap-3 ${
                 "bg-neutral-900 border-neutral-800"
               }`}>
-                <div className="w-8 h-8 rounded-lg bg-emerald-900/50 border border-emerald-700 flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Target className="w-4 h-4 text-emerald-400" />
+                <div className="w-8 h-8 rounded-lg bg-neutral-800 border border-neutral-700 text-white flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Target className="w-4 h-4 text-white" />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-xs font-bold font-sans mb-1">Completion Rate</span>
                   <span className="text-lg font-extrabold font-mono">{taskDoneRatePercent}%</span>
                   <div className="flex items-center gap-1 text-[10px] font-mono">
-                    <TaskDone className="w-3 h-3 text-emerald-400" />
+                    <TaskDone className="w-3 h-3 text-neutral-400" />
                     <span className={"text-neutral-400"}>Tasks Finished</span>
                   </div>
                 </div>
@@ -2250,8 +2250,8 @@ export function Popup() {
               "bg-neutral-900 border-neutral-800"
             }`}>
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-lg bg-indigo-900/50 border border-indigo-700 flex items-center justify-center">
-                  <TrendingUp className="w-3.5 h-3.5 text-indigo-400" />
+                <div className="w-7 h-7 rounded-lg bg-neutral-800 border border-neutral-700 text-white flex items-center justify-center">
+                  <TrendingUp className="w-3.5 h-3.5 text-white" />
                 </div>
                 <span className="text-[10px] font-mono uppercase tracking-wider font-bold">Focus Trend</span>
               </div>
@@ -2292,8 +2292,8 @@ export function Popup() {
               "bg-neutral-900 border-neutral-800"
             }`}>
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-7 h-7 rounded-lg bg-rose-900/50 border border-rose-700 flex items-center justify-center">
-                  <BarChart3 className="w-3.5 h-3.5 text-rose-400" />
+                <div className="w-7 h-7 rounded-lg bg-neutral-800 border border-neutral-700 text-white flex items-center justify-center">
+                  <BarChart3 className="w-3.5 h-3.5 text-white" />
                 </div>
                 <span className="text-[10px] font-mono uppercase tracking-wider font-bold">Distraction Analysis</span>
               </div>

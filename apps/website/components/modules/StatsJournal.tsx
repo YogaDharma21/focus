@@ -226,7 +226,7 @@ export function StatsJournal() {
                 </Card>
 
                 <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border-primary/10 shadow-md backdrop-blur-sm rounded-[var(--radius)]">
-                    <div className="p-2 bg-emerald-500/10 border border-emerald-500/30 rounded-[var(--radius)] text-emerald-500 mb-1">
+                    <div className="p-2 bg-primary/10 border border-primary/20 rounded-[var(--radius)] text-primary mb-1">
                         <CheckCircle2 className="w-5 h-5" />
                     </div>
                     <div className="text-2xl font-bold">
@@ -238,7 +238,7 @@ export function StatsJournal() {
                 </Card>
 
                 <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border-primary/10 shadow-md backdrop-blur-sm rounded-[var(--radius)]">
-                    <div className="p-2 bg-blue-500/10 border border-blue-500/30 rounded-[var(--radius)] text-blue-500 mb-1">
+                    <div className="p-2 bg-primary/10 border border-primary/20 rounded-[var(--radius)] text-primary mb-1">
                         <List className="w-5 h-5" />
                     </div>
                     <div className="text-2xl font-bold">{tasksPending}</div>
@@ -253,8 +253,8 @@ export function StatsJournal() {
                 {/* Longest Streak */}
                 <Card className="p-4 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-3 rounded-[var(--radius)]">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-[var(--radius)] bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-center justify-center shrink-0 shadow-sm">
-                            <Flame className="w-4 h-4 fill-amber-500/20" />
+                        <div className="w-9 h-9 rounded-[var(--radius)] bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 shadow-sm">
+                            <Flame className="w-4 h-4" />
                         </div>
                         <h3 className="text-sm font-bold tracking-tight text-foreground">Longest Streak</h3>
                     </div>
@@ -273,7 +273,7 @@ export function StatsJournal() {
                 {/* Completion Rate */}
                 <Card className="p-4 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-3 rounded-[var(--radius)]">
                     <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-[var(--radius)] bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 flex items-center justify-center shrink-0 shadow-sm">
+                        <div className="w-9 h-9 rounded-[var(--radius)] bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 shadow-sm">
                             <Target className="w-4 h-4" />
                         </div>
                         <h3 className="text-sm font-bold tracking-tight text-foreground">Completion Rate</h3>
@@ -283,7 +283,7 @@ export function StatsJournal() {
                             {todos.length > 0 ? Math.round((todos.filter((t) => t.completed).length / todos.length) * 100) : 0}%
                         </div>
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                            <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground" />
                             Tasks Finished
                         </div>
                     </div>
@@ -293,7 +293,7 @@ export function StatsJournal() {
             {/* Weekly Focus Trend Chart */}
             <Card className="p-4 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col rounded-[var(--radius)] space-y-3">
                 <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-[var(--radius)] bg-indigo-500/10 border border-indigo-500/30 text-indigo-500 flex items-center justify-center shrink-0 shadow-sm">
+                    <div className="w-9 h-9 rounded-[var(--radius)] bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 shadow-sm">
                         <TrendingUp className="w-4 h-4" />
                     </div>
                     <h3 className="text-sm font-bold tracking-tight text-foreground">Focus Trend</h3>
@@ -340,7 +340,7 @@ export function StatsJournal() {
             <Card className="p-6 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-4 rounded-[var(--radius)]">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <div className="p-2 bg-red-500/10 rounded-[var(--radius)] text-red-500">
+                        <div className="w-9 h-9 rounded-[var(--radius)] bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 shadow-sm">
                             <BarChart3 className="w-4 h-4" />
                         </div>
                         <h2 className="font-semibold text-lg">Distraction Analysis</h2>

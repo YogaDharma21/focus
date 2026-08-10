@@ -171,8 +171,8 @@ export function StatsJournal() {
 
         {/* Tasks Today */}
         <View style={[styles.grid3Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={[styles.iconBadgeSquare, { backgroundColor: 'rgba(34, 197, 94, 0.15)' }]}>
-            <CheckCircle2 size={15} color="#22c55e" />
+          <View style={[styles.iconBadgeSquare, { backgroundColor: colors.border }]}>
+            <CheckCircle2 size={15} color={colors.text} />
           </View>
           <Text style={[styles.largeNumValue, { color: colors.text }]}>{tasksTodayFinished}</Text>
           <Text style={[styles.grid3Label, { color: colors.textMuted }]}>TASKS TODAY</Text>
@@ -180,8 +180,8 @@ export function StatsJournal() {
 
         {/* Pending Tasks */}
         <View style={[styles.grid3Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={[styles.iconBadgeSquare, { backgroundColor: 'rgba(59, 130, 246, 0.15)' }]}>
-            <ListFilter size={15} color="#3b82f6" />
+          <View style={[styles.iconBadgeSquare, { backgroundColor: colors.border }]}>
+            <ListFilter size={15} color={colors.text} />
           </View>
           <Text style={[styles.largeNumValue, { color: colors.text }]}>{pendingTasksCount}</Text>
           <Text style={[styles.grid3Label, { color: colors.textMuted }]}>PENDING TASKS</Text>
@@ -193,8 +193,8 @@ export function StatsJournal() {
         {/* Longest Streak Card */}
         <View style={[styles.grid2Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.iconTitleRow}>
-            <View style={[styles.iconBadgeSmallSquare, { backgroundColor: 'rgba(249, 115, 22, 0.15)', borderWidth: 1, borderColor: 'rgba(249, 115, 22, 0.4)' }]}>
-              <Flame size={15} color="#f97316" />
+            <View style={[styles.iconBadgeSmallSquare, { backgroundColor: colors.border }]}>
+              <Flame size={15} color={colors.text} />
             </View>
             <Text style={[styles.cardTitleSmall, { color: colors.text }]}>Longest Streak</Text>
           </View>
@@ -214,8 +214,8 @@ export function StatsJournal() {
         {/* Completion Rate Card */}
         <View style={[styles.grid2Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={styles.iconTitleRow}>
-            <View style={[styles.iconBadgeSmallSquare, { backgroundColor: 'rgba(34, 197, 94, 0.15)', borderWidth: 1, borderColor: 'rgba(34, 197, 94, 0.4)' }]}>
-              <Target size={15} color="#22c55e" />
+            <View style={[styles.iconBadgeSmallSquare, { backgroundColor: colors.border }]}>
+              <Target size={15} color={colors.text} />
             </View>
             <Text style={[styles.cardTitleSmall, { color: colors.text }]}>Completion Rate</Text>
           </View>
@@ -223,7 +223,7 @@ export function StatsJournal() {
           <Text style={[styles.bigPercentText, { color: colors.text }]}>{completionRate}%</Text>
 
           <View style={styles.iconSubtextRow}>
-            <CheckCircle2 size={13} color="#22c55e" />
+            <CheckCircle2 size={13} color={colors.textMuted} />
             <Text style={[styles.subtext, { color: colors.textMuted }]}>Tasks Finished</Text>
           </View>
         </View>
@@ -232,8 +232,8 @@ export function StatsJournal() {
       {/* 4. FOCUS TREND Card */}
       <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.sectionHeaderRow}>
-          <View style={styles.indigoIconBadge}>
-            <TrendingUp size={15} color="#818cf8" />
+          <View style={[styles.iconBadgeSmallSquare, { backgroundColor: colors.border }]}>
+            <TrendingUp size={15} color={colors.text} />
           </View>
           <Text style={[styles.monoHeaderTitle, { color: colors.text, fontFamily: monoFont }]}>
             FOCUS TREND
@@ -279,8 +279,8 @@ export function StatsJournal() {
       {/* 5. DISTRACTION ANALYSIS Card */}
       <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.sectionHeaderRow}>
-          <View style={styles.redIconBadge}>
-            <BarChart2 size={15} color="#f43f5e" />
+          <View style={[styles.iconBadgeSmallSquare, { backgroundColor: colors.border }]}>
+            <BarChart2 size={15} color={colors.text} />
           </View>
           <Text style={[styles.monoHeaderTitle, { color: colors.text, fontFamily: monoFont }]}>
             DISTRACTION ANALYSIS
