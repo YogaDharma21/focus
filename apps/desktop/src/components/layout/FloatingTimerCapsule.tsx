@@ -196,21 +196,13 @@ export const FloatingTimerCapsule: React.FC = () => {
     <div ref={containerRef} className="fixed top-1 left-1/2 -translate-x-1/2 z-50 select-none no-drag">
       {/* 1. Compact Pill inside TitleBar (When not expanded) */}
       {!isExpanded ? (
-        <button
-          onClick={() => setIsExpanded(true)}
-          className="bg-zinc-900 border border-zinc-800 rounded-full px-3 py-1 flex items-center justify-between gap-3 shadow-md hover:bg-zinc-800 hover:border-zinc-700 transition-all active:scale-98 text-xs"
-        >
-          <div className="flex items-center gap-1.5 min-w-0 text-left">
-            <span className="text-xs flex items-center">{renderModeIcon()}</span>
-            <span className="text-[11px] font-semibold text-zinc-200 tracking-tight">{timerLabel}</span>
-            {activeTask && (
-              <span className="text-[10px] text-zinc-400 truncate max-w-[70px]">
-                · {activeTask.text}
-              </span>
-            )}
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
+        isActive ? (
+          /* Active Playing State (Image 2 style: green border, timer icon, time, green dot) */
+          <button
+            onClick={() => setIsExpanded(true)}
+            className="bg-zinc-900 border border-emerald-500/80 rounded-full px-3.5 py-1 flex items-center gap-2.5 shadow-md hover:bg-zinc-850 hover:border-emerald-400 transition-all active:scale-98 text-xs group"
+          >
+            <span className="text-xs flex items-center text-zinc-200">{renderModeIcon()}</span>
             <span className="text-[11px] font-mono font-bold text-white tracking-wider">
               {timeString}
             </span>
@@ -219,17 +211,38 @@ export const FloatingTimerCapsule: React.FC = () => {
                 e.stopPropagation();
                 handleToggleTimer();
               }}
-              className="w-5 h-5 rounded-full bg-zinc-100 text-zinc-950 hover:bg-zinc-200 transition-all flex items-center justify-center shrink-0 shadow-sm"
-              title={isActive ? "Pause Timer" : "Start Timer"}
-            >
-              {isActive ? (
-                <Pause className="w-3 h-3 fill-zinc-950" />
-              ) : (
-                <Play className="w-3 h-3 fill-zinc-950 ml-0.5" />
-              )}
+              className="w-2.5 h-2.5 rounded-full bg-emerald-500 group-hover:bg-emerald-400 transition-all shrink-0 shadow-sm"
+              title="Pause Timer"
+            />
+          </button>
+        ) : (
+          /* Inactive / Paused State (Clean look: mode icon, timer label, time, play button) */
+          <button
+            onClick={() => setIsExpanded(true)}
+            className="bg-zinc-900 border border-zinc-800 rounded-full px-3 py-1 flex items-center justify-between gap-3 shadow-md hover:bg-zinc-800 hover:border-zinc-700 transition-all active:scale-98 text-xs"
+          >
+            <div className="flex items-center gap-1.5 min-w-0 text-left">
+              <span className="text-xs flex items-center">{renderModeIcon()}</span>
+              <span className="text-[11px] font-semibold text-zinc-200 tracking-tight">{timerLabel}</span>
             </div>
-          </div>
-        </button>
+
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-[11px] font-mono font-bold text-white tracking-wider">
+                {timeString}
+              </span>
+              <div
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleToggleTimer();
+                }}
+                className="w-5 h-5 rounded-full bg-zinc-100 text-zinc-950 hover:bg-zinc-200 transition-all flex items-center justify-center shrink-0 shadow-sm"
+                title="Start Timer"
+              >
+                <Play className="w-3 h-3 fill-zinc-950 ml-0.5" />
+              </div>
+            </div>
+          </button>
+        )
       ) : (
         /* 2. Expanded Card Popup dropdown matching user image mockup */
         <div className="w-[380px] bg-[#121214] border border-zinc-800 rounded-2xl p-4 shadow-2xl space-y-3.5 animate-in zoom-in-95 duration-200 relative mt-1">
