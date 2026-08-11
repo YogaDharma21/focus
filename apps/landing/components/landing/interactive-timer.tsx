@@ -9,8 +9,16 @@ export function InteractiveTimer() {
   const [seconds, setSeconds] = useState<number>(25 * 60)
   const [flowSeconds, setFlowSeconds] = useState<number>(1200)
   const [isMusicPlaying, setIsMusicPlaying] = useState<boolean>(false)
+  const [volume, setVolume] = useState<number>(0.5) // Default volume at 50%
   const [selectedTask, setSelectedTask] = useState<string>("Landing Page Design")
   const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  // Initialize and update volume
+  useEffect(() => {
+    if (audioRef.current) {
+      audioRef.current.volume = volume
+    }
+  }, [volume])
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null
@@ -64,11 +72,19 @@ export function InteractiveTimer() {
       audioRef.current.pause()
       setIsMusicPlaying(false)
     } else {
+      audioRef.current.volume = volume
       audioRef.current.play().then(() => {
         setIsMusicPlaying(true)
       }).catch((err) => {
         console.error("Audio playback error:", err)
       })
+    }
+  }
+
+  const handleVolumeChange = (newVol: number) => {
+    setVolume(newVol)
+    if (audioRef.current) {
+      audioRef.current.volume = newVol
     }
   }
 
@@ -94,13 +110,13 @@ export function InteractiveTimer() {
             Try the Focus Timer
           </h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            Test Pomodoro, Break, and Flow modes with intelligent break calculation and real Lofi music.
+            Test Pomodoro, Break, and Flow modes with intelligent break calculation and adjustable Lofi music.
           </p>
         </div>
 
         {/* Demo Card */}
         <div className="max-w-2xl mx-auto bg-card border border-border rounded-2xl p-6 sm:p-8">
-          {/* Mode Switcher Bar matching actual app */}
+          {/* Mode Switcher Bar */}
           <div className="flex items-center justify-center gap-1 mb-6 p-1 bg-muted/60 rounded-xl max-w-xs sm:max-w-sm mx-auto border border-border/50">
             <button
               onClick={() => handleModeChange("pomodoro")}
@@ -209,11 +225,11 @@ export function InteractiveTimer() {
             </div>
           </div>
 
-          {/* Music Section */}
+          {/* Music & Volume Control Bar */}
           <div className="mt-8 pt-4 border-t border-border">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                {isMusicPlaying ? (
+                {isMusicPlaying && volume > 0 ? (
                   <Volume2 className="size-4 text-foreground animate-pulse" />
                 ) : (
                   <VolumeX className="size-4 text-muted-foreground" />
@@ -221,17 +237,38 @@ export function InteractiveTimer() {
                 <span className="text-xs font-medium text-foreground">Music:</span>
               </div>
 
-              <button
-                onClick={toggleMusic}
-                className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors ${
-                  isMusicPlaying
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <span>🎧</span>
-                <span>{isMusicPlaying ? "Playing Lofi Beats" : "Play Lofi Beats"}</span>
-              </button>
+              <div className="flex items-center gap-3">
+                {/* Volume Slider Control */}
+                <div className="flex items-center gap-2 bg-muted/60 px-2.5 py-1.5 rounded-lg border border-border/60">
+                  <Volume2 className="size-3 text-muted-foreground shrink-0" />
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={volume}
+                    onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                    className="w-16 sm:w-20 h-1 bg-muted-foreground/30 rounded-lg appearance-none cursor-pointer accent-primary"
+                    title={`Volume: ${Math.round(volume * 100)}%`}
+                  />
+                  <span className="text-[10px] font-mono text-muted-foreground min-w-[28px] text-right">
+                    {Math.round(volume * 100)}%
+                  </span>
+                </div>
+
+                {/* Play / Pause Toggle Button */}
+                <button
+                  onClick={toggleMusic}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors ${
+                    isMusicPlaying
+                      ? "bg-primary text-primary-foreground"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <span>🎧</span>
+                  <span>{isMusicPlaying ? "Playing Lofi Beats" : "Play Lofi Beats"}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
