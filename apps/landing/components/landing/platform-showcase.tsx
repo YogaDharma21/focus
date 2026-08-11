@@ -15,7 +15,7 @@ export function PlatformShowcase() {
       url: "https://focustracks.vercel.app",
       icon: Globe,
       tech: ["Next.js 16", "React 19", "Tailwind CSS", "Zustand"],
-      tagline: "Full-featured web application available at focustracks.vercel.app.",
+      tagline: "Full-featured web application available in your browser.",
       description:
         "The web version brings together customizable Pomodoro & Flow timers, deep focus full-screen mode, lofi music player, and task tracking directly in your browser.",
       features: [
@@ -197,7 +197,7 @@ export function PlatformShowcase() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-opacity"
                   >
-                    Visit Website Version ({currentApp.url})
+                    Launch Web App
                     <ExternalLink className="size-3.5" />
                   </a>
                 </div>
