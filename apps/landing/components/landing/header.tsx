@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Timer, Sparkles, Menu, X, ArrowUpRight } from "lucide-react"
+import { Timer, Menu, X, ExternalLink } from "lucide-react"
 
 function GithubIcon({ className }: { className?: string }) {
   return (
@@ -29,60 +29,57 @@ export function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
         scrolled
-          ? "bg-background/80 backdrop-blur-md border-b border-border/50 shadow-sm py-3"
+          ? "bg-background/90 backdrop-blur-md border-b border-border py-3"
           : "bg-transparent py-5"
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        {/* Brand Logo */}
-        <a href="#" className="flex items-center gap-2.5 group">
-          <div className="size-9 rounded-xl bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 p-0.5 shadow-md shadow-purple-500/20 group-hover:scale-105 transition-transform">
-            <div className="w-full h-full bg-background rounded-[10px] flex items-center justify-center">
-              <Timer className="size-5 text-indigo-500 dark:text-indigo-400 group-hover:rotate-12 transition-transform" />
-            </div>
+        {/* Brand Logo - Minimal */}
+        <a href="#" className="flex items-center gap-2.5">
+          <div className="size-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
+            <Timer className="size-4" />
           </div>
           <div className="flex flex-col">
-            <span className="font-bold text-lg leading-none tracking-tight bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text text-transparent">
+            <span className="font-bold text-base tracking-tight text-foreground">
               Focus
             </span>
-            <span className="text-[10px] font-mono text-muted-foreground tracking-widest uppercase font-semibold">
+            <span className="text-[10px] font-mono text-muted-foreground tracking-wider uppercase">
               Productivity
             </span>
           </div>
         </a>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1 bg-muted/40 backdrop-blur-sm p-1.5 rounded-full border border-border/40">
+        <nav className="hidden md:flex items-center gap-1 bg-muted/50 p-1 rounded-full border border-border">
           <a
             href="#features"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-background/80 rounded-full transition-all"
+            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-full transition-colors"
           >
             Features
           </a>
           <a
             href="#ecosystem"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-background/80 rounded-full transition-all"
+            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-full transition-colors"
           >
             Ecosystem
           </a>
           <a
             href="#interactive-demo"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-background/80 rounded-full transition-all flex items-center gap-1"
+            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-full transition-colors"
           >
-            <Sparkles className="size-3 text-amber-500 animate-pulse" />
-            Live Demo
+            Try Demo
           </a>
           <a
             href="#download"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-background/80 rounded-full transition-all"
+            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-full transition-colors"
           >
             Downloads
           </a>
           <a
             href="#faq"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-background/80 rounded-full transition-all"
+            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-full transition-colors"
           >
             FAQ
           </a>
@@ -100,11 +97,13 @@ export function Header() {
             <GithubIcon className="size-5" />
           </a>
           <a
-            href="#interactive-demo"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity shadow-md shadow-primary/20"
+            href="https://focustracks.vercel.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
           >
-            Launch App
-            <ArrowUpRight className="size-3.5" />
+            Launch Web App
+            <ExternalLink className="size-3.5" />
           </a>
         </div>
 
@@ -120,39 +119,39 @@ export function Header() {
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-background/95 backdrop-blur-xl border-b border-border/50 px-6 py-6 space-y-4">
+        <div className="md:hidden bg-background border-b border-border px-6 py-6 space-y-4">
           <a
             href="#features"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-sm font-medium text-foreground py-2 border-b border-border/30"
+            className="block text-sm font-medium text-foreground py-2 border-b border-border/50"
           >
             Features
           </a>
           <a
             href="#ecosystem"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-sm font-medium text-foreground py-2 border-b border-border/30"
+            className="block text-sm font-medium text-foreground py-2 border-b border-border/50"
           >
             Ecosystem
           </a>
           <a
             href="#interactive-demo"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-sm font-medium text-foreground py-2 border-b border-border/30"
+            className="block text-sm font-medium text-foreground py-2 border-b border-border/50"
           >
-            Live Demo
+            Try Demo
           </a>
           <a
             href="#download"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-sm font-medium text-foreground py-2 border-b border-border/30"
+            className="block text-sm font-medium text-foreground py-2 border-b border-border/50"
           >
             Downloads
           </a>
           <a
             href="#faq"
             onClick={() => setMobileMenuOpen(false)}
-            className="block text-sm font-medium text-foreground py-2 border-b border-border/30"
+            className="block text-sm font-medium text-foreground py-2 border-b border-border/50"
           >
             FAQ
           </a>
@@ -164,14 +163,16 @@ export function Header() {
               className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
             >
               <GithubIcon className="size-5" />
-              GitHub Repository
+              GitHub
             </a>
             <a
-              href="#interactive-demo"
-              onClick={() => setMobileMenuOpen(false)}
-              className="px-4 py-2 rounded-full text-xs font-semibold bg-primary text-primary-foreground"
+              href="https://focustracks.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 px-4 py-2 rounded-full text-xs font-semibold bg-primary text-primary-foreground"
             >
-              Launch App
+              Launch Web App
+              <ExternalLink className="size-3" />
             </a>
           </div>
         </div>

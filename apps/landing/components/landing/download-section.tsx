@@ -1,6 +1,6 @@
 "use client"
 
-import { Globe, Monitor, Smartphone, Shield, Download, ExternalLink, ArrowRight } from "lucide-react"
+import { Globe, Monitor, Smartphone, Shield, Download, ExternalLink } from "lucide-react"
 
 export function DownloadSection() {
   const downloads = [
@@ -8,10 +8,10 @@ export function DownloadSection() {
       title: "Focus Web",
       category: "Web Application",
       icon: Globe,
-      description: "Access your timers and tasks directly from any web browser without installation.",
+      description: "Access your timers and tasks directly at focustracks.vercel.app in any browser.",
       buttonText: "Launch Web App",
-      buttonLink: "#interactive-demo",
-      badge: "No Install Required",
+      buttonLink: "https://focustracks.vercel.app",
+      badge: "focustracks.vercel.app",
       isPrimary: true,
     },
     {
@@ -47,55 +47,53 @@ export function DownloadSection() {
   ]
 
   return (
-    <section id="download" className="py-24 bg-muted/20 relative">
+    <section id="download" className="py-20 bg-muted/30 border-t border-border relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-16">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold mb-4">
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted border border-border text-foreground text-xs font-medium mb-3">
             <Download className="size-3.5" />
-            <span>Available Everywhere</span>
+            <span>Downloads</span>
           </div>
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
-            Get Focus on All Your Devices
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">
+            Get Focus on All Devices
           </h2>
-          <p className="mt-4 text-base sm:text-lg text-muted-foreground">
-            Download the native desktop app, mobile app, or browser extension — or start using the web app immediately.
+          <p className="mt-3 text-sm text-muted-foreground">
+            Download the native apps or start using the web version immediately at focustracks.vercel.app.
           </p>
         </div>
 
         {/* Downloads Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {downloads.map((item) => {
             const Icon = item.icon
             return (
               <div
                 key={item.title}
-                className={`rounded-3xl p-6 border transition-all flex flex-col justify-between ${
+                className={`rounded-2xl p-5 border transition-colors flex flex-col justify-between ${
                   item.isPrimary
-                    ? "bg-card border-indigo-500/50 shadow-xl ring-1 ring-indigo-500/30 scale-[1.02]"
-                    : "bg-card/60 border-border/60 hover:border-border hover:bg-card shadow-sm"
+                    ? "bg-card border-foreground/40"
+                    : "bg-card/60 border-border hover:border-border"
                 }`}
               >
                 <div>
-                  <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center justify-between mb-3">
                     <div
-                      className={`p-3 rounded-2xl ${
-                        item.isPrimary
-                          ? "bg-indigo-500 text-white"
-                          : "bg-muted text-muted-foreground"
+                      className={`p-2.5 rounded-lg ${
+                        item.isPrimary ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                       }`}
                     >
-                      <Icon className="size-6" />
+                      <Icon className="size-5" />
                     </div>
-                    <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded-md">
+                    <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded">
                       {item.badge}
                     </span>
                   </div>
 
-                  <span className="text-[11px] font-semibold text-indigo-500 uppercase tracking-wider">
+                  <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                     {item.category}
                   </span>
-                  <h3 className="text-lg font-bold tracking-tight text-foreground mt-0.5">
+                  <h3 className="text-base font-bold tracking-tight text-foreground mt-0.5">
                     {item.title}
                   </h3>
                   <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
@@ -103,23 +101,19 @@ export function DownloadSection() {
                   </p>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-border/40">
+                <div className="mt-5 pt-3 border-t border-border">
                   <a
                     href={item.buttonLink}
-                    target={item.buttonLink.startsWith("http") ? "_blank" : "_self"}
+                    target="_blank"
                     rel="noopener noreferrer"
-                    className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
+                    className={`w-full py-2 px-3 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 ${
                       item.isPrimary
-                        ? "bg-primary text-primary-foreground hover:opacity-90 shadow-md shadow-indigo-500/20"
+                        ? "bg-primary text-primary-foreground hover:opacity-90"
                         : "bg-muted hover:bg-muted/80 text-foreground"
                     }`}
                   >
                     <span>{item.buttonText}</span>
-                    {item.buttonLink.startsWith("http") ? (
-                      <ExternalLink className="size-3.5" />
-                    ) : (
-                      <ArrowRight className="size-3.5" />
-                    )}
+                    <ExternalLink className="size-3.5" />
                   </a>
                 </div>
               </div>
