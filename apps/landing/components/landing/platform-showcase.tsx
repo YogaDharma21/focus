@@ -45,7 +45,7 @@ export function PlatformShowcase() {
       features: [
         "System tray / Menu bar quick timer menu",
         "Global keyboard shortcuts to start/pause sessions",
-        "Offline audio player with pre-loaded tracks",
+        "Offline audio player with preloaded tracks",
         "Native OS desktop notifications",
         "Zero-latency local storage sync",
       ],
@@ -231,44 +231,39 @@ export function PlatformShowcase() {
               </div>
             </div>
 
-            {/* Screenshots Right - Uncropped Adaptive View */}
+            {/* Screenshots Right */}
             <div className="lg:col-span-7 space-y-3">
-              <div className="relative rounded-xl border border-border bg-background p-2 sm:p-4 min-h-[350px] sm:min-h-[440px] flex items-center justify-center">
+              <div className="rounded-xl border border-border bg-background overflow-hidden flex items-center justify-center min-h-[300px] sm:min-h-[420px]">
                 {activePlatform === "mobile" ? (
-                  /* Mobile Phone Frame */
-                  <div className="w-full max-w-[260px] sm:max-w-[290px] rounded-[32px] border-4 border-muted bg-card p-2 shadow-md overflow-hidden">
-                    <div className="relative rounded-[24px] overflow-hidden aspect-[9/19] bg-background">
+                  <div className="w-full max-w-[270px] rounded-[32px] border-4 border-border bg-card p-2 my-4 shadow-md overflow-hidden">
+                    <div className="rounded-[24px] overflow-hidden aspect-[9/19] bg-background">
                       <Image
                         src={currentApp.screenshots[selectedShotIndex]?.src || currentApp.screenshots[0].src}
                         alt={currentApp.screenshots[selectedShotIndex]?.name || currentApp.name}
                         width={600}
                         height={1200}
-                        className="object-contain w-full h-full"
+                        className="w-full h-full object-cover"
                       />
                     </div>
                   </div>
                 ) : activePlatform === "extension" ? (
-                  /* Extension Popup Frame */
-                  <div className="w-full max-w-[400px] rounded-xl border border-border bg-card p-2 shadow-md overflow-hidden">
-                    <div className="relative rounded-lg overflow-hidden aspect-[4/3] bg-background flex items-center justify-center">
-                      <Image
-                        src={currentApp.screenshots[selectedShotIndex]?.src || currentApp.screenshots[0].src}
-                        alt={currentApp.screenshots[selectedShotIndex]?.name || currentApp.name}
-                        width={800}
-                        height={600}
-                        className="object-contain w-full h-full"
-                      />
-                    </div>
+                  <div className="w-full max-w-[400px] rounded-xl border border-border bg-card p-2 my-4 shadow-md overflow-hidden">
+                    <Image
+                      src={currentApp.screenshots[selectedShotIndex]?.src || currentApp.screenshots[0].src}
+                      alt={currentApp.screenshots[selectedShotIndex]?.name || currentApp.name}
+                      width={800}
+                      height={600}
+                      className="w-full h-auto object-contain rounded-lg"
+                    />
                   </div>
                 ) : (
-                  /* Web / Desktop Frame - Uncropped */
-                  <div className="w-full max-h-[460px] flex items-center justify-center">
+                  <div className="w-full overflow-hidden flex items-center justify-center">
                     <Image
                       src={currentApp.screenshots[selectedShotIndex]?.src || currentApp.screenshots[0].src}
                       alt={currentApp.screenshots[selectedShotIndex]?.name || currentApp.name}
                       width={1000}
                       height={625}
-                      className="object-contain max-h-[440px] w-auto mx-auto rounded-md"
+                      className="w-full h-auto max-h-[460px] object-cover object-top"
                     />
                   </div>
                 )}

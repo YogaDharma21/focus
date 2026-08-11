@@ -103,10 +103,10 @@ export function Hero() {
           </div>
         </div>
 
-        {/* Platform Preview Mockup Container */}
+        {/* Platform Preview Showcase */}
         <div className="mt-12 max-w-5xl mx-auto">
           {/* Tab Selector */}
-          <div className="flex items-center justify-center gap-1.5 mb-5 p-1 bg-muted rounded-xl border border-border max-w-fit mx-auto">
+          <div className="flex items-center justify-center gap-1.5 mb-6 p-1 bg-muted rounded-xl border border-border max-w-fit mx-auto">
             {platforms.map((platform) => {
               const Icon = platform.icon
               const isActive = activeTab === platform.id
@@ -127,66 +127,80 @@ export function Hero() {
             })}
           </div>
 
-          {/* Screenshot Device Showcase Frame */}
-          <div className="rounded-2xl border border-border bg-card p-2 sm:p-4 overflow-hidden">
-            {/* Window Top Controls Bar */}
-            <div className="flex items-center justify-between px-3 py-1.5 mb-3 bg-muted/50 rounded-lg border border-border/50 text-[11px] font-mono text-muted-foreground">
-              <div className="flex items-center gap-1.5">
-                <div className="size-2.5 rounded-full bg-border" />
-                <div className="size-2.5 rounded-full bg-border" />
-                <div className="size-2.5 rounded-full bg-border" />
+          {/* Screenshot Display Frame */}
+          {activeTab === "mobile" ? (
+            /* Mobile Frame */
+            <div className="max-w-[300px] sm:max-w-[330px] mx-auto rounded-[40px] border-4 border-border bg-card p-2.5 shadow-xl">
+              <div className="flex items-center justify-between px-3 py-1.5 mb-2 bg-muted/60 rounded-full text-[10px] font-mono text-muted-foreground">
+                <span className="w-2 h-2 rounded-full bg-foreground/40" />
+                <span>focus-app / mobile</span>
+                <span>{currentPlatform.badge}</span>
               </div>
-              <span>focus-app / {currentPlatform.id}</span>
-              <span className="text-[10px] text-muted-foreground font-sans">
-                {currentPlatform.badge}
-              </span>
+              <div className="rounded-[30px] overflow-hidden border border-border bg-background aspect-[9/19]">
+                <Image
+                  src={currentPlatform.imgSrc}
+                  alt={currentPlatform.alt}
+                  width={600}
+                  height={1200}
+                  className="w-full h-full object-cover"
+                  priority
+                />
+              </div>
             </div>
+          ) : activeTab === "extension" ? (
+            /* Extension Popup Frame */
+            <div className="max-w-[450px] mx-auto rounded-2xl border border-border bg-card p-3 shadow-xl">
+              <div className="flex items-center justify-between px-3 py-1.5 mb-2 bg-muted/60 rounded-lg border border-border/50 text-[11px] font-mono text-muted-foreground">
+                <div className="flex items-center gap-1.5">
+                  <div className="size-2.5 rounded-full bg-border" />
+                  <div className="size-2.5 rounded-full bg-border" />
+                  <div className="size-2.5 rounded-full bg-border" />
+                </div>
+                <span>focus-app / extension</span>
+                <span className="text-[10px] text-muted-foreground">{currentPlatform.badge}</span>
+              </div>
+              <div className="rounded-lg overflow-hidden border border-border bg-background">
+                <Image
+                  src={currentPlatform.imgSrc}
+                  alt={currentPlatform.alt}
+                  width={800}
+                  height={600}
+                  className="w-full h-auto object-contain"
+                  priority
+                />
+              </div>
+            </div>
+          ) : (
+            /* Desktop / Web App Full Window Frame */
+            <div className="rounded-2xl border border-border bg-card overflow-hidden shadow-xl text-left">
+              {/* Window Header */}
+              <div className="flex items-center justify-between px-4 py-2.5 bg-muted/60 border-b border-border text-[11px] font-mono text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <div className="size-2.5 rounded-full bg-foreground/20" />
+                    <div className="size-2.5 rounded-full bg-foreground/20" />
+                    <div className="size-2.5 rounded-full bg-foreground/20" />
+                  </div>
+                  <span className="ml-2 font-medium text-foreground">focus-app / {currentPlatform.id}</span>
+                </div>
+                <span className="text-[11px] font-sans text-muted-foreground font-medium">
+                  {currentPlatform.badge}
+                </span>
+              </div>
 
-            {/* Adaptive Screen Display Container */}
-            <div className="relative rounded-lg border border-border bg-background p-2 sm:p-4 flex items-center justify-center min-h-[350px] sm:min-h-[480px]">
-              {activeTab === "mobile" ? (
-                /* Mobile Phone Frame */
-                <div className="w-full max-w-[280px] sm:max-w-[320px] rounded-[36px] border-4 border-muted bg-card p-2 shadow-md overflow-hidden">
-                  <div className="relative rounded-[28px] overflow-hidden aspect-[9/19] bg-background">
-                    <Image
-                      src={currentPlatform.imgSrc}
-                      alt={currentPlatform.alt}
-                      width={600}
-                      height={1200}
-                      className="object-contain w-full h-full"
-                      priority
-                    />
-                  </div>
-                </div>
-              ) : activeTab === "extension" ? (
-                /* Extension Popup Frame */
-                <div className="w-full max-w-[420px] rounded-xl border border-border bg-card p-2 shadow-md overflow-hidden">
-                  <div className="relative rounded-lg overflow-hidden aspect-[4/3] sm:aspect-[16/11] bg-background flex items-center justify-center">
-                    <Image
-                      src={currentPlatform.imgSrc}
-                      alt={currentPlatform.alt}
-                      width={800}
-                      height={600}
-                      className="object-contain w-full h-full"
-                      priority
-                    />
-                  </div>
-                </div>
-              ) : (
-                /* Desktop & Web App Frame - Full Uncropped View */
-                <div className="w-full relative rounded-lg overflow-hidden max-h-[520px] flex items-center justify-center">
-                  <Image
-                    src={currentPlatform.imgSrc}
-                    alt={currentPlatform.alt}
-                    width={1200}
-                    height={750}
-                    className="object-contain max-h-[500px] w-auto mx-auto rounded-md"
-                    priority
-                  />
-                </div>
-              )}
+              {/* Full Image Container - Edge to Edge */}
+              <div className="bg-background overflow-hidden flex items-center justify-center">
+                <Image
+                  src={currentPlatform.imgSrc}
+                  alt={currentPlatform.alt}
+                  width={1200}
+                  height={800}
+                  className="w-full h-auto max-h-[580px] object-cover object-top"
+                  priority
+                />
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </section>
