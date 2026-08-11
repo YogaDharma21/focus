@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Timer, Coffee, Clock, Play, Pause, RotateCcw, Volume2, VolumeX, CheckCircle, Calculator } from "lucide-react"
 
 export function InteractiveTimer() {
@@ -8,8 +8,9 @@ export function InteractiveTimer() {
   const [isRunning, setIsRunning] = useState<boolean>(false)
   const [seconds, setSeconds] = useState<number>(25 * 60)
   const [flowSeconds, setFlowSeconds] = useState<number>(1200)
-  const [isMusicPlaying, setIsMusicPlaying] = useState<boolean>(true)
+  const [isMusicPlaying, setIsMusicPlaying] = useState<boolean>(false)
   const [selectedTask, setSelectedTask] = useState<string>("Landing Page Design")
+  const audioRef = useRef<HTMLAudioElement | null>(null)
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null
@@ -57,6 +58,20 @@ export function InteractiveTimer() {
     }
   }
 
+  const toggleMusic = () => {
+    if (!audioRef.current) return
+    if (isMusicPlaying) {
+      audioRef.current.pause()
+      setIsMusicPlaying(false)
+    } else {
+      audioRef.current.play().then(() => {
+        setIsMusicPlaying(true)
+      }).catch((err) => {
+        console.error("Audio playback error:", err)
+      })
+    }
+  }
+
   const tasks = [
     "Landing Page Design",
     "Focus Shield Integration",
@@ -66,6 +81,9 @@ export function InteractiveTimer() {
 
   return (
     <section id="interactive-demo" className="py-20 relative">
+      {/* Audio Element for Lofi Beats */}
+      <audio ref={audioRef} src="/shortlofi.mp3" loop preload="auto" />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-12">
@@ -76,7 +94,7 @@ export function InteractiveTimer() {
             Try the Focus Timer
           </h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            Test Pomodoro, Break, and Flow modes with intelligent break calculation and built-in Lofi music.
+            Test Pomodoro, Break, and Flow modes with intelligent break calculation and real Lofi music.
           </p>
         </div>
 
@@ -196,7 +214,7 @@ export function InteractiveTimer() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {isMusicPlaying ? (
-                  <Volume2 className="size-4 text-foreground" />
+                  <Volume2 className="size-4 text-foreground animate-pulse" />
                 ) : (
                   <VolumeX className="size-4 text-muted-foreground" />
                 )}
@@ -204,7 +222,7 @@ export function InteractiveTimer() {
               </div>
 
               <button
-                onClick={() => setIsMusicPlaying(!isMusicPlaying)}
+                onClick={toggleMusic}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors ${
                   isMusicPlaying
                     ? "bg-primary text-primary-foreground"
@@ -212,7 +230,7 @@ export function InteractiveTimer() {
                 }`}
               >
                 <span>🎧</span>
-                <span>Lofi Beats</span>
+                <span>{isMusicPlaying ? "Playing Lofi Beats" : "Play Lofi Beats"}</span>
               </button>
             </div>
           </div>
