@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { Timer, Menu, X, ExternalLink } from "lucide-react"
 
 function GithubIcon({ className }: { className?: string }) {
@@ -36,11 +37,15 @@ export function Header() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative flex items-center justify-between">
-        {/* Brand Logo - Minimal */}
-        <a href="#" className="flex items-center gap-2">
-          <div className="size-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
-            <Timer className="size-4" />
-          </div>
+        {/* Brand Logo - Minimal with Actual Focus Target Icon */}
+        <a href="#" className="flex items-center gap-2.5">
+          <Image
+            src="/icon.png"
+            alt="Focus App Icon"
+            width={32}
+            height={32}
+            className="size-8 rounded-lg object-contain"
+          />
           <span className="font-bold text-lg tracking-tight text-foreground">
             Focus
           </span>
