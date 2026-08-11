@@ -233,28 +233,31 @@ export function PlatformShowcase() {
 
             {/* Screenshots Right */}
             <div className="lg:col-span-7 space-y-3">
-              <div className="rounded-xl border border-border bg-background overflow-hidden flex items-center justify-center min-h-[300px] sm:min-h-[420px]">
+              <div className="rounded-xl border border-border bg-background overflow-hidden flex items-center justify-center min-h-[300px] sm:min-h-[420px] p-2">
                 {activePlatform === "mobile" ? (
-                  <div className="w-full max-w-[270px] rounded-[32px] border-4 border-border bg-card p-2 my-4 shadow-md overflow-hidden">
-                    <div className="rounded-[24px] overflow-hidden aspect-[9/19] bg-background">
+                  <div className="w-full max-w-[260px] sm:max-w-[280px] rounded-[36px] border-4 border-neutral-800 bg-neutral-950 p-2 my-2 shadow-md overflow-hidden">
+                    <div className="w-16 h-3 bg-neutral-800 rounded-full mx-auto mb-1.5" />
+                    <div className="rounded-[26px] overflow-hidden aspect-[720/1607] bg-background">
                       <Image
                         src={currentApp.screenshots[selectedShotIndex]?.src || currentApp.screenshots[0].src}
                         alt={currentApp.screenshots[selectedShotIndex]?.name || currentApp.name}
-                        width={600}
-                        height={1200}
+                        width={720}
+                        height={1607}
                         className="w-full h-full object-cover"
                       />
                     </div>
                   </div>
                 ) : activePlatform === "extension" ? (
-                  <div className="w-full max-w-[400px] rounded-xl border border-border bg-card p-2 my-4 shadow-md overflow-hidden">
-                    <Image
-                      src={currentApp.screenshots[selectedShotIndex]?.src || currentApp.screenshots[0].src}
-                      alt={currentApp.screenshots[selectedShotIndex]?.name || currentApp.name}
-                      width={800}
-                      height={600}
-                      className="w-full h-auto object-contain rounded-lg"
-                    />
+                  <div className="w-full max-w-[360px] rounded-xl border border-border bg-card p-2 my-2 shadow-md overflow-hidden">
+                    <div className="rounded-lg overflow-hidden aspect-[525/720] bg-background">
+                      <Image
+                        src={currentApp.screenshots[selectedShotIndex]?.src || currentApp.screenshots[0].src}
+                        alt={currentApp.screenshots[selectedShotIndex]?.name || currentApp.name}
+                        width={525}
+                        height={720}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
                   </div>
                 ) : (
                   <div className="w-full overflow-hidden flex items-center justify-center">

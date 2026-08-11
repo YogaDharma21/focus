@@ -129,43 +129,40 @@ export function Hero() {
 
           {/* Screenshot Display Frame */}
           {activeTab === "mobile" ? (
-            /* Mobile Frame */
-            <div className="max-w-[300px] sm:max-w-[330px] mx-auto rounded-[40px] border-4 border-border bg-card p-2.5 shadow-xl">
-              <div className="flex items-center justify-between px-3 py-1.5 mb-2 bg-muted/60 rounded-full text-[10px] font-mono text-muted-foreground">
-                <span className="w-2 h-2 rounded-full bg-foreground/40" />
-                <span>focus-app / mobile</span>
-                <span>{currentPlatform.badge}</span>
-              </div>
-              <div className="rounded-[30px] overflow-hidden border border-border bg-background aspect-[9/19]">
+            /* Authentic Mobile Phone Frame */
+            <div className="max-w-[310px] sm:max-w-[340px] mx-auto rounded-[48px] border-[8px] border-neutral-800 bg-neutral-950 p-2 shadow-2xl overflow-hidden relative">
+              {/* Dynamic Island / Notch */}
+              <div className="w-24 h-4 bg-neutral-800 rounded-full mx-auto mb-2" />
+              <div className="rounded-[36px] overflow-hidden border border-neutral-800 bg-background aspect-[720/1607]">
                 <Image
                   src={currentPlatform.imgSrc}
                   alt={currentPlatform.alt}
-                  width={600}
-                  height={1200}
+                  width={720}
+                  height={1607}
                   className="w-full h-full object-cover"
                   priority
                 />
               </div>
             </div>
           ) : activeTab === "extension" ? (
-            /* Extension Popup Frame */
-            <div className="max-w-[450px] mx-auto rounded-2xl border border-border bg-card p-3 shadow-xl">
+            /* Browser Extension Popup Box Frame */
+            <div className="max-w-[380px] sm:max-w-[420px] mx-auto rounded-2xl border border-border bg-card p-3 shadow-xl text-left">
               <div className="flex items-center justify-between px-3 py-1.5 mb-2 bg-muted/60 rounded-lg border border-border/50 text-[11px] font-mono text-muted-foreground">
                 <div className="flex items-center gap-1.5">
-                  <div className="size-2.5 rounded-full bg-border" />
-                  <div className="size-2.5 rounded-full bg-border" />
-                  <div className="size-2.5 rounded-full bg-border" />
+                  <div className="size-2 rounded-full bg-foreground/20" />
+                  <div className="size-2 rounded-full bg-foreground/20" />
+                  <div className="size-2 rounded-full bg-foreground/20" />
                 </div>
-                <span>focus-app / extension</span>
+                <span>Focus Extension Popup</span>
                 <span className="text-[10px] text-muted-foreground">{currentPlatform.badge}</span>
               </div>
-              <div className="rounded-lg overflow-hidden border border-border bg-background">
+              <div className="rounded-lg overflow-hidden border border-border bg-background aspect-[525/720]">
                 <Image
                   src={currentPlatform.imgSrc}
                   alt={currentPlatform.alt}
-                  width={800}
-                  height={600}
-                  className="w-full h-auto object-contain"
+                  width={525}
+                  height={720}
+                  className="w-full h-full object-cover"
                   priority
                 />
               </div>
