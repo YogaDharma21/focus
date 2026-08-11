@@ -1,10 +1,10 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Play, Pause, RotateCcw, Volume2, VolumeX, CheckCircle, Calculator, Zap } from "lucide-react"
+import { Timer, Coffee, Clock, Play, Pause, RotateCcw, Volume2, VolumeX, CheckCircle, Calculator } from "lucide-react"
 
 export function InteractiveTimer() {
-  const [mode, setMode] = useState<"pomodoro" | "flow">("pomodoro")
+  const [mode, setMode] = useState<"pomodoro" | "break" | "flow">("pomodoro")
   const [isRunning, setIsRunning] = useState<boolean>(false)
   const [seconds, setSeconds] = useState<number>(25 * 60)
   const [flowSeconds, setFlowSeconds] = useState<number>(1200)
@@ -15,7 +15,7 @@ export function InteractiveTimer() {
     let interval: NodeJS.Timeout | null = null
     if (isRunning) {
       interval = setInterval(() => {
-        if (mode === "pomodoro") {
+        if (mode === "pomodoro" || mode === "break") {
           setSeconds((prev) => (prev > 0 ? prev - 1 : 0))
         } else {
           setFlowSeconds((prev) => prev + 1)
@@ -36,11 +36,13 @@ export function InteractiveTimer() {
   // Calculate 1/5th Flow break duration
   const calculatedBreakMins = Math.max(1, Math.round(flowSeconds / 5 / 60))
 
-  const handleModeChange = (newMode: "pomodoro" | "flow") => {
+  const handleModeChange = (newMode: "pomodoro" | "break" | "flow") => {
     setMode(newMode)
     setIsRunning(false)
     if (newMode === "pomodoro") {
       setSeconds(25 * 60)
+    } else if (newMode === "break") {
+      setSeconds(5 * 60)
     }
   }
 
@@ -48,6 +50,8 @@ export function InteractiveTimer() {
     setIsRunning(false)
     if (mode === "pomodoro") {
       setSeconds(25 * 60)
+    } else if (mode === "break") {
+      setSeconds(5 * 60)
     } else {
       setFlowSeconds(0)
     }
@@ -72,34 +76,46 @@ export function InteractiveTimer() {
             Try the Focus Timer
           </h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            Test both Pomodoro and Flow modes with intelligent break calculation and built-in Lofi music.
+            Test Pomodoro, Break, and Flow modes with intelligent break calculation and built-in Lofi music.
           </p>
         </div>
 
-        {/* Demo Card - Minimal */}
+        {/* Demo Card */}
         <div className="max-w-2xl mx-auto bg-card border border-border rounded-2xl p-6 sm:p-8">
-          {/* Mode Switcher */}
-          <div className="flex items-center justify-center gap-2 mb-6 p-1 bg-muted rounded-xl max-w-xs mx-auto">
+          {/* Mode Switcher Bar matching actual app */}
+          <div className="flex items-center justify-center gap-1 mb-6 p-1 bg-muted/60 rounded-xl max-w-xs sm:max-w-sm mx-auto border border-border/50">
             <button
               onClick={() => handleModeChange("pomodoro")}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors ${
+              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${
                 mode === "pomodoro"
-                  ? "bg-background text-foreground border border-border"
+                  ? "bg-background text-foreground border border-border shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Pomodoro (25m)
+              <Timer className="size-3.5" />
+              <span>Pomodoro</span>
+            </button>
+            <button
+              onClick={() => handleModeChange("break")}
+              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${
+                mode === "break"
+                  ? "bg-background text-foreground border border-border shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Coffee className="size-3.5" />
+              <span>Break</span>
             </button>
             <button
               onClick={() => handleModeChange("flow")}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1 ${
+              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${
                 mode === "flow"
-                  ? "bg-background text-foreground border border-border"
+                  ? "bg-background text-foreground border border-border shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <Zap className="size-3.5" />
-              Flow Mode
+              <Clock className="size-3.5" />
+              <span>Flow</span>
             </button>
           </div>
 
@@ -130,11 +146,15 @@ export function InteractiveTimer() {
           <div className="flex flex-col items-center justify-center my-4">
             <div className="size-56 sm:size-64 rounded-full border-2 border-border bg-background flex flex-col items-center justify-center">
               <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1">
-                {mode === "pomodoro" ? "Focus Session" : "Flow Mode Active"}
+                {mode === "pomodoro"
+                  ? "Focus Session"
+                  : mode === "break"
+                  ? "Break Time"
+                  : "Flow Mode Active"}
               </span>
 
               <span className="text-5xl font-black font-mono tracking-tight text-foreground">
-                {mode === "pomodoro" ? formatTime(seconds) : formatTime(flowSeconds)}
+                {mode === "flow" ? formatTime(flowSeconds) : formatTime(seconds)}
               </span>
 
               {mode === "flow" && (
