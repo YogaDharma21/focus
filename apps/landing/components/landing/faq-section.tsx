@@ -31,7 +31,7 @@ export function FAQSection() {
     {
       question: "Is Focus open source?",
       answer:
-        "Yes, Focus is 100% open source under the MIT License! The entire codebase — including the Next.js web app, Expo mobile app, Electron desktop app, and Manifest V3 extension — lives in a clean polyglot monorepo.",
+        "Yes, Focus is 100% open source under the MIT License! The entire codebase (including the Next.js web app, Expo mobile app, Electron desktop app, and Manifest V3 extension) lives in a clean polyglot monorepo.",
     },
   ]
 

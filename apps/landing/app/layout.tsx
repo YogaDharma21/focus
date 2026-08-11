@@ -13,7 +13,7 @@ const fontMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  title: "Focus — Master Your Attention & Stay in Flow",
+  title: "Focus - Master Your Attention & Stay in Flow",
   description:
     "The minimalist, all-in-one productivity suite with Pomodoro & Flow timers, 1/5th break calculation, Focus Shield website blocker, ambient soundscapes, and cross-platform sync across Web, Desktop, Mobile, and Browser Extension.",
   keywords: [
@@ -28,7 +28,7 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Focus Team" }],
   openGraph: {
-    title: "Focus — Master Your Attention & Stay in Flow",
+    title: "Focus - Master Your Attention & Stay in Flow",
     description:
       "Minimalist productivity suite for Web, Desktop, Mobile, and Browser Extension.",
     type: "website",
