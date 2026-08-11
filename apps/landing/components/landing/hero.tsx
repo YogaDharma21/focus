@@ -49,7 +49,7 @@ export function Hero() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
         {/* Release Badge */}
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted border border-border text-foreground text-xs font-medium mb-6">
-          <span>Focus Ecosystem v0.0.1 • Monorepo</span>
+          <span>FocusTracks v0.0.1 • Monorepo</span>
         </div>
 
         {/* Hero Title */}
