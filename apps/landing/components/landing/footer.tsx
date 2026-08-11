@@ -29,7 +29,7 @@ export function Footer() {
               height={28}
               className="size-7 rounded-md object-contain"
             />
-            <span className="font-bold text-sm text-foreground">Focus Productivity Suite</span>
+            <span className="font-bold text-sm text-foreground">Focus</span>
           </div>
 
           {/* Links */}

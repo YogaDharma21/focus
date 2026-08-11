@@ -48,7 +48,7 @@ export function FAQSection() {
             Frequently Asked Questions
           </h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            Everything you need to know about the Focus productivity suite.
+            Everything you need to know about Focus.
           </p>
         </div>
 
