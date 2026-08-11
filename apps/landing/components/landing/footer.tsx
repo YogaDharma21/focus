@@ -1,6 +1,6 @@
 "use client"
 
-import { Timer, Heart } from "lucide-react"
+import { Timer, ExternalLink } from "lucide-react"
 
 function GithubIcon({ className }: { className?: string }) {
   return (
@@ -16,29 +16,28 @@ function GithubIcon({ className }: { className?: string }) {
 
 export function Footer() {
   return (
-    <footer className="border-t border-border/50 bg-card/40 py-12">
+    <footer className="border-t border-border bg-card py-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-5">
           {/* Brand */}
-          <div className="flex items-center gap-2.5">
-            <div className="size-8 rounded-xl bg-gradient-to-br from-indigo-500 to-pink-500 p-0.5">
-              <div className="w-full h-full bg-background rounded-[10px] flex items-center justify-center">
-                <Timer className="size-4 text-indigo-500" />
-              </div>
+          <div className="flex items-center gap-2">
+            <div className="size-7 rounded-md bg-primary text-primary-foreground flex items-center justify-center">
+              <Timer className="size-3.5" />
             </div>
-            <span className="font-bold text-base tracking-tight">Focus Productivity Suite</span>
+            <span className="font-bold text-sm text-foreground">Focus Productivity Suite</span>
           </div>
 
-          {/* Nav Links */}
-          <div className="flex flex-wrap items-center justify-center gap-6 text-xs text-muted-foreground font-medium">
+          {/* Links */}
+          <div className="flex flex-wrap items-center justify-center gap-5 text-xs text-muted-foreground font-medium">
+            <a href="https://focustracks.vercel.app" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors flex items-center gap-1">
+              <span>focustracks.vercel.app</span>
+              <ExternalLink className="size-3" />
+            </a>
             <a href="#features" className="hover:text-foreground transition-colors">
               Features
             </a>
             <a href="#ecosystem" className="hover:text-foreground transition-colors">
               Ecosystem
-            </a>
-            <a href="#interactive-demo" className="hover:text-foreground transition-colors">
-              Live Demo
             </a>
             <a href="#download" className="hover:text-foreground transition-colors">
               Downloads
@@ -57,11 +56,9 @@ export function Footer() {
             </a>
           </div>
 
-          {/* Copyright */}
-          <div className="text-xs text-muted-foreground flex items-center gap-1">
-            <span>Built with</span>
-            <Heart className="size-3 text-red-500 fill-current" />
-            <span>for Deep Work • MIT License</span>
+          {/* License */}
+          <div className="text-xs text-muted-foreground">
+            <span>MIT License</span>
           </div>
         </div>
       </div>
