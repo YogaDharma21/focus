@@ -37,18 +37,13 @@ export function Header() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
         {/* Brand Logo - Minimal */}
-        <a href="#" className="flex items-center gap-2.5">
+        <a href="#" className="flex items-center gap-2">
           <div className="size-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
             <Timer className="size-4" />
           </div>
-          <div className="flex flex-col">
-            <span className="font-bold text-base tracking-tight text-foreground">
-              Focus
-            </span>
-            <span className="text-[10px] font-mono text-muted-foreground tracking-wider uppercase">
-              Productivity
-            </span>
-          </div>
+          <span className="font-bold text-lg tracking-tight text-foreground">
+            Focus
+          </span>
         </a>
 
         {/* Desktop Nav */}
