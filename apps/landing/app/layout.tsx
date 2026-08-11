@@ -33,6 +33,11 @@ export const metadata: Metadata = {
       "Minimalist productivity suite for Web, Desktop, Mobile, and Browser Extension.",
     type: "website",
   },
+  icons: {
+    icon: "/icon.png",
+    shortcut: "/icon.png",
+    apple: "/apple-touch-icon.png",
+  },
 }
 
 export default function RootLayout({

@@ -1,6 +1,7 @@
 "use client"
 
-import { Timer, ExternalLink } from "lucide-react"
+import Image from "next/image"
+import { ExternalLink } from "lucide-react"
 
 function GithubIcon({ className }: { className?: string }) {
   return (
@@ -21,9 +22,13 @@ export function Footer() {
         <div className="flex flex-col md:flex-row items-center justify-between gap-5">
           {/* Brand */}
           <div className="flex items-center gap-2">
-            <div className="size-7 rounded-md bg-primary text-primary-foreground flex items-center justify-center">
-              <Timer className="size-3.5" />
-            </div>
+            <Image
+              src="/icon.png"
+              alt="Focus App Icon"
+              width={28}
+              height={28}
+              className="size-7 rounded-md object-contain"
+            />
             <span className="font-bold text-sm text-foreground">Focus Productivity Suite</span>
           </div>
 
