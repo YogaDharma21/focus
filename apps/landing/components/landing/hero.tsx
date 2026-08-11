@@ -54,8 +54,8 @@ export function Hero() {
 
         {/* Hero Title */}
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight max-w-4xl mx-auto leading-tight text-foreground text-balance">
-          Master Your Attention. <br className="hidden sm:block" />
-          Stay in Flow.
+          Master Your Attention <br className="hidden sm:block" />
+          Stay in Flow
         </h1>
 
         {/* Subtitle */}
