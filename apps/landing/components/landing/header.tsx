@@ -35,7 +35,7 @@ export function Header() {
           : "bg-transparent py-5"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative flex items-center justify-between">
         {/* Brand Logo - Minimal */}
         <a href="#" className="flex items-center gap-2">
           <div className="size-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center">
@@ -46,8 +46,8 @@ export function Header() {
           </span>
         </a>
 
-        {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-1 bg-muted/50 p-1 rounded-full border border-border">
+        {/* Desktop Nav - Mathematically Centered */}
+        <nav className="hidden md:flex items-center gap-1 bg-muted/50 p-1 rounded-full border border-border absolute left-1/2 -translate-x-1/2">
           <a
             href="#features"
             className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-full transition-colors"
