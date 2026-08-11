@@ -231,16 +231,47 @@ export function PlatformShowcase() {
               </div>
             </div>
 
-            {/* Screenshots Right */}
+            {/* Screenshots Right - Uncropped Adaptive View */}
             <div className="lg:col-span-7 space-y-3">
-              <div className="relative rounded-xl overflow-hidden border border-border bg-background aspect-[16/10]">
-                <Image
-                  src={currentApp.screenshots[selectedShotIndex]?.src || currentApp.screenshots[0].src}
-                  alt={currentApp.screenshots[selectedShotIndex]?.name || currentApp.name}
-                  width={1000}
-                  height={625}
-                  className="object-cover w-full h-full"
-                />
+              <div className="relative rounded-xl border border-border bg-background p-2 sm:p-4 min-h-[350px] sm:min-h-[440px] flex items-center justify-center">
+                {activePlatform === "mobile" ? (
+                  /* Mobile Phone Frame */
+                  <div className="w-full max-w-[260px] sm:max-w-[290px] rounded-[32px] border-4 border-muted bg-card p-2 shadow-md overflow-hidden">
+                    <div className="relative rounded-[24px] overflow-hidden aspect-[9/19] bg-background">
+                      <Image
+                        src={currentApp.screenshots[selectedShotIndex]?.src || currentApp.screenshots[0].src}
+                        alt={currentApp.screenshots[selectedShotIndex]?.name || currentApp.name}
+                        width={600}
+                        height={1200}
+                        className="object-contain w-full h-full"
+                      />
+                    </div>
+                  </div>
+                ) : activePlatform === "extension" ? (
+                  /* Extension Popup Frame */
+                  <div className="w-full max-w-[400px] rounded-xl border border-border bg-card p-2 shadow-md overflow-hidden">
+                    <div className="relative rounded-lg overflow-hidden aspect-[4/3] bg-background flex items-center justify-center">
+                      <Image
+                        src={currentApp.screenshots[selectedShotIndex]?.src || currentApp.screenshots[0].src}
+                        alt={currentApp.screenshots[selectedShotIndex]?.name || currentApp.name}
+                        width={800}
+                        height={600}
+                        className="object-contain w-full h-full"
+                      />
+                    </div>
+                  </div>
+                ) : (
+                  /* Web / Desktop Frame - Uncropped */
+                  <div className="w-full max-h-[460px] flex items-center justify-center">
+                    <Image
+                      src={currentApp.screenshots[selectedShotIndex]?.src || currentApp.screenshots[0].src}
+                      alt={currentApp.screenshots[selectedShotIndex]?.name || currentApp.name}
+                      width={1000}
+                      height={625}
+                      className="object-contain max-h-[440px] w-auto mx-auto rounded-md"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex items-center gap-1.5 overflow-x-auto pb-1">

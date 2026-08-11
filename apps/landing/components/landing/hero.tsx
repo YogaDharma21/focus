@@ -103,7 +103,7 @@ export function Hero() {
           </div>
         </div>
 
-        {/* Platform Preview Mockup */}
+        {/* Platform Preview Mockup Container */}
         <div className="mt-12 max-w-5xl mx-auto">
           {/* Tab Selector */}
           <div className="flex items-center justify-center gap-1.5 mb-5 p-1 bg-muted rounded-xl border border-border max-w-fit mx-auto">
@@ -127,9 +127,10 @@ export function Hero() {
             })}
           </div>
 
-          {/* Screenshot Container */}
-          <div className="rounded-2xl border border-border bg-card p-2 sm:p-3 overflow-hidden">
-            <div className="flex items-center justify-between px-3 py-1.5 mb-2 bg-muted/50 rounded-lg border border-border/50 text-[11px] font-mono text-muted-foreground">
+          {/* Screenshot Device Showcase Frame */}
+          <div className="rounded-2xl border border-border bg-card p-2 sm:p-4 overflow-hidden">
+            {/* Window Top Controls Bar */}
+            <div className="flex items-center justify-between px-3 py-1.5 mb-3 bg-muted/50 rounded-lg border border-border/50 text-[11px] font-mono text-muted-foreground">
               <div className="flex items-center gap-1.5">
                 <div className="size-2.5 rounded-full bg-border" />
                 <div className="size-2.5 rounded-full bg-border" />
@@ -141,15 +142,49 @@ export function Hero() {
               </span>
             </div>
 
-            <div className="relative rounded-lg overflow-hidden border border-border aspect-[16/10] sm:aspect-[16/9] bg-background">
-              <Image
-                src={currentPlatform.imgSrc}
-                alt={currentPlatform.alt}
-                width={1200}
-                height={750}
-                className="object-cover w-full h-full"
-                priority
-              />
+            {/* Adaptive Screen Display Container */}
+            <div className="relative rounded-lg border border-border bg-background p-2 sm:p-4 flex items-center justify-center min-h-[350px] sm:min-h-[480px]">
+              {activeTab === "mobile" ? (
+                /* Mobile Phone Frame */
+                <div className="w-full max-w-[280px] sm:max-w-[320px] rounded-[36px] border-4 border-muted bg-card p-2 shadow-md overflow-hidden">
+                  <div className="relative rounded-[28px] overflow-hidden aspect-[9/19] bg-background">
+                    <Image
+                      src={currentPlatform.imgSrc}
+                      alt={currentPlatform.alt}
+                      width={600}
+                      height={1200}
+                      className="object-contain w-full h-full"
+                      priority
+                    />
+                  </div>
+                </div>
+              ) : activeTab === "extension" ? (
+                /* Extension Popup Frame */
+                <div className="w-full max-w-[420px] rounded-xl border border-border bg-card p-2 shadow-md overflow-hidden">
+                  <div className="relative rounded-lg overflow-hidden aspect-[4/3] sm:aspect-[16/11] bg-background flex items-center justify-center">
+                    <Image
+                      src={currentPlatform.imgSrc}
+                      alt={currentPlatform.alt}
+                      width={800}
+                      height={600}
+                      className="object-contain w-full h-full"
+                      priority
+                    />
+                  </div>
+                </div>
+              ) : (
+                /* Desktop & Web App Frame - Full Uncropped View */
+                <div className="w-full relative rounded-lg overflow-hidden max-h-[520px] flex items-center justify-center">
+                  <Image
+                    src={currentPlatform.imgSrc}
+                    alt={currentPlatform.alt}
+                    width={1200}
+                    height={750}
+                    className="object-contain max-h-[500px] w-auto mx-auto rounded-md"
+                    priority
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
