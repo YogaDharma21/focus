@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { ChevronDown, HelpCircle } from "lucide-react"
+import { ChevronDown, HelpCircle, ExternalLink } from "lucide-react"
 
 export function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0)
@@ -13,9 +13,10 @@ export function FAQSection() {
         "When using Flow mode, Focus tracks how long you've been in flow state continuously. Once you finish your session, Focus automatically calculates your break length as 1/5th (20%) of your active flow time. For example, a 50-minute flow session results in a 10-minute break.",
     },
     {
-      question: "Where can I access the live Web App version?",
+      question: "Can I use the Web App directly in my browser?",
       answer:
-        "The live web application is hosted at https://focustracks.vercel.app. You can use it directly in any modern browser without installing anything.",
+        "Yes! You can launch the web application directly in any modern browser without installing anything.",
+      hasWebLink: true,
     },
     {
       question: "What is Focus Shield and how does it block websites?",
@@ -73,8 +74,19 @@ export function FAQSection() {
                 </button>
 
                 {isOpen && (
-                  <div className="px-5 pb-5 text-xs text-muted-foreground leading-relaxed border-t border-border/50 pt-3">
-                    {faq.answer}
+                  <div className="px-5 pb-5 text-xs text-muted-foreground leading-relaxed border-t border-border/50 pt-3 flex flex-col gap-3">
+                    <p>{faq.answer}</p>
+                    {faq.hasWebLink && (
+                      <a
+                        href="https://focustracks.vercel.app"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium w-fit hover:opacity-90 transition-opacity"
+                      >
+                        Launch Web App
+                        <ExternalLink className="size-3" />
+                      </a>
+                    )}
                   </div>
                 )}
               </div>

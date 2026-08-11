@@ -12,7 +12,7 @@ export function Hero() {
       id: "website",
       name: "Web App",
       icon: Globe,
-      badge: "focustracks.vercel.app",
+      badge: "Next.js 16",
       imgSrc: "/screenshots/website/screenshot-main.png",
       alt: "Focus Web Application",
     },
@@ -52,7 +52,7 @@ export function Hero() {
           <span>Focus Ecosystem v0.0.1 • Monorepo</span>
         </div>
 
-        {/* Hero Title - No Gradient */}
+        {/* Hero Title */}
         <h1 className="text-4xl sm:text-6xl font-extrabold tracking-tight max-w-4xl mx-auto leading-tight text-foreground">
           Master Your Attention. Stay in Flow.
         </h1>
@@ -71,7 +71,7 @@ export function Hero() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"
           >
-            Open Web App (focustracks.vercel.app)
+            Launch Web App
             <ExternalLink className="size-4" />
           </a>
           <a
@@ -127,7 +127,7 @@ export function Hero() {
             })}
           </div>
 
-          {/* Screenshot Container - Minimal */}
+          {/* Screenshot Container */}
           <div className="rounded-2xl border border-border bg-card p-2 sm:p-3 overflow-hidden">
             <div className="flex items-center justify-between px-3 py-1.5 mb-2 bg-muted/50 rounded-lg border border-border/50 text-[11px] font-mono text-muted-foreground">
               <div className="flex items-center gap-1.5">

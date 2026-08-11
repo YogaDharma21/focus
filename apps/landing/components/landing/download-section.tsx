@@ -8,10 +8,10 @@ export function DownloadSection() {
       title: "Focus Web",
       category: "Web Application",
       icon: Globe,
-      description: "Access your timers and tasks directly at focustracks.vercel.app in any browser.",
+      description: "Access your timers and tasks directly in any web browser without installation.",
       buttonText: "Launch Web App",
       buttonLink: "https://focustracks.vercel.app",
-      badge: "focustracks.vercel.app",
+      badge: "Web App",
       isPrimary: true,
     },
     {
@@ -59,7 +59,7 @@ export function DownloadSection() {
             Get Focus on All Devices
           </h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            Download the native apps or start using the web version immediately at focustracks.vercel.app.
+            Download the native apps or launch the web version immediately.
           </p>
         </div>
 

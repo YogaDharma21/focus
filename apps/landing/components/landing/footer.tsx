@@ -29,8 +29,13 @@ export function Footer() {
 
           {/* Links */}
           <div className="flex flex-wrap items-center justify-center gap-5 text-xs text-muted-foreground font-medium">
-            <a href="https://focustracks.vercel.app" target="_blank" rel="noopener noreferrer" className="hover:text-foreground transition-colors flex items-center gap-1">
-              <span>focustracks.vercel.app</span>
+            <a
+              href="https://focustracks.vercel.app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-foreground transition-colors flex items-center gap-1"
+            >
+              <span>Launch Web App</span>
               <ExternalLink className="size-3" />
             </a>
             <a href="#features" className="hover:text-foreground transition-colors">
