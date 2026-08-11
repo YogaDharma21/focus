@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Timer, Coffee, Clock, Play, Pause, RotateCcw, Volume2, VolumeX, CheckCircle, Calculator } from "lucide-react"
+import { Timer, Coffee, Clock, Play, Pause, RotateCcw, Volume2, VolumeX, CheckCircle, Calculator, Headphones } from "lucide-react"
 
 export function InteractiveTimer() {
   const [mode, setMode] = useState<"pomodoro" | "break" | "flow">("pomodoro")
@@ -265,7 +265,7 @@ export function InteractiveTimer() {
                       : "bg-muted text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <span>🎧</span>
+                  <Headphones className="size-3.5" />
                   <span>{isMusicPlaying ? "Playing Lofi Beats" : "Play Lofi Beats"}</span>
                 </button>
               </div>
