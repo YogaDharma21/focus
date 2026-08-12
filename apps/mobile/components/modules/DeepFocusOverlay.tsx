@@ -143,7 +143,7 @@ export function DeepFocusOverlay() {
           <View style={styles.headerBadge}>
             <Focus size={18} color={colors.textMuted} />
             <Text style={[styles.modeLabel, { color: colors.textMuted }]}>
-              Deep Focus Mode • {timerMode === 'POMODORO' ? (timerState === 'WORK' ? 'Work' : 'Break') : 'Flow Mode'}
+              Deep Focus Mode
             </Text>
           </View>
 
