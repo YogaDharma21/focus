@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { useAppStore, TodoItem } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
+import { Radius } from '@/constants/theme';
 import { playCompletionSound } from '@/lib/sound';
 import {
   Play,
@@ -771,7 +772,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 360,
     flexDirection: 'row',
-    borderRadius: 16,
+    borderRadius: Radius.base,
     borderWidth: 1,
     padding: 4,
     marginBottom: 20,
@@ -779,7 +780,7 @@ const styles = StyleSheet.create({
   modeBtn: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 12,
+    borderRadius: Radius.base,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
@@ -806,7 +807,7 @@ const styles = StyleSheet.create({
     width: '100%',
     paddingVertical: 10,
     paddingHorizontal: 16,
-    borderRadius: 16,
+    borderRadius: Radius.base,
     borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
@@ -827,7 +828,7 @@ const styles = StyleSheet.create({
   sessionGoalContainer: {
     width: '100%',
     height: 46,
-    borderRadius: 16,
+    borderRadius: Radius.base,
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -910,7 +911,7 @@ const styles = StyleSheet.create({
   mainActionBtn: {
     width: 60,
     height: 60,
-    borderRadius: 16,
+    borderRadius: Radius.base,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
@@ -918,7 +919,7 @@ const styles = StyleSheet.create({
   secondaryActionBtn: {
     width: 42,
     height: 42,
-    borderRadius: 12,
+    borderRadius: Radius.base,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -933,7 +934,7 @@ const styles = StyleSheet.create({
   modalBox: {
     width: '100%',
     maxWidth: 360,
-    borderRadius: 16,
+    borderRadius: Radius.base,
     borderWidth: 1,
     padding: 20,
   },

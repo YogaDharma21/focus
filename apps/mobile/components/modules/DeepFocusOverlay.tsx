@@ -3,6 +3,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
+import { Radius } from '@/constants/theme';
 import { playCompletionSound } from '@/lib/sound';
 import { Play, Pause, X, Focus, AlertTriangle, CheckCircle2, Plus, Music, Volume2, VolumeX } from 'lucide-react-native';
 
@@ -356,7 +357,7 @@ const styles = StyleSheet.create({
   playBtn: {
     width: 80,
     height: 80,
-    borderRadius: 22,
+    borderRadius: Radius.base,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
@@ -364,7 +365,7 @@ const styles = StyleSheet.create({
   secondaryActionBtn: {
     width: 52,
     height: 52,
-    borderRadius: 14,
+    borderRadius: Radius.base,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -379,7 +380,7 @@ const styles = StyleSheet.create({
   modalBox: {
     width: '100%',
     maxWidth: 360,
-    borderRadius: 20,
+    borderRadius: Radius.base,
     borderWidth: 1,
     padding: 20,
   },
