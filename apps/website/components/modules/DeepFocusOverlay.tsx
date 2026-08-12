@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppStore } from "@/lib/store";
-import { Pause, Play, X, CheckCircle2 } from "lucide-react";
+import { Pause, Play, X, CheckCircle2, Music, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -27,7 +27,15 @@ export function DeepFocusOverlay() {
         todos,
         selectedTodoId,
         selectedSubtaskId,
+        isMusicPlaying,
+        setIsMusicPlaying,
+        musicVolume,
+        setMusicVolume,
+        isMusicMuted,
+        setIsMusicMuted,
     } = useAppStore();
+
+    const [showMusicMenu, setShowMusicMenu] = useState(false);
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const sessionStartTimeRef = useRef<number | null>(null);
@@ -180,6 +188,90 @@ export function DeepFocusOverlay() {
         <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-500">
             <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
             
+            {/* Top Left Lofi-Beats Music Control */}
+            <div className="absolute top-6 left-6 z-50">
+                <button
+                    onClick={() => setShowMusicMenu(!showMusicMenu)}
+                    className={cn(
+                        "h-10 px-3.5 rounded-full border transition-all flex items-center gap-2 backdrop-blur-md shadow-sm",
+                        isMusicPlaying
+                            ? "bg-white/15 border-white/25 text-white ring-1 ring-white/20 shadow-md"
+                            : "bg-white/5 border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/10"
+                    )}
+                    title={isMusicPlaying ? "Lofi-Beats: Playing" : "Lofi-Beats: Paused"}
+                >
+                    <Music className={cn("w-4 h-4", isMusicPlaying && "text-white animate-pulse")} />
+                    <span className="text-xs font-semibold tracking-wide">Lofi-Beats</span>
+                    {isMusicPlaying && (
+                        <span className="flex items-center gap-0.5 h-3 ml-0.5">
+                            <span className="w-0.5 h-2.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+                            <span className="w-0.5 h-3 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+                            <span className="w-0.5 h-2 bg-white rounded-full animate-bounce" />
+                        </span>
+                    )}
+                </button>
+
+                {showMusicMenu && (
+                    <div className="absolute top-full left-0 mt-2.5 w-64 bg-[#121214]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-3.5 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-200 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-white">
+                                <Music className="w-4 h-4 text-white/90" />
+                                <span className="text-xs font-semibold tracking-wide">
+                                    Lofi-Beats
+                                </span>
+                            </div>
+                            <button
+                                onClick={() => setIsMusicPlaying(!isMusicPlaying)}
+                                className={cn(
+                                    "px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5",
+                                    isMusicPlaying
+                                        ? "bg-white text-black hover:bg-white/90 shadow"
+                                        : "bg-white/10 text-white hover:bg-white/20"
+                                )}
+                            >
+                                {isMusicPlaying ? (
+                                    <>
+                                        <Pause className="w-3.5 h-3.5 fill-current" /> Pause
+                                    </>
+                                ) : (
+                                    <>
+                                        <Play className="w-3.5 h-3.5 fill-current" /> Play
+                                    </>
+                                )}
+                            </button>
+                        </div>
+
+                        <div className="flex items-center gap-2.5 pt-1 border-t border-white/5">
+                            <button
+                                onClick={() => setIsMusicMuted(!isMusicMuted)}
+                                className="text-white/70 hover:text-white transition-colors p-1"
+                                aria-label={isMusicMuted ? "Unmute" : "Mute"}
+                            >
+                                {isMusicMuted || musicVolume === 0 ? (
+                                    <VolumeX className="w-4 h-4" />
+                                ) : (
+                                    <Volume2 className="w-4 h-4" />
+                                )}
+                            </button>
+                            <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                value={isMusicMuted ? 0 : musicVolume}
+                                onChange={(e) => {
+                                    const val = parseInt(e.target.value, 10);
+                                    setMusicVolume(val);
+                                    if (val > 0 && isMusicMuted) {
+                                        setIsMusicMuted(false);
+                                    }
+                                }}
+                                className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
+                            />
+                        </div>
+                    </div>
+                )}
+            </div>
+
             <button
                 onClick={exitFocusMode}
                 className="absolute top-6 right-6 text-muted-foreground hover:text-foreground transition-colors"
@@ -198,22 +290,26 @@ export function DeepFocusOverlay() {
                     {formatTime(timeLeft)}
                 </div>
 
-                {sessionName && (
-                    <div className="flex flex-col items-center gap-1">
-                        <div className="text-lg sm:text-xl text-muted-foreground text-center max-w-md px-4 truncate">
-                            {sessionName}
+                {(() => {
+                    const selectedTodo = todos.find((t) => t.id === selectedTodoId);
+                    const displayTitle = selectedTodo ? selectedTodo.text : sessionName;
+                    if (!displayTitle) return null;
+                    return (
+                        <div className="flex flex-col items-center gap-1">
+                            <div className="text-lg sm:text-xl font-semibold text-muted-foreground text-center max-w-md px-4 truncate">
+                                {displayTitle}
+                            </div>
+                            {selectedTodoId && selectedSubtaskId && (() => {
+                                const subtask = selectedTodo?.subtasks?.find((s) => s.id === selectedSubtaskId);
+                                return subtask ? (
+                                    <div className="text-sm text-muted-foreground/60 text-center max-w-md px-4 truncate">
+                                        {subtask.text}
+                                    </div>
+                                ) : null;
+                            })()}
                         </div>
-                        {selectedTodoId && selectedSubtaskId && (() => {
-                            const todo = todos.find((t) => t.id === selectedTodoId);
-                            const subtask = todo?.subtasks?.find((s) => s.id === selectedSubtaskId);
-                            return subtask ? (
-                                <div className="text-sm text-muted-foreground/60 text-center max-w-md px-4 truncate">
-                                    {subtask.text}
-                                </div>
-                            ) : null;
-                        })()}
-                    </div>
-                )}
+                    );
+                })()}
 
                 <div className="flex items-center gap-4 mt-8">
                     <DistractionCounter />

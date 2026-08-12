@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 export const Colors = {
   light: {
     background: '#09090b',
-    card: '#18181b',
+    card: '#141414',
     cardBorder: '#27272a',
     text: '#fafafa',
     textMuted: '#a1a1aa',
@@ -14,11 +14,11 @@ export const Colors = {
     tint: '#ffffff',
     tabIconDefault: '#71717a',
     tabIconSelected: '#ffffff',
-    inputBg: '#09090b',
+    inputBg: '#141414',
   },
   dark: {
     background: '#09090b',
-    card: '#18181b',
+    card: '#141414',
     cardBorder: '#27272a',
     text: '#fafafa',
     textMuted: '#a1a1aa',
@@ -29,7 +29,7 @@ export const Colors = {
     tint: '#ffffff',
     tabIconDefault: '#71717a',
     tabIconSelected: '#ffffff',
-    inputBg: '#09090b',
+    inputBg: '#141414',
   },
 };
 
@@ -53,3 +53,16 @@ export const Fonts = Platform.select({
     mono: "SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace",
   },
 });
+
+export const Radius = {
+  rem: '0.625rem',
+  base: 10, // 0.625rem = 10px
+  sm: 6,
+  md: 10,
+  lg: 10,
+  xl: 10,
+  card: 10,
+  modal: 10,
+  button: 10,
+  full: 9999,
+};

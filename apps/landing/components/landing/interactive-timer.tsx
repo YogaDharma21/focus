@@ -266,7 +266,7 @@ export function InteractiveTimer() {
                   }`}
                 >
                   <Headphones className="size-3.5" />
-                  <span>{isMusicPlaying ? "Playing Lofi Beats" : "Play Lofi Beats"}</span>
+                  <span>{isMusicPlaying ? "Playing Lofi-Beats" : "Play Lofi-Beats"}</span>
                 </button>
               </div>
             </div>

@@ -18,11 +18,13 @@ export function MediaPlayer() {
         localUrl,
         mediaPlayerOpen,
         setMediaPlayerOpen,
+        isMusicPlaying,
+        setIsMusicPlaying,
+        musicVolume,
+        setMusicVolume,
+        isMusicMuted,
+        setIsMusicMuted,
     } = useAppStore();
-
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [muted, setMuted] = useState(false);
-    const [volume, setVolume] = useState(60);
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);
@@ -30,9 +32,22 @@ export function MediaPlayer() {
     // Synchronize volume
     useEffect(() => {
         if (audioRef.current) {
-            audioRef.current.volume = muted ? 0 : volume / 100;
+            audioRef.current.volume = isMusicMuted ? 0 : musicVolume / 100;
         }
-    }, [volume, muted]);
+    }, [musicVolume, isMusicMuted]);
+
+    // Synchronize play state from store
+    useEffect(() => {
+        if (!audioRef.current) return;
+        if (isMusicPlaying) {
+            audioRef.current.play().catch((err) => {
+                console.log("Audio play error:", err);
+                setIsMusicPlaying(false);
+            });
+        } else {
+            audioRef.current.pause();
+        }
+    }, [isMusicPlaying, setIsMusicPlaying]);
 
     // Handle outside clicks to close expanded popup
     useEffect(() => {
@@ -54,28 +69,18 @@ export function MediaPlayer() {
     }, [mediaPlayerOpen, setMediaPlayerOpen]);
 
     const togglePlay = useCallback(() => {
-        if (!audioRef.current) return;
-        if (isPlaying) {
-            audioRef.current.pause();
-            setIsPlaying(false);
-        } else {
-            audioRef.current.play().then(() => {
-                setIsPlaying(true);
-            }).catch((err) => {
-                console.log("Audio play error:", err);
-            });
-        }
-    }, [isPlaying]);
+        setIsMusicPlaying(!isMusicPlaying);
+    }, [isMusicPlaying, setIsMusicPlaying]);
 
     const toggleMute = () => {
-        setMuted(!muted);
+        setIsMusicMuted(!isMusicMuted);
     };
 
     const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const val = parseInt(e.target.value, 10);
-        setVolume(val);
-        if (val > 0 && muted) {
-            setMuted(false);
+        setMusicVolume(val);
+        if (val > 0 && isMusicMuted) {
+            setIsMusicMuted(false);
         }
     };
 
@@ -86,8 +91,8 @@ export function MediaPlayer() {
                 ref={audioRef}
                 src={localUrl || "/music1.mp3"}
                 loop
-                onPlay={() => setIsPlaying(true)}
-                onPause={() => setIsPlaying(false)}
+                onPlay={() => setIsMusicPlaying(true)}
+                onPause={() => setIsMusicPlaying(false)}
             />
 
             {/* Collapsed Pill (Top Floating Button) */}
@@ -101,11 +106,11 @@ export function MediaPlayer() {
                 )}
                 aria-label="Toggle ambient music player"
             >
-                <Music className={cn("w-4 h-4 transition-transform duration-300 group-hover:scale-110", isPlaying && "text-primary animate-pulse")} />
+                <Music className={cn("w-4 h-4 transition-transform duration-300 group-hover:scale-110", isMusicPlaying && "text-primary animate-pulse")} />
                 <span className="font-semibold text-xs sm:text-sm tracking-wide">
-                    Lo-Fi
+                    Lofi-Beats
                 </span>
-                {isPlaying && (
+                {isMusicPlaying && (
                     <span className="flex items-center gap-0.5 h-3 ml-0.5">
                         <span className="w-0.5 h-2.5 bg-primary rounded-full animate-bounce [animation-delay:-0.3s]" />
                         <span className="w-0.5 h-3 bg-primary rounded-full animate-bounce [animation-delay:-0.15s]" />
@@ -122,7 +127,7 @@ export function MediaPlayer() {
                         <div className="flex items-center gap-2 text-white">
                             <Music className="w-4 h-4 text-white/90" />
                             <span className="text-sm font-semibold tracking-wide">
-                                Ambient Music
+                                Lofi-Beats
                             </span>
                         </div>
                         <button
@@ -139,16 +144,16 @@ export function MediaPlayer() {
                         <div className="flex items-center gap-3 min-w-0">
                             <div className={cn(
                                 "w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 transition-transform duration-500",
-                                isPlaying && "rotate-45"
+                                isMusicPlaying && "rotate-45"
                             )}>
-                                <Disc className={cn("w-5 h-5 text-white/80", isPlaying && "text-primary animate-spin [animation-duration:6s]")} />
+                                <Disc className={cn("w-5 h-5 text-white/80", isMusicPlaying && "text-primary animate-spin [animation-duration:6s]")} />
                             </div>
                             <div className="min-w-0">
                                 <h4 className="text-sm font-bold text-white truncate">
-                                    Lo-Fi
+                                    Lofi-Beats
                                 </h4>
                                 <p className="text-xs text-white/50 truncate">
-                                    Focus Ambient Music
+                                    Lofi-Beats
                                 </p>
                             </div>
                         </div>
@@ -157,9 +162,9 @@ export function MediaPlayer() {
                         <button
                             onClick={togglePlay}
                             className="w-10 h-10 rounded-full bg-white hover:bg-white/90 text-black active:scale-95 transition-all duration-200 flex items-center justify-center shrink-0 shadow-lg"
-                            aria-label={isPlaying ? "Pause music" : "Play music"}
+                            aria-label={isMusicPlaying ? "Pause music" : "Play music"}
                         >
-                            {isPlaying ? (
+                            {isMusicPlaying ? (
                                 <Pause className="w-5 h-5 fill-current text-black" />
                             ) : (
                                 <Play className="w-5 h-5 fill-current text-black ml-0.5" />
@@ -172,9 +177,9 @@ export function MediaPlayer() {
                         <button
                             onClick={toggleMute}
                             className="text-white/70 hover:text-white transition-colors p-1"
-                            aria-label={muted ? "Unmute" : "Mute"}
+                            aria-label={isMusicMuted ? "Unmute" : "Mute"}
                         >
-                            {muted || volume === 0 ? (
+                            {isMusicMuted || musicVolume === 0 ? (
                                 <VolumeX className="w-4 h-4" />
                             ) : (
                                 <Volume2 className="w-4 h-4" />
@@ -186,7 +191,7 @@ export function MediaPlayer() {
                                 type="range"
                                 min="0"
                                 max="100"
-                                value={muted ? 0 : volume}
+                                value={isMusicMuted ? 0 : musicVolume}
                                 onChange={handleVolumeChange}
                                 className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
                             />

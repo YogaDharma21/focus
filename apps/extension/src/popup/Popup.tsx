@@ -55,7 +55,7 @@ import { BackgroundDisplay } from "./components/BackgroundDisplay";
 import { DeepFocusOverlay } from "./components/DeepFocusOverlay";
 import { Progress } from "../components/ui/progress";
 import { AppStateData, TodoItem, PriorityType, BackgroundTheme } from "../types";
-import { getStoredState, saveStoredState, subscribeToStateChanges, DEFAULT_STATE } from "../lib/storage";
+import { getStoredState, saveStoredState, subscribeToStateChanges, getCachedState, DEFAULT_STATE } from "../lib/storage";
 import "../index.css";
 
 function formatTaskDueDate(dueDate?: string, dueTime?: string): string {
@@ -109,7 +109,7 @@ const BACKGROUND_THEMES: { id: BackgroundTheme; name: string }[] = [
 ];
 
 export function Popup() {
-  const [state, setState] = useState<AppStateData | null>(null);
+  const [state, setState] = useState<AppStateData | null>(getCachedState());
   const [activeTab, setActiveTab] = useState<"timer" | "tasks" | "shield" | "notes" | "stats">("timer");
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -186,11 +186,14 @@ export function Popup() {
     return () => unsubscribe();
   }, []);
 
-  // Auto-activate deep focus when timer starts
+  // Auto-activate deep focus when timer starts (Pomodoro or Flow), auto-exit when timer stops/finishes
   useEffect(() => {
     if (!state) return;
-    if (state.isActive && !prevIsActiveRef.current && !state.deepFocusMode) {
+    const isWorkOrFlow = state.timerState === "WORK" || state.timerState === "FLOW";
+    if (state.isActive && !prevIsActiveRef.current && !state.deepFocusMode && isWorkOrFlow) {
       updateState({ deepFocusMode: true });
+    } else if (!state.isActive && prevIsActiveRef.current && state.deepFocusMode) {
+      updateState({ deepFocusMode: false });
     }
     prevIsActiveRef.current = state.isActive;
   }, [state?.isActive]);
@@ -217,7 +220,13 @@ export function Popup() {
   // Timer controls — write to storage directly, the background's
   // chrome.storage.onChanged listener reacts to start/stop the timer.
   const toggleTimer = () => {
-    updateState({ isActive: !state.isActive });
+    const starting = !state.isActive;
+    const isWorkOrFlow = state.timerState === "WORK" || state.timerState === "FLOW";
+    if (starting && isWorkOrFlow) {
+      updateState({ isActive: true, deepFocusMode: true });
+    } else {
+      updateState({ isActive: starting, deepFocusMode: false });
+    }
   };
 
   const resetTimer = () => {
@@ -226,7 +235,7 @@ export function Popup() {
     else if (state.timerState === "BREAK") defaultTime = state.pomodoroSettings.break * 60;
     else if (state.timerState === "FLOW") defaultTime = 0;
 
-    updateState({ isActive: false, timeLeft: defaultTime });
+    updateState({ isActive: false, deepFocusMode: false, timeLeft: defaultTime });
   };
 
   const switchTimerModeAndState = (mode: "POMODORO" | "FLOW", timerState: "WORK" | "BREAK" | "FLOW") => {
@@ -314,6 +323,7 @@ export function Popup() {
 
     updateState({
       isActive: isWorkOrFlow && state.pomodoroSettings.autoStartBreak,
+      deepFocusMode: false,
       timerState: nextState,
       previousMode: prevMode,
       timeLeft: nextTime,
@@ -637,6 +647,29 @@ export function Popup() {
     const cat = d.category || "Other";
     distractionCounts[cat] = (distractionCounts[cat] || 0) + 1;
   });
+
+  // Instant Deep Focus View when in Deep Focus Mode
+  if (state.deepFocusMode) {
+    return (
+      <div className="w-[420px] h-[580px] bg-black text-white relative flex flex-col overflow-hidden select-none font-sans">
+        <DeepFocusOverlay
+          state={state}
+          onToggleTimer={toggleTimer}
+          onCompleteSession={() => {
+            completeSession();
+            updateState({ deepFocusMode: false });
+          }}
+          onSelectDistraction={(category) => {
+            selectDistractionCategory(category);
+            updateState({ deepFocusMode: false });
+          }}
+          onToggleMusic={toggleMusicPlay}
+          onSetMusicVolume={handleMusicVolumeChange}
+          onExit={() => updateState({ deepFocusMode: false })}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={`w-[420px] h-[580px] flex flex-col overflow-hidden select-none font-sans relative ${
@@ -1472,7 +1505,7 @@ export function Popup() {
           >
             <Music className="w-4 h-4 text-current shrink-0" />
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-semibold truncate">Lo-Fi</div>
+              <div className="text-xs font-semibold truncate">Lofi-Beats</div>
             </div>
           </div>
 
@@ -1533,7 +1566,7 @@ export function Popup() {
               <div className="flex items-center gap-2.5">
                 <Music className={`w-4 h-4 ${isMusicPlaying ? "text-primary animate-pulse" : "opacity-50"}`} />
                 <div>
-                  <div className="text-xs font-bold">Lo-Fi</div>
+                  <div className="text-xs font-bold">Lofi-Beats</div>
                 </div>
               </div>
 
@@ -1572,7 +1605,7 @@ export function Popup() {
         {activeTab === "timer" && (
           <div className="flex flex-col items-center justify-between min-h-full pb-1 pt-1 gap-2">
             {/* 3-Way Mode Switcher (Pomodoro, Break, Flow - No Minutes in Toggle Labels!) */}
-            <div className={`flex items-center p-1 rounded-xl border w-full max-w-[320px] ${
+            <div className={`flex items-center p-1 rounded-lg border w-full max-w-[320px] ${
               "bg-neutral-900 border-neutral-800"
             }`}>
               <button
@@ -1621,7 +1654,7 @@ export function Popup() {
             <div className="w-full max-w-[280px] mb-2 relative">
               {/* Task Selector Dropdown Menu (Pops UPWARDS so Timer Controls below remain visible!) */}
               {showTaskDropdown && (
-                <div className={`absolute bottom-full left-0 right-0 mb-1.5 z-50 p-2 rounded-2xl border shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-1 ${
+                <div className={`absolute bottom-full left-0 right-0 mb-1.5 z-50 p-2 rounded-lg border shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-1 ${
                   "bg-neutral-900/95 border-neutral-800 text-white"
                 }`}>
                   <div className="flex items-center justify-between px-2 py-1">
@@ -1737,7 +1770,7 @@ export function Popup() {
                 <button
                   type="button"
                   onClick={() => setShowTaskDropdown(!showTaskDropdown)}
-                  className={`w-full px-4 py-3 rounded-2xl border transition-all flex flex-col items-center justify-center gap-1 shadow-sm ${
+                  className={`w-full px-4 py-3 rounded-lg border transition-all flex flex-col items-center justify-center gap-1 shadow-sm ${
                     "bg-neutral-900/90 border-neutral-800 hover:border-neutral-700 text-white"
                   }`}
                   title="Click to select another task or custom focus"
@@ -1752,7 +1785,7 @@ export function Popup() {
                 </button>
               ) : (
                 /* Custom Focus Mode (Editable Input Mode) */
-                <div className="w-full flex items-center rounded-xl border bg-neutral-900 border-neutral-800 focus-within:border-white px-2 py-1 transition-colors">
+                <div className="w-full flex items-center rounded-lg border bg-neutral-900 border-neutral-800 focus-within:border-white px-2 py-1 transition-colors">
                   <input
                     type="text"
                     value={state.sessionName}
@@ -1775,7 +1808,7 @@ export function Popup() {
 
             {/* Subtasks Section for Selected Task */}
             {selectedTask && (selectedTask.subtasks || []).length > 0 && (
-              <div className={`w-full max-w-[280px] p-2.5 mb-2 rounded-xl border flex flex-col gap-1.5 ${
+              <div className={`w-full max-w-[280px] p-2.5 mb-2 rounded-lg border flex flex-col gap-1.5 ${
                 "bg-neutral-900/90 border-neutral-800"
               }`}>
                 <div className="flex items-center justify-between text-[11px] font-mono font-bold opacity-70">
@@ -1799,7 +1832,7 @@ export function Popup() {
 
             {/* Task Notes Section for Selected Task */}
             {selectedTask && selectedTask.notes && selectedTask.notes.trim().length > 0 && (
-              <div className={`w-full max-w-[280px] p-2.5 mb-2 rounded-xl border flex flex-col gap-1 ${
+              <div className={`w-full max-w-[280px] p-2.5 mb-2 rounded-lg border flex flex-col gap-1 ${
                 "bg-neutral-900/90 border-neutral-800"
               }`}>
                 <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-70">
@@ -2339,23 +2372,6 @@ export function Popup() {
           </div>
         )}
       </div>
-
-      {/* Deep Focus Mode Overlay */}
-      {state.deepFocusMode && (
-        <DeepFocusOverlay
-          state={state}
-          onToggleTimer={toggleTimer}
-          onCompleteSession={() => {
-            completeSession();
-            updateState({ deepFocusMode: false });
-          }}
-          onSelectDistraction={(category) => {
-            selectDistractionCategory(category);
-            updateState({ deepFocusMode: false });
-          }}
-          onExit={() => updateState({ deepFocusMode: false })}
-        />
-      )}
     </div>
   );
 }
