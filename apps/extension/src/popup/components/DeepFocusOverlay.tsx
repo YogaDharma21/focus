@@ -214,15 +214,6 @@ export function DeepFocusOverlay({
           </button>
         </div>
       </div>
-
-      {/* ESC hint */}
-      <div className="absolute bottom-5 text-[10px] text-neutral-600 flex items-center gap-1.5">
-        Press{" "}
-        <kbd className="px-1.5 py-0.5 bg-neutral-900 rounded text-[9px] font-mono border border-neutral-800">
-          Esc
-        </kbd>{" "}
-        to exit focus mode
-      </div>
     </div>
   );
 }
