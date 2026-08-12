@@ -49,6 +49,9 @@ export function Footer() {
             <a href="#ecosystem" className="hover:text-foreground transition-colors">
               Ecosystem
             </a>
+            <a href="#interactive-demo" className="hover:text-foreground transition-colors">
+              Try Demo
+            </a>
             <a href="#features" className="hover:text-foreground transition-colors">
               Features
             </a>
