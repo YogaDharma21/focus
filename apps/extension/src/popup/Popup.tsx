@@ -2353,6 +2353,8 @@ export function Popup() {
             selectDistractionCategory(category);
             updateState({ deepFocusMode: false });
           }}
+          onToggleMusic={toggleMusicPlay}
+          onSetMusicVolume={handleMusicVolumeChange}
           onExit={() => updateState({ deepFocusMode: false })}
         />
       )}
