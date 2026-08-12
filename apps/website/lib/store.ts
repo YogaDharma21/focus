@@ -135,8 +135,8 @@ export const useAppStore = create<AppState>()(
             localPlaylist: [
                 {
                     id: "local-1",
-                    title: "Lo-Fi",
-                    artist: "Focus Ambient Music",
+                    title: "Lofi-Beats",
+                    artist: "Lofi-Beats",
                     url: "/music1.mp3",
                 },
             ],
@@ -426,8 +426,8 @@ export const useAppStore = create<AppState>()(
                     localPlaylist: [
                         {
                             id: "local-1",
-                            title: "Lo-Fi",
-                            artist: "Focus Ambient Music",
+                            title: "Lofi-Beats",
+                            artist: "Lofi-Beats",
                             url: "/music1.mp3",
                         },
                     ],

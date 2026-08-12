@@ -240,7 +240,7 @@ export function DeepFocusOverlay() {
                                     : "hover:bg-white/5 hover:border-white/20 text-muted-foreground hover:text-foreground"
                             )}
                             onClick={() => setShowMusicMenu(!showMusicMenu)}
-                            title={isMusicPlaying ? "Ambient Music: Playing" : "Ambient Music: Paused"}
+                            title={isMusicPlaying ? "Lofi-Beats: Playing" : "Lofi-Beats: Paused"}
                         >
                             <Music className={cn("w-6 h-6", isMusicPlaying && "animate-pulse")} />
                         </Button>
@@ -251,7 +251,7 @@ export function DeepFocusOverlay() {
                                     <div className="flex items-center gap-2 text-white">
                                         <Music className="w-4 h-4 text-white/90" />
                                         <span className="text-xs font-semibold tracking-wide">
-                                            Ambient Music
+                                            Lofi-Beats
                                         </span>
                                     </div>
                                     <button

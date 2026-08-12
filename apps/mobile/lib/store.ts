@@ -152,7 +152,7 @@ export const useAppStore = create<AppState>()(
       localPlaylist: [
         {
           id: 'local-1',
-          title: 'Lo-Fi',
+          title: 'Lofi-Beats',
           artist: '',
           url: 'music1.mp3',
         },

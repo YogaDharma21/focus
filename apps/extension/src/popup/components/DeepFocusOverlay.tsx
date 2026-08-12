@@ -105,7 +105,7 @@ export function DeepFocusOverlay({
                   ? "border-primary/50 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20"
                   : "border-neutral-700 text-neutral-400 hover:text-white hover:border-white/20"
               }`}
-              title={state.isMusicPlaying ? "Ambient Music: Playing" : "Ambient Music: Paused"}
+              title={state.isMusicPlaying ? "Lofi-Beats: Playing" : "Lofi-Beats: Paused"}
             >
               <Music className={`w-4.5 h-4.5 ${state.isMusicPlaying ? "animate-pulse" : ""}`} />
             </button>
@@ -115,7 +115,7 @@ export function DeepFocusOverlay({
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5 text-neutral-200">
                     <Music className="w-3.5 h-3.5 text-neutral-400" />
-                    <span className="text-xs font-semibold">Ambient Music</span>
+                    <span className="text-xs font-semibold">Lofi-Beats</span>
                   </div>
                   <button
                     onClick={onToggleMusic}

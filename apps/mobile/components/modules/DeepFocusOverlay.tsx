@@ -212,9 +212,9 @@ export function DeepFocusOverlay() {
         <Modal visible={musicModalOpen} transparent animationType="fade" onRequestClose={() => setMusicModalOpen(false)}>
           <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setMusicModalOpen(false)}>
             <TouchableOpacity activeOpacity={1} style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => {}}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Ambient Music</Text>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Lofi-Beats</Text>
               <Text style={[styles.modalSub, { color: colors.textMuted }]}>
-                Control focus audio while in Deep Focus mode.
+                Control Lofi-Beats audio while in Deep Focus mode.
               </Text>
               
               <View style={{ gap: 12, marginVertical: 16 }}>

@@ -166,7 +166,7 @@ export const useDesktopStore = create<DesktopState>()(
       localPlaylist: [
         {
           id: "local-1",
-          title: "Chill Lo-Fi Beat",
+          title: "Lofi-Beats",
           artist: "Focus Studio",
           url: "https://assets.mixkit.co/music/preview/mixkit-chill-bro-494.mp3",
         },
