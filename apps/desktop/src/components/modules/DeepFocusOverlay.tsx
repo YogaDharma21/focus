@@ -175,6 +175,13 @@ export const DeepFocusOverlay: React.FC = () => {
           {timeString}
         </h1>
 
+        {/* Selected Task Name / Session Goal */}
+        {(activeTask?.text || sessionName) && (
+          <div className="text-sm md:text-base font-semibold text-zinc-400 text-center max-w-md px-4 truncate">
+            {activeTask?.text || sessionName}
+          </div>
+        )}
+
         {/* Minimal Control Row */}
         <div className="flex items-center gap-6 relative">
           {/* Ambient Music Control Button */}

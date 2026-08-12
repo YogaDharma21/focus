@@ -82,12 +82,17 @@ export function DeepFocusOverlay({
           {formatTime(state.timeLeft)}
         </div>
 
-        {/* Session Name */}
-        {state.sessionName && (
-          <div className="text-sm text-neutral-400 text-center max-w-[280px] px-4 truncate">
-            {state.sessionName}
-          </div>
-        )}
+        {/* Session / Selected Task Name */}
+        {(() => {
+          const selectedTask = state.todos?.find((t) => t.id === state.selectedTodoId);
+          const displayTitle = selectedTask ? selectedTask.text : state.sessionName;
+          if (!displayTitle) return null;
+          return (
+            <div className="text-sm font-semibold text-neutral-400 text-center max-w-[280px] px-4 truncate">
+              {displayTitle}
+            </div>
+          );
+        })()}
 
         {/* Control Buttons */}
         <div className="flex items-center gap-3 mt-4">
