@@ -1605,7 +1605,7 @@ export function Popup() {
         {activeTab === "timer" && (
           <div className="flex flex-col items-center justify-between min-h-full pb-1 pt-1 gap-2">
             {/* 3-Way Mode Switcher (Pomodoro, Break, Flow - No Minutes in Toggle Labels!) */}
-            <div className={`flex items-center p-1 rounded-xl border w-full max-w-[320px] ${
+            <div className={`flex items-center p-1 rounded-lg border w-full max-w-[320px] ${
               "bg-neutral-900 border-neutral-800"
             }`}>
               <button
@@ -1654,7 +1654,7 @@ export function Popup() {
             <div className="w-full max-w-[280px] mb-2 relative">
               {/* Task Selector Dropdown Menu (Pops UPWARDS so Timer Controls below remain visible!) */}
               {showTaskDropdown && (
-                <div className={`absolute bottom-full left-0 right-0 mb-1.5 z-50 p-2 rounded-2xl border shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-1 ${
+                <div className={`absolute bottom-full left-0 right-0 mb-1.5 z-50 p-2 rounded-lg border shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-1 ${
                   "bg-neutral-900/95 border-neutral-800 text-white"
                 }`}>
                   <div className="flex items-center justify-between px-2 py-1">
@@ -1770,7 +1770,7 @@ export function Popup() {
                 <button
                   type="button"
                   onClick={() => setShowTaskDropdown(!showTaskDropdown)}
-                  className={`w-full px-4 py-3 rounded-2xl border transition-all flex flex-col items-center justify-center gap-1 shadow-sm ${
+                  className={`w-full px-4 py-3 rounded-lg border transition-all flex flex-col items-center justify-center gap-1 shadow-sm ${
                     "bg-neutral-900/90 border-neutral-800 hover:border-neutral-700 text-white"
                   }`}
                   title="Click to select another task or custom focus"
@@ -1785,7 +1785,7 @@ export function Popup() {
                 </button>
               ) : (
                 /* Custom Focus Mode (Editable Input Mode) */
-                <div className="w-full flex items-center rounded-xl border bg-neutral-900 border-neutral-800 focus-within:border-white px-2 py-1 transition-colors">
+                <div className="w-full flex items-center rounded-lg border bg-neutral-900 border-neutral-800 focus-within:border-white px-2 py-1 transition-colors">
                   <input
                     type="text"
                     value={state.sessionName}
@@ -1808,7 +1808,7 @@ export function Popup() {
 
             {/* Subtasks Section for Selected Task */}
             {selectedTask && (selectedTask.subtasks || []).length > 0 && (
-              <div className={`w-full max-w-[280px] p-2.5 mb-2 rounded-xl border flex flex-col gap-1.5 ${
+              <div className={`w-full max-w-[280px] p-2.5 mb-2 rounded-lg border flex flex-col gap-1.5 ${
                 "bg-neutral-900/90 border-neutral-800"
               }`}>
                 <div className="flex items-center justify-between text-[11px] font-mono font-bold opacity-70">
@@ -1832,7 +1832,7 @@ export function Popup() {
 
             {/* Task Notes Section for Selected Task */}
             {selectedTask && selectedTask.notes && selectedTask.notes.trim().length > 0 && (
-              <div className={`w-full max-w-[280px] p-2.5 mb-2 rounded-xl border flex flex-col gap-1 ${
+              <div className={`w-full max-w-[280px] p-2.5 mb-2 rounded-lg border flex flex-col gap-1 ${
                 "bg-neutral-900/90 border-neutral-800"
               }`}>
                 <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-70">
