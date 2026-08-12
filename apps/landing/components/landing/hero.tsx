@@ -47,10 +47,6 @@ export function Hero() {
   return (
     <section className="relative pt-28 pb-16 md:pt-36 md:pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        {/* Release Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted border border-border text-foreground text-xs font-medium mb-6">
-          <span>FocusTracks v0.0.1 • Monorepo</span>
-        </div>
 
         {/* Hero Title */}
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight max-w-4xl mx-auto leading-tight text-foreground text-balance">

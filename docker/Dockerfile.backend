@@ -1,0 +1,9 @@
+# Dockerfile placeholder for Backend App (apps/backend)
+FROM node:22-alpine
+WORKDIR /app/apps/backend
+
+COPY apps/backend ./
+
+EXPOSE 8080
+
+CMD ["echo", "Backend service placeholder running on port 8080"]
