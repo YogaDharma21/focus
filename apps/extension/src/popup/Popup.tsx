@@ -55,7 +55,7 @@ import { BackgroundDisplay } from "./components/BackgroundDisplay";
 import { DeepFocusOverlay } from "./components/DeepFocusOverlay";
 import { Progress } from "../components/ui/progress";
 import { AppStateData, TodoItem, PriorityType, BackgroundTheme } from "../types";
-import { getStoredState, saveStoredState, subscribeToStateChanges, DEFAULT_STATE } from "../lib/storage";
+import { getStoredState, saveStoredState, subscribeToStateChanges, getCachedState, DEFAULT_STATE } from "../lib/storage";
 import "../index.css";
 
 function formatTaskDueDate(dueDate?: string, dueTime?: string): string {
@@ -109,7 +109,7 @@ const BACKGROUND_THEMES: { id: BackgroundTheme; name: string }[] = [
 ];
 
 export function Popup() {
-  const [state, setState] = useState<AppStateData | null>(null);
+  const [state, setState] = useState<AppStateData | null>(getCachedState());
   const [activeTab, setActiveTab] = useState<"timer" | "tasks" | "shield" | "notes" | "stats">("timer");
   const [showInfoModal, setShowInfoModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -637,6 +637,29 @@ export function Popup() {
     const cat = d.category || "Other";
     distractionCounts[cat] = (distractionCounts[cat] || 0) + 1;
   });
+
+  // Instant Deep Focus View when in Deep Focus Mode
+  if (state.deepFocusMode) {
+    return (
+      <div className="w-[420px] h-[580px] bg-black text-white relative flex flex-col overflow-hidden select-none font-sans">
+        <DeepFocusOverlay
+          state={state}
+          onToggleTimer={toggleTimer}
+          onCompleteSession={() => {
+            completeSession();
+            updateState({ deepFocusMode: false });
+          }}
+          onSelectDistraction={(category) => {
+            selectDistractionCategory(category);
+            updateState({ deepFocusMode: false });
+          }}
+          onToggleMusic={toggleMusicPlay}
+          onSetMusicVolume={handleMusicVolumeChange}
+          onExit={() => updateState({ deepFocusMode: false })}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className={`w-[420px] h-[580px] flex flex-col overflow-hidden select-none font-sans relative ${
@@ -2339,25 +2362,6 @@ export function Popup() {
           </div>
         )}
       </div>
-
-      {/* Deep Focus Mode Overlay */}
-      {state.deepFocusMode && (
-        <DeepFocusOverlay
-          state={state}
-          onToggleTimer={toggleTimer}
-          onCompleteSession={() => {
-            completeSession();
-            updateState({ deepFocusMode: false });
-          }}
-          onSelectDistraction={(category) => {
-            selectDistractionCategory(category);
-            updateState({ deepFocusMode: false });
-          }}
-          onToggleMusic={toggleMusicPlay}
-          onSetMusicVolume={handleMusicVolumeChange}
-          onExit={() => updateState({ deepFocusMode: false })}
-        />
-      )}
     </div>
   );
 }
