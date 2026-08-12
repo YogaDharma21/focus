@@ -18,7 +18,7 @@ jobs:
       cli: ${{ steps.filter.outputs.cli }}
       extension: ${{ steps.filter.outputs.extension }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v3
         id: filter
         with:
@@ -43,7 +43,7 @@ jobs:
     if: needs.detect-changes.outputs.website == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -63,7 +63,7 @@ jobs:
     if: needs.detect-changes.outputs.landing == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -83,7 +83,7 @@ jobs:
     if: needs.detect-changes.outputs.mobile == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -98,7 +98,7 @@ jobs:
     if: needs.detect-changes.outputs.desktop == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -116,7 +116,7 @@ jobs:
     if: needs.detect-changes.outputs.backend == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Verify Backend Directory
         run: echo "Verifying backend app setup"
 
@@ -125,7 +125,7 @@ jobs:
     if: needs.detect-changes.outputs.cli == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Verify CLI Directory
         run: echo "Verifying CLI app setup"
 
@@ -134,7 +134,7 @@ jobs:
     if: needs.detect-changes.outputs.extension == 'true'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-node@v4
         with:
           node-version: 22
