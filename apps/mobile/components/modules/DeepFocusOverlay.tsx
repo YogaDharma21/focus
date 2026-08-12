@@ -126,6 +126,28 @@ export function DeepFocusOverlay() {
           },
         ]}
       >
+        {/* Top Left Lofi-Beats Music Pill */}
+        <TouchableOpacity
+          style={[
+            styles.musicPillBtn,
+            {
+              backgroundColor: isMusicPlaying ? colors.card : 'rgba(255, 255, 255, 0.05)',
+              borderColor: isMusicPlaying ? colors.textMuted : colors.border,
+              top: Math.max(insets.top + 12, 40),
+            },
+          ]}
+          onPress={() => setMusicModalOpen(true)}
+          activeOpacity={0.7}
+        >
+          <Music size={16} color={isMusicPlaying ? colors.text : colors.textMuted} />
+          <Text style={[styles.musicPillText, { color: isMusicPlaying ? colors.text : colors.textMuted }]}>
+            Lofi-Beats
+          </Text>
+          {isMusicPlaying ? (
+            <View style={[styles.activeDot, { backgroundColor: colors.text }]} />
+          ) : null}
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={[
             styles.exitBtn,
@@ -153,17 +175,6 @@ export function DeepFocusOverlay() {
 
           {/* Deep Focus Controls Row */}
           <View style={styles.controlsRow}>
-            {/* Ambient Music Toggle Button */}
-            <TouchableOpacity
-              style={[
-                styles.secondaryActionBtn,
-                { backgroundColor: colors.card, borderColor: isMusicPlaying ? colors.primary : colors.border },
-              ]}
-              onPress={() => setMusicModalOpen(true)}
-              activeOpacity={0.7}
-            >
-              <Music size={24} color={isMusicPlaying ? colors.primary : colors.text} />
-            </TouchableOpacity>
 
             {/* Log Distraction Button */}
             <TouchableOpacity
@@ -221,17 +232,17 @@ export function DeepFocusOverlay() {
                 <TouchableOpacity
                   style={[
                     styles.distractionItem,
-                    { backgroundColor: isMusicPlaying ? colors.primary : colors.inputBg, borderColor: colors.border },
+                    { backgroundColor: isMusicPlaying ? colors.card : colors.inputBg, borderColor: isMusicPlaying ? colors.textMuted : colors.border },
                   ]}
                   onPress={() => setIsMusicPlaying(!isMusicPlaying)}
                 >
-                  <Text style={{ color: isMusicPlaying ? colors.primaryForeground : colors.text, fontWeight: '600' }}>
-                    {isMusicPlaying ? 'Pause Ambient Audio' : 'Play Ambient Audio'}
+                  <Text style={{ color: colors.text, fontWeight: '600' }}>
+                    {isMusicPlaying ? 'Pause Lofi Audio' : 'Play Lofi Audio'}
                   </Text>
                   {isMusicPlaying ? (
-                    <Pause size={18} color={colors.primaryForeground} />
+                    <Pause size={18} color={colors.text} />
                   ) : (
-                    <Play size={18} color={colors.text} />
+                    <Play size={18} color={colors.textMuted} />
                   )}
                 </TouchableOpacity>
 
@@ -242,15 +253,15 @@ export function DeepFocusOverlay() {
                   {[0.2, 0.4, 0.6, 0.8, 1.0].map((v) => (
                     <TouchableOpacity
                       key={v}
+                      onPress={() => setMusicVolume(v)}
                       style={{
                         flex: 1,
                         height: 28,
                         borderRadius: 6,
-                        backgroundColor: musicVolume >= v ? colors.primary : colors.inputBg,
+                        backgroundColor: musicVolume >= v ? colors.text : colors.inputBg,
                         borderWidth: 1,
                         borderColor: colors.border,
                       }}
-                      onPress={() => setMusicVolume(v)}
                     />
                   ))}
                 </View>
@@ -312,13 +323,35 @@ const styles = StyleSheet.create({
   },
   exitBtn: {
     position: 'absolute',
-    right: 24,
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 10,
+  },
+  musicPillBtn: {
+    position: 'absolute',
+    left: 20,
+    height: 40,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    zIndex: 10,
+  },
+  musicPillText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   content: {
     alignItems: 'center',

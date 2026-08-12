@@ -157,6 +157,77 @@ export const DeepFocusOverlay: React.FC = () => {
 
   return (
     <div className="fixed inset-0 bg-[#09090b] z-50 flex flex-col items-center justify-between p-8 select-none animate-in fade-in duration-200">
+      {/* Top Left Lofi-Beats Music Control */}
+      <div className="absolute top-6 left-6 z-50">
+        <button
+          onClick={() => setShowMusicMenu(!showMusicMenu)}
+          className={cn(
+            "h-10 px-3.5 rounded-full border transition-all flex items-center gap-2 backdrop-blur-md shadow-sm",
+            isMusicPlaying
+              ? "bg-zinc-800/95 border-zinc-700 text-white ring-1 ring-zinc-600 shadow-md"
+              : "bg-zinc-900/60 border-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-800/60"
+          )}
+          title={isMusicPlaying ? "Lofi-Beats: Playing" : "Lofi-Beats: Paused"}
+        >
+          <Music className={cn("w-4 h-4", isMusicPlaying && "text-white animate-pulse")} />
+          <span className="text-xs font-semibold tracking-wide">Lofi-Beats</span>
+          {isMusicPlaying && (
+            <span className="flex items-center gap-0.5 h-3 ml-0.5">
+              <span className="w-0.5 h-2.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+              <span className="w-0.5 h-3 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+              <span className="w-0.5 h-2 bg-white rounded-full animate-bounce" />
+            </span>
+          )}
+        </button>
+
+        {showMusicMenu && (
+          <div className="absolute top-full left-0 mt-2.5 w-60 bg-[#181818] border border-zinc-800/90 rounded-2xl shadow-2xl z-50 p-3.5 space-y-3 animate-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2 text-zinc-200">
+                <Music className="w-4 h-4 text-zinc-300" />
+                <span className="text-xs font-semibold">Lofi-Beats</span>
+              </div>
+              <button
+                onClick={() => setIsMusicPlaying(!isMusicPlaying)}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5",
+                  isMusicPlaying
+                    ? "bg-white text-black hover:bg-white/90 shadow"
+                    : "bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                )}
+              >
+                {isMusicPlaying ? (
+                  <>
+                    <Pause className="w-3.5 h-3.5 fill-current" /> Pause
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-3.5 h-3.5 fill-current" /> Play
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2.5 pt-1 border-t border-zinc-800">
+              {volume === 0 ? (
+                <VolumeX className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+              ) : (
+                <Volume2 className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+              )}
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={volume}
+                onChange={(e) => setVolume(Number(e.target.value))}
+                className="w-full h-1 bg-zinc-800 rounded-lg accent-zinc-100 cursor-pointer"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Top Right Close X Button */}
       <button
         onClick={() => setDeepFocusMode(false)}
@@ -184,69 +255,6 @@ export const DeepFocusOverlay: React.FC = () => {
 
         {/* Minimal Control Row */}
         <div className="flex items-center gap-6 relative">
-          {/* Ambient Music Control Button */}
-          <div className="relative">
-            <button
-              onClick={() => setShowMusicMenu(!showMusicMenu)}
-              className={cn(
-                "w-11 h-11 rounded-xl border flex items-center justify-center transition-colors shadow-sm",
-                isMusicPlaying
-                  ? "bg-zinc-800 border-zinc-700 text-emerald-400"
-                  : "bg-[#141414] border-zinc-800/80 text-zinc-400 hover:text-white"
-              )}
-              title={isMusicPlaying ? "Lofi-Beats: Playing" : "Lofi-Beats: Paused"}
-            >
-              <Music className={cn("w-4 h-4", isMusicPlaying && "animate-pulse")} />
-            </button>
-
-            {showMusicMenu && (
-              <div className="absolute bottom-14 left-1/2 -translate-x-1/2 w-60 bg-[#181818] border border-zinc-800/90 rounded-2xl shadow-2xl z-50 p-3 space-y-3 animate-in zoom-in-95 duration-150">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-zinc-200">
-                    <Music className="w-4 h-4 text-zinc-300" />
-                    <span className="text-xs font-semibold">Lofi-Beats</span>
-                  </div>
-                  <button
-                    onClick={() => setIsMusicPlaying(!isMusicPlaying)}
-                    className={cn(
-                      "px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5",
-                      isMusicPlaying
-                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30"
-                        : "bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
-                    )}
-                  >
-                    {isMusicPlaying ? (
-                      <>
-                        <Pause className="w-3 h-3 fill-current" /> Pause
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-3 h-3 fill-current" /> Play
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-2.5 pt-1 border-t border-zinc-800">
-                  {volume === 0 ? (
-                    <VolumeX className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
-                  ) : (
-                    <Volume2 className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
-                  )}
-                  <input
-                    type="range"
-                    min={0}
-                    max={1}
-                    step={0.05}
-                    value={volume}
-                    onChange={(e) => setVolume(Number(e.target.value))}
-                    className="w-full h-1 bg-zinc-800 rounded-lg accent-zinc-100 cursor-pointer"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Distraction Alert Popover Button */}
           <div className="relative">
             <button

@@ -63,6 +63,75 @@ export function DeepFocusOverlay({
 
   return (
     <div className="absolute inset-0 z-[100] bg-black flex flex-col items-center justify-center">
+      {/* Top Left Lofi-Beats Music Control */}
+      <div className="absolute top-4 left-4 z-50">
+        <button
+          onClick={() => setShowMusicMenu(!showMusicMenu)}
+          className={`h-8 px-2.5 rounded-full border transition-all flex items-center gap-1.5 text-xs font-semibold ${
+            state.isMusicPlaying
+              ? "bg-neutral-800 border-neutral-700 text-white ring-1 ring-neutral-600 shadow"
+              : "bg-neutral-900/60 border-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-800/60"
+          }`}
+          title={state.isMusicPlaying ? "Lofi-Beats: Playing" : "Lofi-Beats: Paused"}
+        >
+          <Music className={`w-3.5 h-3.5 ${state.isMusicPlaying ? "text-white animate-pulse" : ""}`} />
+          <span>Lofi-Beats</span>
+          {state.isMusicPlaying && (
+            <span className="flex items-center gap-0.5 h-2.5 ml-0.5">
+              <span className="w-0.5 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+              <span className="w-0.5 h-2.5 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+              <span className="w-0.5 h-1.5 bg-white rounded-full animate-bounce" />
+            </span>
+          )}
+        </button>
+
+        {showMusicMenu && (
+          <div className="absolute top-full left-0 mt-2 w-56 p-3 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl z-[200] space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-150">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5 text-neutral-200">
+                <Music className="w-3.5 h-3.5 text-neutral-400" />
+                <span className="text-xs font-semibold">Lofi-Beats</span>
+              </div>
+              <button
+                onClick={onToggleMusic}
+                className={`px-2 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${
+                  state.isMusicPlaying
+                    ? "bg-white text-black hover:bg-white/90 shadow"
+                    : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
+                }`}
+              >
+                {state.isMusicPlaying ? (
+                  <>
+                    <Pause className="w-3 h-3 fill-current" /> Pause
+                  </>
+                ) : (
+                  <>
+                    <Play className="w-3 h-3 fill-current" /> Play
+                  </>
+                )}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1 border-t border-neutral-800">
+              {state.musicVolume === 0 ? (
+                <VolumeX className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+              ) : (
+                <Volume2 className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+              )}
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.05"
+                value={state.musicVolume ?? 0.8}
+                onChange={(e) => onSetMusicVolume(parseFloat(e.target.value))}
+                className="w-full h-1 bg-neutral-800 rounded-lg accent-neutral-100 cursor-pointer"
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Close button */}
       <button
         onClick={onExit}
@@ -96,67 +165,6 @@ export function DeepFocusOverlay({
 
         {/* Control Buttons */}
         <div className="flex items-center gap-3 mt-4">
-          {/* Ambient Music Control */}
-          <div className="relative">
-            <button
-              onClick={() => setShowMusicMenu(!showMusicMenu)}
-              className={`w-11 h-11 rounded-xl border-2 flex items-center justify-center transition-all ${
-                state.isMusicPlaying
-                  ? "border-primary/50 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20"
-                  : "border-neutral-700 text-neutral-400 hover:text-white hover:border-white/20"
-              }`}
-              title={state.isMusicPlaying ? "Lofi-Beats: Playing" : "Lofi-Beats: Paused"}
-            >
-              <Music className={`w-4.5 h-4.5 ${state.isMusicPlaying ? "animate-pulse" : ""}`} />
-            </button>
-
-            {showMusicMenu && (
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-3 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl z-[200] space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-neutral-200">
-                    <Music className="w-3.5 h-3.5 text-neutral-400" />
-                    <span className="text-xs font-semibold">Lofi-Beats</span>
-                  </div>
-                  <button
-                    onClick={onToggleMusic}
-                    className={`px-2 py-1 rounded-md text-xs font-semibold transition-all flex items-center gap-1 ${
-                      state.isMusicPlaying
-                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
-                        : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
-                    }`}
-                  >
-                    {state.isMusicPlaying ? (
-                      <>
-                        <Pause className="w-3 h-3 fill-current" /> Pause
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-3 h-3 fill-current" /> Play
-                      </>
-                    )}
-                  </button>
-                </div>
-
-                <div className="flex items-center gap-2 pt-1 border-t border-neutral-800">
-                  {state.musicVolume === 0 ? (
-                    <VolumeX className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
-                  ) : (
-                    <Volume2 className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
-                  )}
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.05"
-                    value={state.musicVolume ?? 0.8}
-                    onChange={(e) => onSetMusicVolume(parseFloat(e.target.value))}
-                    className="w-full h-1 bg-neutral-800 rounded-lg accent-neutral-100 cursor-pointer"
-                  />
-                </div>
-              </div>
-            )}
-          </div>
-
           {/* Log Distraction */}
           <div className="relative">
             <button
