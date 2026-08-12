@@ -6,13 +6,14 @@ export const MediaPlayer: React.FC = () => {
   const {
     mediaPlayerOpen,
     setMediaPlayerOpen,
+    isMusicPlaying,
+    setIsMusicPlaying,
     soundEffectEnabled,
     setSoundEffectEnabled,
     volume,
     setVolume
   } = useDesktopStore();
 
-  const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
@@ -21,14 +22,20 @@ export const MediaPlayer: React.FC = () => {
     }
   }, [volume]);
 
-  const togglePlay = () => {
+  useEffect(() => {
     if (!audioRef.current) return;
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
+    if (isMusicPlaying) {
+      audioRef.current.play().catch((err) => {
+        console.warn("Audio play failed", err);
+        setIsMusicPlaying(false);
+      });
     } else {
-      audioRef.current.play().then(() => setIsPlaying(true)).catch((err) => console.warn("Audio play failed", err));
+      audioRef.current.pause();
     }
+  }, [isMusicPlaying, setIsMusicPlaying]);
+
+  const togglePlay = () => {
+    setIsMusicPlaying(!isMusicPlaying);
   };
 
   return (
@@ -37,8 +44,8 @@ export const MediaPlayer: React.FC = () => {
         ref={audioRef}
         src="./music1.mp3"
         loop
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
+        onPlay={() => setIsMusicPlaying(true)}
+        onPause={() => setIsMusicPlaying(false)}
       />
 
       {mediaPlayerOpen ? (
@@ -47,7 +54,7 @@ export const MediaPlayer: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Music className="w-4 h-4 text-zinc-300" />
-              <span className="text-xs font-semibold text-zinc-200">Ambient Music</span>
+              <span className="text-xs font-semibold text-zinc-200">Lofi-Beats</span>
             </div>
             <button
               onClick={() => setMediaPlayerOpen(false)}
@@ -62,23 +69,23 @@ export const MediaPlayer: React.FC = () => {
             <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
               <div 
                 className={`w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 shrink-0 ${
-                  isPlaying ? 'animate-spin' : ''
+                  isMusicPlaying ? 'animate-spin' : ''
                 }`}
                 style={{ animationDuration: '4s' }}
               >
                 <Disc className="w-4 h-4 text-zinc-300" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-zinc-100 truncate">Lo-Fi</p>
-                <p className="text-[10px] text-zinc-500 truncate">Focus Ambient Music</p>
+                <p className="text-xs font-semibold text-zinc-100 truncate">Lofi-Beats</p>
+                <p className="text-[10px] text-zinc-500 truncate">Lofi-Beats</p>
               </div>
             </div>
             <button
               onClick={togglePlay}
               className="p-2.5 rounded-xl bg-zinc-100 text-zinc-950 hover:bg-zinc-200 transition-all shadow-md active:scale-95 shrink-0"
-              title={isPlaying ? "Pause Music" : "Play Music"}
+              title={isMusicPlaying ? "Pause Music" : "Play Music"}
             >
-              {isPlaying ? <Pause className="w-4 h-4 fill-zinc-950" /> : <Play className="w-4 h-4 fill-zinc-950 ml-0.5" />}
+              {isMusicPlaying ? <Pause className="w-4 h-4 fill-zinc-950" /> : <Play className="w-4 h-4 fill-zinc-950 ml-0.5" />}
             </button>
           </div>
 
@@ -113,8 +120,8 @@ export const MediaPlayer: React.FC = () => {
           onClick={() => setMediaPlayerOpen(true)}
           className="p-3 rounded-2xl bg-zinc-900 border border-zinc-800 text-zinc-200 hover:text-white shadow-xl transition-all flex items-center gap-2 hover:scale-105"
         >
-          <Music className={`w-4 h-4 ${isPlaying ? "text-emerald-400 animate-pulse" : "text-zinc-300"}`} />
-          <span className="text-xs font-semibold">Lo-Fi</span>
+          <Music className={`w-4 h-4 ${isMusicPlaying ? "text-emerald-400 animate-pulse" : "text-zinc-300"}`} />
+          <span className="text-xs font-semibold">Lofi-Beats</span>
         </button>
       )}
     </div>

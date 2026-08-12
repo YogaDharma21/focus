@@ -264,7 +264,7 @@ export const FocusTimer: React.FC = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-full max-w-2xl mx-auto w-full select-none space-y-6">
       {/* 1. Top Segmented Capsule Tab Bar */}
-      <div className="bg-[#141414] border border-zinc-800/80 p-1 rounded-2xl flex items-center justify-between w-80 shadow-md">
+      <div className="bg-[#141414] border border-zinc-800/80 p-1 rounded-lg flex items-center justify-between w-80 shadow-md">
         <button
           onClick={() => handleSelectTab('POMODORO')}
           className={`flex-1 py-2 text-xs font-semibold rounded-xl transition-all flex items-center justify-center gap-1.5 ${
@@ -313,7 +313,7 @@ export const FocusTimer: React.FC = () => {
       <div className="w-full max-w-sm relative space-y-2" ref={taskSelectorRef}>
         {/* Task Selection Dropdown Popover (Matching reference design from website & extension) */}
         {showTaskDropdown && (
-          <div className="absolute bottom-full left-0 right-0 mb-2 z-50 p-2.5 rounded-2xl border border-neutral-800 bg-neutral-900/95 text-white shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-1">
+          <div className="absolute bottom-full left-0 right-0 mb-2 z-50 p-2.5 rounded-lg border border-neutral-800 bg-neutral-900/95 text-white shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-1">
             {/* Header: FOCUS TOPIC with X close button */}
             <div className="flex items-center justify-between px-2 pt-0.5 pb-1">
               <span className="text-[10px] font-mono font-bold uppercase text-neutral-400 opacity-70 tracking-wider">
@@ -404,7 +404,7 @@ export const FocusTimer: React.FC = () => {
             type="button"
             onClick={() => setShowTaskDropdown(!showTaskDropdown)}
             className={cn(
-              "w-full px-4 py-2.5 rounded-2xl border transition-all flex items-center justify-between gap-2 shadow-sm cursor-pointer group relative",
+              "w-full px-4 py-2.5 rounded-lg border transition-all flex items-center justify-between gap-2 shadow-sm cursor-pointer group relative",
               "bg-neutral-900/90 text-white",
               showTaskDropdown ? "border-white" : "border-neutral-800 hover:border-neutral-700"
             )}
@@ -422,7 +422,7 @@ export const FocusTimer: React.FC = () => {
           /* Custom Focus Mode: Pill input container matching reference image */
           <div
             className={cn(
-              "w-full flex items-center rounded-2xl border bg-neutral-900 transition-colors shadow-sm px-3 py-1.5 relative",
+              "w-full flex items-center rounded-lg border bg-neutral-900 transition-colors shadow-sm px-3 py-1.5 relative",
               showTaskDropdown ? "border-white" : "border-neutral-800 focus-within:border-white"
             )}
           >
@@ -447,7 +447,7 @@ export const FocusTimer: React.FC = () => {
 
         {/* Subtasks checklist for selected active task */}
         {activeTask && activeTask.subtasks && activeTask.subtasks.length > 0 && (
-          <div className="w-full bg-[#141414] border border-zinc-800/80 rounded-2xl p-3 space-y-2 text-xs shadow-md mt-3 animate-in fade-in duration-200">
+          <div className="w-full bg-[#141414] border border-zinc-800/80 rounded-lg p-3 space-y-2 text-xs shadow-md mt-3 animate-in fade-in duration-200">
             <div className="flex items-center justify-between px-1">
               <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
                 Subtasks ({activeTask.subtasks.filter(s => s.completed).length}/{activeTask.subtasks.length})
@@ -476,7 +476,7 @@ export const FocusTimer: React.FC = () => {
 
         {/* Task Notes for selected active task */}
         {activeTask && activeTask.notes && activeTask.notes.trim().length > 0 && (
-          <div className="w-full bg-[#141414] border border-zinc-800/80 rounded-2xl p-3 space-y-1.5 text-xs shadow-md mt-3 animate-in fade-in duration-200">
+          <div className="w-full bg-[#141414] border border-zinc-800/80 rounded-lg p-3 space-y-1.5 text-xs shadow-md mt-3 animate-in fade-in duration-200">
             <div className="flex items-center gap-1.5 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
               <FileText className="w-3.5 h-3.5 text-zinc-500" />
               <span>Task Notes</span>

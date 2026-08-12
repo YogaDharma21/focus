@@ -3,8 +3,9 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
+import { Radius } from '@/constants/theme';
 import { playCompletionSound } from '@/lib/sound';
-import { Play, Pause, X, Focus, AlertTriangle, CheckCircle2, Plus } from 'lucide-react-native';
+import { Play, Pause, X, AlertTriangle, CheckCircle2, Plus, Music, Volume2, VolumeX } from 'lucide-react-native';
 
 const DISTRACTION_CATEGORIES = [
   'Social Media',
@@ -35,10 +36,16 @@ export function DeepFocusOverlay() {
     addDistraction,
     pomodoroSettings,
     selectedTodoId,
+    todos,
     incrementTodoSession,
+    isMusicPlaying,
+    setIsMusicPlaying,
+    musicVolume,
+    setMusicVolume,
   } = useAppStore();
 
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
+  const [musicModalOpen, setMusicModalOpen] = useState(false);
 
   if (!deepFocusMode) return null;
 
@@ -119,6 +126,28 @@ export function DeepFocusOverlay() {
           },
         ]}
       >
+        {/* Top Left Lofi-Beats Music Pill */}
+        <TouchableOpacity
+          style={[
+            styles.musicPillBtn,
+            {
+              backgroundColor: isMusicPlaying ? colors.card : 'rgba(255, 255, 255, 0.05)',
+              borderColor: isMusicPlaying ? colors.textMuted : colors.border,
+              top: Math.max(insets.top + 12, 40),
+            },
+          ]}
+          onPress={() => setMusicModalOpen(true)}
+          activeOpacity={0.7}
+        >
+          <Music size={16} color={isMusicPlaying ? colors.text : colors.textMuted} />
+          <Text style={[styles.musicPillText, { color: isMusicPlaying ? colors.text : colors.textMuted }]}>
+            Lofi-Beats
+          </Text>
+          {isMusicPlaying ? (
+            <View style={[styles.activeDot, { backgroundColor: colors.text }]} />
+          ) : null}
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={[
             styles.exitBtn,
@@ -134,21 +163,19 @@ export function DeepFocusOverlay() {
         </TouchableOpacity>
 
         <View style={styles.content}>
-          <View style={styles.headerBadge}>
-            <Focus size={18} color={colors.textMuted} />
-            <Text style={[styles.modeLabel, { color: colors.textMuted }]}>
-              Deep Focus Mode • {timerMode === 'POMODORO' ? (timerState === 'WORK' ? 'Work' : 'Break') : 'Flow Mode'}
-            </Text>
-          </View>
-
           <Text style={[styles.timerText, { color: colors.text }]}>{formatTime(timeLeft)}</Text>
 
-          {sessionName ? (
-            <Text style={[styles.sessionText, { color: colors.textMuted }]}>{sessionName}</Text>
-          ) : null}
+          {(() => {
+            const selectedTodo = todos.find((t) => t.id === selectedTodoId);
+            const displayTitle = selectedTodo ? selectedTodo.text : sessionName;
+            return displayTitle ? (
+              <Text style={[styles.sessionText, { color: colors.textMuted }]}>{displayTitle}</Text>
+            ) : null;
+          })()}
 
           {/* Deep Focus Controls Row */}
           <View style={styles.controlsRow}>
+
             {/* Log Distraction Button */}
             <TouchableOpacity
               style={[
@@ -191,6 +218,64 @@ export function DeepFocusOverlay() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Ambient Music Control Modal */}
+        <Modal visible={musicModalOpen} transparent animationType="fade" onRequestClose={() => setMusicModalOpen(false)}>
+          <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setMusicModalOpen(false)}>
+            <TouchableOpacity activeOpacity={1} style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => {}}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Lofi-Beats</Text>
+              <Text style={[styles.modalSub, { color: colors.textMuted }]}>
+                Control Lofi-Beats audio while in Deep Focus mode.
+              </Text>
+              
+              <View style={{ gap: 12, marginVertical: 16 }}>
+                <TouchableOpacity
+                  style={[
+                    styles.distractionItem,
+                    { backgroundColor: isMusicPlaying ? colors.card : colors.inputBg, borderColor: isMusicPlaying ? colors.textMuted : colors.border },
+                  ]}
+                  onPress={() => setIsMusicPlaying(!isMusicPlaying)}
+                >
+                  <Text style={{ color: colors.text, fontWeight: '600' }}>
+                    {isMusicPlaying ? 'Pause Lofi Audio' : 'Play Lofi Audio'}
+                  </Text>
+                  {isMusicPlaying ? (
+                    <Pause size={18} color={colors.text} />
+                  ) : (
+                    <Play size={18} color={colors.textMuted} />
+                  )}
+                </TouchableOpacity>
+
+                <Text style={{ color: colors.textMuted, fontSize: 13, marginTop: 4 }}>
+                  Volume: {Math.round(musicVolume * 100)}%
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  {[0.2, 0.4, 0.6, 0.8, 1.0].map((v) => (
+                    <TouchableOpacity
+                      key={v}
+                      onPress={() => setMusicVolume(v)}
+                      style={{
+                        flex: 1,
+                        height: 28,
+                        borderRadius: 6,
+                        backgroundColor: musicVolume >= v ? colors.text : colors.inputBg,
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                      }}
+                    />
+                  ))}
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.closeModalBtn, { backgroundColor: colors.border }]}
+                onPress={() => setMusicModalOpen(false)}
+              >
+                <Text style={{ color: colors.text, fontWeight: '600' }}>Done</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
 
         {/* Distraction Logger Modal */}
         <Modal visible={distractionModalOpen} transparent animationType="fade" onRequestClose={() => setDistractionModalOpen(false)}>
@@ -238,13 +323,35 @@ const styles = StyleSheet.create({
   },
   exitBtn: {
     position: 'absolute',
-    right: 24,
-    width: 44,
-    height: 44,
-    borderRadius: 12,
+    right: 20,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    zIndex: 10,
+  },
+  musicPillBtn: {
+    position: 'absolute',
+    left: 20,
+    height: 40,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    zIndex: 10,
+  },
+  musicPillText: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  activeDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
   },
   content: {
     alignItems: 'center',
@@ -281,7 +388,7 @@ const styles = StyleSheet.create({
   playBtn: {
     width: 80,
     height: 80,
-    borderRadius: 22,
+    borderRadius: Radius.base,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
@@ -289,7 +396,7 @@ const styles = StyleSheet.create({
   secondaryActionBtn: {
     width: 52,
     height: 52,
-    borderRadius: 14,
+    borderRadius: Radius.base,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -304,7 +411,7 @@ const styles = StyleSheet.create({
   modalBox: {
     width: '100%',
     maxWidth: 360,
-    borderRadius: 20,
+    borderRadius: Radius.base,
     borderWidth: 1,
     padding: 20,
   },

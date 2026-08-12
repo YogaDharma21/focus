@@ -21,11 +21,13 @@ export function MediaPlayer() {
     setMediaPlayerOpen,
     localPlaylist,
     setMediaUrl,
+    isMusicPlaying,
+    setIsMusicPlaying,
+    musicVolume,
+    setMusicVolume,
   } = useAppStore();
 
-  const [isPlaying, setIsPlaying] = useState(false);
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const [volume, setVolume] = useState(0.8);
   const soundRef = useRef<Audio.Sound | null>(null);
 
   const bottomOffset = 56 + Math.max(insets.bottom, 0) + 12;
@@ -54,38 +56,44 @@ export function MediaPlayer() {
         : require('../../assets/music1.mp3');
       const { sound } = await Audio.Sound.createAsync(
         source,
-        { shouldPlay: true, isLooping: true, volume }
+        { shouldPlay: true, isLooping: true, volume: musicVolume }
       );
       soundRef.current = sound;
-      setIsPlaying(true);
+      setIsMusicPlaying(true);
     } catch (error) {
       console.log('Error loading audio:', error);
     }
   };
 
   const changeVolume = async (newVol: number) => {
-    setVolume(newVol);
+    setMusicVolume(newVol);
     if (soundRef.current) {
       await soundRef.current.setVolumeAsync(newVol);
     }
   };
 
-  const togglePlay = async () => {
-    if (!soundRef.current) {
-      const track = localPlaylist[currentTrackIndex] || localPlaylist[0];
-      if (track) {
-        await playSound(track.url);
+  useEffect(() => {
+    const syncState = async () => {
+      if (isMusicPlaying) {
+        if (!soundRef.current) {
+          const track = localPlaylist[currentTrackIndex] || localPlaylist[0];
+          if (track) {
+            await playSound(track.url);
+          }
+        } else {
+          await soundRef.current.playAsync();
+        }
+      } else {
+        if (soundRef.current) {
+          await soundRef.current.pauseAsync();
+        }
       }
-      return;
-    }
+    };
+    syncState();
+  }, [isMusicPlaying]);
 
-    if (isPlaying) {
-      await soundRef.current.pauseAsync();
-      setIsPlaying(false);
-    } else {
-      await soundRef.current.playAsync();
-      setIsPlaying(true);
-    }
+  const togglePlay = async () => {
+    setIsMusicPlaying(!isMusicPlaying);
   };
 
   const selectTrack = async (index: number) => {
@@ -131,7 +139,7 @@ export function MediaPlayer() {
           onPress={togglePlay}
           activeOpacity={0.8}
         >
-          {isPlaying ? (
+          {isMusicPlaying ? (
             <Pause size={16} color={colors.primaryForeground} />
           ) : (
             <Play size={16} color={colors.primaryForeground} fill={colors.primaryForeground} style={{ marginLeft: 2 }} />
@@ -200,7 +208,7 @@ export function MediaPlayer() {
                           </Text>
                         )}
                       </View>
-                      {active && isPlaying && <Volume2 size={16} color={colors.text} />}
+                      {active && isMusicPlaying && <Volume2 size={16} color={colors.text} />}
                     </TouchableOpacity>
                   );
                 })}
@@ -211,7 +219,7 @@ export function MediaPlayer() {
                 <View style={styles.volumeHeader}>
                   <Volume2 size={16} color={colors.textMuted} />
                   <Text style={[styles.volumeText, { color: colors.textMuted }]}>
-                    Volume ({Math.round(volume * 100)}%)
+                    Volume ({Math.round(musicVolume * 100)}%)
                   </Text>
                 </View>
                 <View style={styles.volumeBarRow}>
@@ -221,7 +229,7 @@ export function MediaPlayer() {
                       style={[
                         styles.volumeStepBtn,
                         {
-                          backgroundColor: volume >= v ? colors.text : colors.inputBg,
+                          backgroundColor: musicVolume >= v ? colors.text : colors.inputBg,
                           borderColor: colors.border,
                         },
                       ]}
