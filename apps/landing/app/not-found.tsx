@@ -1,75 +1,80 @@
-import Link from "next/link"
-import { Header } from "@/components/landing/header"
-import { Footer } from "@/components/landing/footer"
-import { buttonVariants } from "@/components/ui/button"
-import { ArrowLeft, Timer, Sparkles, Home } from "lucide-react"
+import Link from "next/link";
+import { ArrowLeft, Focus, Sparkles, Compass } from "lucide-react";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex flex-col bg-background text-foreground selection:bg-indigo-500 selection:text-white font-sans antialiased">
-      <Header />
+    <main className="relative min-h-screen flex items-center justify-center overflow-hidden bg-background text-foreground p-6 selection:bg-primary selection:text-primary-foreground">
+      {/* Background ambient glowing orbs */}
+      <div className="fixed inset-0 pointer-events-none z-0">
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-primary/10 rounded-full blur-[140px] animate-pulse" />
+        <div className="absolute bottom-10 right-10 w-[300px] h-[300px] bg-indigo-500/10 rounded-full blur-[100px]" />
+        <div className="absolute top-10 left-10 w-[250px] h-[250px] bg-amber-500/5 rounded-full blur-[90px]" />
+      </div>
 
-      <main className="flex-1 flex items-center justify-center relative overflow-hidden pt-32 pb-20 px-4 sm:px-6 lg:px-8">
-        {/* Background glow effects */}
-        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] bg-gradient-to-tr from-indigo-500/15 via-purple-500/10 to-pink-500/5 rounded-full blur-3xl pointer-events-none" />
-
-        <div className="relative z-10 max-w-2xl w-full text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold tracking-wide uppercase mb-8">
-            <Sparkles className="size-3.5" />
-            <span>404 Error</span>
+      <div className="relative z-10 max-w-xl w-full text-center">
+        {/* Glassmorphic Card Container */}
+        <div className="relative p-8 sm:p-12 rounded-3xl border border-white/10 dark:border-white/10 bg-white/5 dark:bg-black/20 backdrop-blur-2xl shadow-2xl transition-all duration-300">
+          
+          {/* Animated Top Badge */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold tracking-wider uppercase mb-6 animate-bounce">
+            <Sparkles className="w-3.5 h-3.5" />
+            <span>404 - Out of Focus</span>
           </div>
 
-          {/* Glowing Hero Number & Icon */}
-          <div className="relative mb-6 flex items-center justify-center">
-            <h1 className="text-8xl sm:text-9xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-foreground via-foreground/70 to-foreground/20 select-none">
+          {/* Glowing 404 Hero Display */}
+          <div className="relative flex items-center justify-center mb-6">
+            <h1 className="text-8xl sm:text-9xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-foreground via-foreground/80 to-foreground/30 select-none">
               404
             </h1>
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="size-20 sm:size-24 rounded-full border border-indigo-500/30 bg-indigo-500/5 backdrop-blur-md flex items-center justify-center animate-pulse">
-                <Timer className="size-10 text-indigo-400 opacity-90" />
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-dashed border-primary/40 flex items-center justify-center">
+                <Focus className="w-10 h-10 sm:w-12 sm:h-12 text-primary opacity-80" />
               </div>
             </div>
           </div>
 
-          {/* Heading */}
-          <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight mb-4">
-            Looks like you've drifted off focus.
+          {/* Heading & Subtitle */}
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">
+            Lost Your Flow?
           </h2>
-
-          {/* Description */}
-          <p className="text-muted-foreground text-base sm:text-lg leading-relaxed max-w-lg mx-auto mb-10">
-            The page you are looking for doesn't exist or has been relocated. Let's get you back to productivity.
+          <p className="text-muted-foreground text-sm sm:text-base leading-relaxed mb-8 max-w-md mx-auto">
+            The page you are looking for has drifted away or does not exist. Let's get your attention back on track.
           </p>
 
-          {/* Actions */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+          {/* Navigation Action Buttons */}
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               href="/"
-              className={buttonVariants({
-                size: "lg",
-                className: "w-full sm:w-auto font-semibold px-6 gap-2 bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-500/25",
-              })}
+              className={cn(
+                buttonVariants({ variant: "default", size: "lg" }),
+                "w-full sm:w-auto font-medium px-6 gap-2 shadow-lg shadow-primary/25 hover:shadow-primary/40 transition-all"
+              )}
             >
-              <Home className="size-4" />
-              Back to Main Page
+              <Focus className="w-4 h-4" />
+              Return to Focus App
             </Link>
             <Link
-              href="/#features"
-              className={buttonVariants({
-                variant: "outline",
-                size: "lg",
-                className: "w-full sm:w-auto font-semibold px-6 gap-2 border-border hover:bg-muted",
-              })}
+              href="/"
+              className={cn(
+                buttonVariants({ variant: "outline", size: "lg" }),
+                "w-full sm:w-auto font-medium px-6 gap-2 border-white/10 hover:bg-white/10"
+              )}
             >
-              <ArrowLeft className="size-4" />
-              Explore Features
+              <ArrowLeft className="w-4 h-4" />
+              Go Back Home
             </Link>
           </div>
-        </div>
-      </main>
 
-      <Footer />
-    </div>
-  )
+          {/* Footer Hint */}
+          <div className="mt-8 pt-6 border-t border-white/10 flex items-center justify-center gap-2 text-xs text-muted-foreground/70">
+            <Compass className="w-3.5 h-3.5" />
+            <span>Need assistance? Reach back to your main workspace.</span>
+          </div>
+
+        </div>
+      </div>
+    </main>
+  );
 }
