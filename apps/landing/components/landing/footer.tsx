@@ -30,6 +30,9 @@ export function Footer() {
               className="size-7 rounded-md object-contain"
             />
             <span className="font-bold text-sm text-foreground">Focus</span>
+            <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-full bg-muted border border-border text-muted-foreground">
+              v0.0.1
+            </span>
           </div>
 
           {/* Links */}
@@ -43,11 +46,11 @@ export function Footer() {
               <span>Launch Web App</span>
               <ExternalLink className="size-3" />
             </a>
-            <a href="#features" className="hover:text-foreground transition-colors">
-              Features
-            </a>
             <a href="#ecosystem" className="hover:text-foreground transition-colors">
               Ecosystem
+            </a>
+            <a href="#features" className="hover:text-foreground transition-colors">
+              Features
             </a>
             <a href="#download" className="hover:text-foreground transition-colors">
               Downloads
@@ -66,8 +69,10 @@ export function Footer() {
             </a>
           </div>
 
-          {/* License */}
-          <div className="text-xs text-muted-foreground">
+          {/* License & Version */}
+          <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium">
+            <span>Focus v0.0.1</span>
+            <span>•</span>
             <span>MIT License</span>
           </div>
         </div>

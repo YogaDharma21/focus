@@ -54,16 +54,16 @@ export function Header() {
         {/* Desktop Nav - Mathematically Centered */}
         <nav className="hidden md:flex items-center gap-1 bg-muted/50 p-1 rounded-full border border-border absolute left-1/2 -translate-x-1/2">
           <a
-            href="#features"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-full transition-colors"
-          >
-            Features
-          </a>
-          <a
             href="#ecosystem"
             className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-full transition-colors"
           >
             Ecosystem
+          </a>
+          <a
+            href="#features"
+            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-full transition-colors"
+          >
+            Features
           </a>
           <a
             href="#interactive-demo"
@@ -121,18 +121,18 @@ export function Header() {
       {mobileMenuOpen && (
         <div className="md:hidden bg-background border-b border-border px-6 py-6 space-y-4">
           <a
-            href="#features"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block text-sm font-medium text-foreground py-2 border-b border-border/50"
-          >
-            Features
-          </a>
-          <a
             href="#ecosystem"
             onClick={() => setMobileMenuOpen(false)}
             className="block text-sm font-medium text-foreground py-2 border-b border-border/50"
           >
             Ecosystem
+          </a>
+          <a
+            href="#features"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-sm font-medium text-foreground py-2 border-b border-border/50"
+          >
+            Features
           </a>
           <a
             href="#interactive-demo"

@@ -1,0 +1,28 @@
+# Dockerfile for Website App (apps/website)
+FROM node:22-alpine AS builder
+WORKDIR /app
+
+# Copy website package files
+COPY apps/website/package*.json ./apps/website/
+WORKDIR /app/apps/website
+RUN npm install
+
+# Copy website source code
+COPY apps/website ./
+RUN npm run build
+
+# Runner stage
+FROM node:22-alpine AS runner
+WORKDIR /app/apps/website
+
+ENV NODE_ENV=production
+ENV PORT=3000
+
+COPY --from=builder /app/apps/website/package*.json ./
+COPY --from=builder /app/apps/website/.next ./.next
+COPY --from=builder /app/apps/website/public ./public
+COPY --from=builder /app/apps/website/node_modules ./node_modules
+
+EXPOSE 3000
+
+CMD ["npm", "run", "start", "--", "-p", "3000"]
