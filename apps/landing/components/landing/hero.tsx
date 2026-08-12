@@ -66,14 +66,14 @@ export function Hero() {
             href="https://focustracks.vercel.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"
           >
             Launch Web App
             <ExternalLink className="size-4" />
           </a>
           <a
             href="#ecosystem"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-muted hover:bg-muted/80 text-foreground font-medium text-sm border border-border transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-medium text-sm border border-border transition-colors"
           >
             Explore All 4 Apps
             <ArrowRight className="size-4" />
