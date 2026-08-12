@@ -5,7 +5,7 @@ import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
 import { Radius } from '@/constants/theme';
 import { playCompletionSound } from '@/lib/sound';
-import { Play, Pause, X, Focus, AlertTriangle, CheckCircle2, Plus, Music, Volume2, VolumeX } from 'lucide-react-native';
+import { Play, Pause, X, AlertTriangle, CheckCircle2, Plus, Music, Volume2, VolumeX } from 'lucide-react-native';
 
 const DISTRACTION_CATEGORIES = [
   'Social Media',
@@ -141,13 +141,6 @@ export function DeepFocusOverlay() {
         </TouchableOpacity>
 
         <View style={styles.content}>
-          <View style={styles.headerBadge}>
-            <Focus size={18} color={colors.textMuted} />
-            <Text style={[styles.modeLabel, { color: colors.textMuted }]}>
-              Deep Focus Mode
-            </Text>
-          </View>
-
           <Text style={[styles.timerText, { color: colors.text }]}>{formatTime(timeLeft)}</Text>
 
           {(() => {
