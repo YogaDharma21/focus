@@ -108,7 +108,7 @@ export function MediaPlayer() {
             >
                 <Music className={cn("w-4 h-4 transition-transform duration-300 group-hover:scale-110", isMusicPlaying && "text-primary animate-pulse")} />
                 <span className="font-semibold text-xs sm:text-sm tracking-wide">
-                    Lo-Fi
+                    Lofi-Beats
                 </span>
                 {isMusicPlaying && (
                     <span className="flex items-center gap-0.5 h-3 ml-0.5">
@@ -127,7 +127,7 @@ export function MediaPlayer() {
                         <div className="flex items-center gap-2 text-white">
                             <Music className="w-4 h-4 text-white/90" />
                             <span className="text-sm font-semibold tracking-wide">
-                                Ambient Music
+                                Lofi-Beats
                             </span>
                         </div>
                         <button
@@ -150,10 +150,10 @@ export function MediaPlayer() {
                             </div>
                             <div className="min-w-0">
                                 <h4 className="text-sm font-bold text-white truncate">
-                                    Lo-Fi
+                                    Lofi-Beats
                                 </h4>
                                 <p className="text-xs text-white/50 truncate">
-                                    Focus Ambient Music
+                                    Lofi-Beats
                                 </p>
                             </div>
                         </div>

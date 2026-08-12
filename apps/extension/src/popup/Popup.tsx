@@ -1505,7 +1505,7 @@ export function Popup() {
           >
             <Music className="w-4 h-4 text-current shrink-0" />
             <div className="flex-1 min-w-0">
-              <div className="text-xs font-semibold truncate">Lo-Fi</div>
+              <div className="text-xs font-semibold truncate">Lofi-Beats</div>
             </div>
           </div>
 
@@ -1566,7 +1566,7 @@ export function Popup() {
               <div className="flex items-center gap-2.5">
                 <Music className={`w-4 h-4 ${isMusicPlaying ? "text-primary animate-pulse" : "opacity-50"}`} />
                 <div>
-                  <div className="text-xs font-bold">Lo-Fi</div>
+                  <div className="text-xs font-bold">Lofi-Beats</div>
                 </div>
               </div>
 

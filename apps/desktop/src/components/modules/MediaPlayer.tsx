@@ -54,7 +54,7 @@ export const MediaPlayer: React.FC = () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Music className="w-4 h-4 text-zinc-300" />
-              <span className="text-xs font-semibold text-zinc-200">Ambient Music</span>
+              <span className="text-xs font-semibold text-zinc-200">Lofi-Beats</span>
             </div>
             <button
               onClick={() => setMediaPlayerOpen(false)}
@@ -76,8 +76,8 @@ export const MediaPlayer: React.FC = () => {
                 <Disc className="w-4 h-4 text-zinc-300" />
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-zinc-100 truncate">Lo-Fi</p>
-                <p className="text-[10px] text-zinc-500 truncate">Focus Ambient Music</p>
+                <p className="text-xs font-semibold text-zinc-100 truncate">Lofi-Beats</p>
+                <p className="text-[10px] text-zinc-500 truncate">Lofi-Beats</p>
               </div>
             </div>
             <button
@@ -121,7 +121,7 @@ export const MediaPlayer: React.FC = () => {
           className="p-3 rounded-2xl bg-zinc-900 border border-zinc-800 text-zinc-200 hover:text-white shadow-xl transition-all flex items-center gap-2 hover:scale-105"
         >
           <Music className={`w-4 h-4 ${isMusicPlaying ? "text-emerald-400 animate-pulse" : "text-zinc-300"}`} />
-          <span className="text-xs font-semibold">Lo-Fi</span>
+          <span className="text-xs font-semibold">Lofi-Beats</span>
         </button>
       )}
     </div>

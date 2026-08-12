@@ -194,7 +194,7 @@ export const DeepFocusOverlay: React.FC = () => {
                   ? "bg-zinc-800 border-zinc-700 text-emerald-400"
                   : "bg-[#141414] border-zinc-800/80 text-zinc-400 hover:text-white"
               )}
-              title={isMusicPlaying ? "Ambient Music: Playing" : "Ambient Music: Paused"}
+              title={isMusicPlaying ? "Lofi-Beats: Playing" : "Lofi-Beats: Paused"}
             >
               <Music className={cn("w-4 h-4", isMusicPlaying && "animate-pulse")} />
             </button>
@@ -204,7 +204,7 @@ export const DeepFocusOverlay: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-zinc-200">
                     <Music className="w-4 h-4 text-zinc-300" />
-                    <span className="text-xs font-semibold">Ambient Music</span>
+                    <span className="text-xs font-semibold">Lofi-Beats</span>
                   </div>
                   <button
                     onClick={() => setIsMusicPlaying(!isMusicPlaying)}
