@@ -47,10 +47,6 @@ export function Hero() {
   return (
     <section className="relative pt-28 pb-16 md:pt-36 md:pb-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-        {/* Release Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted border border-border text-foreground text-xs font-medium mb-6">
-          <span>FocusTracks v0.0.1 • Monorepo</span>
-        </div>
 
         {/* Hero Title */}
         <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight max-w-4xl mx-auto leading-tight text-foreground text-balance">
@@ -70,14 +66,14 @@ export function Hero() {
             href="https://focustracks.vercel.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"
           >
             Launch Web App
             <ExternalLink className="size-4" />
           </a>
           <a
             href="#ecosystem"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-muted hover:bg-muted/80 text-foreground font-medium text-sm border border-border transition-colors"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-medium text-sm border border-border transition-colors"
           >
             Explore All 4 Apps
             <ArrowRight className="size-4" />

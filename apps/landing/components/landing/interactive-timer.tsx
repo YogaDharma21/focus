@@ -103,7 +103,7 @@ export function InteractiveTimer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted border border-border text-foreground text-xs font-medium mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-muted border border-border text-foreground text-xs font-medium mb-3">
             <span>Live Interactive Demo</span>
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-foreground">
@@ -163,7 +163,7 @@ export function InteractiveTimer() {
                 <button
                   key={task}
                   onClick={() => setSelectedTask(task)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
                     selectedTask === task
                       ? "bg-primary text-primary-foreground"
                       : "bg-muted text-muted-foreground hover:text-foreground"
@@ -176,34 +176,24 @@ export function InteractiveTimer() {
             </div>
           </div>
 
-          {/* Timer Circle */}
-          <div className="flex flex-col items-center justify-center my-4">
-            <div className="size-56 sm:size-64 rounded-full border-2 border-border bg-background flex flex-col items-center justify-center">
-              <span className="text-[11px] font-mono uppercase tracking-wider text-muted-foreground mb-1">
-                {mode === "pomodoro"
-                  ? "Focus Session"
-                  : mode === "break"
-                  ? "Break Time"
-                  : "Flow Mode Active"}
-              </span>
-
-              <span className="text-5xl font-black font-mono tracking-tight text-foreground">
-                {mode === "flow" ? formatTime(flowSeconds) : formatTime(seconds)}
-              </span>
-
-              {mode === "flow" && (
-                <div className="mt-2 flex items-center gap-1 text-xs font-medium text-muted-foreground bg-muted px-2.5 py-0.5 rounded-md">
-                  <Calculator className="size-3" />
-                  <span>Calculated Break: {calculatedBreakMins} min</span>
-                </div>
-              )}
+          {/* Timer Display (No Circle) */}
+          <div className="flex flex-col items-center justify-center my-6">
+            <div className="text-[4rem] sm:text-[5.5rem] md:text-[7rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow select-none font-mono">
+              {mode === "flow" ? formatTime(flowSeconds) : formatTime(seconds)}
             </div>
 
+            {mode === "flow" && (
+              <div className="mt-3 flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-muted px-3 py-1 rounded-lg border border-border">
+                <Calculator className="size-3.5 text-primary" />
+                <span>Calculated Break: {calculatedBreakMins} min</span>
+              </div>
+            )}
+
             {/* Timer Controls */}
-            <div className="flex items-center gap-3 mt-6">
+            <div className="flex items-center gap-3 mt-8">
               <button
                 onClick={() => setIsRunning(!isRunning)}
-                className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-primary text-primary-foreground font-medium text-xs hover:opacity-90 transition-opacity"
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium text-xs hover:opacity-90 transition-opacity"
               >
                 {isRunning ? (
                   <>
@@ -217,7 +207,7 @@ export function InteractiveTimer() {
               </button>
               <button
                 onClick={resetTimer}
-                className="p-2.5 rounded-full bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors"
+                className="p-2.5 rounded-xl bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors"
                 title="Reset Timer"
               >
                 <RotateCcw className="size-4" />

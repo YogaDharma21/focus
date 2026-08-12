@@ -112,7 +112,7 @@ export function PlatformShowcase() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-12">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted border border-border text-foreground text-xs font-medium mb-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-muted border border-border text-foreground text-xs font-medium mb-3">
             <span>Cross-Platform Ecosystem</span>
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-foreground">
@@ -172,7 +172,7 @@ export function PlatformShowcase() {
             {/* App Info Left */}
             <div className="lg:col-span-5 space-y-5">
               <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-muted text-foreground border border-border">
+                <span className="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-muted text-foreground border border-border">
                   {currentApp.name}
                 </span>
                 <span className="text-xs text-muted-foreground font-mono">

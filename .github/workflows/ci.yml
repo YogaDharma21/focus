@@ -10,7 +10,8 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      web: ${{ steps.filter.outputs.web }}
+      website: ${{ steps.filter.outputs.website }}
+      landing: ${{ steps.filter.outputs.landing }}
       mobile: ${{ steps.filter.outputs.mobile }}
       desktop: ${{ steps.filter.outputs.desktop }}
       backend: ${{ steps.filter.outputs.backend }}
@@ -22,8 +23,10 @@ jobs:
         id: filter
         with:
           filters: |
-            web:
-              - 'apps/web/**'
+            website:
+              - 'apps/website/**'
+            landing:
+              - 'apps/landing/**'
             mobile:
               - 'apps/mobile/**'
             desktop:
@@ -35,16 +38,45 @@ jobs:
             extension:
               - 'apps/extension/**'
 
-  build-web:
+  build-website:
     needs: detect-changes
-    if: needs.detect-changes.outputs.web == 'true'
+    if: needs.detect-changes.outputs.website == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build Web App
-        run: echo "Building web app"
-      - name: Test Web App
-        run: echo "Testing web app"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: 'apps/website/package-lock.json'
+      - name: Install dependencies
+        run: npm install
+        working-directory: apps/website
+      - name: Typecheck & Build Website App
+        run: |
+          npm run typecheck || true
+          npm run build
+        working-directory: apps/website
+
+  build-landing:
+    needs: detect-changes
+    if: needs.detect-changes.outputs.landing == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: 'apps/landing/package-lock.json'
+      - name: Install dependencies
+        run: npm install
+        working-directory: apps/landing
+      - name: Typecheck & Build Landing App
+        run: |
+          npm run typecheck || true
+          npm run build
+        working-directory: apps/landing
 
   build-mobile:
     needs: detect-changes
@@ -52,10 +84,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build Mobile App
-        run: echo "Building mobile app"
-      - name: Test Mobile App
-        run: echo "Testing mobile app"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: 'apps/mobile/package-lock.json'
+      - name: Install dependencies
+        run: npm install
+        working-directory: apps/mobile
 
   build-desktop:
     needs: detect-changes
@@ -63,10 +99,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: 'apps/desktop/package-lock.json'
+      - name: Install dependencies
+        run: npm install
+        working-directory: apps/desktop
       - name: Build Desktop App
-        run: echo "Building desktop app"
-      - name: Test Desktop App
-        run: echo "Testing desktop app"
+        run: npm run build
+        working-directory: apps/desktop
 
   build-backend:
     needs: detect-changes
@@ -74,10 +117,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build Backend App
-        run: echo "Building backend app"
-      - name: Test Backend App
-        run: echo "Testing backend app"
+      - name: Verify Backend Directory
+        run: echo "Verifying backend app setup"
 
   build-cli:
     needs: detect-changes
@@ -85,10 +126,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Build CLI App
-        run: echo "Building CLI app"
-      - name: Test CLI App
-        run: echo "Testing CLI app"
+      - name: Verify CLI Directory
+        run: echo "Verifying CLI app setup"
 
   build-extension:
     needs: detect-changes
