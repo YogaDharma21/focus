@@ -36,6 +36,7 @@ export function DeepFocusOverlay() {
     addDistraction,
     pomodoroSettings,
     selectedTodoId,
+    todos,
     incrementTodoSession,
     isMusicPlaying,
     setIsMusicPlaying,
@@ -149,9 +150,13 @@ export function DeepFocusOverlay() {
 
           <Text style={[styles.timerText, { color: colors.text }]}>{formatTime(timeLeft)}</Text>
 
-          {sessionName ? (
-            <Text style={[styles.sessionText, { color: colors.textMuted }]}>{sessionName}</Text>
-          ) : null}
+          {(() => {
+            const selectedTodo = todos.find((t) => t.id === selectedTodoId);
+            const displayTitle = selectedTodo ? selectedTodo.text : sessionName;
+            return displayTitle ? (
+              <Text style={[styles.sessionText, { color: colors.textMuted }]}>{displayTitle}</Text>
+            ) : null;
+          })()}
 
           {/* Deep Focus Controls Row */}
           <View style={styles.controlsRow}>

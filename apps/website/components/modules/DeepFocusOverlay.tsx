@@ -206,22 +206,26 @@ export function DeepFocusOverlay() {
                     {formatTime(timeLeft)}
                 </div>
 
-                {sessionName && (
-                    <div className="flex flex-col items-center gap-1">
-                        <div className="text-lg sm:text-xl text-muted-foreground text-center max-w-md px-4 truncate">
-                            {sessionName}
+                {(() => {
+                    const selectedTodo = todos.find((t) => t.id === selectedTodoId);
+                    const displayTitle = selectedTodo ? selectedTodo.text : sessionName;
+                    if (!displayTitle) return null;
+                    return (
+                        <div className="flex flex-col items-center gap-1">
+                            <div className="text-lg sm:text-xl font-semibold text-muted-foreground text-center max-w-md px-4 truncate">
+                                {displayTitle}
+                            </div>
+                            {selectedTodoId && selectedSubtaskId && (() => {
+                                const subtask = selectedTodo?.subtasks?.find((s) => s.id === selectedSubtaskId);
+                                return subtask ? (
+                                    <div className="text-sm text-muted-foreground/60 text-center max-w-md px-4 truncate">
+                                        {subtask.text}
+                                    </div>
+                                ) : null;
+                            })()}
                         </div>
-                        {selectedTodoId && selectedSubtaskId && (() => {
-                            const todo = todos.find((t) => t.id === selectedTodoId);
-                            const subtask = todo?.subtasks?.find((s) => s.id === selectedSubtaskId);
-                            return subtask ? (
-                                <div className="text-sm text-muted-foreground/60 text-center max-w-md px-4 truncate">
-                                    {subtask.text}
-                                </div>
-                            ) : null;
-                        })()}
-                    </div>
-                )}
+                    );
+                })()}
 
                 <div className="flex items-center gap-4 mt-8">
                     {/* Ambient Music Control */}
