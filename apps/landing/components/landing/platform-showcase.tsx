@@ -113,7 +113,7 @@ export function PlatformShowcase() {
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted border border-border text-foreground text-xs font-medium mb-3">
-            <span>Polyglot Monorepo</span>
+            <span>Cross-Platform Ecosystem</span>
           </div>
           <h2 className="text-3xl font-bold tracking-tight text-foreground">
             One Unified Experience Across 4 Platforms
