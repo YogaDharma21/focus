@@ -28,7 +28,7 @@ export default function NotFound() {
               404
             </h1>
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-dashed border-primary/40 animate-[spin_12s_linear_infinite] flex items-center justify-center">
+              <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-2 border-dashed border-primary/40 flex items-center justify-center">
                 <Focus className="w-10 h-10 sm:w-12 sm:h-12 text-primary opacity-80" />
               </div>
             </div>
