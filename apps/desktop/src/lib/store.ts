@@ -80,6 +80,8 @@ export interface DesktopState {
   removeFromPlaylist: (url: string) => void;
   mediaPlayerOpen: boolean;
   setMediaPlayerOpen: (open: boolean) => void;
+  isMusicPlaying: boolean;
+  setIsMusicPlaying: (playing: boolean) => void;
   setSoundEffectEnabled: (enabled: boolean) => void;
   setVolume: (volume: number) => void;
 
@@ -198,6 +200,8 @@ export const useDesktopStore = create<DesktopState>()(
         }),
       mediaPlayerOpen: true,
       setMediaPlayerOpen: (open) => set({ mediaPlayerOpen: open }),
+      isMusicPlaying: false,
+      setIsMusicPlaying: (playing) => set({ isMusicPlaying: playing }),
       setSoundEffectEnabled: (enabled) => set({ soundEffectEnabled: enabled }),
       setVolume: (volume) => set({ volume }),
 

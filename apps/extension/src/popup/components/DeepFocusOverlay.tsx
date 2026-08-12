@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback } from "react";
-import { Pause, Play, X, CheckCircle2, AlertTriangle } from "lucide-react";
+import { Pause, Play, X, CheckCircle2, AlertTriangle, Music, Volume2, VolumeX } from "lucide-react";
 import { AppStateData } from "../../types";
 
 interface DeepFocusOverlayProps {
@@ -7,6 +7,8 @@ interface DeepFocusOverlayProps {
   onToggleTimer: () => void;
   onCompleteSession: () => void;
   onSelectDistraction: (category: string) => void;
+  onToggleMusic: () => void;
+  onSetMusicVolume: (volume: number) => void;
   onExit: () => void;
 }
 
@@ -23,9 +25,12 @@ export function DeepFocusOverlay({
   onToggleTimer,
   onCompleteSession,
   onSelectDistraction,
+  onToggleMusic,
+  onSetMusicVolume,
   onExit,
 }: DeepFocusOverlayProps) {
   const [showDistractions, setShowDistractions] = React.useState(false);
+  const [showMusicMenu, setShowMusicMenu] = React.useState(false);
 
   // ESC key to exit
   useEffect(() => {
@@ -86,6 +91,67 @@ export function DeepFocusOverlay({
 
         {/* Control Buttons */}
         <div className="flex items-center gap-3 mt-4">
+          {/* Ambient Music Control */}
+          <div className="relative">
+            <button
+              onClick={() => setShowMusicMenu(!showMusicMenu)}
+              className={`w-11 h-11 rounded-xl border-2 flex items-center justify-center transition-all ${
+                state.isMusicPlaying
+                  ? "border-primary/50 text-emerald-400 bg-emerald-500/10 hover:bg-emerald-500/20"
+                  : "border-neutral-700 text-neutral-400 hover:text-white hover:border-white/20"
+              }`}
+              title={state.isMusicPlaying ? "Ambient Music: Playing" : "Ambient Music: Paused"}
+            >
+              <Music className={`w-4.5 h-4.5 ${state.isMusicPlaying ? "animate-pulse" : ""}`} />
+            </button>
+
+            {showMusicMenu && (
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-3 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl z-[200] space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5 text-neutral-200">
+                    <Music className="w-3.5 h-3.5 text-neutral-400" />
+                    <span className="text-xs font-semibold">Ambient Music</span>
+                  </div>
+                  <button
+                    onClick={onToggleMusic}
+                    className={`px-2 py-1 rounded-md text-xs font-semibold transition-all flex items-center gap-1 ${
+                      state.isMusicPlaying
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                        : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
+                    }`}
+                  >
+                    {state.isMusicPlaying ? (
+                      <>
+                        <Pause className="w-3 h-3 fill-current" /> Pause
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-3 h-3 fill-current" /> Play
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1 border-t border-neutral-800">
+                  {state.musicVolume === 0 ? (
+                    <VolumeX className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+                  ) : (
+                    <Volume2 className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                  )}
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={state.musicVolume ?? 0.8}
+                    onChange={(e) => onSetMusicVolume(parseFloat(e.target.value))}
+                    className="w-full h-1 bg-neutral-800 rounded-lg accent-neutral-100 cursor-pointer"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Log Distraction */}
           <div className="relative">
             <button

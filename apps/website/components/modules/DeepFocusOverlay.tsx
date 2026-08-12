@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppStore } from "@/lib/store";
-import { Pause, Play, X, CheckCircle2 } from "lucide-react";
+import { Pause, Play, X, CheckCircle2, Music, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -27,7 +27,15 @@ export function DeepFocusOverlay() {
         todos,
         selectedTodoId,
         selectedSubtaskId,
+        isMusicPlaying,
+        setIsMusicPlaying,
+        musicVolume,
+        setMusicVolume,
+        isMusicMuted,
+        setIsMusicMuted,
     } = useAppStore();
+
+    const [showMusicMenu, setShowMusicMenu] = useState(false);
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const sessionStartTimeRef = useRef<number | null>(null);
@@ -216,6 +224,84 @@ export function DeepFocusOverlay() {
                 )}
 
                 <div className="flex items-center gap-4 mt-8">
+                    {/* Ambient Music Control */}
+                    <div className="relative">
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className={cn(
+                                "w-14 h-14 rounded-[var(--radius)] border-2 transition-all",
+                                isMusicPlaying
+                                    ? "border-primary/50 text-primary bg-primary/10 hover:bg-primary/20"
+                                    : "hover:bg-white/5 hover:border-white/20 text-muted-foreground hover:text-foreground"
+                            )}
+                            onClick={() => setShowMusicMenu(!showMusicMenu)}
+                            title={isMusicPlaying ? "Ambient Music: Playing" : "Ambient Music: Paused"}
+                        >
+                            <Music className={cn("w-6 h-6", isMusicPlaying && "animate-pulse")} />
+                        </Button>
+
+                        {showMusicMenu && (
+                            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-64 bg-[#121214]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-3.5 shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 space-y-3">
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2 text-white">
+                                        <Music className="w-4 h-4 text-white/90" />
+                                        <span className="text-xs font-semibold tracking-wide">
+                                            Ambient Music
+                                        </span>
+                                    </div>
+                                    <button
+                                        onClick={() => setIsMusicPlaying(!isMusicPlaying)}
+                                        className={cn(
+                                            "px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5",
+                                            isMusicPlaying
+                                                ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                                                : "bg-white/10 text-white hover:bg-white/20"
+                                        )}
+                                    >
+                                        {isMusicPlaying ? (
+                                            <>
+                                                <Pause className="w-3.5 h-3.5" /> Pause
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Play className="w-3.5 h-3.5 fill-current" /> Play
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+
+                                <div className="flex items-center gap-2.5 pt-1 border-t border-white/5">
+                                    <button
+                                        onClick={() => setIsMusicMuted(!isMusicMuted)}
+                                        className="text-white/70 hover:text-white transition-colors p-1"
+                                        aria-label={isMusicMuted ? "Unmute" : "Mute"}
+                                    >
+                                        {isMusicMuted || musicVolume === 0 ? (
+                                            <VolumeX className="w-4 h-4" />
+                                        ) : (
+                                            <Volume2 className="w-4 h-4" />
+                                        )}
+                                    </button>
+                                    <input
+                                        type="range"
+                                        min="0"
+                                        max="100"
+                                        value={isMusicMuted ? 0 : musicVolume}
+                                        onChange={(e) => {
+                                            const val = parseInt(e.target.value, 10);
+                                            setMusicVolume(val);
+                                            if (val > 0 && isMusicMuted) {
+                                                setIsMusicMuted(false);
+                                            }
+                                        }}
+                                        className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
+                                    />
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
                     <DistractionCounter />
 
                     <Button

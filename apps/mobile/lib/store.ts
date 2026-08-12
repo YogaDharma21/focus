@@ -74,6 +74,10 @@ interface AppState {
   removeFromPlaylist: (url: string) => void;
   mediaPlayerOpen: boolean;
   setMediaPlayerOpen: (open: boolean) => void;
+  isMusicPlaying: boolean;
+  setIsMusicPlaying: (playing: boolean) => void;
+  musicVolume: number;
+  setMusicVolume: (volume: number) => void;
 
   timerMode: 'POMODORO' | 'STOPWATCH';
   timerState: 'WORK' | 'BREAK';
@@ -179,6 +183,10 @@ export const useAppStore = create<AppState>()(
         }),
       mediaPlayerOpen: false,
       setMediaPlayerOpen: (open) => set({ mediaPlayerOpen: open }),
+      isMusicPlaying: false,
+      setIsMusicPlaying: (playing) => set({ isMusicPlaying: playing }),
+      musicVolume: 0.8,
+      setMusicVolume: (volume) => set({ musicVolume: volume }),
 
       timerMode: 'POMODORO',
       timerState: 'WORK',

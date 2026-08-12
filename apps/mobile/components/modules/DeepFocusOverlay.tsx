@@ -4,7 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
 import { playCompletionSound } from '@/lib/sound';
-import { Play, Pause, X, Focus, AlertTriangle, CheckCircle2, Plus } from 'lucide-react-native';
+import { Play, Pause, X, Focus, AlertTriangle, CheckCircle2, Plus, Music, Volume2, VolumeX } from 'lucide-react-native';
 
 const DISTRACTION_CATEGORIES = [
   'Social Media',
@@ -36,9 +36,14 @@ export function DeepFocusOverlay() {
     pomodoroSettings,
     selectedTodoId,
     incrementTodoSession,
+    isMusicPlaying,
+    setIsMusicPlaying,
+    musicVolume,
+    setMusicVolume,
   } = useAppStore();
 
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
+  const [musicModalOpen, setMusicModalOpen] = useState(false);
 
   if (!deepFocusMode) return null;
 
@@ -149,6 +154,18 @@ export function DeepFocusOverlay() {
 
           {/* Deep Focus Controls Row */}
           <View style={styles.controlsRow}>
+            {/* Ambient Music Toggle Button */}
+            <TouchableOpacity
+              style={[
+                styles.secondaryActionBtn,
+                { backgroundColor: colors.card, borderColor: isMusicPlaying ? colors.primary : colors.border },
+              ]}
+              onPress={() => setMusicModalOpen(true)}
+              activeOpacity={0.7}
+            >
+              <Music size={24} color={isMusicPlaying ? colors.primary : colors.text} />
+            </TouchableOpacity>
+
             {/* Log Distraction Button */}
             <TouchableOpacity
               style={[
@@ -191,6 +208,64 @@ export function DeepFocusOverlay() {
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Ambient Music Control Modal */}
+        <Modal visible={musicModalOpen} transparent animationType="fade" onRequestClose={() => setMusicModalOpen(false)}>
+          <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setMusicModalOpen(false)}>
+            <TouchableOpacity activeOpacity={1} style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => {}}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Ambient Music</Text>
+              <Text style={[styles.modalSub, { color: colors.textMuted }]}>
+                Control focus audio while in Deep Focus mode.
+              </Text>
+              
+              <View style={{ gap: 12, marginVertical: 16 }}>
+                <TouchableOpacity
+                  style={[
+                    styles.distractionItem,
+                    { backgroundColor: isMusicPlaying ? colors.primary : colors.inputBg, borderColor: colors.border },
+                  ]}
+                  onPress={() => setIsMusicPlaying(!isMusicPlaying)}
+                >
+                  <Text style={{ color: isMusicPlaying ? colors.primaryForeground : colors.text, fontWeight: '600' }}>
+                    {isMusicPlaying ? 'Pause Ambient Audio' : 'Play Ambient Audio'}
+                  </Text>
+                  {isMusicPlaying ? (
+                    <Pause size={18} color={colors.primaryForeground} />
+                  ) : (
+                    <Play size={18} color={colors.text} />
+                  )}
+                </TouchableOpacity>
+
+                <Text style={{ color: colors.textMuted, fontSize: 13, marginTop: 4 }}>
+                  Volume: {Math.round(musicVolume * 100)}%
+                </Text>
+                <View style={{ flexDirection: 'row', gap: 6 }}>
+                  {[0.2, 0.4, 0.6, 0.8, 1.0].map((v) => (
+                    <TouchableOpacity
+                      key={v}
+                      style={{
+                        flex: 1,
+                        height: 28,
+                        borderRadius: 6,
+                        backgroundColor: musicVolume >= v ? colors.primary : colors.inputBg,
+                        borderWidth: 1,
+                        borderColor: colors.border,
+                      }}
+                      onPress={() => setMusicVolume(v)}
+                    />
+                  ))}
+                </View>
+              </View>
+
+              <TouchableOpacity
+                style={[styles.closeModalBtn, { backgroundColor: colors.border }]}
+                onPress={() => setMusicModalOpen(false)}
+              >
+                <Text style={{ color: colors.text, fontWeight: '600' }}>Done</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
 
         {/* Distraction Logger Modal */}
         <Modal visible={distractionModalOpen} transparent animationType="fade" onRequestClose={() => setDistractionModalOpen(false)}>

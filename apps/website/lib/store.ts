@@ -13,6 +13,12 @@ interface AppState {
     setMediaUrl: (url: string) => void;
     mediaPlayerOpen: boolean;
     setMediaPlayerOpen: (open: boolean) => void;
+    isMusicPlaying: boolean;
+    setIsMusicPlaying: (playing: boolean) => void;
+    musicVolume: number;
+    setMusicVolume: (volume: number) => void;
+    isMusicMuted: boolean;
+    setIsMusicMuted: (muted: boolean) => void;
 
     timerMode: "POMODORO" | "STOPWATCH";
     timerState: "WORK" | "BREAK";
@@ -138,6 +144,12 @@ export const useAppStore = create<AppState>()(
             setMediaUrl: (url) => set({ localUrl: url }),
             mediaPlayerOpen: false,
             setMediaPlayerOpen: (open) => set({ mediaPlayerOpen: open }),
+            isMusicPlaying: false,
+            setIsMusicPlaying: (playing) => set({ isMusicPlaying: playing }),
+            musicVolume: 60,
+            setMusicVolume: (volume) => set({ musicVolume: volume }),
+            isMusicMuted: false,
+            setIsMusicMuted: (muted) => set({ isMusicMuted: muted }),
 
             timerMode: "POMODORO",
             timerState: "WORK",

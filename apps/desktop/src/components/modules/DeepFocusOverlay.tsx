@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { playCompletionSound } from '../../lib/sound';
-import { X, Play, Pause, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { X, Play, Pause, AlertTriangle, CheckCircle2, Music, Volume2, VolumeX } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
 import { cn } from '../../lib/utils';
@@ -29,10 +29,15 @@ export const DeepFocusOverlay: React.FC = () => {
     selectedTodoId,
     sessionName,
     previousMode,
-    setPreviousMode
+    setPreviousMode,
+    isMusicPlaying,
+    setIsMusicPlaying,
+    volume,
+    setVolume
   } = useDesktopStore();
 
   const [showDistractionMenu, setShowDistractionMenu] = useState(false);
+  const [showMusicMenu, setShowMusicMenu] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -172,6 +177,69 @@ export const DeepFocusOverlay: React.FC = () => {
 
         {/* Minimal Control Row */}
         <div className="flex items-center gap-6 relative">
+          {/* Ambient Music Control Button */}
+          <div className="relative">
+            <button
+              onClick={() => setShowMusicMenu(!showMusicMenu)}
+              className={cn(
+                "w-11 h-11 rounded-xl border flex items-center justify-center transition-colors shadow-sm",
+                isMusicPlaying
+                  ? "bg-zinc-800 border-zinc-700 text-emerald-400"
+                  : "bg-[#141414] border-zinc-800/80 text-zinc-400 hover:text-white"
+              )}
+              title={isMusicPlaying ? "Ambient Music: Playing" : "Ambient Music: Paused"}
+            >
+              <Music className={cn("w-4 h-4", isMusicPlaying && "animate-pulse")} />
+            </button>
+
+            {showMusicMenu && (
+              <div className="absolute bottom-14 left-1/2 -translate-x-1/2 w-60 bg-[#181818] border border-zinc-800/90 rounded-2xl shadow-2xl z-50 p-3 space-y-3 animate-in zoom-in-95 duration-150">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-zinc-200">
+                    <Music className="w-4 h-4 text-zinc-300" />
+                    <span className="text-xs font-semibold">Ambient Music</span>
+                  </div>
+                  <button
+                    onClick={() => setIsMusicPlaying(!isMusicPlaying)}
+                    className={cn(
+                      "px-2.5 py-1 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5",
+                      isMusicPlaying
+                        ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30"
+                        : "bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                    )}
+                  >
+                    {isMusicPlaying ? (
+                      <>
+                        <Pause className="w-3 h-3 fill-current" /> Pause
+                      </>
+                    ) : (
+                      <>
+                        <Play className="w-3 h-3 fill-current" /> Play
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2.5 pt-1 border-t border-zinc-800">
+                  {volume === 0 ? (
+                    <VolumeX className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                  ) : (
+                    <Volume2 className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                  )}
+                  <input
+                    type="range"
+                    min={0}
+                    max={1}
+                    step={0.05}
+                    value={volume}
+                    onChange={(e) => setVolume(Number(e.target.value))}
+                    className="w-full h-1 bg-zinc-800 rounded-lg accent-zinc-100 cursor-pointer"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+
           {/* Distraction Alert Popover Button */}
           <div className="relative">
             <button
