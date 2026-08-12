@@ -60,12 +60,24 @@ export const DEFAULT_STATE: AppStateData = {
 
 let cachedState: AppStateData | null = null;
 
+if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+  chrome.storage.local.get([STORAGE_KEY], (result) => {
+    if (result && result[STORAGE_KEY]) {
+      cachedState = { ...DEFAULT_STATE, ...result[STORAGE_KEY] };
+    }
+  });
+}
+
 if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.onChanged) {
   chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName === "local" && changes[STORAGE_KEY] && changes[STORAGE_KEY].newValue) {
       cachedState = { ...DEFAULT_STATE, ...changes[STORAGE_KEY].newValue };
     }
   });
+}
+
+export function getCachedState(): AppStateData | null {
+  return cachedState;
 }
 
 export async function getStoredState(): Promise<AppStateData> {

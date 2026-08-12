@@ -62,7 +62,7 @@ export function DeepFocusOverlay({
   };
 
   return (
-    <div className="absolute inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center animate-fade-in">
+    <div className="absolute inset-0 z-[100] bg-black flex flex-col items-center justify-center">
       {/* Close button */}
       <button
         onClick={onExit}
