@@ -3,7 +3,7 @@ import { Platform } from 'react-native';
 export const Colors = {
   light: {
     background: '#09090b',
-    card: '#18181b',
+    card: '#141414',
     cardBorder: '#27272a',
     text: '#fafafa',
     textMuted: '#a1a1aa',
@@ -14,11 +14,11 @@ export const Colors = {
     tint: '#ffffff',
     tabIconDefault: '#71717a',
     tabIconSelected: '#ffffff',
-    inputBg: '#09090b',
+    inputBg: '#141414',
   },
   dark: {
     background: '#09090b',
-    card: '#18181b',
+    card: '#141414',
     cardBorder: '#27272a',
     text: '#fafafa',
     textMuted: '#a1a1aa',
@@ -29,7 +29,7 @@ export const Colors = {
     tint: '#ffffff',
     tabIconDefault: '#71717a',
     tabIconSelected: '#ffffff',
-    inputBg: '#09090b',
+    inputBg: '#141414',
   },
 };
 
