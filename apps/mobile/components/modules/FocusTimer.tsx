@@ -423,11 +423,16 @@ export function FocusTimer() {
 
         {/* Selected Task Subtasks Checklist */}
         {selectedTodo && selectedTodo.subtasks && selectedTodo.subtasks.length > 0 && (
-          <View style={[styles.subtaskFocusCard, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+          <View style={[styles.subtaskFocusCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.subtaskFocusHeader}>
-              <ListCheck size={14} color={colors.textMuted} />
-              <Text style={[styles.subtaskFocusTitle, { color: colors.text }]}>
-                Subtasks ({selectedTodo.subtasks.filter((s) => s.completed).length}/{selectedTodo.subtasks.length})
+              <View style={styles.subtaskFocusHeaderLeft}>
+                <ListCheck size={14} color={colors.textMuted} />
+                <Text style={[styles.subtaskFocusTitle, { color: colors.textMuted }]}>
+                  SUBTASKS
+                </Text>
+              </View>
+              <Text style={[styles.subtaskFocusCounter, { color: colors.textMuted }]}>
+                {selectedTodo.subtasks.filter((s) => s.completed).length} / {selectedTodo.subtasks.length}
               </Text>
             </View>
 
@@ -461,11 +466,11 @@ export function FocusTimer() {
 
         {/* Selected Task Notes */}
         {selectedTodo && selectedTodo.notes && selectedTodo.notes.trim().length > 0 && (
-          <View style={[styles.subtaskFocusCard, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
-            <View style={styles.subtaskFocusHeader}>
-              <FileText size={14} color="#a1a1aa" />
-              <Text style={[styles.subtaskFocusTitle, { color: colors.text }]}>
-                Task Notes
+          <View style={[styles.subtaskFocusCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.subtaskFocusHeaderLeft}>
+              <FileText size={14} color={colors.textMuted} />
+              <Text style={[styles.subtaskFocusTitle, { color: colors.textMuted }]}>
+                TASK NOTES
               </Text>
             </View>
             <Text style={[styles.taskNotesText, { color: colors.text }]}>
@@ -851,35 +856,45 @@ const styles = StyleSheet.create({
   },
   subtaskFocusCard: {
     width: '100%',
-    borderRadius: 12,
+    borderRadius: Radius.base,
     borderWidth: 1,
-    padding: 12,
-    marginBottom: 20,
+    padding: 14,
+    marginBottom: 10,
     gap: 8,
   },
   subtaskFocusHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    justifyContent: 'space-between',
     marginBottom: 4,
   },
+  subtaskFocusHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
   subtaskFocusTitle: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: 11,
+    fontWeight: '700',
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 0.8,
+  },
+  subtaskFocusCounter: {
+    fontSize: 11,
+    fontWeight: '700',
   },
   subtaskFocusList: {
-    gap: 6,
+    gap: 8,
   },
   subtaskFocusItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
     paddingVertical: 2,
   },
   subtaskFocusText: {
-    fontSize: 13,
+    fontSize: 14,
+    fontWeight: '700',
     flex: 1,
   },
   subtaskCompletedText: {
@@ -1081,9 +1096,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   taskNotesText: {
-    fontSize: 12,
-    lineHeight: 18,
-    opacity: 0.9,
-    marginTop: 2,
+    fontSize: 14,
+    fontWeight: '700',
+    lineHeight: 20,
+    marginTop: 4,
   },
 });
