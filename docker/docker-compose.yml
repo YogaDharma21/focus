@@ -1,16 +1,35 @@
 version: '3.8'
 
 services:
-  # Add services from apps here
-  # Example:
-  # web:
-  #   build: ./apps/web
-  #   ports:
-  #     - "3000:3000"
-  #
-  # backend:
-  #   build: ./apps/backend
-  #   ports:
-  #     - "8080:8080"
+  landing:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.landing
+    container_name: focus-landing
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
 
-  # Add more services as needed
+  website:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.website
+    container_name: focus-website
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+
+  backend:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.backend
+    container_name: focus-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - PORT=8080

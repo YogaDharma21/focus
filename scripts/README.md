@@ -1,19 +1,26 @@
-# Scripts
+# Monorepo Utility Scripts
 
-This folder contains utility scripts for the monorepo.
+This folder contains node utility scripts to automate builds, inspections, and workspace maintenance.
 
-## Purpose
+## Available Scripts
 
-- Helper scripts for common tasks
-- Build and deployment automation
-- Development environment setup
+### 1. Build All Apps (`scripts/build-all.js`)
+Builds production output for active monorepo applications (`website`, `landing`, `desktop`, `extension`).
 
-## Usage
+```bash
+node scripts/build-all.js
+```
 
-Each script should have its own documentation or `--help` flag.
+### 2. Clean Workspace (`scripts/clean.js`)
+Removes `.next`, `dist`, `out`, `.turbo`, and temporary build outputs across all apps.
 
-## Notes
+```bash
+node scripts/clean.js
+```
 
-- Scripts are NOT shared code between apps
-- Each app should have its own scripts if needed
-- Keep scripts language-agnostic where possible
+### 3. Check App Statuses (`scripts/check-apps.js`)
+Inspects and lists all app folders under `/apps` with their package names and version information.
+
+```bash
+node scripts/check-apps.js
+```

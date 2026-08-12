@@ -1,49 +1,41 @@
-# Docker Configuration
+# Docker Environment
 
-This folder contains Docker configurations for the monorepo.
+This directory contains container configurations and orchestration setups for the Focus monorepo applications.
 
-## Usage
+## Services Configuration
 
-### Starting all services
+| Service | Application Path | Container Name | Port Mapping | Dockerfile |
+|---|---|---|---|---|
+| **`website`** | `apps/website/` | `focus-website` | `3000:3000` | `docker/Dockerfile.website` |
+| **`landing`** | `apps/landing/` | `focus-landing` | `3001:3001` | `docker/Dockerfile.landing` |
+| **`backend`** | `apps/backend/` | `focus-backend` | `8080:8080` | `docker/Dockerfile.backend` |
+
+## Usage Commands
+
+### Start All Services
 
 ```bash
-docker-compose -f docker/docker-compose.yml up
+docker-compose -f docker/docker-compose.yml up --build -d
 ```
 
-### Starting specific service
+### Start Specific Service
 
 ```bash
-docker-compose -f docker/docker-compose.yml up <service-name>
+# Start Landing App
+docker-compose -f docker/docker-compose.yml up landing
+
+# Start Web App
+docker-compose -f docker/docker-compose.yml up website
 ```
 
-### Stopping services
+### Stop Services
 
 ```bash
 docker-compose -f docker/docker-compose.yml down
 ```
 
-## Adding a new service
+### View Logs
 
-1. Add your service to `docker-compose.yml`
-2. Each app in `/apps/*` should have its own `Dockerfile`
-3. Reference the app directory in the service configuration
-
-Example:
-
-```yaml
-services:
-  web:
-    build: 
-      context: ../apps/web
-      dockerfile: Dockerfile
-    ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
+```bash
+docker-compose -f docker/docker-compose.yml logs -f [service-name]
 ```
-
-## Notes
-
-- This is a placeholder for future docker configurations
-- Each app is responsible for its own Dockerfile
-- The root docker-compose.yml orchestrates all apps
