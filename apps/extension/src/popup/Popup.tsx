@@ -186,11 +186,14 @@ export function Popup() {
     return () => unsubscribe();
   }, []);
 
-  // Auto-activate deep focus when timer starts
+  // Auto-activate deep focus when timer starts (Pomodoro or Flow), auto-exit when timer stops/finishes
   useEffect(() => {
     if (!state) return;
-    if (state.isActive && !prevIsActiveRef.current && !state.deepFocusMode) {
+    const isWorkOrFlow = state.timerState === "WORK" || state.timerState === "FLOW";
+    if (state.isActive && !prevIsActiveRef.current && !state.deepFocusMode && isWorkOrFlow) {
       updateState({ deepFocusMode: true });
+    } else if (!state.isActive && prevIsActiveRef.current && state.deepFocusMode) {
+      updateState({ deepFocusMode: false });
     }
     prevIsActiveRef.current = state.isActive;
   }, [state?.isActive]);
@@ -217,7 +220,13 @@ export function Popup() {
   // Timer controls — write to storage directly, the background's
   // chrome.storage.onChanged listener reacts to start/stop the timer.
   const toggleTimer = () => {
-    updateState({ isActive: !state.isActive });
+    const starting = !state.isActive;
+    const isWorkOrFlow = state.timerState === "WORK" || state.timerState === "FLOW";
+    if (starting && isWorkOrFlow) {
+      updateState({ isActive: true, deepFocusMode: true });
+    } else {
+      updateState({ isActive: starting, deepFocusMode: false });
+    }
   };
 
   const resetTimer = () => {
@@ -226,7 +235,7 @@ export function Popup() {
     else if (state.timerState === "BREAK") defaultTime = state.pomodoroSettings.break * 60;
     else if (state.timerState === "FLOW") defaultTime = 0;
 
-    updateState({ isActive: false, timeLeft: defaultTime });
+    updateState({ isActive: false, deepFocusMode: false, timeLeft: defaultTime });
   };
 
   const switchTimerModeAndState = (mode: "POMODORO" | "FLOW", timerState: "WORK" | "BREAK" | "FLOW") => {
@@ -314,6 +323,7 @@ export function Popup() {
 
     updateState({
       isActive: isWorkOrFlow && state.pomodoroSettings.autoStartBreak,
+      deepFocusMode: false,
       timerState: nextState,
       previousMode: prevMode,
       timeLeft: nextTime,
