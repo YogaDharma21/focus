@@ -60,16 +60,16 @@ export function Header() {
             Ecosystem
           </a>
           <a
-            href="#features"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-full transition-colors"
-          >
-            Features
-          </a>
-          <a
             href="#interactive-demo"
             className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-full transition-colors"
           >
             Try Demo
+          </a>
+          <a
+            href="#features"
+            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-full transition-colors"
+          >
+            Features
           </a>
           <a
             href="#download"
@@ -128,18 +128,18 @@ export function Header() {
             Ecosystem
           </a>
           <a
-            href="#features"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block text-sm font-medium text-foreground py-2 border-b border-border/50"
-          >
-            Features
-          </a>
-          <a
             href="#interactive-demo"
             onClick={() => setMobileMenuOpen(false)}
             className="block text-sm font-medium text-foreground py-2 border-b border-border/50"
           >
             Try Demo
+          </a>
+          <a
+            href="#features"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block text-sm font-medium text-foreground py-2 border-b border-border/50"
+          >
+            Features
           </a>
           <a
             href="#download"
