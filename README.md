@@ -1,9 +1,6 @@
 # Focus
 
 [![Version](https://img.shields.io/badge/Version-v0.0.1-blue?style=for-the-badge)](https://github.com/YogaDharma21/focus)
-[![Next.js](https://img.shields.io/badge/Next.js-16.1.6-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)](https://nextjs.org/)
-[![Expo](https://img.shields.io/badge/Expo-v52.0.0-000000?style=for-the-badge&logo=expo&logoColor=white)](https://expo.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 **Focus** is a modern, minimalist productivity suite designed to keep you in flow state. This monorepo houses the full ecosystem — from the Next.js web application with customizable timers, task management, and ambient media, to the mobile application, browser extension, backend services, CLI tools, and desktop client.
@@ -101,7 +98,7 @@
 
 ## Project Structure
 
-This is a polyglot monorepo — each application is structured independently with its own dependencies and configuration.
+This is a monorepo — each application is structured independently with its own dependencies and configuration.
 
 ```
 focus/
@@ -126,7 +123,7 @@ focus/
 | App | Path | Status | Tech Stack |
 |-----|------|--------|------------|
 | **Website** | `apps/website/` | 🚧 In Development | Next.js, React, TypeScript, Tailwind CSS, Zustand |
-| **Mobile** | `apps/mobile/` | 🚧 In Development | Expo SDK 52, React Native, TypeScript, Zustand |
+| **Mobile** | `apps/mobile/` | 🚧 In Development | Expo, React Native, TypeScript, Zustand |
 | **Extension** | `apps/extension/` | 🚧 In Development | Vite, React, TypeScript, Tailwind CSS, Zustand, MV3 |
 | **Desktop** | `apps/desktop/` | 🚧 In Development | Electron, Vite, React, TypeScript, Tailwind CSS, Zustand |
 | **Backend** | `apps/backend/` | 📦 Planned | TBD |
