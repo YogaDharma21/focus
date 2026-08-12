@@ -60,6 +60,9 @@ export const Radius = {
   sm: 6,
   md: 10,
   lg: 10,
-  xl: 14,
+  xl: 10,
+  card: 10,
+  modal: 10,
+  button: 10,
   full: 9999,
 };
