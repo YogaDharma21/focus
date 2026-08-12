@@ -52,34 +52,34 @@ export function Header() {
         </a>
 
         {/* Desktop Nav - Mathematically Centered */}
-        <nav className="hidden md:flex items-center gap-1 bg-muted/50 p-1 rounded-full border border-border absolute left-1/2 -translate-x-1/2">
+        <nav className="hidden md:flex items-center gap-1 bg-muted/50 p-1 rounded-xl border border-border absolute left-1/2 -translate-x-1/2">
           <a
             href="#ecosystem"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-full transition-colors"
+            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg transition-colors"
           >
             Ecosystem
           </a>
           <a
             href="#interactive-demo"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-full transition-colors"
+            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg transition-colors"
           >
             Try Demo
           </a>
           <a
             href="#features"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-full transition-colors"
+            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg transition-colors"
           >
             Features
           </a>
           <a
             href="#download"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-full transition-colors"
+            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg transition-colors"
           >
             Downloads
           </a>
           <a
             href="#faq"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-full transition-colors"
+            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg transition-colors"
           >
             FAQ
           </a>
@@ -100,7 +100,7 @@ export function Header() {
             href="https://focustracks.vercel.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
           >
             Launch Web App
             <ExternalLink className="size-3.5" />
@@ -169,7 +169,7 @@ export function Header() {
               href="https://focustracks.vercel.app"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 px-4 py-2 rounded-full text-xs font-semibold bg-primary text-primary-foreground"
+              className="inline-flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-semibold bg-primary text-primary-foreground"
             >
               Launch Web App
               <ExternalLink className="size-3" />

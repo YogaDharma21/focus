@@ -30,7 +30,7 @@ export function Footer() {
               className="size-7 rounded-md object-contain"
             />
             <span className="font-bold text-sm text-foreground">Focus</span>
-            <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-full bg-muted border border-border text-muted-foreground">
+            <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-md bg-muted border border-border text-muted-foreground">
               v0.0.1
             </span>
           </div>
