@@ -73,7 +73,13 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
         });
         return true;
       } else if (message.action === "SET_SOUND_EFFECT_VOLUME") {
-        saveStoredState({ soundEffectVolume: message.volume }).then(() => {
+        const vol = typeof message.volume === "number" ? Math.max(0, Math.min(1, message.volume)) : 0.8;
+        saveStoredState({ soundEffectVolume: vol }).then(() => {
+          sendResponse({ success: true });
+        });
+        return true;
+      } else if (message.action === "SET_SOUND_EFFECT_ENABLED") {
+        saveStoredState({ soundEffectEnabled: Boolean(message.enabled) }).then(() => {
           sendResponse({ success: true });
         });
         return true;
@@ -81,7 +87,8 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
         getStoredState().then((state) => {
           const enabled = state.soundEffectEnabled ?? true;
           if (enabled || message.force) {
-            const vol = typeof message.volume === "number" ? message.volume : (state.soundEffectVolume ?? 0.8);
+            const rawVol = typeof message.volume === "number" ? message.volume : (state.soundEffectVolume ?? 0.8);
+            const vol = Math.max(0, Math.min(1, rawVol));
             sendToOffscreen("PLAY_SOUND_EFFECT", { volume: vol });
           }
           sendResponse({ success: true });

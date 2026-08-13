@@ -53,8 +53,9 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
             ? chrome.runtime.getURL("soundeffect.mp3")
             : "/soundeffect.mp3";
           const sfx = new Audio(sfxUrl);
-          if (typeof message.volume === "number") {
-            sfx.volume = Math.max(0, Math.min(1, message.volume));
+          const targetVol = typeof message.volume === "number" ? message.volume : parseFloat(message.volume);
+          if (!isNaN(targetVol)) {
+            sfx.volume = Math.max(0, Math.min(1, targetVol));
           } else {
             sfx.volume = 0.8;
           }
