@@ -33,6 +33,8 @@ import {
   Paintbrush,
   Music,
   Volume2,
+  Volume1,
+  BellRing,
   ChevronUp,
   ChevronDown,
   Activity,
@@ -142,6 +144,8 @@ export function Popup() {
 
   const isMusicPlaying = state?.isMusicPlaying ?? false;
   const musicVolume = state?.musicVolume ?? 0.8;
+  const soundEffectVolume = state?.soundEffectVolume ?? 0.8;
+  const soundEffectEnabled = state?.soundEffectEnabled ?? true;
 
   const handleMusicVolumeChange = (v: number) => {
     updateState({ musicVolume: v });
@@ -150,12 +154,32 @@ export function Popup() {
     }
   };
 
+  const handleSoundEffectVolumeChange = (v: number) => {
+    updateState({ soundEffectVolume: v });
+    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({ target: "background", action: "SET_SOUND_EFFECT_VOLUME", volume: v });
+    }
+  };
+
   const playSoundEffect = () => {
     if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
-      chrome.runtime.sendMessage({ target: "background", action: "PLAY_SOUND_EFFECT" });
+      chrome.runtime.sendMessage({ target: "background", action: "PLAY_SOUND_EFFECT", volume: soundEffectVolume });
     } else {
       try {
         const audio = new Audio("/soundeffect.mp3");
+        audio.volume = soundEffectVolume;
+        audio.play().catch(() => {});
+      } catch (err) {}
+    }
+  };
+
+  const playTestSoundEffect = () => {
+    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({ target: "background", action: "PLAY_SOUND_EFFECT", volume: soundEffectVolume, force: true });
+    } else {
+      try {
+        const audio = new Audio("/soundeffect.mp3");
+        audio.volume = soundEffectVolume;
         audio.play().catch(() => {});
       } catch (err) {}
     }
@@ -1579,21 +1603,63 @@ export function Popup() {
               )}
             </div>
 
-            {/* Volume Slider */}
-            <div className="mt-2 pt-2 flex items-center gap-2">
-              <Volume2 className="w-3.5 h-3.5 opacity-60 shrink-0" />
-              <input
-                type="range"
-                min="0"
-                max="1"
-                step="0.05"
-                value={musicVolume}
-                onChange={(e) => handleMusicVolumeChange(parseFloat(e.target.value))}
-                className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer"
-              />
-              <span className="text-[10px] font-mono opacity-60 w-7 text-right">
-                {Math.round(musicVolume * 100)}%
-              </span>
+            {/* Music Volume Slider */}
+            <div className="mt-2 pt-2 border-t border-neutral-800 space-y-1">
+              <div className="flex items-center justify-between text-[10px] opacity-60">
+                <span>Music Volume</span>
+                <span className="font-mono">{Math.round(musicVolume * 100)}%</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Volume2 className="w-3.5 h-3.5 opacity-60 shrink-0" />
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={musicVolume}
+                  onChange={(e) => handleMusicVolumeChange(parseFloat(e.target.value))}
+                  className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer"
+                />
+              </div>
+            </div>
+
+            {/* Sound Effect (SFX) Volume Slider & Test */}
+            <div className="mt-2 pt-2 border-t border-neutral-800 space-y-1">
+              <div className="flex items-center justify-between text-[10px] opacity-60">
+                <span className="flex items-center gap-1">
+                  <BellRing className="w-3 h-3" />
+                  Sound Effect (SFX)
+                </span>
+                <span className="font-mono">{Math.round(soundEffectVolume * 100)}%</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => updateState({ soundEffectEnabled: !soundEffectEnabled })}
+                  title={soundEffectEnabled ? "SFX Enabled" : "SFX Muted"}
+                  className={`p-1 rounded text-xs transition-colors shrink-0 ${
+                    soundEffectEnabled ? "bg-neutral-800 text-white border border-neutral-700" : "bg-neutral-950 text-neutral-500 border border-neutral-850"
+                  }`}
+                >
+                  <BellRing className="w-3 h-3" />
+                </button>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={soundEffectVolume}
+                  onChange={(e) => handleSoundEffectVolumeChange(parseFloat(e.target.value))}
+                  className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer"
+                />
+                <button
+                  onClick={playTestSoundEffect}
+                  title="Test Sound Effect"
+                  className="px-2 py-0.5 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-white rounded text-[10px] font-semibold transition-all shrink-0 active:scale-95 flex items-center gap-1"
+                >
+                  <Volume1 className="w-3 h-3 text-neutral-300" />
+                  Test
+                </button>
+              </div>
             </div>
           </div>
         )}
