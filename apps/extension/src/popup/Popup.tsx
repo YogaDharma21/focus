@@ -161,25 +161,35 @@ export function Popup() {
     }
   };
 
-  const playSoundEffect = () => {
+  const toggleSoundEffectEnabled = () => {
+    const next = !soundEffectEnabled;
+    updateState({ soundEffectEnabled: next });
     if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
-      chrome.runtime.sendMessage({ target: "background", action: "PLAY_SOUND_EFFECT", volume: soundEffectVolume });
+      chrome.runtime.sendMessage({ target: "background", action: "SET_SOUND_EFFECT_ENABLED", enabled: next });
+    }
+  };
+
+  const playSoundEffect = (overrideVolume?: number) => {
+    const vol = typeof overrideVolume === "number" ? overrideVolume : soundEffectVolume;
+    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({ target: "background", action: "PLAY_SOUND_EFFECT", volume: vol });
     } else {
       try {
         const audio = new Audio("/soundeffect.mp3");
-        audio.volume = soundEffectVolume;
+        audio.volume = Math.max(0, Math.min(1, vol));
         audio.play().catch(() => {});
       } catch (err) {}
     }
   };
 
-  const playTestSoundEffect = () => {
+  const playTestSoundEffect = (overrideVolume?: number) => {
+    const vol = typeof overrideVolume === "number" ? overrideVolume : soundEffectVolume;
     if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
-      chrome.runtime.sendMessage({ target: "background", action: "PLAY_SOUND_EFFECT", volume: soundEffectVolume, force: true });
+      chrome.runtime.sendMessage({ target: "background", action: "PLAY_SOUND_EFFECT", volume: vol, force: true });
     } else {
       try {
         const audio = new Audio("/soundeffect.mp3");
-        audio.volume = soundEffectVolume;
+        audio.volume = Math.max(0, Math.min(1, vol));
         audio.play().catch(() => {});
       } catch (err) {}
     }
@@ -235,6 +245,7 @@ export function Popup() {
 
 
   const updateState = (updates: Partial<AppStateData>) => {
+    setState((prev) => (prev ? { ...prev, ...updates } : null));
     saveStoredState(updates).then((nxt) => {
       setState(nxt);
     });
@@ -1634,7 +1645,7 @@ export function Popup() {
               </div>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => updateState({ soundEffectEnabled: !soundEffectEnabled })}
+                  onClick={toggleSoundEffectEnabled}
                   title={soundEffectEnabled ? "SFX Enabled" : "SFX Muted"}
                   className={`p-1 rounded text-xs transition-colors shrink-0 ${
                     soundEffectEnabled ? "bg-neutral-800 text-white border border-neutral-700" : "bg-neutral-950 text-neutral-500 border border-neutral-850"
@@ -1652,7 +1663,7 @@ export function Popup() {
                   className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer"
                 />
                 <button
-                  onClick={playTestSoundEffect}
+                  onClick={() => playTestSoundEffect()}
                   title="Test Sound Effect"
                   className="px-2 py-0.5 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-white rounded text-[10px] font-semibold transition-all shrink-0 active:scale-95 flex items-center gap-1"
                 >
