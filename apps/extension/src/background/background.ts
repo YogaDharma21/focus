@@ -72,9 +72,20 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
           sendResponse({ success: true });
         });
         return true;
+      } else if (message.action === "SET_SOUND_EFFECT_VOLUME") {
+        saveStoredState({ soundEffectVolume: message.volume }).then(() => {
+          sendResponse({ success: true });
+        });
+        return true;
       } else if (message.action === "PLAY_SOUND_EFFECT") {
-        sendToOffscreen("PLAY_SOUND_EFFECT");
-        sendResponse({ success: true });
+        getStoredState().then((state) => {
+          const enabled = state.soundEffectEnabled ?? true;
+          if (enabled || message.force) {
+            const vol = typeof message.volume === "number" ? message.volume : (state.soundEffectVolume ?? 0.8);
+            sendToOffscreen("PLAY_SOUND_EFFECT", { volume: vol });
+          }
+          sendResponse({ success: true });
+        });
         return true;
       } else if (message.action === "RESTORE_BLOCKED_TABS") {
         restoreBlockedTabs();
@@ -348,7 +359,9 @@ async function startBackgroundTimer() {
 
         updateBadge(nextTime, autoStart, nextState);
 
-        sendToOffscreen("PLAY_SOUND_EFFECT");
+        if (state.soundEffectEnabled ?? true) {
+          sendToOffscreen("PLAY_SOUND_EFFECT", { volume: state.soundEffectVolume ?? 0.8 });
+        }
         restoreBlockedTabs();
 
         if (typeof chrome !== "undefined" && chrome.notifications) {

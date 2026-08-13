@@ -1,6 +1,7 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { Music, Play, Pause, Volume2, VolumeX, BellRing, ChevronDown, Disc } from 'lucide-react';
+import React, { useRef, useEffect } from 'react';
+import { Music, Play, Pause, Volume2, VolumeX, BellRing, ChevronDown, Disc, Volume1 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
+import { playTestCompletionSound } from '../../lib/sound';
 
 export const MediaPlayer: React.FC = () => {
   const {
@@ -10,6 +11,8 @@ export const MediaPlayer: React.FC = () => {
     setIsMusicPlaying,
     soundEffectEnabled,
     setSoundEffectEnabled,
+    soundEffectVolume,
+    setSoundEffectVolume,
     volume,
     setVolume
   } = useDesktopStore();
@@ -49,7 +52,7 @@ export const MediaPlayer: React.FC = () => {
       />
 
       {mediaPlayerOpen ? (
-        <div className="w-72 bg-zinc-900 border border-zinc-800 p-4 rounded-2xl shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
+        <div className="w-80 bg-zinc-900 border border-zinc-800 p-4 rounded-2xl shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -89,9 +92,13 @@ export const MediaPlayer: React.FC = () => {
             </button>
           </div>
 
-          {/* Volume & Completion Chime Controls */}
-          <div className="flex items-center justify-between gap-3 px-1 pt-1">
-            <div className="flex items-center gap-2 flex-1">
+          {/* Music Volume Control */}
+          <div className="space-y-1">
+            <div className="flex items-center justify-between text-[10px] text-zinc-400 font-medium px-1">
+              <span>Music Volume</span>
+              <span>{Math.round(volume * 100)}%</span>
+            </div>
+            <div className="flex items-center gap-2 px-1">
               {volume === 0 ? <VolumeX className="w-3.5 h-3.5 text-zinc-500 shrink-0" /> : <Volume2 className="w-3.5 h-3.5 text-zinc-400 shrink-0" />}
               <input
                 type="range"
@@ -103,16 +110,45 @@ export const MediaPlayer: React.FC = () => {
                 className="w-full h-1 bg-zinc-800 rounded-lg accent-zinc-100 cursor-pointer"
               />
             </div>
+          </div>
 
-            <button
-              onClick={() => setSoundEffectEnabled(!soundEffectEnabled)}
-              title={soundEffectEnabled ? "Completion Chime Enabled" : "Completion Chime Muted"}
-              className={`p-1.5 rounded-lg text-xs transition-colors ${
-                soundEffectEnabled ? "bg-zinc-800 text-zinc-100 border border-zinc-700" : "bg-zinc-950 text-zinc-500 border border-zinc-800"
-              }`}
-            >
-              <BellRing className="w-3.5 h-3.5" />
-            </button>
+          {/* Sound Effect (SFX) Control */}
+          <div className="pt-2 border-t border-zinc-800 space-y-1.5">
+            <div className="flex items-center justify-between text-[10px] text-zinc-400 font-medium px-1">
+              <span className="flex items-center gap-1">
+                <BellRing className="w-3 h-3 text-zinc-400" />
+                Sound Effect (SFX)
+              </span>
+              <span>{Math.round((soundEffectVolume ?? 0.8) * 100)}%</span>
+            </div>
+            <div className="flex items-center gap-2 px-1">
+              <button
+                onClick={() => setSoundEffectEnabled(!soundEffectEnabled)}
+                title={soundEffectEnabled ? "Sound Effect Enabled" : "Sound Effect Muted"}
+                className={`p-1.5 rounded-lg text-xs transition-colors shrink-0 ${
+                  soundEffectEnabled ? "bg-zinc-800 text-zinc-100 border border-zinc-700" : "bg-zinc-950 text-zinc-500 border border-zinc-800"
+                }`}
+              >
+                <BellRing className="w-3.5 h-3.5" />
+              </button>
+              <input
+                type="range"
+                min={0}
+                max={1}
+                step={0.05}
+                value={soundEffectVolume ?? 0.8}
+                onChange={(e) => setSoundEffectVolume(Number(e.target.value))}
+                className="w-full h-1 bg-zinc-800 rounded-lg accent-zinc-100 cursor-pointer"
+              />
+              <button
+                onClick={() => playTestCompletionSound()}
+                title="Test Sound Effect"
+                className="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 rounded-lg text-[10px] font-semibold transition-all shrink-0 active:scale-95 flex items-center gap-1"
+              >
+                <Volume1 className="w-3 h-3 text-emerald-400" />
+                Test
+              </button>
+            </div>
           </div>
         </div>
       ) : (

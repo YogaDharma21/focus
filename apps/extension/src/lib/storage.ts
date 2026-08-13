@@ -55,7 +55,9 @@ export const DEFAULT_STATE: AppStateData = {
   },
   deepFocusMode: false,
   isMusicPlaying: false,
-  musicVolume: 0.8
+  musicVolume: 0.8,
+  soundEffectVolume: 0.8,
+  soundEffectEnabled: true
 };
 
 let cachedState: AppStateData | null = null;

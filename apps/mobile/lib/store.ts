@@ -78,6 +78,10 @@ interface AppState {
   setIsMusicPlaying: (playing: boolean) => void;
   musicVolume: number;
   setMusicVolume: (volume: number) => void;
+  soundEffectVolume: number;
+  setSoundEffectVolume: (volume: number) => void;
+  soundEffectEnabled: boolean;
+  setSoundEffectEnabled: (enabled: boolean) => void;
 
   timerMode: 'POMODORO' | 'STOPWATCH';
   timerState: 'WORK' | 'BREAK';
@@ -187,6 +191,10 @@ export const useAppStore = create<AppState>()(
       setIsMusicPlaying: (playing) => set({ isMusicPlaying: playing }),
       musicVolume: 0.8,
       setMusicVolume: (volume) => set({ musicVolume: volume }),
+      soundEffectVolume: 0.8,
+      setSoundEffectVolume: (volume) => set({ soundEffectVolume: volume }),
+      soundEffectEnabled: true,
+      setSoundEffectEnabled: (enabled) => set({ soundEffectEnabled: enabled }),
 
       timerMode: 'POMODORO',
       timerState: 'WORK',
