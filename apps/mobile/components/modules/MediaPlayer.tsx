@@ -10,8 +10,9 @@ import {
 import { Audio } from 'expo-av';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
-import { Play, Pause, Music, Volume2, X, ChevronUp, ChevronDown } from 'lucide-react-native';
+import { Play, Pause, Music, Volume2, Volume1, BellRing, X, ChevronUp, ChevronDown } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { playTestCompletionSound } from '@/lib/sound';
 
 export function MediaPlayer() {
   const insets = useSafeAreaInsets();
@@ -25,6 +26,10 @@ export function MediaPlayer() {
     setIsMusicPlaying,
     musicVolume,
     setMusicVolume,
+    soundEffectVolume,
+    setSoundEffectVolume,
+    soundEffectEnabled,
+    setSoundEffectEnabled,
   } = useAppStore();
 
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -214,12 +219,12 @@ export function MediaPlayer() {
                 })}
               </View>
 
-              {/* Volume Slider Section */}
+              {/* Music Volume Section */}
               <View style={[styles.volumeSection, { borderColor: colors.border }]}>
                 <View style={styles.volumeHeader}>
                   <Volume2 size={16} color={colors.textMuted} />
                   <Text style={[styles.volumeText, { color: colors.textMuted }]}>
-                    Volume ({Math.round(musicVolume * 100)}%)
+                    Music Volume ({Math.round(musicVolume * 100)}%)
                   </Text>
                 </View>
                 <View style={styles.volumeBarRow}>
@@ -234,6 +239,53 @@ export function MediaPlayer() {
                         },
                       ]}
                       onPress={() => changeVolume(v)}
+                    />
+                  ))}
+                </View>
+              </View>
+
+              {/* Sound Effect (SFX) Volume Section */}
+              <View style={[styles.volumeSection, { borderColor: colors.border }]}>
+                <View style={styles.volumeHeader}>
+                  <TouchableOpacity 
+                    onPress={() => setSoundEffectEnabled(!soundEffectEnabled)}
+                    style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
+                  >
+                    <BellRing size={16} color={soundEffectEnabled ? colors.text : colors.textMuted} />
+                    <Text style={[styles.volumeText, { color: colors.textMuted }]}>
+                      Sound Effect ({Math.round((soundEffectVolume ?? 0.8) * 100)}%)
+                    </Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={() => playTestCompletionSound()}
+                    style={{
+                      flexDirection: 'row',
+                      alignItems: 'center',
+                      gap: 4,
+                      backgroundColor: colors.inputBg,
+                      paddingHorizontal: 10,
+                      paddingVertical: 4,
+                      borderRadius: 8,
+                      borderWidth: 1,
+                      borderColor: colors.border,
+                    }}
+                  >
+                    <Volume1 size={14} color={colors.text} />
+                    <Text style={{ fontSize: 12, fontWeight: '600', color: colors.text }}>Test</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.volumeBarRow}>
+                  {[0.2, 0.4, 0.6, 0.8, 1.0].map((v) => (
+                    <TouchableOpacity
+                      key={v}
+                      style={[
+                        styles.volumeStepBtn,
+                        {
+                          backgroundColor: (soundEffectVolume ?? 0.8) >= v ? colors.text : colors.inputBg,
+                          borderColor: colors.border,
+                        },
+                      ]}
+                      onPress={() => setSoundEffectVolume(v)}
                     />
                   ))}
                 </View>

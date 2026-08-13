@@ -99,4 +99,6 @@ export interface AppStateData {
   deepFocusMode?: boolean;
   isMusicPlaying?: boolean;
   musicVolume?: number;
+  soundEffectVolume?: number;
+  soundEffectEnabled?: boolean;
 }
