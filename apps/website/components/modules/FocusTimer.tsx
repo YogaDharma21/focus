@@ -52,6 +52,8 @@ export function FocusTimer() {
         setSelectedSubtaskId,
         setDeepFocusMode,
         resetAllData,
+        soundEffectVolume,
+        soundEffectEnabled,
     } = useAppStore();
 
     const [settingsOpen, setSettingsOpen] = useState(false);
@@ -77,24 +79,26 @@ export function FocusTimer() {
     const sessionStartTimeRef = useRef<number | null>(null);
 
     const playSound = React.useCallback(() => {
+        if (!soundEffectEnabled) return;
+        const vol = (soundEffectVolume ?? 80) / 100;
         try {
             if (audioRef.current) {
                 audioRef.current.currentTime = 0;
-                audioRef.current.volume = 0.5;
+                audioRef.current.volume = vol;
                 audioRef.current.play().catch(() => {
                     const fallback = new Audio("/soundeffect.mp3");
-                    fallback.volume = 0.5;
+                    fallback.volume = vol;
                     fallback.play().catch(() => {});
                 });
             } else {
                 const fallback = new Audio("/soundeffect.mp3");
-                fallback.volume = 0.5;
+                fallback.volume = vol;
                 fallback.play().catch(() => {});
             }
         } catch {
             // ignore
         }
-    }, []);
+    }, [soundEffectEnabled, soundEffectVolume]);
 
     useEffect(() => {
         const unlockAudio = () => {

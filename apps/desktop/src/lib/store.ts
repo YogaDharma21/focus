@@ -72,6 +72,7 @@ export interface DesktopState {
   spotifyUrl: string;
   localUrl: string;
   soundEffectEnabled: boolean;
+  soundEffectVolume: number;
   volume: number;
   localPlaylist: { id: string; title: string; artist: string; url: string }[];
   setMediaType: (type: "YOUTUBE" | "SPOTIFY" | "LOCAL") => void;
@@ -83,6 +84,7 @@ export interface DesktopState {
   isMusicPlaying: boolean;
   setIsMusicPlaying: (playing: boolean) => void;
   setSoundEffectEnabled: (enabled: boolean) => void;
+  setSoundEffectVolume: (volume: number) => void;
   setVolume: (volume: number) => void;
 
   // Timer State
@@ -162,6 +164,7 @@ export const useDesktopStore = create<DesktopState>()(
       spotifyUrl: "https://open.spotify.com/playlist/37i9dQZF1DX8Uebhn9wzrS",
       localUrl: "https://assets.mixkit.co/music/preview/mixkit-chill-bro-494.mp3",
       soundEffectEnabled: true,
+      soundEffectVolume: 0.8,
       volume: 0.8,
       localPlaylist: [
         {
@@ -203,6 +206,7 @@ export const useDesktopStore = create<DesktopState>()(
       isMusicPlaying: false,
       setIsMusicPlaying: (playing) => set({ isMusicPlaying: playing }),
       setSoundEffectEnabled: (enabled) => set({ soundEffectEnabled: enabled }),
+      setSoundEffectVolume: (volume) => set({ soundEffectVolume: volume }),
       setVolume: (volume) => set({ volume }),
 
       // Timer State

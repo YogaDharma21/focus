@@ -53,6 +53,11 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
             ? chrome.runtime.getURL("soundeffect.mp3")
             : "/soundeffect.mp3";
           const sfx = new Audio(sfxUrl);
+          if (typeof message.volume === "number") {
+            sfx.volume = Math.max(0, Math.min(1, message.volume));
+          } else {
+            sfx.volume = 0.8;
+          }
           sfx.play().catch((err) => console.log("SFX play error:", err));
         } catch (e) {
           console.error("SFX error:", e);

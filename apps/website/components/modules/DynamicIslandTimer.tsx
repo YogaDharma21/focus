@@ -27,6 +27,8 @@ export function DynamicIslandTimer() {
         setDeepFocusMode,
         todos,
         selectedTodoId,
+        soundEffectVolume,
+        soundEffectEnabled,
     } = useAppStore();
     const [isExpanded, setIsExpanded] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -44,24 +46,26 @@ export function DynamicIslandTimer() {
     }, []);
 
     const playSound = React.useCallback(() => {
+        if (!soundEffectEnabled) return;
+        const vol = (soundEffectVolume ?? 80) / 100;
         try {
             if (audioRef.current) {
                 audioRef.current.currentTime = 0;
-                audioRef.current.volume = 0.5;
+                audioRef.current.volume = vol;
                 audioRef.current.play().catch(() => {
                     const fallback = new Audio("/soundeffect.mp3");
-                    fallback.volume = 0.5;
+                    fallback.volume = vol;
                     fallback.play().catch(() => {});
                 });
             } else {
                 const fallback = new Audio("/soundeffect.mp3");
-                fallback.volume = 0.5;
+                fallback.volume = vol;
                 fallback.play().catch(() => {});
             }
         } catch {
             // ignore
         }
-    }, []);
+    }, [soundEffectEnabled, soundEffectVolume]);
 
     useEffect(() => {
         const unlockAudio = () => {

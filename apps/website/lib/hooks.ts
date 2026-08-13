@@ -33,15 +33,19 @@ export function useTimerEngine() {
         pomodoroSettings,
         addSession,
         setDeepFocusMode,
+        soundEffectVolume,
+        soundEffectEnabled,
     } = useAppStore();
 
     const handleAutoCompleteSession = React.useCallback(() => {
         setIsActive(false);
 
         try {
-            const audio = new Audio("/soundeffect.mp3");
-            audio.volume = 0.5;
-            audio.play().catch(() => {});
+            if (soundEffectEnabled ?? true) {
+                const audio = new Audio("/soundeffect.mp3");
+                audio.volume = (soundEffectVolume ?? 80) / 100;
+                audio.play().catch(() => {});
+            }
         } catch {
             // ignore
         }

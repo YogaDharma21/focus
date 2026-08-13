@@ -33,6 +33,8 @@ export function DeepFocusOverlay() {
         setMusicVolume,
         isMusicMuted,
         setIsMusicMuted,
+        soundEffectVolume,
+        soundEffectEnabled,
     } = useAppStore();
 
     const [showMusicMenu, setShowMusicMenu] = useState(false);
@@ -41,20 +43,22 @@ export function DeepFocusOverlay() {
     const sessionStartTimeRef = useRef<number | null>(null);
 
     const playSound = useCallback(() => {
+        if (!soundEffectEnabled) return;
+        const vol = (soundEffectVolume ?? 80) / 100;
         try {
             const audio = new Audio("/soundeffect.mp3");
-            audio.volume = 0.5;
+            audio.volume = vol;
             audio.play().catch(() => {
                 if (audioRef.current) {
                     audioRef.current.currentTime = 0;
-                    audioRef.current.volume = 0.5;
+                    audioRef.current.volume = vol;
                     audioRef.current.play().catch(() => {});
                 }
             });
         } catch {
             // ignore
         }
-    }, []);
+    }, [soundEffectEnabled, soundEffectVolume]);
 
     useEffect(() => {
         const unlockAudio = () => {
