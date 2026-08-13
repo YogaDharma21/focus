@@ -145,7 +145,7 @@ export const MediaPlayer: React.FC = () => {
                 title="Test Sound Effect"
                 className="px-2 py-1 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 rounded-lg text-[10px] font-semibold transition-all shrink-0 active:scale-95 flex items-center gap-1"
               >
-                <Volume1 className="w-3 h-3 text-emerald-400" />
+                <Volume1 className="w-3 h-3 text-zinc-300" />
                 Test
               </button>
             </div>
