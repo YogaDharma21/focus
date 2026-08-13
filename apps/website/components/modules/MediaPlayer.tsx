@@ -260,7 +260,7 @@ export function MediaPlayer() {
                                 className="px-2 py-1 bg-white/15 hover:bg-white/25 border border-white/20 text-white rounded-lg text-[11px] font-semibold transition-all shrink-0 active:scale-95 flex items-center gap-1"
                                 title="Test Sound Effect"
                             >
-                                <Volume1 className="w-3.5 h-3.5 text-emerald-400" />
+                                <Volume1 className="w-3.5 h-3.5 text-white/80" />
                                 Test
                             </button>
                         </div>
