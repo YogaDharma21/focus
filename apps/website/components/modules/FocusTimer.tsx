@@ -177,6 +177,7 @@ export function FocusTimer() {
             if (pomodoroSettings.autoStartBreak) {
                 setIsActive(true);
             }
+            setDeepFocusMode(false);
         } else if (timerMode === "POMODORO" && timerState === "BREAK") {
             if (previousMode === "STOPWATCH") {
                 setTimerMode("STOPWATCH");
@@ -187,6 +188,12 @@ export function FocusTimer() {
                 setTimerState("WORK");
                 setTimeLeft(pomodoroSettings.work * 60);
             }
+            if (pomodoroSettings.autoStartTimer) {
+                setIsActive(true);
+                setDeepFocusMode(true);
+            } else {
+                setDeepFocusMode(false);
+            }
         } else if (timerMode === "STOPWATCH" && duration > 0) {
             setPreviousMode("STOPWATCH");
             const breakSeconds = Math.floor(duration / 5);
@@ -194,9 +201,13 @@ export function FocusTimer() {
                 setTimerMode("POMODORO");
                 setTimerState("BREAK");
                 setTimeLeft(breakSeconds);
+                if (pomodoroSettings.autoStartBreak) {
+                    setIsActive(true);
+                }
             } else {
                 setTimeLeft(0);
             }
+            setDeepFocusMode(false);
         }
 
         const focusedTask = selectedTodoId
@@ -225,8 +236,7 @@ export function FocusTimer() {
                 }
             }
         }
-        sessionStartTimeRef.current = null;
-        setDeepFocusMode(false);
+        setSessionStartTime(null);
     }, [
         timerMode,
         timerState,
@@ -251,6 +261,7 @@ export function FocusTimer() {
         toggleSubtask,
         addSession,
         selectedTodo,
+        setSessionStartTime,
     ]);
 
     const prevSettingsRef = useRef({ work: pomodoroSettings.work, break: pomodoroSettings.break, longBreak: pomodoroSettings.longBreak });
@@ -316,6 +327,7 @@ export function FocusTimer() {
             <div className="flex gap-2 mb-3 p-1 bg-secondary/30 rounded-[var(--radius)] backdrop-blur-md">
                 <button
                     onClick={() => {
+                        setPreviousMode("POMODORO");
                         setTimerMode("POMODORO");
                         setTimerState("WORK");
                         setIsActive(false);
@@ -333,6 +345,7 @@ export function FocusTimer() {
                 </button>
                 <button
                     onClick={() => {
+                        setPreviousMode(timerMode === "STOPWATCH" ? "STOPWATCH" : "POMODORO");
                         setTimerMode("POMODORO");
                         setTimerState("BREAK");
                         setIsActive(false);
@@ -350,7 +363,9 @@ export function FocusTimer() {
                 </button>
                 <button
                     onClick={() => {
+                        setPreviousMode("STOPWATCH");
                         setTimerMode("STOPWATCH");
+                        setTimerState("WORK");
                         setIsActive(false);
                         setTimeLeft(0);
                     }}
@@ -743,6 +758,26 @@ export function FocusTimer() {
                                         onCheckedChange={(checked: boolean) =>
                                             setPomodoroSettings({
                                                 autoStartBreak: checked,
+                                            })
+                                        }
+                                        className="scale-110"
+                                    />
+                                </div>
+
+                                <div className="p-4 rounded-[var(--radius)] bg-primary/5 border border-primary/10 flex items-center justify-between shadow-inner">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-base font-semibold">
+                                            Auto-start Timer
+                                        </Label>
+                                        <p className="text-[10px] text-muted-foreground">
+                                            Launch focus timer immediately after break
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        checked={pomodoroSettings.autoStartTimer}
+                                        onCheckedChange={(checked: boolean) =>
+                                            setPomodoroSettings({
+                                                autoStartTimer: checked,
                                             })
                                         }
                                         className="scale-110"

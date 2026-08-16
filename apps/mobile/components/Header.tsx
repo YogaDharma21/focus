@@ -125,6 +125,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
         if (pomodoroSettings.autoStartBreak) {
           setIsActive(true);
         }
+        setDeepFocusMode(false);
       } else {
         setTimeLeft(0);
       }
@@ -154,6 +155,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
       if (pomodoroSettings.autoStartBreak) {
         setIsActive(true);
       }
+      setDeepFocusMode(false);
     } else if (timerMode === 'POMODORO' && timerState === 'BREAK') {
       if (previousMode === 'STOPWATCH') {
         setTimerMode('STOPWATCH');
@@ -163,6 +165,12 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
         setTimerMode('POMODORO');
         setTimerState('WORK');
         setTimeLeft(pomodoroSettings.work * 60);
+      }
+      if (pomodoroSettings.autoStartTimer) {
+        setIsActive(true);
+        setDeepFocusMode(true);
+      } else {
+        setDeepFocusMode(false);
       }
     }
   };

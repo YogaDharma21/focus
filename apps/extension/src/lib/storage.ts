@@ -18,6 +18,7 @@ export const DEFAULT_STATE: AppStateData = {
     break: 5,
     longBreak: 15,
     autoStartBreak: false,
+    autoStartTimer: false,
   },
   pomodoroCount: 0,
   todos: [],
