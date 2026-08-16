@@ -28,6 +28,7 @@ export default function TabLayout() {
     setTimerState,
     setTimerMode,
     setPreviousMode,
+    setDeepFocusMode,
     addSession,
     incrementTodoSession,
   } = useAppStore();
@@ -66,6 +67,7 @@ export default function TabLayout() {
                 if (state.pomodoroSettings.autoStartBreak) {
                   setIsActive(true);
                 }
+                setDeepFocusMode(false);
               } else {
                 if (state.previousMode === 'STOPWATCH') {
                   setTimerMode('STOPWATCH');
@@ -75,6 +77,12 @@ export default function TabLayout() {
                   setTimerMode('POMODORO');
                   setTimerState('WORK');
                   setTimeLeft(state.pomodoroSettings.work * 60);
+                }
+                if (state.pomodoroSettings.autoStartTimer) {
+                  setIsActive(true);
+                  setDeepFocusMode(true);
+                } else {
+                  setDeepFocusMode(false);
                 }
               }
               return 0;
@@ -91,7 +99,7 @@ export default function TabLayout() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, setIsActive, setTimeLeft, setTimerMode, setTimerState, setPreviousMode, addSession, incrementTodoSession]);
+  }, [isActive, setIsActive, setTimeLeft, setTimerMode, setTimerState, setPreviousMode, setDeepFocusMode, addSession, incrementTodoSession]);
 
   const bottomInset = Math.max(insets.bottom, 0);
 

@@ -160,6 +160,7 @@ export function DynamicIslandTimer() {
             if (pomodoroSettings.autoStartBreak) {
                 setIsActive(true);
             }
+            setDeepFocusMode(false);
         } else if (timerMode === "POMODORO" && timerState === "BREAK") {
             if (previousMode === "STOPWATCH") {
                 setTimerMode("STOPWATCH");
@@ -170,6 +171,12 @@ export function DynamicIslandTimer() {
                 setTimerState("WORK");
                 setTimeLeft(pomodoroSettings.work * 60);
             }
+            if (pomodoroSettings.autoStartTimer) {
+                setIsActive(true);
+                setDeepFocusMode(true);
+            } else {
+                setDeepFocusMode(false);
+            }
         } else if (timerMode === "STOPWATCH" && duration > 0) {
             setPreviousMode("STOPWATCH");
             const breakSeconds = Math.floor(duration / 5);
@@ -177,12 +184,15 @@ export function DynamicIslandTimer() {
                 setTimerMode("POMODORO");
                 setTimerState("BREAK");
                 setTimeLeft(breakSeconds);
+                if (pomodoroSettings.autoStartBreak) {
+                    setIsActive(true);
+                }
             } else {
                 setTimeLeft(0);
             }
+            setDeepFocusMode(false);
         }
         setSessionStartTime(null);
-        setDeepFocusMode(false);
     };
 
     const activeTask = todos.find((t) => t.id === selectedTodoId);

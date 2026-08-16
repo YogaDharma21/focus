@@ -52,21 +52,17 @@ export function useTimerEngine() {
             // ignore
         }
 
-        const duration =
-            timerMode === "POMODORO"
-                ? (timerState === "WORK" ? pomodoroSettings.work * 60 : pomodoroSettings.break * 60)
-                : 0;
-
-        if (duration > 0) {
-            addSession({
-                id: crypto.randomUUID(),
-                date: new Date().toISOString(),
-                duration,
-                mode: timerMode,
-            });
-        }
-
         if (timerMode === "POMODORO" && timerState === "WORK") {
+            const duration = pomodoroSettings.work * 60;
+            if (duration > 0) {
+                addSession({
+                    id: crypto.randomUUID(),
+                    date: new Date().toISOString(),
+                    duration,
+                    mode: "POMODORO",
+                });
+            }
+
             const nextCount = (pomodoroCount || 0) + 1;
             setPomodoroCount(nextCount);
             const isLongBreak = nextCount % 4 === 0;
@@ -80,6 +76,7 @@ export function useTimerEngine() {
             if (pomodoroSettings.autoStartBreak) {
                 setIsActive(true);
             }
+            setDeepFocusMode(false);
         } else if (timerMode === "POMODORO" && timerState === "BREAK") {
             if (previousMode === "STOPWATCH") {
                 setTimerMode("STOPWATCH");
@@ -90,8 +87,13 @@ export function useTimerEngine() {
                 setTimerState("WORK");
                 setTimeLeft(pomodoroSettings.work * 60);
             }
+            if (pomodoroSettings.autoStartTimer) {
+                setIsActive(true);
+                setDeepFocusMode(true);
+            } else {
+                setDeepFocusMode(false);
+            }
         }
-        setDeepFocusMode(false);
     }, [
         timerMode,
         timerState,
