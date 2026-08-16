@@ -25,7 +25,8 @@ export const GlobalTimerEngine: React.FC = () => {
     soundEffectEnabled,
     sessionName,
     previousMode,
-    setPreviousMode
+    setPreviousMode,
+    setDeepFocusMode
   } = useDesktopStore();
 
 
@@ -79,6 +80,7 @@ export const GlobalTimerEngine: React.FC = () => {
         if (pomodoroSettings.autoStartBreak) {
           setIsActive(true);
         }
+        setDeepFocusMode(false);
       } else {
         if (previousMode === 'STOPWATCH') {
           electron.showNotification("Break Complete!", "Ready to jump back into Flow state?");
@@ -88,6 +90,12 @@ export const GlobalTimerEngine: React.FC = () => {
           electron.showNotification("Break Complete!", "Ready to start focusing again?");
           setTimerState('WORK');
           setTimeLeft(pomodoroSettings.work * 60);
+        }
+        if (pomodoroSettings.autoStartTimer) {
+          setIsActive(true);
+          setDeepFocusMode(true);
+        } else {
+          setDeepFocusMode(false);
         }
       }
     } else {
@@ -130,6 +138,7 @@ export const GlobalTimerEngine: React.FC = () => {
       if (pomodoroSettings.autoStartBreak) {
         setIsActive(true);
       }
+      setDeepFocusMode(false);
     }
   };
 

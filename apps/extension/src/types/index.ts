@@ -79,6 +79,7 @@ export interface AppStateData {
     break: number; // minutes
     longBreak: number; // minutes
     autoStartBreak: boolean;
+    autoStartTimer: boolean;
   };
   pomodoroCount?: number;
   

@@ -80,6 +80,7 @@ export function useTimerEngine() {
             if (pomodoroSettings.autoStartBreak) {
                 setIsActive(true);
             }
+            setDeepFocusMode(false);
         } else if (timerMode === "POMODORO" && timerState === "BREAK") {
             if (previousMode === "STOPWATCH") {
                 setTimerMode("STOPWATCH");
@@ -90,8 +91,13 @@ export function useTimerEngine() {
                 setTimerState("WORK");
                 setTimeLeft(pomodoroSettings.work * 60);
             }
+            if (pomodoroSettings.autoStartTimer) {
+                setIsActive(true);
+                setDeepFocusMode(true);
+            } else {
+                setDeepFocusMode(false);
+            }
         }
-        setDeepFocusMode(false);
     }, [
         timerMode,
         timerState,

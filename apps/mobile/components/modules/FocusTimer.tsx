@@ -74,6 +74,7 @@ export function FocusTimer() {
     resetAllData,
     toggleSubtask,
     incrementTodoSession,
+    setDeepFocusMode,
   } = useAppStore();
 
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
@@ -90,6 +91,7 @@ export function FocusTimer() {
   const [breakInput, setBreakInput] = useState(pomodoroSettings.break.toString());
   const [longBreakInput, setLongBreakInput] = useState((pomodoroSettings.longBreak || 15).toString());
   const [autoBreak, setAutoBreak] = useState(pomodoroSettings.autoStartBreak);
+  const [autoTimer, setAutoTimer] = useState(pomodoroSettings.autoStartTimer);
 
 
 
@@ -165,6 +167,7 @@ export function FocusTimer() {
         if (pomodoroSettings.autoStartBreak) {
           setIsActive(true);
         }
+        setDeepFocusMode(false);
       } else {
         setTimeLeft(0);
       }
@@ -195,6 +198,7 @@ export function FocusTimer() {
       if (pomodoroSettings.autoStartBreak) {
         setIsActive(true);
       }
+      setDeepFocusMode(false);
     } else if (timerMode === 'POMODORO' && timerState === 'BREAK') {
       // Break Completed -> return to previous mode (Flow or Pomodoro Work)
       if (previousMode === 'STOPWATCH') {
@@ -206,6 +210,12 @@ export function FocusTimer() {
         setTimerState('WORK');
         setTimeLeft(pomodoroSettings.work * 60);
       }
+      if (pomodoroSettings.autoStartTimer) {
+        setIsActive(true);
+        setDeepFocusMode(true);
+      } else {
+        setDeepFocusMode(false);
+      }
     }
   };
 
@@ -213,7 +223,7 @@ export function FocusTimer() {
     const w = parseInt(workInput, 10) || 25;
     const b = parseInt(breakInput, 10) || 5;
     const lb = parseInt(longBreakInput, 10) || 15;
-    setPomodoroSettings({ work: w, break: b, longBreak: lb, autoStartBreak: autoBreak });
+    setPomodoroSettings({ work: w, break: b, longBreak: lb, autoStartBreak: autoBreak, autoStartTimer: autoTimer });
     if (!isActive && timerMode === 'POMODORO') {
       const isLongBreak = (pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0;
       setTimeLeft(timerState === 'WORK' ? w * 60 : (isLongBreak ? lb * 60 : b * 60));
@@ -224,7 +234,7 @@ export function FocusTimer() {
   const handleConfirmResetData = () => {
     Alert.alert(
       'Reset All Data',
-      'Are you sure you want to reset all tasks, history, mood notes, and app settings? This action cannot be undone.',
+      'Are you sure you want to reset all app data? This cannot be undone.',
       [
         { text: 'Cancel', style: 'cancel' },
         {
@@ -249,6 +259,7 @@ export function FocusTimer() {
 
   const selectPomodoroBreak = () => {
     setIsActive(false);
+    setPreviousMode(timerMode === 'STOPWATCH' ? 'STOPWATCH' : 'POMODORO');
     setTimerMode('POMODORO');
     setTimerState('BREAK');
     setTimeLeft(pomodoroSettings.break * 60);
@@ -606,6 +617,7 @@ export function FocusTimer() {
               setBreakInput(pomodoroSettings.break.toString());
               setLongBreakInput((pomodoroSettings.longBreak || 15).toString());
               setAutoBreak(pomodoroSettings.autoStartBreak);
+              setAutoTimer(pomodoroSettings.autoStartTimer);
               setSettingsModalOpen(true);
             }}
             activeOpacity={0.7}
@@ -672,6 +684,15 @@ export function FocusTimer() {
               <Switch
                 value={autoBreak}
                 onValueChange={setAutoBreak}
+                trackColor={{ false: colors.border, true: colors.primary }}
+              />
+            </View>
+
+            <View style={styles.switchRow}>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>Auto-start Timer</Text>
+              <Switch
+                value={autoTimer}
+                onValueChange={setAutoTimer}
                 trackColor={{ false: colors.border, true: colors.primary }}
               />
             </View>
