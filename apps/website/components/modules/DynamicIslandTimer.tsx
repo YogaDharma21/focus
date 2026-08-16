@@ -22,6 +22,8 @@ export function DynamicIslandTimer() {
         setTimerMode,
         setPreviousMode,
         pomodoroSettings,
+        pomodoroCount,
+        setPomodoroCount,
         addSession,
         setSessionStartTime,
         setDeepFocusMode,
@@ -41,9 +43,11 @@ export function DynamicIslandTimer() {
                 setIsExpanded(false);
             }
         };
-        document.addEventListener("mousedown", handleClickOutside);
+        if (isExpanded) {
+            document.addEventListener("mousedown", handleClickOutside);
+        }
         return () => document.removeEventListener("mousedown", handleClickOutside);
-    }, []);
+    }, [isExpanded]);
 
     const playSound = React.useCallback(() => {
         if (!soundEffectEnabled) return;
@@ -67,23 +71,7 @@ export function DynamicIslandTimer() {
         }
     }, [soundEffectEnabled, soundEffectVolume]);
 
-    useEffect(() => {
-        const unlockAudio = () => {
-            if (audioRef.current) {
-                audioRef.current.load();
-            }
-            window.removeEventListener("click", unlockAudio);
-            window.removeEventListener("keydown", unlockAudio);
-        };
-        window.addEventListener("click", unlockAudio);
-        window.addEventListener("keydown", unlockAudio);
-        return () => {
-            window.removeEventListener("click", unlockAudio);
-            window.removeEventListener("keydown", unlockAudio);
-        };
-    }, []);
-
-    const getCurrentIcon = () => {
+    const getModeIcon = () => {
         if (timerMode === "POMODORO") {
             return timerState === "WORK" ? (
                 <Timer className="w-4 h-4 text-zinc-200 shrink-0" />
@@ -96,7 +84,9 @@ export function DynamicIslandTimer() {
 
     const getCurrentModeLabel = () => {
         if (timerMode === "POMODORO") {
-            return timerState === "WORK" ? "Pomodoro" : "Break";
+            return timerState === "WORK"
+                ? `Pomodoro ${((pomodoroCount || 0) % 4) + 1}/4`
+                : ((pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0 ? "Long Break" : "Break");
         }
         return "Flow";
     };
@@ -157,9 +147,16 @@ export function DynamicIslandTimer() {
         }
 
         if (timerMode === "POMODORO" && timerState === "WORK") {
+            const nextCount = (pomodoroCount || 0) + 1;
+            setPomodoroCount(nextCount);
+            const isLongBreak = nextCount % 4 === 0;
+            const breakDuration = isLongBreak
+                ? (pomodoroSettings.longBreak || 15) * 60
+                : (pomodoroSettings.break || 5) * 60;
+
             setPreviousMode("POMODORO");
             setTimerState("BREAK");
-            setTimeLeft(pomodoroSettings.break * 60);
+            setTimeLeft(breakDuration);
             if (pomodoroSettings.autoStartBreak) {
                 setIsActive(true);
             }
@@ -205,7 +202,7 @@ export function DynamicIslandTimer() {
                 )}
                 title="Click to toggle timer controls"
             >
-                {getCurrentIcon()}
+                {getModeIcon()}
                 <span className="font-mono font-bold text-xs sm:text-sm text-white tracking-wider tabular-nums">
                     {formatTime(timeLeft)}
                 </span>
@@ -230,7 +227,7 @@ export function DynamicIslandTimer() {
                         title="Click to collapse widget"
                     >
                         <div className="flex items-center gap-2">
-                            {getCurrentIcon()}
+                            {getModeIcon()}
                             <span className="text-xs font-bold text-white tracking-tight">
                                 {getCurrentModeLabel()}
                             </span>

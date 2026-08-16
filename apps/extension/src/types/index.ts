@@ -77,8 +77,10 @@ export interface AppStateData {
   pomodoroSettings: {
     work: number; // minutes
     break: number; // minutes
+    longBreak: number; // minutes
     autoStartBreak: boolean;
   };
+  pomodoroCount?: number;
   
   todos: TodoItem[];
   groups: Group[];

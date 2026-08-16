@@ -16,6 +16,8 @@ export const GlobalTimerEngine: React.FC = () => {
     isActive,
     setIsActive,
     pomodoroSettings,
+    pomodoroCount,
+    setPomodoroCount,
     todos,
     updateTodo,
     selectedTodoId,
@@ -38,6 +40,8 @@ export const GlobalTimerEngine: React.FC = () => {
     if (timerMode === 'POMODORO') {
       if (timerState === 'WORK') {
         const durationWorked = Math.max(60, (pomodoroSettings.work * 60) - timeLeft);
+        const nextCount = (pomodoroCount || 0) + 1;
+        setPomodoroCount(nextCount);
         
         addSession({
           id: crypto.randomUUID(),
@@ -56,11 +60,21 @@ export const GlobalTimerEngine: React.FC = () => {
           });
         }
 
-        electron.showNotification("Session Complete!", `Great work finishing "${title}"! Time for a break.`);
+        const isLongBreak = nextCount % 4 === 0;
+        const breakDuration = isLongBreak
+          ? (pomodoroSettings.longBreak || 15) * 60
+          : (pomodoroSettings.break || 5) * 60;
+
+        electron.showNotification(
+          isLongBreak ? "4 Pomodoros Completed!" : "Session Complete!",
+          isLongBreak 
+            ? `Great job completing 4 pomodoro sessions! Time for a ${pomodoroSettings.longBreak || 15} minute long break.`
+            : `Great work finishing "${title}"! Time for a break.`
+        );
         
         setPreviousMode('POMODORO');
         setTimerState('BREAK');
-        setTimeLeft(pomodoroSettings.break * 60);
+        setTimeLeft(breakDuration);
 
         if (pomodoroSettings.autoStartBreak) {
           setIsActive(true);

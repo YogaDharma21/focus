@@ -129,10 +129,13 @@ interface AppState {
   addSession: (session: Session) => void;
   addDistraction: (category: string) => void;
 
-  pomodoroSettings: { work: number; break: number; autoStartBreak: boolean };
+  pomodoroSettings: { work: number; break: number; longBreak: number; autoStartBreak: boolean };
   setPomodoroSettings: (
-    settings: Partial<{ work: number; break: number; autoStartBreak: boolean }>
+    settings: Partial<{ work: number; break: number; longBreak: number; autoStartBreak: boolean }>
   ) => void;
+  pomodoroCount: number;
+  setPomodoroCount: (count: number | ((prev: number) => number)) => void;
+  resetPomodoroCount: () => void;
 
   resetAllData: () => void;
 
@@ -465,11 +468,17 @@ export const useAppStore = create<AppState>()(
           ),
         })),
 
-      pomodoroSettings: { work: 25, break: 5, autoStartBreak: false },
+      pomodoroSettings: { work: 25, break: 5, longBreak: 15, autoStartBreak: false },
       setPomodoroSettings: (updates) =>
         set((state) => ({
           pomodoroSettings: { ...state.pomodoroSettings, ...updates },
         })),
+      pomodoroCount: 0,
+      setPomodoroCount: (countOrFn) =>
+        set((state) => ({
+          pomodoroCount: typeof countOrFn === 'function' ? countOrFn(state.pomodoroCount || 0) : countOrFn,
+        })),
+      resetPomodoroCount: () => set({ pomodoroCount: 0 }),
 
       resetAllData: () =>
         set({
@@ -488,7 +497,8 @@ export const useAppStore = create<AppState>()(
           timerState: 'WORK',
           timeLeft: 25 * 60,
           isActive: false,
-          pomodoroSettings: { work: 25, break: 5, autoStartBreak: false },
+          pomodoroSettings: { work: 25, break: 5, longBreak: 15, autoStartBreak: false },
+          pomodoroCount: 0,
           background: 'dark',
         }),
     }),

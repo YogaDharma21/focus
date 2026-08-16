@@ -18,6 +18,8 @@ export function DeepFocusOverlay() {
         timerState,
         previousMode,
         pomodoroSettings,
+        pomodoroCount,
+        setPomodoroCount,
         setTimeLeft,
         setTimerState,
         setTimerMode,
@@ -78,14 +80,11 @@ export function DeepFocusOverlay() {
 
     useEffect(() => {
         if (isActive && !sessionStartTimeRef.current) {
-            const now = Date.now();
-            sessionStartTimeRef.current = now;
-            setSessionStartTime(new Date(now).toISOString());
+            sessionStartTimeRef.current = Date.now();
         } else if (!isActive) {
             sessionStartTimeRef.current = null;
-            setSessionStartTime(null);
         }
-    }, [isActive, setSessionStartTime]);
+    }, [isActive]);
 
     const handleCompleteSession = useCallback(() => {
         setIsActive(false);
@@ -111,21 +110,29 @@ export function DeepFocusOverlay() {
                 duration,
                 mode: timerMode,
             });
+            const selectedTodo = todos.find((t) => t.id === selectedTodoId);
             fetch("/api/sessions", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     duration,
-                    tasks: [],
+                    tasks: selectedTodo ? [selectedTodo.text] : [],
                 }),
             }).catch(() => {});
         }
         setDeepFocusMode(false);
 
         if (timerMode === "POMODORO" && timerState === "WORK") {
+            const nextCount = (pomodoroCount || 0) + 1;
+            setPomodoroCount(nextCount);
+            const isLongBreak = nextCount % 4 === 0;
+            const breakDuration = isLongBreak
+                ? (pomodoroSettings.longBreak || 15) * 60
+                : (pomodoroSettings.break || 5) * 60;
+
             setPreviousMode("POMODORO");
             setTimerState("BREAK");
-            setTimeLeft(pomodoroSettings.break * 60);
+            setTimeLeft(breakDuration);
             if (pomodoroSettings.autoStartBreak) {
                 setIsActive(true);
             }
@@ -164,7 +171,11 @@ export function DeepFocusOverlay() {
         setDeepFocusMode,
         playSound,
         pomodoroSettings,
+        pomodoroCount,
+        setPomodoroCount,
         addSession,
+        selectedTodoId,
+        todos,
     ]);
 
     useEffect(() => {
@@ -284,7 +295,41 @@ export function DeepFocusOverlay() {
                 <X className="w-6 h-6" />
             </button>
 
-            <div className="flex flex-col items-center gap-6">
+            <div className="flex flex-col items-center gap-4">
+                {/* Pomodoro Cycle & Progress Indicator */}
+                {timerMode === "POMODORO" && (
+                    <div className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-secondary/40 border border-border/50 text-xs font-mono text-foreground/80 shadow-sm animate-in fade-in duration-150">
+                        <div className="flex items-center gap-1.5">
+                            {[0, 1, 2, 3].map((index) => {
+                                const currentCycleStep = (pomodoroCount || 0) % 4;
+                                const isCompleted = index < currentCycleStep;
+                                const isCurrent = index === currentCycleStep && timerState === "WORK";
+                                return (
+                                    <div
+                                        key={index}
+                                        className={cn(
+                                            "w-2 h-2 rounded-full transition-all duration-300",
+                                            isCompleted
+                                                ? "bg-primary shadow-[0_0_6px_rgba(255,255,255,0.7)]"
+                                                : isCurrent
+                                                ? "bg-primary/70 ring-2 ring-primary/30 animate-pulse"
+                                                : "bg-muted-foreground/30",
+                                        )}
+                                        title={`Pomodoro ${index + 1} of 4`}
+                                    />
+                                );
+                            })}
+                        </div>
+                        <span className="text-[11px] font-medium text-foreground/90">
+                            {timerState === "BREAK"
+                                ? (pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0
+                                    ? `Long Break (${pomodoroSettings.longBreak || 15}m)`
+                                    : `Short Break (${pomodoroSettings.break || 5}m)`
+                                : `Pomodoro ${((pomodoroCount || 0) % 4) + 1} of 4`}
+                        </span>
+                    </div>
+                )}
+
                 <div
                     className={cn(
                         "text-[4rem] sm:text-[6rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground select-none",
