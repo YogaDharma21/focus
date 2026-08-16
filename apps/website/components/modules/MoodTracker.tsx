@@ -1,8 +1,9 @@
 "use client";
 
 import React from "react";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useAppStore } from "@/lib/store";
+import { useShallow } from "zustand/react/shallow";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -24,63 +25,65 @@ export interface MoodConfig {
     pillSelectedClass: string;
 }
 
-export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
-    amazing: {
+const MOODS: MoodConfig[] = [
+    {
         key: "amazing",
         label: "Amazing",
-        icon: <Smile className="w-6 h-6" />,
-        color: "#ffffff",
-        bgClass: "bg-white hover:bg-slate-100",
-        borderClass: "border-white",
-        textClass: "text-white font-semibold",
-        ringClass: "ring-white",
-        pillSelectedClass: "bg-white text-slate-950 shadow-lg scale-105 border-white font-bold",
+        icon: <Zap className="w-5 h-5" />,
+        color: "#10b981",
+        bgClass: "bg-emerald-500/15",
+        borderClass: "border-emerald-500/30",
+        textClass: "text-emerald-400",
+        ringClass: "ring-emerald-500/30",
+        pillSelectedClass: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 shadow-sm",
     },
-    ok: {
+    {
         key: "ok",
-        label: "OK",
-        icon: <Meh className="w-6 h-6" />,
-        color: "#cbd5e1", // slate-300
-        bgClass: "bg-slate-300 hover:bg-slate-200",
-        borderClass: "border-slate-300",
-        textClass: "text-slate-300 font-semibold",
-        ringClass: "ring-slate-300",
-        pillSelectedClass: "bg-slate-300 text-slate-950 shadow-lg scale-105 border-slate-300 font-bold",
+        label: "Good",
+        icon: <Smile className="w-5 h-5" />,
+        color: "#3b82f6",
+        bgClass: "bg-blue-500/15",
+        borderClass: "border-blue-500/30",
+        textClass: "text-blue-400",
+        ringClass: "ring-blue-500/30",
+        pillSelectedClass: "bg-blue-500/20 text-blue-300 border-blue-500/40 shadow-sm",
     },
-    tired: {
+    {
         key: "tired",
         label: "Tired",
-        icon: <Moon className="w-6 h-6" />,
-        color: "#64748b", // slate-500
-        bgClass: "bg-slate-500 hover:bg-slate-400",
-        borderClass: "border-slate-500",
-        textClass: "text-slate-400 font-semibold",
-        ringClass: "ring-slate-400",
-        pillSelectedClass: "bg-slate-500 text-white shadow-lg scale-105 border-slate-500 font-bold",
+        icon: <Moon className="w-5 h-5" />,
+        color: "#8b5cf6",
+        bgClass: "bg-purple-500/15",
+        borderClass: "border-purple-500/30",
+        textClass: "text-purple-400",
+        ringClass: "ring-purple-500/30",
+        pillSelectedClass: "bg-purple-500/20 text-purple-300 border-purple-500/40 shadow-sm",
     },
-    sad: {
+    {
         key: "sad",
         label: "Sad",
-        icon: <Frown className="w-6 h-6" />,
-        color: "#334155", // slate-700
-        bgClass: "bg-slate-700 hover:bg-slate-600",
-        borderClass: "border-slate-700",
-        textClass: "text-slate-300 font-semibold",
-        ringClass: "ring-slate-600",
-        pillSelectedClass: "bg-slate-700 text-white shadow-lg scale-105 border-slate-700 font-bold",
+        icon: <Frown className="w-5 h-5" />,
+        color: "#64748b",
+        bgClass: "bg-slate-500/15",
+        borderClass: "border-slate-500/30",
+        textClass: "text-slate-400",
+        ringClass: "ring-slate-500/30",
+        pillSelectedClass: "bg-slate-500/20 text-slate-300 border-slate-500/40 shadow-sm",
     },
-    stressed: {
+    {
         key: "stressed",
         label: "Stressed",
-        icon: <Zap className="w-6 h-6" />,
-        color: "#1e293b", // slate-800 (solid charcoal, no border, clearly distinct from empty dark boxes)
-        bgClass: "bg-slate-800 hover:bg-slate-700",
-        borderClass: "border-slate-800",
-        textClass: "text-slate-300 font-semibold",
-        ringClass: "ring-slate-700",
-        pillSelectedClass: "bg-slate-800 text-white shadow-lg scale-105 border-slate-800 font-bold",
+        icon: <Meh className="w-5 h-5" />,
+        color: "#f43f5e",
+        bgClass: "bg-rose-500/15",
+        borderClass: "border-rose-500/30",
+        textClass: "text-rose-400",
+        ringClass: "ring-rose-500/30",
+        pillSelectedClass: "bg-rose-500/20 text-rose-300 border-rose-500/40 shadow-sm",
     },
-};
+];
+
+export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = Object.fromEntries(MOODS.map(m => [m.key, m])) as Record<MoodType, MoodConfig>;
 
 const MONTH_LABELS = ["J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D"];
 const FULL_MONTH_NAMES = [
@@ -88,10 +91,11 @@ const FULL_MONTH_NAMES = [
     "July", "August", "September", "October", "November", "December"
 ];
 
-function normalizeMoodKey(rawMood: string | undefined): MoodType | null {
+export function normalizeMoodKey(rawMood: string | undefined): MoodType | null {
     if (!rawMood) return null;
-    if (rawMood === "amazing" || rawMood === "😊" || rawMood === "🤩" || rawMood === "Happy" || rawMood === "Excited") return "amazing";
-    if (rawMood === "ok" || rawMood === "🙂" || rawMood === "😐" || rawMood === "Okay") return "ok";
+    const lower = rawMood.toLowerCase();
+    if (lower === "amazing" || lower === "great" || lower === "⚡" || rawMood === "Amazing") return "amazing";
+    if (lower === "ok" || lower === "good" || lower === "happy" || lower === "😊" || rawMood === "Good") return "ok";
     if (rawMood === "tired" || rawMood === "😴" || rawMood === "Tired") return "tired";
     if (rawMood === "sad" || rawMood === "😔" || rawMood === "Sad") return "sad";
     if (rawMood === "stressed" || rawMood === "😤" || rawMood === "Stressed") return "stressed";
@@ -99,14 +103,24 @@ function normalizeMoodKey(rawMood: string | undefined): MoodType | null {
 }
 
 export function MoodTracker() {
-    const { moodNotes, setMoodForDate, cycleMoodForDate, deleteMoodNote } = useAppStore();
+    const { moodNotes, setMoodForDate, cycleMoodForDate, deleteMoodNote } =
+        useAppStore(
+            useShallow((s) => ({
+                moodNotes: s.moodNotes,
+                setMoodForDate: s.setMoodForDate,
+                cycleMoodForDate: s.cycleMoodForDate,
+                deleteMoodNote: s.deleteMoodNote,
+            }))
+        );
     const today = new Date();
     const todayStr = format(today, "yyyy-MM-dd");
     
     const [selectedYear, setSelectedYear] = useState<number>(today.getFullYear());
     const [selectedDateKey, setSelectedDateKey] = useState<string>(todayStr);
-    const [selectedMood, setSelectedMood] = useState<MoodType | null>(null);
-    const [descriptionText, setDescriptionText] = useState("");
+    
+    const initialNote = moodNotes.find((n) => n.date.slice(0, 10) === todayStr);
+    const [selectedMood, setSelectedMood] = useState<MoodType | null>(() => normalizeMoodKey(initialNote?.mood));
+    const [descriptionText, setDescriptionText] = useState(() => initialNote?.text || "");
     const [hoveredDateInfo, setHoveredDateInfo] = useState<{
         dateStr: string;
         formattedDate: string;
@@ -118,11 +132,12 @@ export function MoodTracker() {
     const selectedDateNote = moodNotes.find((n) => n.date.slice(0, 10) === selectedDateKey);
     const currentSelectedMoodKey = normalizeMoodKey(selectedDateNote?.mood);
 
-    // Sync input form whenever selectedDateKey changes or store updates
-    useEffect(() => {
-        setSelectedMood(currentSelectedMoodKey);
-        setDescriptionText(selectedDateNote?.text || "");
-    }, [selectedDateKey, selectedDateNote?.mood, selectedDateNote?.text]);
+    const handleSelectDate = (dateStr: string) => {
+        setSelectedDateKey(dateStr);
+        const note = moodNotes.find((n) => n.date.slice(0, 10) === dateStr);
+        setSelectedMood(normalizeMoodKey(note?.mood));
+        setDescriptionText(note?.text || "");
+    };
 
     const handleSaveMood = () => {
         const moodToSave = selectedMood || currentSelectedMoodKey || "amazing";
@@ -131,32 +146,23 @@ export function MoodTracker() {
 
     const isTodaySelected = selectedDateKey === todayStr;
 
-    // Helper to format date string
-    const formatDateStr = (dateKey: string) => {
-        try {
-            const parts = dateKey.split("-").map(Number);
-            const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
-            return format(dateObj, "MMM d, yyyy");
-        } catch {
-            return dateKey;
-        }
-    };
-
     const getFormattedSelectedDate = () => {
         try {
-            const parts = selectedDateKey.split("-").map(Number);
-            const dateObj = new Date(parts[0], parts[1] - 1, parts[2]);
-            return format(dateObj, "EEEE, MMMM d, yyyy");
+            const parsed = new Date(selectedDateKey + "T00:00:00");
+            if (isValid(parsed)) {
+                return format(parsed, "MMMM d, yyyy");
+            }
         } catch {
-            return selectedDateKey;
+            // fallback
         }
+        return selectedDateKey;
     };
 
     // Calculate active date info for bottom banner (hovered date or clicked/selected date)
     const activeDateKey = hoveredDateInfo?.dateStr || selectedDateKey;
     const activeNoteObj = moodNotes.find((n) => n.date.slice(0, 10) === activeDateKey);
     const activeMoodKey = normalizeMoodKey(activeNoteObj?.mood);
-    const activeFormattedDate = formatDateStr(activeDateKey);
+    const activeFormattedDate = format(new Date(activeDateKey + "T00:00:00"), "MMM d, yyyy");
 
     // Calculate mood stats for selected year
     const yearNotes = moodNotes.filter((n) => {
@@ -182,17 +188,13 @@ export function MoodTracker() {
     const totalTrackedDays = Object.values(stats).reduce((a, b) => a + b, 0);
 
     return (
-        <div className="h-full flex flex-col gap-6 pb-12">
-            {/* Input & Detail Inspector Card for Selected Date */}
+        <div className="space-y-6 pb-12 animate-in fade-in duration-300">
+            {/* Top Interactive Logger Card */}
             <Card className="p-6 bg-card/50 border-0 shadow-md backdrop-blur-xl rounded-[var(--radius)] space-y-4">
-                <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 shrink-0">
-                            <Smile className="w-4 h-4" />
-                        </div>
-                        <h2 className="font-semibold text-lg">
-                            Log Mood {isTodaySelected ? "(Today)" : `for ${formatDateStr(selectedDateKey)}`}
-                        </h2>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-foreground font-semibold text-lg">
+                        <Sparkles className="w-5 h-5 text-primary" />
+                        <span>Daily Reflection</span>
                     </div>
 
                     <div className="flex items-center gap-2">
@@ -202,7 +204,7 @@ export function MoodTracker() {
                         {!isTodaySelected && (
                             <button
                                 onClick={() => {
-                                    setSelectedDateKey(todayStr);
+                                    handleSelectDate(todayStr);
                                     setSelectedYear(today.getFullYear());
                                 }}
                                 className="flex items-center gap-1 text-xs text-primary hover:underline bg-primary/10 px-2.5 py-1 rounded-full border border-primary/20"
@@ -216,30 +218,23 @@ export function MoodTracker() {
                 </div>
 
                 <div className="grid grid-cols-5 gap-2 sm:gap-3">
-                    {(Object.keys(MOOD_CONFIGS) as MoodType[]).map((key) => {
-                        const cfg = MOOD_CONFIGS[key];
-                        const isSelected = selectedMood === key;
+                    {MOODS.map((m) => {
+                        const isSelected = selectedMood === m.key || (!selectedMood && currentSelectedMoodKey === m.key);
                         return (
                             <button
-                                key={key}
-                                type="button"
-                                onClick={() => setSelectedMood(key)}
+                                key={m.key}
+                                onClick={() => setSelectedMood(m.key)}
                                 className={cn(
-                                    "flex flex-col items-center justify-center p-3 rounded-xl transition-all duration-200 border group",
+                                    "flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl border transition-all duration-200 cursor-pointer text-center group",
                                     isSelected
-                                        ? cfg.pillSelectedClass
-                                        : "bg-background/40 hover:bg-background/80 border-border/40 text-foreground"
+                                        ? m.pillSelectedClass
+                                        : "bg-background/40 hover:bg-background/80 border-border/40 text-muted-foreground hover:text-foreground"
                                 )}
                             >
-                                <span className="text-2xl sm:text-3xl transition-transform duration-200 group-hover:scale-110">
-                                    {cfg.icon}
+                                <span className={cn("transition-transform duration-200 group-hover:scale-110", m.textClass)}>
+                                    {m.icon}
                                 </span>
-                                <span className={cn(
-                                    "text-xs font-medium mt-1.5",
-                                    isSelected ? "font-bold" : "text-muted-foreground group-hover:text-foreground"
-                                )}>
-                                    {cfg.label}
-                                </span>
+                                <span className="text-xs font-medium mt-1.5">{m.label}</span>
                             </button>
                         );
                     })}
@@ -256,7 +251,7 @@ export function MoodTracker() {
                     {selectedDateNote ? (
                         <div className="flex items-center gap-2 text-xs text-muted-foreground">
                             <span>Logged as <strong className={MOOD_CONFIGS[currentSelectedMoodKey || "amazing"].textClass}>{MOOD_CONFIGS[currentSelectedMoodKey || "amazing"].label}</strong></span>
-                            {selectedDateNote.text && <span className="italic truncate max-w-[200px]">"{selectedDateNote.text}"</span>}
+                            {selectedDateNote.text && <span className="italic truncate max-w-[200px]">&ldquo;{selectedDateNote.text}&rdquo;</span>}
                             <button
                                 onClick={() => {
                                     deleteMoodNote(selectedDateNote.id);
@@ -270,15 +265,14 @@ export function MoodTracker() {
                             </button>
                         </div>
                     ) : (
-                        <span className="text-xs text-muted-foreground">No mood logged for this date yet</span>
+                        <span className="text-xs text-muted-foreground/60 italic">No mood saved yet for this date</span>
                     )}
 
                     <Button
-                        onClick={handleSaveMood}
-                        className="ml-auto flex items-center gap-2"
                         size="sm"
+                        onClick={handleSaveMood}
+                        className="rounded-xl px-5 text-xs font-semibold shadow"
                     >
-                        <Sparkles className="w-4 h-4" />
                         Save Mood
                     </Button>
                 </div>
@@ -390,7 +384,7 @@ export function MoodTracker() {
                                                 key={monthIdx}
                                                 type="button"
                                                 onClick={() => {
-                                                    setSelectedDateKey(dateKey);
+                                                    handleSelectDate(dateKey);
                                                 }}
                                                 onDoubleClick={(e) => {
                                                     e.preventDefault();
@@ -439,7 +433,7 @@ export function MoodTracker() {
                             )}
                             {activeNoteObj?.text && (
                                 <span className="text-foreground/80 italic ml-2 max-w-[300px] truncate bg-background/50 px-2 py-0.5 rounded border border-border/30">
-                                    "{activeNoteObj.text}"
+                                    &ldquo;{activeNoteObj.text}&rdquo;
                                 </span>
                             )}
                         </div>

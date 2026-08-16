@@ -24,7 +24,10 @@ interface DistractionCounterProps {
 }
 
 export function DistractionCounter({ className }: DistractionCounterProps) {
-    const { isActive, setIsActive, addDistraction, setDeepFocusMode } = useAppStore();
+    const isActive = useAppStore((s) => s.isActive);
+    const setIsActive = useAppStore((s) => s.setIsActive);
+    const addDistraction = useAppStore((s) => s.addDistraction);
+    const setDeepFocusMode = useAppStore((s) => s.setDeepFocusMode);
     const [open, setOpen] = useState(false);
 
     const handleDistraction = (category: string) => {

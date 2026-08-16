@@ -1,6 +1,7 @@
 "use client";
 
 import { useAppStore, Distraction } from "@/lib/store";
+import { useShallow } from "zustand/react/shallow";
 import { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
@@ -18,8 +19,16 @@ import { isSameDay, parseISO } from "date-fns";
 
 export function StatsJournal() {
     const { sessions, sessionStartTime, isActive, todos, distractions } =
-        useAppStore();
-    const [liveElapsed, setLiveElapsed] = useState(0);
+        useAppStore(
+            useShallow((s) => ({
+                sessions: s.sessions,
+                sessionStartTime: s.sessionStartTime,
+                isActive: s.isActive,
+                todos: s.todos,
+                distractions: s.distractions,
+            }))
+        );
+    const [currentTime, setCurrentTime] = useState(() => Date.now());
     const [showHours, setShowHours] = useState(false);
 
     const today = new Date();
@@ -46,19 +55,16 @@ export function StatsJournal() {
     };
 
     useEffect(() => {
-        let interval: NodeJS.Timeout;
-        if (isActive && sessionStartTime) {
-            interval = setInterval(() => {
-                const elapsed = Math.floor(
-                    (Date.now() - new Date(sessionStartTime).getTime()) / 1000,
-                );
-                setLiveElapsed(elapsed);
-            }, 1000);
-        } else {
-            setLiveElapsed(0);
-        }
+        if (!isActive || !sessionStartTime) return;
+        const interval = setInterval(() => {
+            setCurrentTime(Date.now());
+        }, 1000);
         return () => clearInterval(interval);
     }, [isActive, sessionStartTime]);
+
+    const liveElapsed = isActive && sessionStartTime
+        ? Math.floor((currentTime - new Date(sessionStartTime).getTime()) / 1000)
+        : 0;
 
     const todaysSessions = sessions.filter((s) =>
         s.date && isSameDay(parseISO(s.date), today),
@@ -90,7 +96,7 @@ export function StatsJournal() {
         ).sort().reverse();
 
         let streak = 0;
-        let currentDate = new Date();
+        const currentDate = new Date();
         currentDate.setHours(0, 0, 0, 0);
 
         for (const dateStr of uniqueDates) {

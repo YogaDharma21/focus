@@ -14,18 +14,19 @@ import { BackgroundSelector } from "@/components/modules/BackgroundSelector";
 import { MoodTracker } from "@/components/modules/MoodTracker";
 import { useAppStore } from "@/lib/store";
 import { useTimerEngine } from "@/lib/hooks";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
+
+const emptySubscribe = () => () => {};
 
 export default function Page() {
     useTimerEngine();
-    const { currentView, mediaPlayerOpen, isActive, deepFocusMode, setDeepFocusMode } = useAppStore();
-    const [mounted, setMounted] = useState(false);
+    const currentView = useAppStore((s) => s.currentView);
+    const isActive = useAppStore((s) => s.isActive);
+    const deepFocusMode = useAppStore((s) => s.deepFocusMode);
+    const setDeepFocusMode = useAppStore((s) => s.setDeepFocusMode);
+    const mounted = useSyncExternalStore(emptySubscribe, () => true, () => false);
     const prevActiveRef = useRef(isActive);
-
-    useEffect(() => {
-        setMounted(true);
-    }, []);
 
     useEffect(() => {
         if (isActive && !prevActiveRef.current && !deepFocusMode) {
@@ -65,8 +66,8 @@ export default function Page() {
             {deepFocusMode && <DeepFocusOverlay />}
 
             <div className={cn(
-                "flex min-h-screen transition-opacity duration-500",
-                deepFocusMode && "opacity-0 pointer-events-none"
+                "flex min-h-screen transition-opacity duration-300",
+                deepFocusMode && "opacity-0 pointer-events-none invisible"
             )}>
                 <BottomNavbar />
                 

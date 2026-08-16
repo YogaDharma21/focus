@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { useAppStore } from "@/lib/store";
+import { useShallow } from "zustand/react/shallow";
 import { Play, Pause, CheckCircle2, Timer, Coffee, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
@@ -31,7 +32,31 @@ export function DynamicIslandTimer() {
         selectedTodoId,
         soundEffectVolume,
         soundEffectEnabled,
-    } = useAppStore();
+    } = useAppStore(
+        useShallow((s) => ({
+            timerMode: s.timerMode,
+            timerState: s.timerState,
+            previousMode: s.previousMode,
+            timeLeft: s.timeLeft,
+            isActive: s.isActive,
+            sessionName: s.sessionName,
+            setIsActive: s.setIsActive,
+            setTimeLeft: s.setTimeLeft,
+            setTimerState: s.setTimerState,
+            setTimerMode: s.setTimerMode,
+            setPreviousMode: s.setPreviousMode,
+            pomodoroSettings: s.pomodoroSettings,
+            pomodoroCount: s.pomodoroCount,
+            setPomodoroCount: s.setPomodoroCount,
+            addSession: s.addSession,
+            setSessionStartTime: s.setSessionStartTime,
+            setDeepFocusMode: s.setDeepFocusMode,
+            todos: s.todos,
+            selectedTodoId: s.selectedTodoId,
+            soundEffectVolume: s.soundEffectVolume,
+            soundEffectEnabled: s.soundEffectEnabled,
+        }))
+    );
     const [isExpanded, setIsExpanded] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
     const audioRef = useRef<HTMLAudioElement | null>(null);

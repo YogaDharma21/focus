@@ -5,7 +5,8 @@ import { Timer, CheckSquare, BarChart2, Smile } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function BottomNavbar() {
-    const { currentView, setView } = useAppStore();
+    const currentView = useAppStore((s) => s.currentView);
+    const setView = useAppStore((s) => s.setView);
 
     const navItems: {
         label: string;
