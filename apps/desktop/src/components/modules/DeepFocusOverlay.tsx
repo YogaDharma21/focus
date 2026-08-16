@@ -118,9 +118,12 @@ export const DeepFocusOverlay: React.FC = () => {
         if (previousMode === 'STOPWATCH') {
           electron.showNotification("Break Complete!", "Ready to jump back into Flow state?");
           setTimerMode('STOPWATCH');
+          setTimerState('WORK');
           setFlowTimeElapsed(0);
+          setTimeLeft(0);
         } else {
           electron.showNotification("Break Complete!", "Ready to start focusing again?");
+          setTimerMode('POMODORO');
           setTimerState('WORK');
           setTimeLeft(pomodoroSettings.work * 60);
         }
@@ -263,7 +266,7 @@ export const DeepFocusOverlay: React.FC = () => {
       {/* Center Giant Clock & Subtle Controls */}
       <div className="flex flex-col items-center justify-center space-y-6 my-auto">
         {/* Pomodoro Cycle & Progress Indicator */}
-        {timerMode === 'POMODORO' && (
+        {timerMode === 'POMODORO' && previousMode !== 'STOPWATCH' && (
           <div className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-zinc-900/80 border border-zinc-800 text-xs font-mono text-zinc-300 shadow-sm animate-in fade-in duration-150">
             <div className="flex items-center gap-1.5">
               {[0, 1, 2, 3].map((index) => {

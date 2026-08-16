@@ -181,7 +181,7 @@ export function DeepFocusOverlay() {
 
         <View style={styles.content}>
           {/* Pomodoro Cycle & Progress Indicator */}
-          {timerMode === 'POMODORO' && (
+          {timerMode === 'POMODORO' && previousMode !== 'STOPWATCH' && (
             <View style={[styles.cycleIndicatorContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <View style={styles.cycleDotsRow}>
                 {[0, 1, 2, 3].map((index) => {

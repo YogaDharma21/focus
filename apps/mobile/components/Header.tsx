@@ -87,6 +87,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
 
   const selectPomodoroBreak = () => {
     setIsActive(false);
+    setPreviousMode(timerMode === 'STOPWATCH' ? 'STOPWATCH' : 'POMODORO');
     setTimerMode('POMODORO');
     setTimerState('BREAK');
     const isLongBreak = (pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0;

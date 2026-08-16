@@ -308,7 +308,7 @@ export function DeepFocusOverlay() {
 
             <div className="flex flex-col items-center gap-4">
                 {/* Pomodoro Cycle & Progress Indicator */}
-                {timerMode === "POMODORO" && (
+                {timerMode === "POMODORO" && previousMode !== "STOPWATCH" && (
                     <div className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-secondary/40 border border-border/50 text-xs font-mono text-foreground/80 shadow-sm animate-in fade-in duration-150">
                         <div className="flex items-center gap-1.5">
                             {[0, 1, 2, 3].map((index) => {

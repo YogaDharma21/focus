@@ -98,9 +98,12 @@ export const FloatingTimerCapsule: React.FC = () => {
         if (previousMode === 'STOPWATCH') {
           electron.showNotification("Break Complete!", "Ready to jump back into Flow state?");
           setTimerMode('STOPWATCH');
+          setTimerState('WORK');
           setFlowTimeElapsed(0);
+          setTimeLeft(0);
         } else {
           electron.showNotification("Break Complete!", "Ready to start focusing again?");
+          setTimerMode('POMODORO');
           setTimerState('WORK');
           setTimeLeft(pomodoroSettings.work * 60);
         }
@@ -184,7 +187,9 @@ export const FloatingTimerCapsule: React.FC = () => {
   const timerLabel = timerMode === 'POMODORO' 
     ? (timerState === 'WORK' 
         ? `Pomodoro ${((pomodoroCount || 0) % 4) + 1}/4` 
-        : ((pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0 ? 'Long Break' : 'Break'))
+        : (previousMode === 'STOPWATCH'
+            ? 'Break'
+            : ((pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0 ? 'Long Break' : 'Break')))
     : 'Flow';
 
   const activeTask = todos.find(t => t.id === selectedTodoId);
@@ -207,12 +212,16 @@ export const FloatingTimerCapsule: React.FC = () => {
       setTimerState('WORK');
       setTimeLeft(pomodoroSettings.work * 60);
     } else if (tab === 'BREAK') {
+      setPreviousMode(timerMode === 'STOPWATCH' ? 'STOPWATCH' : 'POMODORO');
+      setTimerMode('POMODORO');
       setTimerState('BREAK');
       setTimeLeft(pomodoroSettings.break * 60);
     } else {
       setPreviousMode('STOPWATCH');
       setTimerMode('STOPWATCH');
+      setTimerState('WORK');
       setFlowTimeElapsed(0);
+      setTimeLeft(0);
     }
   };
 
