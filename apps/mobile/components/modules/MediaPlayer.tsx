@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   Modal,
   ScrollView,
 } from 'react-native';
-import { Audio } from 'expo-av';
+import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
 import { Play, Pause, Music, Volume2, Volume1, BellRing, X, ChevronUp, ChevronDown } from 'lucide-react-native';
@@ -33,47 +33,50 @@ export function MediaPlayer() {
   } = useAppStore();
 
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
-  const soundRef = useRef<Audio.Sound | null>(null);
+  const soundRef = useRef<AudioPlayer | null>(null);
 
   const bottomOffset = 56 + Math.max(insets.bottom, 0) + 12;
 
   useEffect(() => {
     return () => {
       if (soundRef.current) {
-        soundRef.current.unloadAsync();
+        soundRef.current.pause();
+        soundRef.current.remove();
+        soundRef.current = null;
       }
     };
   }, []);
 
-  const playSound = async (url: string) => {
+  const playSound = useCallback(async (url: string) => {
     try {
-      await Audio.setAudioModeAsync({
-        playsInSilentModeIOS: true,
-        staysActiveInBackground: true,
-        shouldDuckAndroid: true,
+      await setAudioModeAsync({
+        playsInSilentMode: true,
+        shouldPlayInBackground: true,
+        interruptionMode: 'doNotMix',
       });
       if (soundRef.current) {
-        await soundRef.current.unloadAsync();
+        soundRef.current.pause();
+        soundRef.current.remove();
         soundRef.current = null;
       }
       const source = url && url.startsWith('http')
         ? { uri: url }
         : require('../../assets/music1.mp3');
-      const { sound } = await Audio.Sound.createAsync(
-        source,
-        { shouldPlay: true, isLooping: true, volume: musicVolume }
-      );
-      soundRef.current = sound;
+      const player = createAudioPlayer(source);
+      player.volume = musicVolume;
+      player.loop = true;
+      soundRef.current = player;
+      player.play();
       setIsMusicPlaying(true);
     } catch (error) {
       console.log('Error loading audio:', error);
     }
-  };
+  }, [musicVolume, setIsMusicPlaying]);
 
-  const changeVolume = async (newVol: number) => {
+  const changeVolume = (newVol: number) => {
     setMusicVolume(newVol);
     if (soundRef.current) {
-      await soundRef.current.setVolumeAsync(newVol);
+      soundRef.current.volume = newVol;
     }
   };
 
@@ -86,16 +89,16 @@ export function MediaPlayer() {
             await playSound(track.url);
           }
         } else {
-          await soundRef.current.playAsync();
+          soundRef.current.play();
         }
       } else {
         if (soundRef.current) {
-          await soundRef.current.pauseAsync();
+          soundRef.current.pause();
         }
       }
     };
     syncState();
-  }, [isMusicPlaying]);
+  }, [isMusicPlaying, currentTrackIndex, localPlaylist, playSound]);
 
   const togglePlay = async () => {
     setIsMusicPlaying(!isMusicPlaying);
