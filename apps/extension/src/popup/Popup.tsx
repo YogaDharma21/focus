@@ -57,7 +57,7 @@ import { BackgroundDisplay } from "./components/BackgroundDisplay";
 import { DeepFocusOverlay } from "./components/DeepFocusOverlay";
 import { Progress } from "../components/ui/progress";
 import { AppStateData, TodoItem, PriorityType, BackgroundTheme } from "../types";
-import { getStoredState, saveStoredState, subscribeToStateChanges, getCachedState, DEFAULT_STATE } from "../lib/storage";
+import { getStoredState, saveStoredState, subscribeToStateChanges, getCachedState, DEFAULT_STATE, getWeeklyMinutesFromSessions, getTodayMinutesFromSessions, calculateStreaksFromSessions, DAYS_OF_WEEK } from "../lib/storage";
 import "../index.css";
 
 function formatTaskDueDate(dueDate?: string, dueTime?: string): string {
@@ -299,20 +299,20 @@ export function Popup() {
       chrome.runtime.sendMessage({ target: "background", action: "RESTORE_BLOCKED_TABS" });
     }
     const durationLogged = state.timerState === "FLOW" ? state.timeLeft : (state.pomodoroSettings.work * 60 - state.timeLeft);
-    const minsLogged = Math.max(1, Math.round(durationLogged / 60));
 
-    const dayName = new Date().toLocaleDateString("en-US", { weekday: "short" });
-    const updatedWeekly = { ...state.stats.weeklyMinutes };
-    updatedWeekly[dayName] = (updatedWeekly[dayName] || 0) + (isWorkOrFlow ? minsLogged : 0);
-
-    const newSession = {
+    const newSession = isWorkOrFlow ? {
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
       duration: durationLogged > 0 ? durationLogged : 1,
       mode: state.timerMode,
       sessionName: state.sessionName || "Focus Session",
       todoId: state.selectedTodoId || undefined
-    };
+    } : null;
+
+    const newSessionList = newSession ? [newSession, ...state.sessions] : state.sessions;
+    const updatedWeekly = getWeeklyMinutesFromSessions(newSessionList);
+    const updatedTodayMins = getTodayMinutesFromSessions(newSessionList);
+    const streaks = calculateStreaksFromSessions(newSessionList);
 
     let updatedTodos = state.todos;
     if (state.selectedTodoId && isWorkOrFlow) {
@@ -363,11 +363,13 @@ export function Popup() {
       previousMode: prevMode,
       timeLeft: nextTime,
       todos: updatedTodos,
-      sessions: [newSession, ...state.sessions],
+      sessions: newSessionList,
       stats: {
         ...state.stats,
-        todayMinutes: state.stats.todayMinutes + (isWorkOrFlow ? minsLogged : 0),
+        todayMinutes: updatedTodayMins,
         weeklyMinutes: updatedWeekly,
+        streakDays: streaks.current,
+        longestStreak: streaks.best,
         completedTasksCount
       }
     });
@@ -674,6 +676,10 @@ export function Popup() {
   const finishedTasksTodayCount = state.todos.filter(t => t.completed).length;
   const pendingTasksCount = state.todos.filter(t => !t.completed).length;
   const taskDoneRatePercent = state.todos.length > 0 ? Math.round((finishedTasksTodayCount / state.todos.length) * 100) : 100;
+  const dynamicWeeklyMinutes = getWeeklyMinutesFromSessions(state.sessions);
+  const dynamicTodayMinutes = getTodayMinutesFromSessions(state.sessions);
+  const dynamicStreaks = calculateStreaksFromSessions(state.sessions);
+  const maxWeeklyMins = Math.max(120, ...Object.values(dynamicWeeklyMinutes));
 
   // Distraction Analysis Breakdown
   const distractionCounts: { [cat: string]: number } = {};
@@ -2292,7 +2298,7 @@ export function Popup() {
                 }`}>
                   <Activity className="w-4 h-4" />
                 </div>
-                <span className="text-lg font-extrabold font-mono">{state.stats.todayMinutes}</span>
+                <span className="text-lg font-extrabold font-mono">{dynamicTodayMinutes}</span>
                 <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">MINUTES TODAY</span>
               </div>
 
@@ -2329,11 +2335,11 @@ export function Popup() {
                   <span className="text-xs font-bold font-sans mb-1">Longest Streak</span>
                   <div className="text-[11px] font-mono">
                     <span className={"text-neutral-400"}>Current</span>
-                    <span className="font-bold ml-2">{state.stats.streakDays} Days</span>
+                    <span className="font-bold ml-2">{dynamicStreaks.current} Days</span>
                   </div>
                   <div className="text-[11px] font-mono">
                     <span className={"text-neutral-400"}>Best</span>
-                    <span className="font-bold ml-2">{state.stats.longestStreak} Days</span>
+                    <span className="font-bold ml-2">{dynamicStreaks.best} Days</span>
                   </div>
                 </div>
               </div>
@@ -2366,10 +2372,9 @@ export function Popup() {
                 <span className="text-[10px] font-mono uppercase tracking-wider font-bold">Focus Trend</span>
               </div>
               <div className="flex items-end justify-between gap-2 h-24 pt-2">
-                {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => {
-                  const minsLogged = state.stats.weeklyMinutes[day] || 0;
-                  const maxMins = 120;
-                  const heightPercent = minsLogged > 0 ? Math.min(100, Math.max(10, Math.round((minsLogged / maxMins) * 100))) : 4;
+                {DAYS_OF_WEEK.map((day) => {
+                  const minsLogged = dynamicWeeklyMinutes[day] || 0;
+                  const heightPercent = minsLogged > 0 ? Math.min(100, Math.max(10, Math.round((minsLogged / maxWeeklyMins) * 100))) : 4;
                   return (
                     <div
                       key={day}
