@@ -194,10 +194,16 @@ export const FocusTimer: React.FC = () => {
       `Focused for ${Math.floor(flowTimeElapsed / 60)}m. Recommended break: ${Math.floor(breakDurationSeconds / 60)}m.`
     );
 
+    setPreviousMode('STOPWATCH');
     setTimerMode('POMODORO');
     setTimerState('BREAK');
     setTimeLeft(breakDurationSeconds);
     setFlowTimeElapsed(0);
+
+    if (pomodoroSettings.autoStartBreak) {
+      setIsActive(true);
+    }
+    setDeepFocusMode(false);
   };
 
   const resetTimer = () => {
@@ -256,6 +262,7 @@ export const FocusTimer: React.FC = () => {
       setTimerState('WORK');
       setTimeLeft(pomodoroSettings.work * 60);
     } else if (tab === 'BREAK') {
+      setPreviousMode(timerMode === 'STOPWATCH' ? 'STOPWATCH' : 'POMODORO');
       setTimerMode('POMODORO');
       setTimerState('BREAK');
       setTimeLeft(pomodoroSettings.break * 60);

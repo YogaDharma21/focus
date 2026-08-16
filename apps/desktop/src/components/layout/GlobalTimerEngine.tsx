@@ -30,15 +30,16 @@ export const GlobalTimerEngine: React.FC = () => {
 
 
   const handleCompleteSession = () => {
+    const state = useDesktopStore.getState();
     setIsActive(false);
     playCompletionSound();
 
-    const activeTask = todos.find(t => t.id === selectedTodoId);
-    const title = activeTask?.text || sessionName || 'Focus Session';
+    const activeTask = state.todos.find(t => t.id === state.selectedTodoId);
+    const title = activeTask?.text || state.sessionName || 'Focus Session';
 
-    if (timerMode === 'POMODORO') {
-      if (timerState === 'WORK') {
-        const durationWorked = Math.max(60, (pomodoroSettings.work * 60) - timeLeft);
+    if (state.timerMode === 'POMODORO') {
+      if (state.timerState === 'WORK') {
+        const durationWorked = Math.max(60, (state.pomodoroSettings.work * 60) - state.timeLeft);
         
         addSession({
           id: crypto.randomUUID(),
@@ -61,24 +62,24 @@ export const GlobalTimerEngine: React.FC = () => {
         
         setPreviousMode('POMODORO');
         setTimerState('BREAK');
-        setTimeLeft(pomodoroSettings.break * 60);
+        setTimeLeft(state.pomodoroSettings.break * 60);
 
-        if (pomodoroSettings.autoStartBreak) {
+        if (state.pomodoroSettings.autoStartBreak) {
           setIsActive(true);
         }
         setDeepFocusMode(false);
       } else {
-        if (previousMode === 'STOPWATCH') {
+        if (state.previousMode === 'STOPWATCH') {
           electron.showNotification("Break Complete!", "Ready to jump back into Flow state?");
           setTimerMode('STOPWATCH');
           setFlowTimeElapsed(0);
         } else {
           electron.showNotification("Break Complete!", "Ready to start focusing again?");
           setTimerState('WORK');
-          setTimeLeft(pomodoroSettings.work * 60);
+          setTimeLeft(state.pomodoroSettings.work * 60);
         }
 
-        if (pomodoroSettings.autoStartTimer) {
+        if (state.pomodoroSettings.autoStartTimer) {
           setIsActive(true);
           setDeepFocusMode(true);
         } else {
@@ -86,7 +87,7 @@ export const GlobalTimerEngine: React.FC = () => {
         }
       }
     } else {
-      const durationWorked = Math.max(1, flowTimeElapsed);
+      const durationWorked = Math.max(1, state.flowTimeElapsed);
       const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
       
       addSession({
@@ -105,15 +106,9 @@ export const GlobalTimerEngine: React.FC = () => {
         });
       }
 
-      const breakMins = Math.floor(calculatedBreakSeconds / 60);
-      const breakSecs = calculatedBreakSeconds % 60;
-      const breakStr = breakMins > 0 
-        ? `${breakMins}m${breakSecs > 0 ? ` ${breakSecs}s` : ''}` 
-        : `${breakSecs}s`;
-
       electron.showNotification(
-        "Flow Session Complete!", 
-        `Focused for ${Math.floor(durationWorked / 60)}m. Earned ${breakStr} break!`
+        "Flow Session Completed!",
+        `Great focus flow! Taking a recommended ${Math.floor(calculatedBreakSeconds / 60)}m break.`
       );
       
       setPreviousMode('STOPWATCH');
@@ -122,7 +117,7 @@ export const GlobalTimerEngine: React.FC = () => {
       setTimeLeft(calculatedBreakSeconds);
       setFlowTimeElapsed(0);
 
-      if (pomodoroSettings.autoStartBreak) {
+      if (state.pomodoroSettings.autoStartBreak) {
         setIsActive(true);
       }
       setDeepFocusMode(false);

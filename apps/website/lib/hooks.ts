@@ -39,11 +39,12 @@ export function useTimerEngine() {
 
     const handleAutoCompleteSession = React.useCallback(() => {
         setIsActive(false);
+        const state = useAppStore.getState();
 
         try {
-            if (soundEffectEnabled ?? true) {
+            if (state.soundEffectEnabled ?? true) {
                 const audio = new Audio("/soundeffect.mp3");
-                audio.volume = (soundEffectVolume ?? 80) / 100;
+                audio.volume = (state.soundEffectVolume ?? 80) / 100;
                 audio.play().catch(() => {});
             }
         } catch {
@@ -51,8 +52,8 @@ export function useTimerEngine() {
         }
 
         const duration =
-            timerMode === "POMODORO"
-                ? (timerState === "WORK" ? pomodoroSettings.work * 60 : pomodoroSettings.break * 60)
+            state.timerMode === "POMODORO"
+                ? (state.timerState === "WORK" ? state.pomodoroSettings.work * 60 : state.pomodoroSettings.break * 60)
                 : 0;
 
         if (duration > 0) {
@@ -60,29 +61,29 @@ export function useTimerEngine() {
                 id: crypto.randomUUID(),
                 date: new Date().toISOString(),
                 duration,
-                mode: timerMode,
+                mode: state.timerMode,
             });
         }
 
-        if (timerMode === "POMODORO" && timerState === "WORK") {
+        if (state.timerMode === "POMODORO" && state.timerState === "WORK") {
             setPreviousMode("POMODORO");
             setTimerState("BREAK");
-            setTimeLeft(pomodoroSettings.break * 60);
-            if (pomodoroSettings.autoStartBreak) {
+            setTimeLeft(state.pomodoroSettings.break * 60);
+            if (state.pomodoroSettings.autoStartBreak) {
                 setIsActive(true);
             }
             setDeepFocusMode(false);
-        } else if (timerMode === "POMODORO" && timerState === "BREAK") {
-            if (previousMode === "STOPWATCH") {
+        } else if (state.timerMode === "POMODORO" && state.timerState === "BREAK") {
+            if (state.previousMode === "STOPWATCH") {
                 setTimerMode("STOPWATCH");
                 setTimerState("WORK");
                 setTimeLeft(0);
             } else {
                 setTimerMode("POMODORO");
                 setTimerState("WORK");
-                setTimeLeft(pomodoroSettings.work * 60);
+                setTimeLeft(state.pomodoroSettings.work * 60);
             }
-            if (pomodoroSettings.autoStartTimer) {
+            if (state.pomodoroSettings.autoStartTimer) {
                 setIsActive(true);
                 setDeepFocusMode(true);
             } else {
@@ -90,16 +91,12 @@ export function useTimerEngine() {
             }
         }
     }, [
-        timerMode,
-        timerState,
-        previousMode,
         setTimeLeft,
         setIsActive,
         setTimerState,
         setTimerMode,
         setPreviousMode,
         setDeepFocusMode,
-        pomodoroSettings,
         addSession,
     ]);
 

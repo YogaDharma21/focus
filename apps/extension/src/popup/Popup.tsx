@@ -281,7 +281,9 @@ export function Popup() {
     else if (timerState === "BREAK") nextTime = state.pomodoroSettings.break * 60;
     else if (timerState === "FLOW") nextTime = 0;
 
-    const prevMode = timerState === "FLOW" ? "FLOW" : (timerState === "WORK" ? "POMODORO" : state.previousMode);
+    const prevMode = timerState === "FLOW" 
+      ? "FLOW" 
+      : (timerState === "WORK" ? "POMODORO" : (state.timerMode === "FLOW" || state.timerState === "FLOW" ? "FLOW" : state.previousMode));
 
     updateState({
       timerMode: mode,
@@ -365,6 +367,7 @@ export function Popup() {
     updateState({
       isActive: autoStart,
       deepFocusMode: !isWorkOrFlow && autoStart,
+      timerMode: nextState === "FLOW" ? "FLOW" : "POMODORO",
       timerState: nextState,
       previousMode: prevMode,
       timeLeft: nextTime,

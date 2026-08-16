@@ -246,6 +246,7 @@ export function FocusTimer() {
 
   const selectPomodoroBreak = () => {
     setIsActive(false);
+    setPreviousMode(timerMode === 'STOPWATCH' ? 'STOPWATCH' : 'POMODORO');
     setTimerMode('POMODORO');
     setTimerState('BREAK');
     setTimeLeft(pomodoroSettings.break * 60);

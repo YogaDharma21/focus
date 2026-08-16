@@ -311,6 +311,7 @@ export function FocusTimer() {
             <div className="flex gap-2 mb-3 p-1 bg-secondary/30 rounded-[var(--radius)] backdrop-blur-md">
                 <button
                     onClick={() => {
+                        setPreviousMode("POMODORO");
                         setTimerMode("POMODORO");
                         setTimerState("WORK");
                         setIsActive(false);
@@ -328,6 +329,7 @@ export function FocusTimer() {
                 </button>
                 <button
                     onClick={() => {
+                        setPreviousMode(timerMode === "STOPWATCH" ? "STOPWATCH" : "POMODORO");
                         setTimerMode("POMODORO");
                         setTimerState("BREAK");
                         setIsActive(false);
@@ -345,7 +347,9 @@ export function FocusTimer() {
                 </button>
                 <button
                     onClick={() => {
+                        setPreviousMode("STOPWATCH");
                         setTimerMode("STOPWATCH");
+                        setTimerState("WORK");
                         setIsActive(false);
                         setTimeLeft(0);
                     }}
