@@ -1,5 +1,7 @@
-import { Audio } from 'expo-av';
+import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { useAppStore } from './store';
+
+const soundSource = require('../assets/soundeffect.mp3');
 
 export async function playCompletionSound(forcePlay = false) {
   try {
@@ -9,20 +11,24 @@ export async function playCompletionSound(forcePlay = false) {
 
     if (!soundEffectEnabled && !forcePlay) return;
 
-    await Audio.setAudioModeAsync({
-      playsInSilentModeIOS: true,
-      staysActiveInBackground: true,
-      shouldDuckAndroid: true,
+    await setAudioModeAsync({
+      playsInSilentMode: true,
+      shouldPlayInBackground: true,
+      interruptionMode: 'duckOthers',
     });
-    const { sound } = await Audio.Sound.createAsync(
-      require('../assets/soundeffect.mp3'),
-      { shouldPlay: true, volume: soundEffectVolume }
-    );
-    sound.setOnPlaybackStatusUpdate((status) => {
-      if (status.isLoaded && status.didJustFinish) {
-        sound.unloadAsync();
+
+    const player = createAudioPlayer(soundSource);
+    player.volume = soundEffectVolume;
+    player.loop = false;
+
+    const subscription = player.addListener('playbackStatusUpdate', (status) => {
+      if (status.didJustFinish) {
+        subscription.remove();
+        player.remove();
       }
     });
+
+    player.play();
   } catch (error) {
     console.log('Error playing completion sound:', error);
   }
@@ -31,3 +37,4 @@ export async function playCompletionSound(forcePlay = false) {
 export async function playTestCompletionSound() {
   await playCompletionSound(true);
 }
+
