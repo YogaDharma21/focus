@@ -85,9 +85,12 @@ export const GlobalTimerEngine: React.FC = () => {
         if (previousMode === 'STOPWATCH') {
           electron.showNotification("Break Complete!", "Ready to jump back into Flow state?");
           setTimerMode('STOPWATCH');
+          setTimerState('WORK');
           setFlowTimeElapsed(0);
+          setTimeLeft(0);
         } else {
           electron.showNotification("Break Complete!", "Ready to start focusing again?");
+          setTimerMode('POMODORO');
           setTimerState('WORK');
           setTimeLeft(pomodoroSettings.work * 60);
         }
