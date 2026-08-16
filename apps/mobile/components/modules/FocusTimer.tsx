@@ -684,23 +684,55 @@ export function FocusTimer() {
               />
             </View>
 
-            <View style={styles.switchRow}>
-              <Text style={[styles.settingLabel, { color: colors.text }]}>Auto-start Break</Text>
+            {/* Auto-start Break Toggle Card */}
+            <TouchableOpacity
+              style={[
+                styles.autoStartCard,
+                {
+                  backgroundColor: colors.inputBg,
+                  borderColor: colors.border,
+                },
+              ]}
+              onPress={() => setAutoBreak(!autoBreak)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.autoStartTextContainer}>
+                <Text style={[styles.autoStartTitle, { color: colors.text }]}>Auto-start Break</Text>
+                <Text style={[styles.autoStartSubtitle, { color: colors.textMuted }]}>
+                  Launch break timer immediately after work
+                </Text>
+              </View>
               <Switch
                 value={autoBreak}
                 onValueChange={setAutoBreak}
                 trackColor={{ false: colors.border, true: colors.primary }}
               />
-            </View>
+            </TouchableOpacity>
 
-            <View style={styles.switchRow}>
-              <Text style={[styles.settingLabel, { color: colors.text }]}>Auto-start Timer</Text>
+            {/* Auto-start Timer Toggle Card */}
+            <TouchableOpacity
+              style={[
+                styles.autoStartCard,
+                {
+                  backgroundColor: colors.inputBg,
+                  borderColor: colors.border,
+                },
+              ]}
+              onPress={() => setAutoTimer(!autoTimer)}
+              activeOpacity={0.7}
+            >
+              <View style={styles.autoStartTextContainer}>
+                <Text style={[styles.autoStartTitle, { color: colors.text }]}>Auto-start Timer</Text>
+                <Text style={[styles.autoStartSubtitle, { color: colors.textMuted }]}>
+                  Launch focus timer immediately after break
+                </Text>
+              </View>
               <Switch
                 value={autoTimer}
                 onValueChange={setAutoTimer}
                 trackColor={{ false: colors.border, true: colors.primary }}
               />
-            </View>
+            </TouchableOpacity>
 
             <TouchableOpacity
               style={[styles.saveSettingsBtn, { backgroundColor: colors.primary }]}
@@ -1096,11 +1128,28 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     fontSize: 14,
   },
-  switchRow: {
+  autoStartCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginVertical: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: Radius.base,
+    borderWidth: 1,
+    marginVertical: 4,
+  },
+  autoStartTextContainer: {
+    flex: 1,
+    marginRight: 10,
+    gap: 2,
+  },
+  autoStartTitle: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  autoStartSubtitle: {
+    fontSize: 10,
+    lineHeight: 14,
   },
   saveSettingsBtn: {
     paddingVertical: 12,
