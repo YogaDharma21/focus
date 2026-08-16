@@ -139,6 +139,7 @@ export function Popup() {
   const [breakMinsInput, setBreakMinsInput] = useState(5);
   const [longBreakMinsInput, setLongBreakMinsInput] = useState(15);
   const [autoStartBreakInput, setAutoStartBreakInput] = useState(false);
+  const [autoStartTimerInput, setAutoStartTimerInput] = useState(false);
 
   // Music Player State & Controls
   const [isMusicExpanded, setIsMusicExpanded] = useState(false);
@@ -159,6 +160,13 @@ export function Popup() {
     updateState({ soundEffectVolume: v });
     if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
       chrome.runtime.sendMessage({ target: "background", action: "SET_SOUND_EFFECT_VOLUME", volume: v });
+    }
+  };
+
+  const handleSoundEffectToggle = (enabled: boolean) => {
+    updateState({ soundEffectEnabled: enabled });
+    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({ target: "background", action: "SET_SOUND_EFFECT_ENABLED", enabled });
     }
   };
 
@@ -212,6 +220,7 @@ export function Popup() {
       setBreakMinsInput(initial.pomodoroSettings.break);
       setLongBreakMinsInput(initial.pomodoroSettings.longBreak || 15);
       setAutoStartBreakInput(initial.pomodoroSettings.autoStartBreak);
+      setAutoStartTimerInput(initial.pomodoroSettings.autoStartTimer);
     });
 
     const unsubscribe = subscribeToStateChanges((updated) => {
@@ -284,7 +293,7 @@ export function Popup() {
     }
     else if (timerState === "FLOW") nextTime = 0;
 
-    const prevMode = timerState === "FLOW" ? "FLOW" : (timerState === "WORK" ? "POMODORO" : state.previousMode);
+    const prevMode = timerState === "FLOW" ? "FLOW" : (timerState === "WORK" ? "POMODORO" : (state.timerMode === "FLOW" || state.timerState === "FLOW" ? "FLOW" : state.previousMode));
 
     updateState({
       timerMode: mode,
@@ -368,9 +377,12 @@ export function Popup() {
       }
     }
 
+    const autoStart = isWorkOrFlow ? state.pomodoroSettings.autoStartBreak : state.pomodoroSettings.autoStartTimer;
+
     updateState({
-      isActive: isWorkOrFlow && state.pomodoroSettings.autoStartBreak,
-      deepFocusMode: false,
+      isActive: autoStart,
+      deepFocusMode: !isWorkOrFlow && autoStart,
+      timerMode: nextState === "FLOW" ? "FLOW" : "POMODORO",
       timerState: nextState,
       previousMode: prevMode,
       timeLeft: nextTime,
@@ -426,7 +438,8 @@ export function Popup() {
         work,
         break: brk,
         longBreak: longBrk,
-        autoStartBreak: autoStartBreakInput
+        autoStartBreak: autoStartBreakInput,
+        autoStartTimer: autoStartTimerInput
       },
       timeLeft: state.isActive ? state.timeLeft : newTimeLeft
     });
@@ -1170,6 +1183,34 @@ export function Popup() {
               </div>
             </div>
 
+            {/* Auto-start Timer Toggle */}
+            <div className={`p-3 rounded-xl border flex items-center justify-between ${
+              "bg-neutral-900 border-neutral-800"
+            }`}>
+              <div className="flex flex-col">
+                <span className="text-xs font-bold font-sans">Auto-start Timer</span>
+                <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>
+                  Launch focus timer immediately after break
+                </span>
+              </div>
+              <div
+                onClick={() => setAutoStartTimerInput(!autoStartTimerInput)}
+                className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
+                  autoStartTimerInput
+                    ? "bg-white"
+                    : "bg-neutral-700"
+                }`}
+              >
+                <div
+                  className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
+                    autoStartTimerInput
+                      ? "left-[22px] bg-black"
+                      : "left-[2px] bg-neutral-400"
+                  }`}
+                />
+              </div>
+            </div>
+
             <button
               type="submit"
               className={`w-full py-3 rounded-xl font-bold text-xs border transition-all mt-4 ${
@@ -1763,7 +1804,7 @@ export function Popup() {
             </div>
 
             {/* Pomodoro Cycle & Progress Indicator */}
-            {state.timerMode === "POMODORO" && (
+            {state.timerMode === "POMODORO" && state.previousMode !== "FLOW" && (
               <div className="flex items-center gap-2.5 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-mono text-neutral-300 shadow-sm mt-1 mb-0.5">
                 <div className="flex items-center gap-1.5">
                   {[0, 1, 2, 3].map((index) => {

@@ -81,6 +81,7 @@ export function DeepFocusOverlay() {
         if (pomodoroSettings.autoStartBreak) {
           setIsActive(true);
         }
+        setDeepFocusMode(false);
       } else {
         setTimeLeft(0);
       }
@@ -110,6 +111,7 @@ export function DeepFocusOverlay() {
       if (pomodoroSettings.autoStartBreak) {
         setIsActive(true);
       }
+      setDeepFocusMode(false);
     } else if (timerMode === 'POMODORO' && timerState === 'BREAK') {
       if (previousMode === 'STOPWATCH') {
         setTimerMode('STOPWATCH');
@@ -119,6 +121,12 @@ export function DeepFocusOverlay() {
         setTimerMode('POMODORO');
         setTimerState('WORK');
         setTimeLeft(pomodoroSettings.work * 60);
+      }
+      if (pomodoroSettings.autoStartTimer) {
+        setIsActive(true);
+        setDeepFocusMode(true);
+      } else {
+        setDeepFocusMode(false);
       }
     }
   };
@@ -173,7 +181,7 @@ export function DeepFocusOverlay() {
 
         <View style={styles.content}>
           {/* Pomodoro Cycle & Progress Indicator */}
-          {timerMode === 'POMODORO' && (
+          {timerMode === 'POMODORO' && previousMode !== 'STOPWATCH' && (
             <View style={[styles.cycleIndicatorContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
               <View style={styles.cycleDotsRow}>
                 {[0, 1, 2, 3].map((index) => {

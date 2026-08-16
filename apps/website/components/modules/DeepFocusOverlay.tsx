@@ -136,6 +136,7 @@ export function DeepFocusOverlay() {
             if (pomodoroSettings.autoStartBreak) {
                 setIsActive(true);
             }
+            setDeepFocusMode(false);
         } else if (timerMode === "POMODORO" && timerState === "BREAK") {
             if (previousMode === "STOPWATCH") {
                 setTimerMode("STOPWATCH");
@@ -146,6 +147,12 @@ export function DeepFocusOverlay() {
                 setTimerState("WORK");
                 setTimeLeft(pomodoroSettings.work * 60);
             }
+            if (pomodoroSettings.autoStartTimer) {
+                setIsActive(true);
+                setDeepFocusMode(true);
+            } else {
+                setDeepFocusMode(false);
+            }
         } else if (timerMode === "STOPWATCH" && duration > 0) {
             setPreviousMode("STOPWATCH");
             const breakSeconds = Math.floor(duration / 5);
@@ -153,9 +160,13 @@ export function DeepFocusOverlay() {
                 setTimerMode("POMODORO");
                 setTimerState("BREAK");
                 setTimeLeft(breakSeconds);
+                if (pomodoroSettings.autoStartBreak) {
+                    setIsActive(true);
+                }
             } else {
                 setTimeLeft(0);
             }
+            setDeepFocusMode(false);
         }
         sessionStartTimeRef.current = null;
     }, [
@@ -297,7 +308,7 @@ export function DeepFocusOverlay() {
 
             <div className="flex flex-col items-center gap-4">
                 {/* Pomodoro Cycle & Progress Indicator */}
-                {timerMode === "POMODORO" && (
+                {timerMode === "POMODORO" && previousMode !== "STOPWATCH" && (
                     <div className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-secondary/40 border border-border/50 text-xs font-mono text-foreground/80 shadow-sm animate-in fade-in duration-150">
                         <div className="flex items-center gap-1.5">
                             {[0, 1, 2, 3].map((index) => {

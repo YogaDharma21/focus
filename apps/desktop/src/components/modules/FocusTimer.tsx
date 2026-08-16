@@ -123,15 +123,25 @@ export const FocusTimer: React.FC = () => {
         if (pomodoroSettings.autoStartBreak) {
           setIsActive(true);
         }
+        setDeepFocusMode(false);
       } else {
         if (previousMode === 'STOPWATCH') {
           electron.showNotification("Break Complete!", "Ready to jump back into Flow state?");
           setTimerMode('STOPWATCH');
+          setTimerState('WORK');
           setFlowTimeElapsed(0);
+          setTimeLeft(0);
         } else {
           electron.showNotification("Break Complete!", "Ready to start focusing again?");
+          setTimerMode('POMODORO');
           setTimerState('WORK');
           setTimeLeft(pomodoroSettings.work * 60);
+        }
+        if (pomodoroSettings.autoStartTimer) {
+          setIsActive(true);
+          setDeepFocusMode(true);
+        } else {
+          setDeepFocusMode(false);
         }
       }
     } else {
@@ -146,8 +156,8 @@ export const FocusTimer: React.FC = () => {
         taskTitle: title
       });
 
-      if (currentTask) {
-        updateTodo(currentTask.id, {
+      if (activeTask) {
+        updateTodo(activeTask.id, {
           completed: true,
           completedAt: new Date().toISOString(),
           groupId: 'finished'
@@ -174,35 +184,12 @@ export const FocusTimer: React.FC = () => {
       if (pomodoroSettings.autoStartBreak) {
         setIsActive(true);
       }
+      setDeepFocusMode(false);
     }
   };
 
   const handleFinishFlowSession = () => {
-    if (flowTimeElapsed <= 0) return;
-    setIsActive(false);
-    playCompletionSound();
-
-    const currentTask = todos.find(t => t.id === selectedTodoId);
-    const title = currentTask?.text || sessionName || 'Flow Session';
-    const breakDurationSeconds = Math.max(60, Math.floor(flowTimeElapsed / 5));
-
-    addSession({
-      id: crypto.randomUUID(),
-      date: new Date().toISOString(),
-      duration: flowTimeElapsed,
-      mode: 'STOPWATCH',
-      taskTitle: title
-    });
-
-    electron.showNotification(
-      "Flow Session Completed!",
-      `Focused for ${Math.floor(flowTimeElapsed / 60)}m. Recommended break: ${Math.floor(breakDurationSeconds / 60)}m.`
-    );
-
-    setTimerMode('POMODORO');
-    setTimerState('BREAK');
-    setTimeLeft(breakDurationSeconds);
-    setFlowTimeElapsed(0);
+    handleCompleteSession();
   };
 
   const resetTimer = () => {
@@ -223,16 +210,13 @@ export const FocusTimer: React.FC = () => {
   const handleCustomFocusSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && sessionName.trim()) {
       e.preventDefault();
-      const taskText = sessionName.trim();
       const newTaskId = crypto.randomUUID();
-
       addTodo({
         id: newTaskId,
-        text: taskText,
+        text: sessionName.trim(),
         completed: false,
-        priority: "medium",
-        groupId: "current",
-        estimatedPomodoros: 1,
+        priority: 'medium',
+        groupId: 'current',
         completedPomodoros: 0,
         subtasks: []
       });
@@ -261,13 +245,16 @@ export const FocusTimer: React.FC = () => {
       setTimerState('WORK');
       setTimeLeft(pomodoroSettings.work * 60);
     } else if (tab === 'BREAK') {
+      setPreviousMode(timerMode === 'STOPWATCH' ? 'STOPWATCH' : 'POMODORO');
       setTimerMode('POMODORO');
       setTimerState('BREAK');
       setTimeLeft(pomodoroSettings.break * 60);
     } else {
       setPreviousMode('STOPWATCH');
       setTimerMode('STOPWATCH');
+      setTimerState('WORK');
       setFlowTimeElapsed(0);
+      setTimeLeft(0);
     }
   };
 
@@ -317,7 +304,7 @@ export const FocusTimer: React.FC = () => {
       </div>
 
       {/* Pomodoro Cycle & Progress Indicator */}
-      {timerMode === 'POMODORO' && (
+      {timerMode === 'POMODORO' && previousMode !== 'STOPWATCH' && (
         <div className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-800 text-xs font-mono text-zinc-300 shadow-sm animate-in fade-in duration-150">
           <div className="flex items-center gap-1.5">
             {[0, 1, 2, 3].map((index) => {
@@ -684,6 +671,19 @@ export const FocusTimer: React.FC = () => {
                 </div>
                 <div className={`w-10 h-[22px] rounded-full p-[3px] transition-colors duration-200 shrink-0 ml-4 ${pomodoroSettings.autoStartBreak ? 'bg-zinc-200' : 'bg-zinc-600'}`}>
                   <div className={`w-4 h-4 rounded-full transition-transform duration-200 ${pomodoroSettings.autoStartBreak ? 'translate-x-[18px] bg-zinc-900' : 'translate-x-0 bg-zinc-400'}`} />
+                </div>
+              </div>
+
+              <div 
+                className="flex items-center justify-between bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 mt-1 cursor-pointer"
+                onClick={() => setPomodoroSettings({ autoStartTimer: !pomodoroSettings.autoStartTimer })}
+              >
+                <div className="space-y-0.5">
+                  <span className="text-xs font-semibold text-white block">Auto-start Timer</span>
+                  <span className="text-[10px] text-zinc-400">Launch focus timer immediately after break</span>
+                </div>
+                <div className={`w-10 h-[22px] rounded-full p-[3px] transition-colors duration-200 shrink-0 ml-4 ${pomodoroSettings.autoStartTimer ? 'bg-zinc-200' : 'bg-zinc-600'}`}>
+                  <div className={`w-4 h-4 rounded-full transition-transform duration-200 ${pomodoroSettings.autoStartTimer ? 'translate-x-[18px] bg-zinc-900' : 'translate-x-0 bg-zinc-400'}`} />
                 </div>
               </div>
             </div>

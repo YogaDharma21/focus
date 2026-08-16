@@ -325,7 +325,7 @@ async function startBackgroundTimer() {
         const updatedTodayMins = getTodayMinutesFromSessions(newSessionList);
         const streaks = calculateStreaksFromSessions(newSessionList);
 
-        const autoStart = isWork && state.pomodoroSettings.autoStartBreak;
+        const autoStart = isWork ? state.pomodoroSettings.autoStartBreak : state.pomodoroSettings.autoStartTimer;
 
         let updatedTodos = state.todos;
         if (isWork && state.selectedTodoId) {
@@ -349,7 +349,8 @@ async function startBackgroundTimer() {
 
         await saveStoredState({
           isActive: autoStart,
-          deepFocusMode: false,
+          deepFocusMode: !isWork && autoStart,
+          timerMode: nextState === "FLOW" ? "FLOW" : "POMODORO",
           timerState: nextState,
           previousMode: prevMode,
           timeLeft: nextTime,
