@@ -52,7 +52,7 @@ export function DistractionCounter({ className }: DistractionCounterProps) {
                     title="Log Distraction"
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <AlertTriangle className="size-4 sm:size-5" />
                 </Button>
             </PopoverTrigger>
             <PopoverContent
