@@ -1,8 +1,40 @@
-import { defineConfig } from "vite";
+import { defineConfig, build } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import fs from "fs";
+
+function buildContentScript() {
+  return {
+    name: "build-content-script",
+    async closeBundle() {
+      await build({
+        configFile: false,
+        plugins: [],
+        resolve: {
+          alias: {
+            "@": path.resolve(__dirname, "./src"),
+          },
+        },
+        build: {
+          emptyOutDir: false,
+          outDir: "dist",
+          lib: {
+            entry: path.resolve(__dirname, "src/content/content.ts"),
+            name: "content",
+            formats: ["iife"],
+            fileName: () => "content.js",
+          },
+          rollupOptions: {
+            output: {
+              extend: true,
+            },
+          },
+        },
+      });
+    },
+  };
+}
 
 function copyExtensionAssets() {
   return {
@@ -17,7 +49,7 @@ function copyExtensionAssets() {
 
 export default defineConfig({
   base: './',
-  plugins: [react(), tailwindcss(), copyExtensionAssets()],
+  plugins: [react(), tailwindcss(), buildContentScript(), copyExtensionAssets()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -32,11 +64,10 @@ export default defineConfig({
         blocked: path.resolve(__dirname, "blocked.html"),
         offscreen: path.resolve(__dirname, "offscreen.html"),
         background: path.resolve(__dirname, "src/background/background.ts"),
-        content: path.resolve(__dirname, "src/content/content.ts"),
       },
       output: {
         entryFileNames: (chunkInfo) => {
-          if (chunkInfo.name === "background" || chunkInfo.name === "content") {
+          if (chunkInfo.name === "background") {
             return "[name].js";
           }
           return "assets/[name]-[hash].js";
@@ -47,3 +78,4 @@ export default defineConfig({
     },
   },
 });
+
