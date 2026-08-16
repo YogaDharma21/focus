@@ -60,6 +60,111 @@ export const DEFAULT_STATE: AppStateData = {
   soundEffectEnabled: true
 };
 
+export const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
+
+export function getWeeklyMinutesFromSessions(sessions: { date: string; duration: number }[] = []): Record<string, number> {
+  const weeklyMinutes: Record<string, number> = {
+    Sun: 0,
+    Mon: 0,
+    Tue: 0,
+    Wed: 0,
+    Thu: 0,
+    Fri: 0,
+    Sat: 0,
+  };
+
+  const now = new Date();
+  const currentDayOfWeek = now.getDay(); // 0 = Sun, 6 = Sat
+  const sunday = new Date(now);
+  sunday.setDate(now.getDate() - currentDayOfWeek);
+  sunday.setHours(0, 0, 0, 0);
+
+  const saturday = new Date(sunday);
+  saturday.setDate(sunday.getDate() + 6);
+  saturday.setHours(23, 59, 59, 999);
+
+  (sessions || []).forEach((s) => {
+    if (!s || !s.date) return;
+    const sessionDate = new Date(s.date);
+    if (sessionDate >= sunday && sessionDate <= saturday) {
+      const dayName = DAYS_OF_WEEK[sessionDate.getDay()];
+      const mins = Math.round((s.duration || 0) / 60);
+      weeklyMinutes[dayName] = (weeklyMinutes[dayName] || 0) + mins;
+    }
+  });
+
+  return weeklyMinutes;
+}
+
+export function getTodayMinutesFromSessions(sessions: { date: string; duration: number }[] = []): number {
+  const now = new Date();
+  const todaySessions = (sessions || []).filter((s) => {
+    if (!s || !s.date) return false;
+    const sDate = new Date(s.date);
+    return (
+      sDate.getFullYear() === now.getFullYear() &&
+      sDate.getMonth() === now.getMonth() &&
+      sDate.getDate() === now.getDate()
+    );
+  });
+  return todaySessions.reduce((acc, s) => acc + Math.round((s.duration || 0) / 60), 0);
+}
+
+export function calculateStreaksFromSessions(sessions: { date: string }[] = []): { current: number; best: number } {
+  if (!sessions || sessions.length === 0) return { current: 0, best: 0 };
+  const dates = Array.from(
+    new Set(
+      sessions
+        .filter((s) => s && s.date)
+        .map((s) => {
+          const d = new Date(s.date);
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, "0");
+          const day = String(d.getDate()).padStart(2, "0");
+          return `${y}-${m}-${day}`;
+        })
+    )
+  ).sort();
+
+  if (dates.length === 0) return { current: 0, best: 0 };
+
+  let best = 1;
+  let tempStreak = 1;
+
+  for (let i = 1; i < dates.length; i++) {
+    const prev = new Date(dates[i - 1]);
+    const curr = new Date(dates[i]);
+    const diffDays = Math.round((curr.getTime() - prev.getTime()) / (1000 * 3600 * 24));
+    if (diffDays === 1) {
+      tempStreak++;
+      if (tempStreak > best) best = tempStreak;
+    } else if (diffDays > 1) {
+      tempStreak = 1;
+    }
+  }
+
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  const today = `${y}-${m}-${day}`;
+
+  const yDate = new Date(now.getTime() - 86400000);
+  const yy = yDate.getFullYear();
+  const ym = String(yDate.getMonth() + 1).padStart(2, "0");
+  const yday = String(yDate.getDate()).padStart(2, "0");
+  const yesterday = `${yy}-${ym}-${yday}`;
+
+  const lastDate = dates[dates.length - 1];
+
+  let current = 0;
+  if (lastDate === today || lastDate === yesterday) {
+    current = tempStreak;
+  }
+
+  return { current, best: Math.max(best, current) };
+};
+
 let cachedState: AppStateData | null = null;
 
 if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
