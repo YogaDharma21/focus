@@ -1,4 +1,4 @@
-import { getStoredState, saveStoredState } from "../lib/storage";
+import { getStoredState, saveStoredState, getWeeklyMinutesFromSessions, getTodayMinutesFromSessions, calculateStreaksFromSessions } from "../lib/storage";
 import { AppStateData } from "../types";
 
 let timerInterval: ReturnType<typeof setInterval> | null = null;
@@ -300,32 +300,28 @@ async function startBackgroundTimer() {
           }
         }
 
-        const minsLogged = Math.max(1, Math.round(loggedDuration / 60));
-        const dayName = new Date().toLocaleDateString("en-US", { weekday: "short" });
-        const updatedWeekly = { ...state.stats.weeklyMinutes };
-        if (state.timerState === "WORK") {
-          updatedWeekly[dayName] = (updatedWeekly[dayName] || 0) + minsLogged;
-        }
+        const isWork = state.timerState === "WORK";
+        const newSessionList = isWork
+          ? [
+              ...state.sessions,
+              {
+                id: crypto.randomUUID(),
+                date: new Date().toISOString(),
+                duration: loggedDuration,
+                mode: state.timerMode,
+                sessionName: state.sessionName || "Focus Session",
+              },
+            ]
+          : state.sessions;
 
-        const newSessionList = [
-          ...state.sessions,
-          {
-            id: crypto.randomUUID(),
-            date: new Date().toISOString(),
-            duration: loggedDuration,
-            mode: state.timerMode,
-            sessionName: state.sessionName || "Focus Session",
-          },
-        ];
+        const updatedWeekly = getWeeklyMinutesFromSessions(newSessionList);
+        const updatedTodayMins = getTodayMinutesFromSessions(newSessionList);
+        const streaks = calculateStreaksFromSessions(newSessionList);
 
-        const updatedTodayMins = state.timerState === "WORK"
-          ? state.stats.todayMinutes + minsLogged
-          : state.stats.todayMinutes;
-
-        const autoStart = state.timerState === "WORK" && state.pomodoroSettings.autoStartBreak;
+        const autoStart = isWork && state.pomodoroSettings.autoStartBreak;
 
         let updatedTodos = state.todos;
-        if (state.timerState === "WORK" && state.selectedTodoId) {
+        if (isWork && state.selectedTodoId) {
           updatedTodos = state.todos.map(t => {
             if (t.id === state.selectedTodoId) {
               const newCompleted = (t.completedPomodoros || 0) + 1;
@@ -356,6 +352,8 @@ async function startBackgroundTimer() {
             ...state.stats,
             todayMinutes: updatedTodayMins,
             weeklyMinutes: updatedWeekly,
+            streakDays: streaks.current,
+            longestStreak: streaks.best,
             completedTasksCount: updatedCompletedTasksCount,
           },
         });
