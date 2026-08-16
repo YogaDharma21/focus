@@ -44,6 +44,13 @@ export default function TabLayout() {
               playCompletionSound();
               setIsActive(false);
               if (state.timerState === 'WORK') {
+                const nextCount = (state.pomodoroCount || 0) + 1;
+                state.setPomodoroCount(nextCount);
+                const isLongBreak = nextCount % 4 === 0;
+                const breakDuration = isLongBreak
+                  ? (state.pomodoroSettings.longBreak || 15) * 60
+                  : (state.pomodoroSettings.break || 5) * 60;
+
                 addSession({
                   id: Date.now().toString(),
                   date: new Date().toISOString(),
@@ -55,7 +62,7 @@ export default function TabLayout() {
                 }
                 setPreviousMode('POMODORO');
                 setTimerState('BREAK');
-                setTimeLeft(state.pomodoroSettings.break * 60);
+                setTimeLeft(breakDuration);
                 if (state.pomodoroSettings.autoStartBreak) {
                   setIsActive(true);
                 }

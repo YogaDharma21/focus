@@ -282,11 +282,18 @@ async function startBackgroundTimer() {
         let nextTime = 0;
         let prevMode = state.previousMode;
         let loggedDuration = 0;
+        let nextPomodoroCount = state.pomodoroCount || 0;
 
         if (state.timerState === "WORK") {
+          nextPomodoroCount = (state.pomodoroCount || 0) + 1;
+          const isLongBreak = nextPomodoroCount % 4 === 0;
+          const breakDuration = isLongBreak
+            ? (state.pomodoroSettings.longBreak || 15) * 60
+            : (state.pomodoroSettings.break || 5) * 60;
+
           prevMode = "POMODORO";
           nextState = "BREAK";
-          nextTime = state.pomodoroSettings.break * 60;
+          nextTime = breakDuration;
           loggedDuration = state.pomodoroSettings.work * 60;
         } else {
           // Returning from BREAK back to previous mode (FLOW or POMODORO)
@@ -346,6 +353,7 @@ async function startBackgroundTimer() {
           timerState: nextState,
           previousMode: prevMode,
           timeLeft: nextTime,
+          pomodoroCount: nextPomodoroCount,
           todos: updatedTodos,
           sessions: newSessionList,
           stats: {

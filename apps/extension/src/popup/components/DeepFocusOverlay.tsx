@@ -141,7 +141,40 @@ export function DeepFocusOverlay({
         <X className="w-5 h-5" />
       </button>
 
-      <div className="flex flex-col items-center gap-5">
+      <div className="flex flex-col items-center gap-4">
+        {/* Pomodoro Cycle & Progress Indicator */}
+        {state.timerMode === "POMODORO" && (
+          <div className="flex items-center gap-2.5 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-mono text-neutral-300 shadow-sm animate-in fade-in duration-150">
+            <div className="flex items-center gap-1.5">
+              {[0, 1, 2, 3].map((index) => {
+                const currentCycleStep = (state.pomodoroCount || 0) % 4;
+                const isCompleted = index < currentCycleStep;
+                const isCurrent = index === currentCycleStep && state.timerState === "WORK";
+                return (
+                  <div
+                    key={index}
+                    className={`w-2 h-2 rounded-full transition-all ${
+                      isCompleted
+                        ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.7)]"
+                        : isCurrent
+                        ? "bg-white/80 ring-2 ring-white/30 animate-pulse"
+                        : "bg-neutral-700"
+                    }`}
+                    title={`Pomodoro ${index + 1} of 4`}
+                  />
+                );
+              })}
+            </div>
+            <span className="text-[10px] font-bold text-neutral-300">
+              {state.timerState === "BREAK"
+                ? ((state.pomodoroCount || 0) % 4 === 0 && (state.pomodoroCount || 0) > 0
+                    ? `Long Break (${state.pomodoroSettings.longBreak || 15}m)`
+                    : `Short Break (${state.pomodoroSettings.break || 5}m)`)
+                : `Pomodoro ${((state.pomodoroCount || 0) % 4) + 1} of 4`}
+            </span>
+          </div>
+        )}
+
         {/* Large Timer Display */}
         <div
           className={`text-6xl font-black font-mono tracking-tighter leading-none text-white select-none ${

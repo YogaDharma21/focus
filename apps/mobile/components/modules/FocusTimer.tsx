@@ -69,6 +69,8 @@ export function FocusTimer() {
     addDistraction,
     pomodoroSettings,
     setPomodoroSettings,
+    pomodoroCount,
+    setPomodoroCount,
     resetAllData,
     toggleSubtask,
     incrementTodoSession,
@@ -81,10 +83,12 @@ export function FocusTimer() {
   const [isSessionFocused, setIsSessionFocused] = useState(false);
   const [isWorkFocused, setIsWorkFocused] = useState(false);
   const [isBreakFocused, setIsBreakFocused] = useState(false);
+  const [isLongBreakFocused, setIsLongBreakFocused] = useState(false);
 
   // Settings inputs
   const [workInput, setWorkInput] = useState(pomodoroSettings.work.toString());
   const [breakInput, setBreakInput] = useState(pomodoroSettings.break.toString());
+  const [longBreakInput, setLongBreakInput] = useState((pomodoroSettings.longBreak || 15).toString());
   const [autoBreak, setAutoBreak] = useState(pomodoroSettings.autoStartBreak);
 
 
@@ -168,6 +172,8 @@ export function FocusTimer() {
       // Pomodoro Work Session Completed
       let sessionDuration = (pomodoroSettings.work * 60) - timeLeft;
       if (sessionDuration <= 0) sessionDuration = pomodoroSettings.work * 60;
+      const nextCount = (pomodoroCount || 0) + 1;
+      setPomodoroCount(nextCount);
 
       addSession({
         id: Date.now().toString(),
@@ -178,9 +184,14 @@ export function FocusTimer() {
       if (selectedTodoId) {
         incrementTodoSession(selectedTodoId);
       }
+      const isLongBreak = nextCount % 4 === 0;
+      const breakDuration = isLongBreak
+        ? (pomodoroSettings.longBreak || 15) * 60
+        : (pomodoroSettings.break || 5) * 60;
+
       setPreviousMode('POMODORO');
       setTimerState('BREAK');
-      setTimeLeft(pomodoroSettings.break * 60);
+      setTimeLeft(breakDuration);
       if (pomodoroSettings.autoStartBreak) {
         setIsActive(true);
       }
@@ -201,9 +212,11 @@ export function FocusTimer() {
   const handleSaveSettings = () => {
     const w = parseInt(workInput, 10) || 25;
     const b = parseInt(breakInput, 10) || 5;
-    setPomodoroSettings({ work: w, break: b, autoStartBreak: autoBreak });
+    const lb = parseInt(longBreakInput, 10) || 15;
+    setPomodoroSettings({ work: w, break: b, longBreak: lb, autoStartBreak: autoBreak });
     if (!isActive && timerMode === 'POMODORO') {
-      setTimeLeft(timerState === 'WORK' ? w * 60 : b * 60);
+      const isLongBreak = (pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0;
+      setTimeLeft(timerState === 'WORK' ? w * 60 : (isLongBreak ? lb * 60 : b * 60));
     }
     setSettingsModalOpen(false);
   };
@@ -357,6 +370,42 @@ export function FocusTimer() {
 
       {/* Timer Content Container (No Card Box) */}
       <View style={styles.timerContent}>
+        {/* Pomodoro Cycle & Progress Indicator */}
+        {timerMode === 'POMODORO' && (
+          <View style={[styles.cycleIndicatorContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.cycleDotsRow}>
+              {[0, 1, 2, 3].map((index) => {
+                const currentCycleStep = (pomodoroCount || 0) % 4;
+                const isCompleted = index < currentCycleStep;
+                const isCurrent = index === currentCycleStep && timerState === 'WORK';
+                return (
+                  <View
+                    key={index}
+                    style={[
+                      styles.cycleDot,
+                      {
+                        backgroundColor: isCompleted
+                          ? colors.text
+                          : isCurrent
+                          ? colors.text
+                          : colors.border,
+                        opacity: isCompleted ? 1 : isCurrent ? 0.7 : 0.4,
+                      },
+                    ]}
+                  />
+                );
+              })}
+            </View>
+            <Text style={[styles.cycleText, { color: colors.text }]}>
+              {timerState === 'BREAK'
+                ? ((pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0
+                    ? `Long Break (${pomodoroSettings.longBreak || 15}m)`
+                    : `Short Break (${pomodoroSettings.break || 5}m)`)
+                : `Pomodoro ${((pomodoroCount || 0) % 4) + 1} of 4`}
+            </Text>
+          </View>
+        )}
+
         <Text style={[styles.timeDisplay, { color: colors.text }]}>
           {formatTime(timeLeft)}
         </Text>
@@ -491,7 +540,7 @@ export function FocusTimer() {
           </View>
         </View>
 
-        {/* 5 Control Buttons Row */}
+        {/* Controls Bar */}
         <View style={styles.controlsRow}>
           {/* 1. Reset Button */}
           <TouchableOpacity
@@ -499,36 +548,36 @@ export function FocusTimer() {
             onPress={resetTimer}
             activeOpacity={0.7}
           >
-            <RotateCcw size={20} color={colors.text} />
+            <RotateCcw size={18} color={colors.text} />
           </TouchableOpacity>
 
-          {/* 2. Log Distraction Button */}
+          {/* 2. Distraction Alert Button */}
           <TouchableOpacity
             style={[
               styles.secondaryActionBtn,
-              { backgroundColor: colors.card, borderColor: colors.border },
-              !isActive && { opacity: 0.5 },
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                opacity: !isActive ? 0.4 : 1,
+              },
             ]}
             onPress={() => setDistractionModalOpen(true)}
             disabled={!isActive}
             activeOpacity={0.7}
           >
-            <AlertTriangle size={20} color={colors.text} />
+            <AlertTriangle size={18} color={colors.text} />
           </TouchableOpacity>
 
-          {/* 3. Play / Pause Button (CENTER) */}
+          {/* 3. Main Play/Pause Button */}
           <TouchableOpacity
-            style={[
-              styles.mainActionBtn,
-              { backgroundColor: colors.primary },
-            ]}
+            style={[styles.mainActionBtn, { backgroundColor: colors.primary }]}
             onPress={toggleTimer}
             activeOpacity={0.8}
           >
             {isActive ? (
               <Pause size={24} color={colors.primaryForeground} />
             ) : (
-              <Play size={24} color={colors.primaryForeground} fill={colors.primaryForeground} style={{ marginLeft: 3 }} />
+              <Play size={24} color={colors.primaryForeground} fill={colors.primaryForeground} style={{ marginLeft: 2 }} />
             )}
           </TouchableOpacity>
 
@@ -536,8 +585,11 @@ export function FocusTimer() {
           <TouchableOpacity
             style={[
               styles.secondaryActionBtn,
-              { backgroundColor: colors.card, borderColor: colors.border },
-              !isActive && { opacity: 0.5 },
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                opacity: !isActive ? 0.4 : 1,
+              },
             ]}
             onPress={handleCompleteSession}
             disabled={!isActive}
@@ -552,6 +604,7 @@ export function FocusTimer() {
             onPress={() => {
               setWorkInput(pomodoroSettings.work.toString());
               setBreakInput(pomodoroSettings.break.toString());
+              setLongBreakInput((pomodoroSettings.longBreak || 15).toString());
               setAutoBreak(pomodoroSettings.autoStartBreak);
               setSettingsModalOpen(true);
             }}
@@ -585,7 +638,7 @@ export function FocusTimer() {
             </View>
 
             <View style={styles.settingGroup}>
-              <Text style={[styles.settingLabel, { color: colors.text }]}>Break Time (mins)</Text>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>Short Break Time (mins)</Text>
               <TextInput
                 style={[
                   styles.settingInput,
@@ -596,6 +649,21 @@ export function FocusTimer() {
                 onChangeText={setBreakInput}
                 onFocus={() => setIsBreakFocused(true)}
                 onBlur={() => setIsBreakFocused(false)}
+              />
+            </View>
+
+            <View style={styles.settingGroup}>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>Long Break Time (mins)</Text>
+              <TextInput
+                style={[
+                  styles.settingInput,
+                  { color: colors.text, borderColor: isLongBreakFocused ? colors.text : colors.border, backgroundColor: colors.inputBg },
+                ]}
+                keyboardType="numeric"
+                value={longBreakInput}
+                onChangeText={setLongBreakInput}
+                onFocus={() => setIsLongBreakFocused(true)}
+                onBlur={() => setIsLongBreakFocused(false)}
               />
             </View>
 
@@ -800,6 +868,31 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 360,
     alignItems: 'center',
+  },
+  cycleIndicatorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    borderWidth: 1,
+    gap: 8,
+    marginBottom: 8,
+  },
+  cycleDotsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  cycleDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  cycleText: {
+    fontSize: 11,
+    fontWeight: '600',
+    fontVariant: ['tabular-nums'],
   },
   timeDisplay: {
     fontSize: 88,
