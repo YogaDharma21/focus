@@ -42,15 +42,37 @@ export function StatsJournal() {
   }, []);
 
   // Calculations
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const now = new Date();
+  const curY = now.getFullYear();
+  const curM = String(now.getMonth() + 1).padStart(2, '0');
+  const curD = String(now.getDate()).padStart(2, '0');
+  const todayLocalStr = `${curY}-${curM}-${curD}`;
+
   const minutesToday = Math.round(
     sessions
-      .filter((s) => s.date.slice(0, 10) === todayStr)
+      .filter((s) => {
+        if (!s || !s.date) return false;
+        const d = new Date(s.date);
+        return (
+          d.getFullYear() === now.getFullYear() &&
+          d.getMonth() === now.getMonth() &&
+          d.getDate() === now.getDate()
+        );
+      })
       .reduce((acc, s) => acc + s.duration, 0) / 60
   );
 
   const tasksTodayFinished = todos.filter(
-    (t) => t.completed && (t.completedAt ? t.completedAt.slice(0, 10) === todayStr : true)
+    (t) => {
+      if (!t.completed) return false;
+      if (!t.completedAt) return true;
+      const d = new Date(t.completedAt);
+      return (
+        d.getFullYear() === now.getFullYear() &&
+        d.getMonth() === now.getMonth() &&
+        d.getDate() === now.getDate()
+      );
+    }
   ).length;
 
   const pendingTasksCount = todos.filter((t) => !t.completed).length;
@@ -63,7 +85,17 @@ export function StatsJournal() {
   const calculateStreak = (sessionList: Session[]) => {
     if (!sessionList || sessionList.length === 0) return { current: 0, best: 0 };
     const dates = Array.from(
-      new Set(sessionList.map((s) => s.date.slice(0, 10)))
+      new Set(
+        sessionList
+          .filter((s) => s && s.date)
+          .map((s) => {
+            const d = new Date(s.date);
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+          })
+      )
     ).sort();
 
     if (dates.length === 0) return { current: 0, best: 0 };
@@ -83,12 +115,15 @@ export function StatsJournal() {
       }
     }
 
-    const today = new Date().toISOString().slice(0, 10);
-    const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+    const yDate = new Date(now.getTime() - 86400000);
+    const yy = yDate.getFullYear();
+    const ym = String(yDate.getMonth() + 1).padStart(2, '0');
+    const yday = String(yDate.getDate()).padStart(2, '0');
+    const yesterday = `${yy}-${ym}-${yday}`;
     const lastDate = dates[dates.length - 1];
 
     let current = 0;
-    if (lastDate === today || lastDate === yesterday) {
+    if (lastDate === todayLocalStr || lastDate === yesterday) {
       current = tempStreak;
     }
 
@@ -104,7 +139,6 @@ export function StatsJournal() {
   }, {});
 
   // Weekly Focus Trend Calculation (Sunday to Saturday)
-  const now = new Date();
   const currentDayIdx = now.getDay(); // 0 = Sun, 6 = Sat
   const sunday = new Date(now);
   sunday.setDate(now.getDate() - currentDayIdx);
@@ -125,6 +159,7 @@ export function StatsJournal() {
   };
 
   sessions.forEach((s) => {
+    if (!s || !s.date) return;
     const sessionDate = new Date(s.date);
     if (sessionDate >= sunday && sessionDate <= saturday) {
       const dayName = DAYS_OF_WEEK[sessionDate.getDay()];

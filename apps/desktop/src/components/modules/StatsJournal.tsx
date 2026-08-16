@@ -25,9 +25,15 @@ export const StatsJournal: React.FC = () => {
   const minsRemainingPart = minutesRemaining % 60;
 
   // 3. Stats Calculations
-  const todayStr = new Date().toISOString().split('T')[0];
-  
-  const todaySessions = sessions.filter(s => s.date.startsWith(todayStr));
+  const todaySessions = sessions.filter(s => {
+    if (!s.date) return false;
+    const sDate = new Date(s.date);
+    return (
+      sDate.getFullYear() === now.getFullYear() &&
+      sDate.getMonth() === now.getMonth() &&
+      sDate.getDate() === now.getDate()
+    );
+  });
   const minutesToday = Math.round(todaySessions.reduce((acc, s) => acc + s.duration, 0) / 60);
 
   const tasksTodayCount = todos.filter(t => t.completed).length;
@@ -38,14 +44,64 @@ export const StatsJournal: React.FC = () => {
     : 0;
 
   // 4. Streak Calculation
-  const sessionDatesSet = new Set(sessions.map(s => s.date.split('T')[0]));
-  let currentStreak = 0;
-  let d = new Date();
-  while (sessionDatesSet.has(d.toISOString().split('T')[0])) {
-    currentStreak++;
-    d.setDate(d.getDate() - 1);
-  }
-  const bestStreak = Math.max(currentStreak, sessions.length > 0 ? 1 : 0);
+  const calculateStreak = () => {
+    if (!sessions || sessions.length === 0) return { current: 0, best: 0 };
+    const dates = Array.from(
+      new Set(
+        sessions
+          .filter(s => s && s.date)
+          .map(s => {
+            const d = new Date(s.date);
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+          })
+      )
+    ).sort();
+
+    if (dates.length === 0) return { current: 0, best: 0 };
+
+    let best = 1;
+    let tempStreak = 1;
+
+    for (let i = 1; i < dates.length; i++) {
+      const prev = new Date(dates[i - 1]);
+      const curr = new Date(dates[i]);
+      const diffDays = Math.round((curr.getTime() - prev.getTime()) / (1000 * 3600 * 24));
+      if (diffDays === 1) {
+        tempStreak++;
+        if (tempStreak > best) best = tempStreak;
+      } else if (diffDays > 1) {
+        tempStreak = 1;
+      }
+    }
+
+    const cur = new Date();
+    const curY = cur.getFullYear();
+    const curM = String(cur.getMonth() + 1).padStart(2, '0');
+    const curD = String(cur.getDate()).padStart(2, '0');
+    const today = `${curY}-${curM}-${curD}`;
+
+    const yDate = new Date(cur.getTime() - 86400000);
+    const yY = yDate.getFullYear();
+    const yM = String(yDate.getMonth() + 1).padStart(2, '0');
+    const yD = String(yDate.getDate()).padStart(2, '0');
+    const yesterday = `${yY}-${yM}-${yD}`;
+
+    const lastDate = dates[dates.length - 1];
+
+    let current = 0;
+    if (lastDate === today || lastDate === yesterday) {
+      current = tempStreak;
+    }
+
+    return { current, best: Math.max(best, current) };
+  };
+
+  const streakData = calculateStreak();
+  const currentStreak = streakData.current;
+  const bestStreak = streakData.best;
 
 
 
