@@ -19,7 +19,10 @@ import { cn } from "@/lib/utils";
 
 export default function Page() {
     useTimerEngine();
-    const { currentView, mediaPlayerOpen, isActive, deepFocusMode, setDeepFocusMode } = useAppStore();
+    const currentView = useAppStore((s) => s.currentView);
+    const isActive = useAppStore((s) => s.isActive);
+    const deepFocusMode = useAppStore((s) => s.deepFocusMode);
+    const setDeepFocusMode = useAppStore((s) => s.setDeepFocusMode);
     const [mounted, setMounted] = useState(false);
     const prevActiveRef = useRef(isActive);
 
@@ -55,18 +58,20 @@ export default function Page() {
 
     return (
         <main className="relative min-h-screen overflow-hidden bg-background text-foreground transition-colors duration-500">
-            <BackgroundDisplay />
+            {!deepFocusMode && <BackgroundDisplay />}
 
-            <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-[var(--radius)] blur-[120px] opacity-20" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-[var(--radius)] blur-[120px] opacity-20" />
-            </div>
+            {!deepFocusMode && (
+                <div className="fixed inset-0 pointer-events-none z-0">
+                    <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-[var(--radius)] blur-[120px] opacity-20" />
+                    <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-[var(--radius)] blur-[120px] opacity-20" />
+                </div>
+            )}
 
             {deepFocusMode && <DeepFocusOverlay />}
 
             <div className={cn(
-                "flex min-h-screen transition-opacity duration-500",
-                deepFocusMode && "opacity-0 pointer-events-none"
+                "flex min-h-screen transition-opacity duration-300",
+                deepFocusMode && "hidden"
             )}>
                 <BottomNavbar />
                 

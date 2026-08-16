@@ -8,39 +8,35 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { DistractionCounter } from "./DistractionCounter";
 
 export function DeepFocusOverlay() {
-    const {
-        timeLeft,
-        isActive,
-        sessionName,
-        setIsActive,
-        setDeepFocusMode,
-        timerMode,
-        timerState,
-        previousMode,
-        pomodoroSettings,
-        setTimeLeft,
-        setTimerState,
-        setTimerMode,
-        setPreviousMode,
-        setSessionStartTime,
-        addSession,
-        todos,
-        selectedTodoId,
-        selectedSubtaskId,
-        isMusicPlaying,
-        setIsMusicPlaying,
-        musicVolume,
-        setMusicVolume,
-        isMusicMuted,
-        setIsMusicMuted,
-        soundEffectVolume,
-        soundEffectEnabled,
-    } = useAppStore();
+    const timeLeft = useAppStore((s) => s.timeLeft);
+    const isActive = useAppStore((s) => s.isActive);
+    const sessionName = useAppStore((s) => s.sessionName);
+    const setIsActive = useAppStore((s) => s.setIsActive);
+    const setDeepFocusMode = useAppStore((s) => s.setDeepFocusMode);
+    const timerMode = useAppStore((s) => s.timerMode);
+    const timerState = useAppStore((s) => s.timerState);
+    const previousMode = useAppStore((s) => s.previousMode);
+    const pomodoroSettings = useAppStore((s) => s.pomodoroSettings);
+    const setTimeLeft = useAppStore((s) => s.setTimeLeft);
+    const setTimerState = useAppStore((s) => s.setTimerState);
+    const setTimerMode = useAppStore((s) => s.setTimerMode);
+    const setPreviousMode = useAppStore((s) => s.setPreviousMode);
+    const addSession = useAppStore((s) => s.addSession);
+    const todos = useAppStore((s) => s.todos);
+    const selectedTodoId = useAppStore((s) => s.selectedTodoId);
+    const selectedSubtaskId = useAppStore((s) => s.selectedSubtaskId);
+    const isMusicPlaying = useAppStore((s) => s.isMusicPlaying);
+    const setIsMusicPlaying = useAppStore((s) => s.setIsMusicPlaying);
+    const musicVolume = useAppStore((s) => s.musicVolume);
+    const setMusicVolume = useAppStore((s) => s.setMusicVolume);
+    const isMusicMuted = useAppStore((s) => s.isMusicMuted);
+    const setIsMusicMuted = useAppStore((s) => s.setIsMusicMuted);
+    const soundEffectVolume = useAppStore((s) => s.soundEffectVolume);
+    const soundEffectEnabled = useAppStore((s) => s.soundEffectEnabled);
 
     const [showMusicMenu, setShowMusicMenu] = useState(false);
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
-    const sessionStartTimeRef = useRef<number | null>(null);
 
     const playSound = useCallback(() => {
         if (!soundEffectEnabled) return;
@@ -76,40 +72,23 @@ export function DeepFocusOverlay() {
         };
     }, []);
 
-    useEffect(() => {
-        if (isActive && !sessionStartTimeRef.current) {
-            const now = Date.now();
-            sessionStartTimeRef.current = now;
-            setSessionStartTime(new Date(now).toISOString());
-        } else if (!isActive) {
-            sessionStartTimeRef.current = null;
-            setSessionStartTime(null);
-        }
-    }, [isActive, setSessionStartTime]);
-
     const handleCompleteSession = useCallback(() => {
+        const state = useAppStore.getState();
         setIsActive(false);
 
         playSound();
 
-        let elapsedSeconds = 0;
-        if (sessionStartTimeRef.current) {
-            elapsedSeconds = Math.floor(
-                (Date.now() - sessionStartTimeRef.current) / 1000,
-            );
-        }
-
         const duration =
-            timerMode === "POMODORO"
-                ? Math.min(elapsedSeconds, pomodoroSettings.work * 60)
-                : timeLeft;
+            state.timerMode === "POMODORO"
+                ? state.pomodoroSettings.work * 60
+                : state.timeLeft;
 
         if (duration > 0) {
             addSession({
                 id: crypto.randomUUID(),
                 date: new Date().toISOString(),
                 duration,
-                mode: timerMode,
+                mode: state.timerMode,
             });
             fetch("/api/sessions", {
                 method: "POST",
@@ -122,47 +101,38 @@ export function DeepFocusOverlay() {
         }
         setDeepFocusMode(false);
 
-        if (timerMode === "POMODORO" && timerState === "WORK") {
+        if (state.timerMode === "POMODORO" && state.timerState === "WORK") {
             setPreviousMode("POMODORO");
             setTimerState("BREAK");
-            setTimeLeft(pomodoroSettings.break * 60);
-            if (pomodoroSettings.autoStartBreak) {
+            setTimeLeft(state.pomodoroSettings.break * 60);
+            if (state.pomodoroSettings.autoStartBreak) {
                 setIsActive(true);
             }
-        } else if (timerMode === "POMODORO" && timerState === "BREAK") {
-            if (previousMode === "STOPWATCH") {
+        } else if (state.timerMode === "POMODORO" && state.timerState === "BREAK") {
+            if (state.previousMode === "STOPWATCH") {
                 setTimerMode("STOPWATCH");
                 setTimerState("WORK");
                 setTimeLeft(0);
             } else {
                 setTimerMode("POMODORO");
                 setTimerState("WORK");
-                setTimeLeft(pomodoroSettings.work * 60);
+                setTimeLeft(state.pomodoroSettings.work * 60);
             }
-            if (pomodoroSettings.autoStartTimer) {
+            if (state.pomodoroSettings.autoStartTimer) {
                 setIsActive(true);
                 setDeepFocusMode(true);
             }
-        } else if (timerMode === "STOPWATCH" && duration > 0) {
+        } else if (state.timerMode === "STOPWATCH" && duration > 0) {
             setPreviousMode("STOPWATCH");
-            const breakSeconds = Math.floor(duration / 5);
-            if (breakSeconds > 0) {
-                setTimerMode("POMODORO");
-                setTimerState("BREAK");
-                setTimeLeft(breakSeconds);
-                if (pomodoroSettings.autoStartBreak) {
-                    setIsActive(true);
-                }
-            } else {
-                setTimeLeft(0);
+            const breakSeconds = Math.max(1, Math.floor(duration / 5));
+            setTimerMode("POMODORO");
+            setTimerState("BREAK");
+            setTimeLeft(breakSeconds);
+            if (state.pomodoroSettings.autoStartBreak) {
+                setIsActive(true);
             }
         }
-        sessionStartTimeRef.current = null;
     }, [
-        timerMode,
-        timerState,
-        previousMode,
-        timeLeft,
         setTimeLeft,
         setIsActive,
         setTimerState,
@@ -170,7 +140,6 @@ export function DeepFocusOverlay() {
         setPreviousMode,
         setDeepFocusMode,
         playSound,
-        pomodoroSettings,
         addSession,
     ]);
 
@@ -196,7 +165,7 @@ export function DeepFocusOverlay() {
     const exitFocusMode = () => setDeepFocusMode(false);
 
     return (
-        <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-500">
+        <div className="fixed inset-0 z-[100] bg-background/98 flex flex-col items-center justify-center animate-in fade-in duration-300 transform-gpu isolate">
             <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
             
             {/* Top Left Lofi-Beats Music Control */}
@@ -293,10 +262,7 @@ export function DeepFocusOverlay() {
 
             <div className="flex flex-col items-center gap-6">
                 <div
-                    className={cn(
-                        "text-[4rem] sm:text-[6rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground select-none",
-                        isActive && "animate-pulse",
-                    )}
+                    className="text-[4rem] sm:text-[6rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground select-none"
                 >
                     {formatTime(timeLeft)}
                 </div>
