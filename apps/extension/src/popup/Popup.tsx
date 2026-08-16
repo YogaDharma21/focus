@@ -277,9 +277,14 @@ export function Popup() {
 
   const resetTimer = () => {
     let defaultTime = 0;
-    if (state.timerState === "WORK") defaultTime = state.pomodoroSettings.work * 60;
-    else if (state.timerState === "BREAK") defaultTime = state.pomodoroSettings.break * 60;
-    else if (state.timerState === "FLOW") defaultTime = 0;
+    if (state.timerState === "WORK") {
+      defaultTime = state.pomodoroSettings.work * 60;
+    } else if (state.timerState === "BREAK") {
+      const isLongBreak = (state.pomodoroCount || 0) % 4 === 0 && (state.pomodoroCount || 0) > 0;
+      defaultTime = isLongBreak ? (state.pomodoroSettings.longBreak || 15) * 60 : state.pomodoroSettings.break * 60;
+    } else if (state.timerState === "FLOW") {
+      defaultTime = 0;
+    }
 
     updateState({ isActive: false, deepFocusMode: false, timeLeft: defaultTime });
   };
@@ -431,7 +436,12 @@ export function Popup() {
     const brk = Math.max(1, breakMinsInput);
     const longBrk = Math.max(1, longBreakMinsInput);
     const isLongBreak = (state.pomodoroCount || 0) % 4 === 0 && (state.pomodoroCount || 0) > 0;
-    const newTimeLeft = state.timerState === "WORK" ? work * 60 : (isLongBreak ? longBrk * 60 : brk * 60);
+    const newTimeLeft =
+      state.timerState === "WORK"
+        ? work * 60
+        : state.timerState === "BREAK"
+        ? (isLongBreak ? longBrk * 60 : brk * 60)
+        : state.timeLeft;
 
     updateState({
       pomodoroSettings: {
