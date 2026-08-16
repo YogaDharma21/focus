@@ -406,9 +406,9 @@ export function DeepFocusOverlay() {
                         onClick={toggleTimer}
                     >
                         {isActive ? (
-                            <Pause className="w-6 h-6" />
+                            <Pause className="size-7" />
                         ) : (
-                            <Play className="w-6 h-6 ml-1" />
+                            <Play className="size-7 ml-0.5" />
                         )}
                     </Button>
 
@@ -425,7 +425,7 @@ export function DeepFocusOverlay() {
                         disabled={!isActive}
                         title="Complete Session"
                     >
-                        <CheckCircle2 className="w-6 h-6" />
+                        <CheckCircle2 className="size-7" />
                     </Button>
                 </div>
             </div>
