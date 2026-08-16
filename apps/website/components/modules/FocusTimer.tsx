@@ -646,7 +646,7 @@ export function FocusTimer() {
                         onClick={resetTimer}
                         title="Reset Timer"
                     >
-                        <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <RotateCcw className="size-4 sm:size-5" />
                     </Button>
 
                     <DistractionCounter />
@@ -656,7 +656,7 @@ export function FocusTimer() {
                     <Button
                         size="icon"
                         className={cn(
-                            "w-16 h-16 sm:w-20 sm:h-20 rounded-[var(--radius)] shadow-md hover:shadow active:scale-95 transition-all duration-300 cursor-pointer",
+                            "w-14 h-14 sm:w-16 sm:h-16 rounded-[var(--radius)] shadow-md hover:shadow active:scale-95 transition-all duration-300 cursor-pointer",
                             isActive
                                 ? "bg-white text-black hover:bg-gray-200"
                                 : "bg-primary text-primary-foreground",
@@ -664,9 +664,9 @@ export function FocusTimer() {
                         onClick={toggleTimer}
                     >
                         {isActive ? (
-                            <Pause className="w-9 h-9 sm:w-12 sm:h-12 fill-current" />
+                            <Pause className="size-7 sm:size-8 fill-current" />
                         ) : (
-                            <Play className="w-9 h-9 sm:w-12 sm:h-12 fill-current ml-1 sm:ml-1.5" />
+                            <Play className="size-7 sm:size-8 fill-current ml-0.5 sm:ml-1" />
                         )}
                     </Button>
                 </div>
@@ -685,7 +685,7 @@ export function FocusTimer() {
                         disabled={!isActive}
                         title="Complete Session"
                     >
-                        <CheckCircle2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <CheckCircle2 className="size-4 sm:size-5" />
                     </Button>
 
                     <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
@@ -696,7 +696,7 @@ export function FocusTimer() {
                                 className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 transition-all cursor-pointer"
                                 title="Timer Settings"
                             >
-                                <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
+                                <Settings className="size-4 sm:size-5" />
                             </Button>
                         </DialogTrigger>
                         <DialogContent>
