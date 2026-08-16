@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from "react";
+import React, { useRef, useEffect, useCallback } from "react";
 import { useAppStore } from "@/lib/store";
+import { useShallow } from "zustand/react/shallow";
 import {
     Music,
     ChevronDown,
@@ -30,7 +31,23 @@ export function MediaPlayer() {
         setSoundEffectVolume,
         soundEffectEnabled,
         setSoundEffectEnabled,
-    } = useAppStore();
+    } = useAppStore(
+        useShallow((s) => ({
+            localUrl: s.localUrl,
+            mediaPlayerOpen: s.mediaPlayerOpen,
+            setMediaPlayerOpen: s.setMediaPlayerOpen,
+            isMusicPlaying: s.isMusicPlaying,
+            setIsMusicPlaying: s.setIsMusicPlaying,
+            musicVolume: s.musicVolume,
+            setMusicVolume: s.setMusicVolume,
+            isMusicMuted: s.isMusicMuted,
+            setIsMusicMuted: s.setIsMusicMuted,
+            soundEffectVolume: s.soundEffectVolume,
+            setSoundEffectVolume: s.setSoundEffectVolume,
+            soundEffectEnabled: s.soundEffectEnabled,
+            setSoundEffectEnabled: s.setSoundEffectEnabled,
+        }))
+    );
 
     const audioRef = useRef<HTMLAudioElement | null>(null);
     const containerRef = useRef<HTMLDivElement | null>(null);

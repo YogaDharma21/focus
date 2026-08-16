@@ -1,6 +1,7 @@
 "use client";
 
 import { useAppStore } from "@/lib/store";
+import { useShallow } from "zustand/react/shallow";
 import { Pause, Play, X, CheckCircle2, Music, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -24,7 +25,6 @@ export function DeepFocusOverlay() {
         setTimerState,
         setTimerMode,
         setPreviousMode,
-        setSessionStartTime,
         addSession,
         todos,
         selectedTodoId,
@@ -37,7 +37,37 @@ export function DeepFocusOverlay() {
         setIsMusicMuted,
         soundEffectVolume,
         soundEffectEnabled,
-    } = useAppStore();
+    } = useAppStore(
+        useShallow((s) => ({
+            timeLeft: s.timeLeft,
+            isActive: s.isActive,
+            sessionName: s.sessionName,
+            setIsActive: s.setIsActive,
+            setDeepFocusMode: s.setDeepFocusMode,
+            timerMode: s.timerMode,
+            timerState: s.timerState,
+            previousMode: s.previousMode,
+            pomodoroSettings: s.pomodoroSettings,
+            pomodoroCount: s.pomodoroCount,
+            setPomodoroCount: s.setPomodoroCount,
+            setTimeLeft: s.setTimeLeft,
+            setTimerState: s.setTimerState,
+            setTimerMode: s.setTimerMode,
+            setPreviousMode: s.setPreviousMode,
+            addSession: s.addSession,
+            todos: s.todos,
+            selectedTodoId: s.selectedTodoId,
+            selectedSubtaskId: s.selectedSubtaskId,
+            isMusicPlaying: s.isMusicPlaying,
+            setIsMusicPlaying: s.setIsMusicPlaying,
+            musicVolume: s.musicVolume,
+            setMusicVolume: s.setMusicVolume,
+            isMusicMuted: s.isMusicMuted,
+            setIsMusicMuted: s.setIsMusicMuted,
+            soundEffectVolume: s.soundEffectVolume,
+            soundEffectEnabled: s.soundEffectEnabled,
+        }))
+    );
 
     const [showMusicMenu, setShowMusicMenu] = useState(false);
 
@@ -211,7 +241,7 @@ export function DeepFocusOverlay() {
     const exitFocusMode = () => setDeepFocusMode(false);
 
     return (
-        <div className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-xl flex flex-col items-center justify-center animate-in fade-in duration-500">
+        <div className="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center animate-in fade-in duration-300 select-none">
             <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
             
             {/* Top Left Lofi-Beats Music Control */}
@@ -219,14 +249,14 @@ export function DeepFocusOverlay() {
                 <button
                     onClick={() => setShowMusicMenu(!showMusicMenu)}
                     className={cn(
-                        "h-10 px-3.5 rounded-full border transition-all flex items-center gap-2 backdrop-blur-md shadow-sm",
+                        "h-10 px-3.5 rounded-full border transition-all flex items-center gap-2 shadow-sm",
                         isMusicPlaying
                             ? "bg-white/15 border-white/25 text-white ring-1 ring-white/20 shadow-md"
                             : "bg-white/5 border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/10"
                     )}
                     title={isMusicPlaying ? "Lofi-Beats: Playing" : "Lofi-Beats: Paused"}
                 >
-                    <Music className={cn("w-4 h-4", isMusicPlaying && "text-white animate-pulse")} />
+                    <Music className={cn("w-4 h-4", isMusicPlaying && "text-white")} />
                     <span className="text-xs font-semibold tracking-wide">Lofi-Beats</span>
                     {isMusicPlaying && (
                         <span className="flex items-center gap-0.5 h-3 ml-0.5">
@@ -238,7 +268,7 @@ export function DeepFocusOverlay() {
                 </button>
 
                 {showMusicMenu && (
-                    <div className="absolute top-full left-0 mt-2.5 w-64 bg-[#121214]/95 backdrop-blur-2xl border border-white/10 rounded-2xl p-3.5 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-200 space-y-3">
+                    <div className="absolute top-full left-0 mt-2.5 w-64 bg-[#121214] border border-white/10 rounded-2xl p-3.5 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-150 space-y-3">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 text-white">
                                 <Music className="w-4 h-4 text-white/90" />
@@ -323,7 +353,7 @@ export function DeepFocusOverlay() {
                                             isCompleted
                                                 ? "bg-primary shadow-[0_0_6px_rgba(255,255,255,0.7)]"
                                                 : isCurrent
-                                                ? "bg-primary/70 ring-2 ring-primary/30 animate-pulse"
+                                                ? "bg-primary/90 ring-2 ring-primary/40"
                                                 : "bg-muted-foreground/30",
                                         )}
                                         title={`Pomodoro ${index + 1} of 4`}
@@ -341,12 +371,7 @@ export function DeepFocusOverlay() {
                     </div>
                 )}
 
-                <div
-                    className={cn(
-                        "text-[4rem] sm:text-[6rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground select-none",
-                        isActive && "animate-pulse",
-                    )}
-                >
+                <div className="text-[4rem] sm:text-[6rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground select-none">
                     {formatTime(timeLeft)}
                 </div>
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useAppStore, TodoItem } from "@/lib/store";
+import { useShallow } from "zustand/react/shallow";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -56,7 +57,41 @@ export function FocusTimer() {
         resetAllData,
         soundEffectVolume,
         soundEffectEnabled,
-    } = useAppStore();
+    } = useAppStore(
+        useShallow((s) => ({
+            timerMode: s.timerMode,
+            timerState: s.timerState,
+            previousMode: s.previousMode,
+            timeLeft: s.timeLeft,
+            isActive: s.isActive,
+            setTimerMode: s.setTimerMode,
+            setTimerState: s.setTimerState,
+            setPreviousMode: s.setPreviousMode,
+            setTimeLeft: s.setTimeLeft,
+            setIsActive: s.setIsActive,
+            setSessionStartTime: s.setSessionStartTime,
+            sessionName: s.sessionName,
+            setSessionName: s.setSessionName,
+            addSession: s.addSession,
+            pomodoroSettings: s.pomodoroSettings,
+            setPomodoroSettings: s.setPomodoroSettings,
+            pomodoroCount: s.pomodoroCount,
+            setPomodoroCount: s.setPomodoroCount,
+            todos: s.todos,
+            addTodo: s.addTodo,
+            updateTodo: s.updateTodo,
+            toggleTodo: s.toggleTodo,
+            toggleSubtask: s.toggleSubtask,
+            selectedTodoId: s.selectedTodoId,
+            setSelectedTodoId: s.setSelectedTodoId,
+            selectedSubtaskId: s.selectedSubtaskId,
+            setSelectedSubtaskId: s.setSelectedSubtaskId,
+            setDeepFocusMode: s.setDeepFocusMode,
+            resetAllData: s.resetAllData,
+            soundEffectVolume: s.soundEffectVolume,
+            soundEffectEnabled: s.soundEffectEnabled,
+        }))
+    );
 
     const [settingsOpen, setSettingsOpen] = useState(false);
     const [taskSelectorOpen, setTaskSelectorOpen] = useState(false);
