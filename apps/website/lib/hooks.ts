@@ -31,6 +31,8 @@ export function useTimerEngine() {
         setTimerMode,
         setPreviousMode,
         pomodoroSettings,
+        pomodoroCount,
+        setPomodoroCount,
         addSession,
         setDeepFocusMode,
         soundEffectVolume,
@@ -65,9 +67,16 @@ export function useTimerEngine() {
         }
 
         if (timerMode === "POMODORO" && timerState === "WORK") {
+            const nextCount = (pomodoroCount || 0) + 1;
+            setPomodoroCount(nextCount);
+            const isLongBreak = nextCount % 4 === 0;
+            const breakDuration = isLongBreak
+                ? (pomodoroSettings.longBreak || 15) * 60
+                : (pomodoroSettings.break || 5) * 60;
+
             setPreviousMode("POMODORO");
             setTimerState("BREAK");
-            setTimeLeft(pomodoroSettings.break * 60);
+            setTimeLeft(breakDuration);
             if (pomodoroSettings.autoStartBreak) {
                 setIsActive(true);
             }
@@ -94,7 +103,11 @@ export function useTimerEngine() {
         setPreviousMode,
         setDeepFocusMode,
         pomodoroSettings,
+        pomodoroCount,
+        setPomodoroCount,
         addSession,
+        soundEffectEnabled,
+        soundEffectVolume,
     ]);
 
     const autoCompleteRef = useRef(handleAutoCompleteSession);

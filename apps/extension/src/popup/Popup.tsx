@@ -137,6 +137,7 @@ export function Popup() {
   // Settings inputs
   const [workMinsInput, setWorkMinsInput] = useState(25);
   const [breakMinsInput, setBreakMinsInput] = useState(5);
+  const [longBreakMinsInput, setLongBreakMinsInput] = useState(15);
   const [autoStartBreakInput, setAutoStartBreakInput] = useState(false);
 
   // Music Player State & Controls
@@ -209,6 +210,7 @@ export function Popup() {
       document.body.className = "dark";
       setWorkMinsInput(initial.pomodoroSettings.work);
       setBreakMinsInput(initial.pomodoroSettings.break);
+      setLongBreakMinsInput(initial.pomodoroSettings.longBreak || 15);
       setAutoStartBreakInput(initial.pomodoroSettings.autoStartBreak);
     });
 
@@ -276,7 +278,10 @@ export function Popup() {
   const switchTimerModeAndState = (mode: "POMODORO" | "FLOW", timerState: "WORK" | "BREAK" | "FLOW") => {
     let nextTime = 0;
     if (timerState === "WORK") nextTime = state.pomodoroSettings.work * 60;
-    else if (timerState === "BREAK") nextTime = state.pomodoroSettings.break * 60;
+    else if (timerState === "BREAK") {
+      const isLongBreak = (state.pomodoroCount || 0) % 4 === 0 && (state.pomodoroCount || 0) > 0;
+      nextTime = isLongBreak ? (state.pomodoroSettings.longBreak || 15) * 60 : state.pomodoroSettings.break * 60;
+    }
     else if (timerState === "FLOW") nextTime = 0;
 
     const prevMode = timerState === "FLOW" ? "FLOW" : (timerState === "WORK" ? "POMODORO" : state.previousMode);
@@ -338,13 +343,20 @@ export function Popup() {
     let nextState: "WORK" | "BREAK" | "FLOW" = "BREAK";
     let nextTime = 0;
     let prevMode = state.previousMode;
+    let nextPomodoroCount = state.pomodoroCount || 0;
 
     if (isWorkOrFlow) {
       prevMode = state.timerState === "FLOW" ? "FLOW" : "POMODORO";
       nextState = "BREAK";
-      nextTime = state.timerState === "FLOW"
-        ? Math.max(1, Math.floor(state.timeLeft / 5))
-        : state.pomodoroSettings.break * 60;
+      if (state.timerState === "FLOW") {
+        nextTime = Math.max(1, Math.floor(state.timeLeft / 5));
+      } else {
+        nextPomodoroCount = (state.pomodoroCount || 0) + 1;
+        const isLongBreak = nextPomodoroCount % 4 === 0;
+        nextTime = isLongBreak
+          ? (state.pomodoroSettings.longBreak || 15) * 60
+          : (state.pomodoroSettings.break || 5) * 60;
+      }
     } else {
       // Return to previous mode after break completes
       if (state.previousMode === "FLOW") {
@@ -362,6 +374,7 @@ export function Popup() {
       timerState: nextState,
       previousMode: prevMode,
       timeLeft: nextTime,
+      pomodoroCount: nextPomodoroCount,
       todos: updatedTodos,
       sessions: newSessionList,
       stats: {
@@ -404,12 +417,15 @@ export function Popup() {
     e.preventDefault();
     const work = Math.max(1, workMinsInput);
     const brk = Math.max(1, breakMinsInput);
-    const newTimeLeft = state.timerState === "WORK" ? work * 60 : brk * 60;
+    const longBrk = Math.max(1, longBreakMinsInput);
+    const isLongBreak = (state.pomodoroCount || 0) % 4 === 0 && (state.pomodoroCount || 0) > 0;
+    const newTimeLeft = state.timerState === "WORK" ? work * 60 : (isLongBreak ? longBrk * 60 : brk * 60);
 
     updateState({
       pomodoroSettings: {
         work,
         break: brk,
+        longBreak: longBrk,
         autoStartBreak: autoStartBreakInput
       },
       timeLeft: state.isActive ? state.timeLeft : newTimeLeft
@@ -1086,11 +1102,11 @@ export function Popup() {
               </div>
             </div>
 
-            {/* Break Duration */}
+            {/* Short Break Duration */}
             <div className={`p-3 rounded-xl border flex items-center justify-between ${
               "bg-neutral-900 border-neutral-800"
             }`}>
-              <span className="text-xs font-bold font-sans">Break Duration</span>
+              <span className="text-xs font-bold font-sans">Short Break Duration</span>
               <div className="flex items-center gap-1.5">
                 <input
                   type="number"
@@ -1098,6 +1114,26 @@ export function Popup() {
                   max="60"
                   value={breakMinsInput}
                   onChange={(e) => setBreakMinsInput(parseInt(e.target.value) || 5)}
+                  className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none ${
+                    "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]"
+                  }`}
+                />
+                <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>min</span>
+              </div>
+            </div>
+
+            {/* Long Break Duration */}
+            <div className={`p-3 rounded-xl border flex items-center justify-between ${
+              "bg-neutral-900 border-neutral-800"
+            }`}>
+              <span className="text-xs font-bold font-sans">Long Break Duration</span>
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  min="1"
+                  max="60"
+                  value={longBreakMinsInput}
+                  onChange={(e) => setLongBreakMinsInput(parseInt(e.target.value) || 15)}
                   className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none ${
                     "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]"
                   }`}
@@ -1725,6 +1761,39 @@ export function Popup() {
                 <span>Flow</span>
               </button>
             </div>
+
+            {/* Pomodoro Cycle & Progress Indicator */}
+            {state.timerMode === "POMODORO" && (
+              <div className="flex items-center gap-2.5 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-mono text-neutral-300 shadow-sm mt-1 mb-0.5">
+                <div className="flex items-center gap-1.5">
+                  {[0, 1, 2, 3].map((index) => {
+                    const currentCycleStep = (state.pomodoroCount || 0) % 4;
+                    const isCompleted = index < currentCycleStep;
+                    const isCurrent = index === currentCycleStep && state.timerState === "WORK";
+                    return (
+                      <div
+                        key={index}
+                        className={`w-2 h-2 rounded-full transition-all ${
+                          isCompleted
+                            ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.7)]"
+                            : isCurrent
+                            ? "bg-white/80 ring-2 ring-white/30 animate-pulse"
+                            : "bg-neutral-700"
+                        }`}
+                        title={`Pomodoro ${index + 1} of 4`}
+                      />
+                    );
+                  })}
+                </div>
+                <span className="text-[10px] font-bold text-neutral-300">
+                  {state.timerState === "BREAK"
+                    ? ((state.pomodoroCount || 0) % 4 === 0 && (state.pomodoroCount || 0) > 0
+                        ? `Long Break (${state.pomodoroSettings.longBreak || 15}m)`
+                        : `Short Break (${state.pomodoroSettings.break || 5}m)`)
+                    : `Pomodoro ${((state.pomodoroCount || 0) % 4) + 1} of 4`}
+                </span>
+              </div>
+            )}
 
             {/* Timer Display - Big Number */}
             <div className="flex flex-col items-center justify-center my-2 py-3">
