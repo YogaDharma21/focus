@@ -25,13 +25,26 @@ export default function TabLayout() {
     isActive,
     setTimeLeft,
     setIsActive,
-    setTimerState,
+    timerMode,
     setTimerMode,
+    timerState,
+    setTimerState,
     setPreviousMode,
+    deepFocusMode,
     setDeepFocusMode,
     addSession,
     incrementTodoSession,
   } = useAppStore();
+
+  const prevActiveRef = React.useRef(isActive);
+
+  React.useEffect(() => {
+    const isWorkOrFlow = timerMode === 'STOPWATCH' || (timerMode === 'POMODORO' && timerState === 'WORK');
+    if (isActive && !prevActiveRef.current && isWorkOrFlow && !deepFocusMode) {
+      setDeepFocusMode(true);
+    }
+    prevActiveRef.current = isActive;
+  }, [isActive, timerMode, timerState, deepFocusMode, setDeepFocusMode]);
 
   React.useEffect(() => {
     let interval: any = null;
