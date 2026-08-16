@@ -344,7 +344,7 @@ async function startBackgroundTimer() {
 
         await saveStoredState({
           isActive: autoStart,
-          deepFocusMode: false,
+          deepFocusMode: !isWork && autoStart,
           timerState: nextState,
           previousMode: prevMode,
           timeLeft: nextTime,

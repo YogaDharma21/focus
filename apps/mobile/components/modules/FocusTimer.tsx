@@ -72,6 +72,7 @@ export function FocusTimer() {
     resetAllData,
     toggleSubtask,
     incrementTodoSession,
+    setDeepFocusMode,
   } = useAppStore();
 
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
@@ -162,6 +163,7 @@ export function FocusTimer() {
         if (pomodoroSettings.autoStartBreak) {
           setIsActive(true);
         }
+        setDeepFocusMode(false);
       } else {
         setTimeLeft(0);
       }
@@ -185,6 +187,7 @@ export function FocusTimer() {
       if (pomodoroSettings.autoStartBreak) {
         setIsActive(true);
       }
+      setDeepFocusMode(false);
     } else if (timerMode === 'POMODORO' && timerState === 'BREAK') {
       // Break Completed -> return to previous mode (Flow or Pomodoro Work)
       if (previousMode === 'STOPWATCH') {
@@ -198,6 +201,9 @@ export function FocusTimer() {
       }
       if (pomodoroSettings.autoStartTimer) {
         setIsActive(true);
+        setDeepFocusMode(true);
+      } else {
+        setDeepFocusMode(false);
       }
     }
   };

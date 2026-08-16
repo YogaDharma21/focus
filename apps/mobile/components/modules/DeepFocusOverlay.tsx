@@ -79,6 +79,7 @@ export function DeepFocusOverlay() {
         if (pomodoroSettings.autoStartBreak) {
           setIsActive(true);
         }
+        setDeepFocusMode(false);
       } else {
         setTimeLeft(0);
       }
@@ -101,6 +102,7 @@ export function DeepFocusOverlay() {
       if (pomodoroSettings.autoStartBreak) {
         setIsActive(true);
       }
+      setDeepFocusMode(false);
     } else if (timerMode === 'POMODORO' && timerState === 'BREAK') {
       if (previousMode === 'STOPWATCH') {
         setTimerMode('STOPWATCH');
@@ -113,6 +115,9 @@ export function DeepFocusOverlay() {
       }
       if (pomodoroSettings.autoStartTimer) {
         setIsActive(true);
+        setDeepFocusMode(true);
+      } else {
+        setDeepFocusMode(false);
       }
     }
   };

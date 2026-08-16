@@ -79,6 +79,7 @@ export const FloatingTimerCapsule: React.FC = () => {
         if (pomodoroSettings.autoStartBreak) {
           setIsActive(true);
         }
+        setDeepFocusMode(false);
       } else {
         if (previousMode === 'STOPWATCH') {
           electron.showNotification("Break Complete!", "Ready to jump back into Flow state?");
@@ -92,6 +93,9 @@ export const FloatingTimerCapsule: React.FC = () => {
 
         if (pomodoroSettings.autoStartTimer) {
           setIsActive(true);
+          setDeepFocusMode(true);
+        } else {
+          setDeepFocusMode(false);
         }
       }
     } else {
@@ -134,6 +138,7 @@ export const FloatingTimerCapsule: React.FC = () => {
       if (pomodoroSettings.autoStartBreak) {
         setIsActive(true);
       }
+      setDeepFocusMode(false);
     }
 
     setIsExpanded(false);

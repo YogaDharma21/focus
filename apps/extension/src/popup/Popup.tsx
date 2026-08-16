@@ -364,7 +364,7 @@ export function Popup() {
 
     updateState({
       isActive: autoStart,
-      deepFocusMode: false,
+      deepFocusMode: !isWorkOrFlow && autoStart,
       timerState: nextState,
       previousMode: prevMode,
       timeLeft: nextTime,

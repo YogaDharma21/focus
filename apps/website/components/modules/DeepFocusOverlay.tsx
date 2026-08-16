@@ -141,6 +141,7 @@ export function DeepFocusOverlay() {
             }
             if (pomodoroSettings.autoStartTimer) {
                 setIsActive(true);
+                setDeepFocusMode(true);
             }
         } else if (timerMode === "STOPWATCH" && duration > 0) {
             setPreviousMode("STOPWATCH");
