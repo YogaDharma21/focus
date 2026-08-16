@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   Modal,
   ScrollView,
   Alert,
-  Switch,
+  Animated,
 } from 'react-native';
 import { useAppStore, TodoItem } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
@@ -44,6 +44,67 @@ const DISTRACTION_CATEGORIES = [
   'Break',
   'Other',
 ];
+
+interface CustomToggleSwitchProps {
+  value: boolean;
+  onToggle: () => void;
+}
+
+function CustomToggleSwitch({ value, onToggle }: CustomToggleSwitchProps) {
+  const animatedValue = useRef(new Animated.Value(value ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(animatedValue, {
+      toValue: value ? 1 : 0,
+      duration: 180,
+      useNativeDriver: false,
+    }).start();
+  }, [value]);
+
+  const translateX = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [3, 21],
+  });
+
+  const trackColor = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['#3f3f46', '#ffffff'],
+  });
+
+  const thumbColor = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: ['#9ca3af', '#09090b'],
+  });
+
+  return (
+    <TouchableOpacity
+      activeOpacity={0.8}
+      onPress={onToggle}
+      accessibilityRole="switch"
+      accessibilityState={{ checked: value }}
+      style={styles.switchTouchable}
+    >
+      <Animated.View
+        style={[
+          styles.switchTrack,
+          {
+            backgroundColor: trackColor,
+          },
+        ]}
+      >
+        <Animated.View
+          style={[
+            styles.switchThumb,
+            {
+              backgroundColor: thumbColor,
+              transform: [{ translateX }],
+            },
+          ]}
+        />
+      </Animated.View>
+    </TouchableOpacity>
+  );
+}
 
 export function FocusTimer() {
   const { colors } = useTheme();
@@ -702,11 +763,7 @@ export function FocusTimer() {
                   Launch break timer immediately after work
                 </Text>
               </View>
-              <Switch
-                value={autoBreak}
-                onValueChange={setAutoBreak}
-                trackColor={{ false: colors.border, true: colors.primary }}
-              />
+              <CustomToggleSwitch value={autoBreak} onToggle={() => setAutoBreak(!autoBreak)} />
             </TouchableOpacity>
 
             {/* Auto-start Timer Toggle Card */}
@@ -727,11 +784,7 @@ export function FocusTimer() {
                   Launch focus timer immediately after break
                 </Text>
               </View>
-              <Switch
-                value={autoTimer}
-                onValueChange={setAutoTimer}
-                trackColor={{ false: colors.border, true: colors.primary }}
-              />
+              <CustomToggleSwitch value={autoTimer} onToggle={() => setAutoTimer(!autoTimer)} />
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -1150,6 +1203,21 @@ const styles = StyleSheet.create({
   autoStartSubtitle: {
     fontSize: 10,
     lineHeight: 14,
+  },
+  switchTouchable: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  switchTrack: {
+    width: 42,
+    height: 24,
+    borderRadius: 12,
+    justifyContent: 'center',
+  },
+  switchThumb: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
   },
   saveSettingsBtn: {
     paddingVertical: 12,
