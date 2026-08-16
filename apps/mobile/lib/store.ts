@@ -129,9 +129,9 @@ interface AppState {
   addSession: (session: Session) => void;
   addDistraction: (category: string) => void;
 
-  pomodoroSettings: { work: number; break: number; autoStartBreak: boolean };
+  pomodoroSettings: { work: number; break: number; autoStartBreak: boolean; autoStartTimer: boolean };
   setPomodoroSettings: (
-    settings: Partial<{ work: number; break: number; autoStartBreak: boolean }>
+    settings: Partial<{ work: number; break: number; autoStartBreak: boolean; autoStartTimer: boolean }>
   ) => void;
 
   resetAllData: () => void;
@@ -465,7 +465,7 @@ export const useAppStore = create<AppState>()(
           ),
         })),
 
-      pomodoroSettings: { work: 25, break: 5, autoStartBreak: false },
+      pomodoroSettings: { work: 25, break: 5, autoStartBreak: false, autoStartTimer: false },
       setPomodoroSettings: (updates) =>
         set((state) => ({
           pomodoroSettings: { ...state.pomodoroSettings, ...updates },
@@ -488,7 +488,7 @@ export const useAppStore = create<AppState>()(
           timerState: 'WORK',
           timeLeft: 25 * 60,
           isActive: false,
-          pomodoroSettings: { work: 25, break: 5, autoStartBreak: false },
+          pomodoroSettings: { work: 25, break: 5, autoStartBreak: false, autoStartTimer: false },
           background: 'dark',
         }),
     }),

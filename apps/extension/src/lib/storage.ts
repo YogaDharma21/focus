@@ -17,6 +17,7 @@ export const DEFAULT_STATE: AppStateData = {
     work: 25,
     break: 5,
     autoStartBreak: false,
+    autoStartTimer: false,
   },
   todos: [],
   groups: [

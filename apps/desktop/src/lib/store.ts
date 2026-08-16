@@ -111,8 +111,8 @@ export interface DesktopState {
   setSelectedSubtaskId: (id: string | null) => void;
 
   // Settings
-  pomodoroSettings: { work: number; break: number; autoStartBreak: boolean };
-  setPomodoroSettings: (settings: Partial<{ work: number; break: number; autoStartBreak: boolean }>) => void;
+  pomodoroSettings: { work: number; break: number; autoStartBreak: boolean; autoStartTimer: boolean };
+  setPomodoroSettings: (settings: Partial<{ work: number; break: number; autoStartBreak: boolean; autoStartTimer: boolean }>) => void;
 
   // Tasks & Groups
   todos: TodoItem[];
@@ -239,7 +239,7 @@ export const useDesktopStore = create<DesktopState>()(
       setSelectedSubtaskId: (id) => set({ selectedSubtaskId: id }),
 
       // Settings
-      pomodoroSettings: { work: 25, break: 5, autoStartBreak: false },
+      pomodoroSettings: { work: 25, break: 5, autoStartBreak: false, autoStartTimer: false },
       setPomodoroSettings: (updates) =>
         set((state) => ({
           pomodoroSettings: { ...state.pomodoroSettings, ...updates },

@@ -109,6 +109,10 @@ export const DeepFocusOverlay: React.FC = () => {
           setTimerState('WORK');
           setTimeLeft(pomodoroSettings.work * 60);
         }
+
+        if (pomodoroSettings.autoStartTimer) {
+          setIsActive(true);
+        }
       }
     } else {
       const durationWorked = Math.max(1, flowTimeElapsed);

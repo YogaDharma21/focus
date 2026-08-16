@@ -86,6 +86,7 @@ export function FocusTimer() {
   const [workInput, setWorkInput] = useState(pomodoroSettings.work.toString());
   const [breakInput, setBreakInput] = useState(pomodoroSettings.break.toString());
   const [autoBreak, setAutoBreak] = useState(pomodoroSettings.autoStartBreak);
+  const [autoTimer, setAutoTimer] = useState(pomodoroSettings.autoStartTimer);
 
 
 
@@ -195,13 +196,16 @@ export function FocusTimer() {
         setTimerState('WORK');
         setTimeLeft(pomodoroSettings.work * 60);
       }
+      if (pomodoroSettings.autoStartTimer) {
+        setIsActive(true);
+      }
     }
   };
 
   const handleSaveSettings = () => {
     const w = parseInt(workInput, 10) || 25;
     const b = parseInt(breakInput, 10) || 5;
-    setPomodoroSettings({ work: w, break: b, autoStartBreak: autoBreak });
+    setPomodoroSettings({ work: w, break: b, autoStartBreak: autoBreak, autoStartTimer: autoTimer });
     if (!isActive && timerMode === 'POMODORO') {
       setTimeLeft(timerState === 'WORK' ? w * 60 : b * 60);
     }
@@ -553,6 +557,7 @@ export function FocusTimer() {
               setWorkInput(pomodoroSettings.work.toString());
               setBreakInput(pomodoroSettings.break.toString());
               setAutoBreak(pomodoroSettings.autoStartBreak);
+              setAutoTimer(pomodoroSettings.autoStartTimer);
               setSettingsModalOpen(true);
             }}
             activeOpacity={0.7}
@@ -604,6 +609,15 @@ export function FocusTimer() {
               <Switch
                 value={autoBreak}
                 onValueChange={setAutoBreak}
+                trackColor={{ false: colors.border, true: colors.primary }}
+              />
+            </View>
+
+            <View style={styles.switchRow}>
+              <Text style={[styles.settingLabel, { color: colors.text }]}>Auto-start Timer</Text>
+              <Switch
+                value={autoTimer}
+                onValueChange={setAutoTimer}
                 trackColor={{ false: colors.border, true: colors.primary }}
               />
             </View>

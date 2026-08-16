@@ -154,6 +154,9 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
         setTimerState('WORK');
         setTimeLeft(pomodoroSettings.work * 60);
       }
+      if (pomodoroSettings.autoStartTimer) {
+        setIsActive(true);
+      }
     }
   };
 

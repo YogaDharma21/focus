@@ -111,6 +111,9 @@ export function DeepFocusOverlay() {
         setTimerState('WORK');
         setTimeLeft(pomodoroSettings.work * 60);
       }
+      if (pomodoroSettings.autoStartTimer) {
+        setIsActive(true);
+      }
     }
   };
 

@@ -318,7 +318,9 @@ async function startBackgroundTimer() {
         const updatedTodayMins = getTodayMinutesFromSessions(newSessionList);
         const streaks = calculateStreaksFromSessions(newSessionList);
 
-        const autoStart = isWork && state.pomodoroSettings.autoStartBreak;
+        const autoStart = isWork
+          ? state.pomodoroSettings.autoStartBreak
+          : (state.pomodoroSettings.autoStartTimer ?? false);
 
         let updatedTodos = state.todos;
         if (isWork && state.selectedTodoId) {

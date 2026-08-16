@@ -138,6 +138,7 @@ export function Popup() {
   const [workMinsInput, setWorkMinsInput] = useState(25);
   const [breakMinsInput, setBreakMinsInput] = useState(5);
   const [autoStartBreakInput, setAutoStartBreakInput] = useState(false);
+  const [autoStartTimerInput, setAutoStartTimerInput] = useState(false);
 
   // Music Player State & Controls
   const [isMusicExpanded, setIsMusicExpanded] = useState(false);
@@ -210,6 +211,7 @@ export function Popup() {
       setWorkMinsInput(initial.pomodoroSettings.work);
       setBreakMinsInput(initial.pomodoroSettings.break);
       setAutoStartBreakInput(initial.pomodoroSettings.autoStartBreak);
+      setAutoStartTimerInput(initial.pomodoroSettings.autoStartTimer || false);
     });
 
     const unsubscribe = subscribeToStateChanges((updated) => {
@@ -356,8 +358,12 @@ export function Popup() {
       }
     }
 
+    const autoStart = isWorkOrFlow
+      ? state.pomodoroSettings.autoStartBreak
+      : (state.pomodoroSettings.autoStartTimer ?? false);
+
     updateState({
-      isActive: isWorkOrFlow && state.pomodoroSettings.autoStartBreak,
+      isActive: autoStart,
       deepFocusMode: false,
       timerState: nextState,
       previousMode: prevMode,
@@ -410,7 +416,8 @@ export function Popup() {
       pomodoroSettings: {
         work,
         break: brk,
-        autoStartBreak: autoStartBreakInput
+        autoStartBreak: autoStartBreakInput,
+        autoStartTimer: autoStartTimerInput
       },
       timeLeft: state.isActive ? state.timeLeft : newTimeLeft
     });
@@ -1127,6 +1134,34 @@ export function Popup() {
                 <div
                   className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
                     autoStartBreakInput
+                      ? "left-[22px] bg-black"
+                      : "left-[2px] bg-neutral-400"
+                  }`}
+                />
+              </div>
+            </div>
+
+            {/* Auto-start Timer Toggle */}
+            <div className={`p-3 rounded-xl border flex items-center justify-between ${
+              "bg-neutral-900 border-neutral-800"
+            }`}>
+              <div className="flex flex-col">
+                <span className="text-xs font-bold font-sans">Auto-start Timer</span>
+                <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>
+                  Launch focus timer immediately after break
+                </span>
+              </div>
+              <div
+                onClick={() => setAutoStartTimerInput(!autoStartTimerInput)}
+                className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
+                  autoStartTimerInput
+                    ? "bg-white"
+                    : "bg-neutral-700"
+                }`}
+              >
+                <div
+                  className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
+                    autoStartTimerInput
                       ? "left-[22px] bg-black"
                       : "left-[2px] bg-neutral-400"
                   }`}
@@ -1987,7 +2022,13 @@ export function Popup() {
 
               {/* Timer Settings Button */}
               <button
-                onClick={() => setShowSettingsModal(true)}
+                onClick={() => {
+                  setWorkMinsInput(state.pomodoroSettings.work);
+                  setBreakMinsInput(state.pomodoroSettings.break);
+                  setAutoStartBreakInput(state.pomodoroSettings.autoStartBreak);
+                  setAutoStartTimerInput(state.pomodoroSettings.autoStartTimer || false);
+                  setShowSettingsModal(true);
+                }}
                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
                   "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
                 }`}

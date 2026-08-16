@@ -78,6 +78,7 @@ export interface AppStateData {
     work: number; // minutes
     break: number; // minutes
     autoStartBreak: boolean;
+    autoStartTimer: boolean;
   };
   
   todos: TodoItem[];

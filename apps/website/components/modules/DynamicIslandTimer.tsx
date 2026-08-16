@@ -173,6 +173,9 @@ export function DynamicIslandTimer() {
                 setTimerState("WORK");
                 setTimeLeft(pomodoroSettings.work * 60);
             }
+            if (pomodoroSettings.autoStartTimer) {
+                setIsActive(true);
+            }
         } else if (timerMode === "STOPWATCH" && duration > 0) {
             setPreviousMode("STOPWATCH");
             const breakSeconds = Math.floor(duration / 5);
@@ -180,6 +183,9 @@ export function DynamicIslandTimer() {
                 setTimerMode("POMODORO");
                 setTimerState("BREAK");
                 setTimeLeft(breakSeconds);
+                if (pomodoroSettings.autoStartBreak) {
+                    setIsActive(true);
+                }
             } else {
                 setTimeLeft(0);
             }

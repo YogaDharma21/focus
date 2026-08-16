@@ -119,6 +119,10 @@ export const FocusTimer: React.FC = () => {
           setTimerState('WORK');
           setTimeLeft(pomodoroSettings.work * 60);
         }
+
+        if (pomodoroSettings.autoStartTimer) {
+          setIsActive(true);
+        }
       }
     } else {
       const durationWorked = Math.max(1, flowTimeElapsed);
@@ -624,6 +628,19 @@ export const FocusTimer: React.FC = () => {
                 </div>
                 <div className={`w-10 h-[22px] rounded-full p-[3px] transition-colors duration-200 shrink-0 ml-4 ${pomodoroSettings.autoStartBreak ? 'bg-zinc-200' : 'bg-zinc-600'}`}>
                   <div className={`w-4 h-4 rounded-full transition-transform duration-200 ${pomodoroSettings.autoStartBreak ? 'translate-x-[18px] bg-zinc-900' : 'translate-x-0 bg-zinc-400'}`} />
+                </div>
+              </div>
+
+              <div 
+                className="flex items-center justify-between bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 mt-1 cursor-pointer"
+                onClick={() => setPomodoroSettings({ autoStartTimer: !pomodoroSettings.autoStartTimer })}
+              >
+                <div className="space-y-0.5">
+                  <span className="text-xs font-semibold text-white block">Auto-start Timer</span>
+                  <span className="text-[10px] text-zinc-400">Launch focus timer immediately after break</span>
+                </div>
+                <div className={`w-10 h-[22px] rounded-full p-[3px] transition-colors duration-200 shrink-0 ml-4 ${pomodoroSettings.autoStartTimer ? 'bg-zinc-200' : 'bg-zinc-600'}`}>
+                  <div className={`w-4 h-4 rounded-full transition-transform duration-200 ${pomodoroSettings.autoStartTimer ? 'translate-x-[18px] bg-zinc-900' : 'translate-x-0 bg-zinc-400'}`} />
                 </div>
               </div>
             </div>

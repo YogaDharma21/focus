@@ -178,6 +178,9 @@ export function FocusTimer() {
                 setTimerState("WORK");
                 setTimeLeft(pomodoroSettings.work * 60);
             }
+            if (pomodoroSettings.autoStartTimer) {
+                setIsActive(true);
+            }
         } else if (timerMode === "STOPWATCH" && duration > 0) {
             setPreviousMode("STOPWATCH");
             const breakSeconds = Math.floor(duration / 5);
@@ -185,6 +188,9 @@ export function FocusTimer() {
                 setTimerMode("POMODORO");
                 setTimerState("BREAK");
                 setTimeLeft(breakSeconds);
+                if (pomodoroSettings.autoStartBreak) {
+                    setIsActive(true);
+                }
             } else {
                 setTimeLeft(0);
             }
@@ -673,6 +679,26 @@ export function FocusTimer() {
                                         onCheckedChange={(checked: boolean) =>
                                             setPomodoroSettings({
                                                 autoStartBreak: checked,
+                                            })
+                                        }
+                                        className="scale-110"
+                                    />
+                                </div>
+
+                                <div className="p-4 rounded-[var(--radius)] bg-primary/5 border border-primary/10 flex items-center justify-between shadow-inner">
+                                    <div className="space-y-0.5">
+                                        <Label className="text-base font-semibold">
+                                            Auto-start Timer
+                                        </Label>
+                                        <p className="text-[10px] text-muted-foreground">
+                                            Launch focus timer immediately after break
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        checked={pomodoroSettings.autoStartTimer}
+                                        onCheckedChange={(checked: boolean) =>
+                                            setPomodoroSettings({
+                                                autoStartTimer: checked,
                                             })
                                         }
                                         className="scale-110"

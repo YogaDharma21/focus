@@ -69,6 +69,9 @@ export default function TabLayout() {
                   setTimerState('WORK');
                   setTimeLeft(state.pomodoroSettings.work * 60);
                 }
+                if (state.pomodoroSettings.autoStartTimer) {
+                  setIsActive(true);
+                }
               }
               return 0;
             }
