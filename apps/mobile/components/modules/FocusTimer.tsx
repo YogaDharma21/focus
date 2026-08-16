@@ -117,7 +117,12 @@ export function FocusTimer() {
   };
 
   const toggleTimer = () => {
-    setIsActive(!isActive);
+    const nextActive = !isActive;
+    setIsActive(nextActive);
+    const isWorkOrFlow = timerMode === 'STOPWATCH' || (timerMode === 'POMODORO' && timerState === 'WORK');
+    if (nextActive && isWorkOrFlow) {
+      setDeepFocusMode(true);
+    }
   };
 
   const resetTimer = () => {
