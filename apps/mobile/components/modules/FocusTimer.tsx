@@ -59,7 +59,7 @@ function CustomToggleSwitch({ value, onToggle }: CustomToggleSwitchProps) {
       duration: 180,
       useNativeDriver: false,
     }).start();
-  }, [value]);
+  }, [value, animatedValue]);
 
   const translateX = animatedValue.interpolate({
     inputRange: [0, 1],
