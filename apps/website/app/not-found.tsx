@@ -26,7 +26,7 @@ export default function NotFound() {
             Lost Your Flow?
           </h2>
           <p className="text-muted-foreground text-sm sm:text-base leading-relaxed mb-8 max-w-md mx-auto">
-            The page you are looking for has drifted away or does not exist. Let's get your attention back on track.
+            The page you are looking for has drifted away or does not exist. Let&apos;s get your attention back on track.
           </p>
 
           {/* Single Action Button */}

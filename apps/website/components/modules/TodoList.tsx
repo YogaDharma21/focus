@@ -1,7 +1,8 @@
 "use client";
 
 import { useAppStore, TodoItem } from "@/lib/store";
-import { useState, useEffect } from "react";
+import { useShallow } from "zustand/react/shallow";
+import { useState } from "react";
 import {
     CheckSquare,
     Trash2,
@@ -9,7 +10,6 @@ import {
     Calendar as CalendarIcon,
     List,
     Settings2,
-    CheckCircle2,
     Target,
     Trash,
     Check,
@@ -43,7 +43,6 @@ import {
     PopoverContent,
     PopoverTrigger,
 } from "@/components/ui/popover";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
@@ -66,7 +65,27 @@ export function TodoList() {
         selectedTodoId,
         setSelectedTodoId,
         setSelectedSubtaskId,
-    } = useAppStore();
+    } = useAppStore(
+        useShallow((s) => ({
+            todos: s.todos,
+            addTodo: s.addTodo,
+            toggleTodo: s.toggleTodo,
+            deleteTodo: s.deleteTodo,
+            updateTodo: s.updateTodo,
+            groups: s.groups,
+            addGroup: s.addGroup,
+            deleteGroup: s.deleteGroup,
+            addSubtask: s.addSubtask,
+            toggleSubtask: s.toggleSubtask,
+            deleteSubtask: s.deleteSubtask,
+            updateSubtask: s.updateSubtask,
+            setSessionName: s.setSessionName,
+            setView: s.setView,
+            selectedTodoId: s.selectedTodoId,
+            setSelectedTodoId: s.setSelectedTodoId,
+            setSelectedSubtaskId: s.setSelectedSubtaskId,
+        }))
+    );
 
     const [newTodo, setNewTodo] = useState("");
     const [selectedGroupId, setSelectedGroupId] = useState<string>("current");
@@ -80,13 +99,13 @@ export function TodoList() {
     const [editingSubtaskId, setEditingSubtaskId] = useState<string | null>(null);
     const [editingSubtaskText, setEditingSubtaskText] = useState("");
     const editingTask = todos.find((t) => t.id === editingTaskId) || null;
-    
-    useEffect(() => {
-        if (editingTask) {
-            setIsEditingTaskName(false);
-            setEditingTaskName(editingTask.text);
-        }
-    }, [editingTask?.id]);
+
+    const handleOpenEditTask = (todo: TodoItem) => {
+        setSelectedTodoId(todo.id);
+        setEditingTaskId(todo.id);
+        setIsEditingTaskName(false);
+        setEditingTaskName(todo.text);
+    };
 
     const handleAddTodo = (e: React.FormEvent) => {
         e.preventDefault();
@@ -339,10 +358,7 @@ export function TodoList() {
 
                             <div
                                 className="flex-1 space-y-1 cursor-pointer"
-                                onClick={() => {
-                                    setSelectedTodoId(todo.id);
-                                    setEditingTaskId(todo.id);
-                                }}
+                                onClick={() => handleOpenEditTask(todo)}
                             >
                                 <p
                                     className={cn(
