@@ -16,8 +16,10 @@ export const DEFAULT_STATE: AppStateData = {
   pomodoroSettings: {
     work: 25,
     break: 5,
+    longBreak: 15,
     autoStartBreak: false,
   },
+  pomodoroCount: 0,
   todos: [],
   groups: [
     { id: "current", name: "Current Tasks", type: "system" },

@@ -57,6 +57,8 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
     addSession,
     addDistraction,
     pomodoroSettings,
+    pomodoroCount,
+    setPomodoroCount,
     incrementTodoSession,
   } = useAppStore();
 
@@ -87,7 +89,8 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
     setIsActive(false);
     setTimerMode('POMODORO');
     setTimerState('BREAK');
-    setTimeLeft(pomodoroSettings.break * 60);
+    const isLongBreak = (pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0;
+    setTimeLeft(isLongBreak ? (pomodoroSettings.longBreak || 15) * 60 : pomodoroSettings.break * 60);
   };
 
   const selectFlow = () => {
@@ -128,6 +131,8 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
     } else if (timerMode === 'POMODORO' && timerState === 'WORK') {
       let sessionDuration = pomodoroSettings.work * 60 - timeLeft;
       if (sessionDuration <= 0) sessionDuration = pomodoroSettings.work * 60;
+      const nextCount = (pomodoroCount || 0) + 1;
+      setPomodoroCount(nextCount);
 
       addSession({
         id: Date.now().toString(),
@@ -138,9 +143,14 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
       if (selectedTodoId) {
         incrementTodoSession(selectedTodoId);
       }
+      const isLongBreak = nextCount % 4 === 0;
+      const breakDuration = isLongBreak
+        ? (pomodoroSettings.longBreak || 15) * 60
+        : (pomodoroSettings.break || 5) * 60;
+
       setPreviousMode('POMODORO');
       setTimerState('BREAK');
-      setTimeLeft(pomodoroSettings.break * 60);
+      setTimeLeft(breakDuration);
       if (pomodoroSettings.autoStartBreak) {
         setIsActive(true);
       }

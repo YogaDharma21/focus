@@ -41,6 +41,8 @@ export function FocusTimer() {
         addSession,
         pomodoroSettings,
         setPomodoroSettings,
+        pomodoroCount,
+        setPomodoroCount,
         todos,
         addTodo,
         updateTodo,
@@ -96,7 +98,7 @@ export function FocusTimer() {
                 fallback.play().catch(() => {});
             }
         } catch {
-            // ignore
+            // Audio play might be blocked by browser policies
         }
     }, [soundEffectEnabled, soundEffectVolume]);
 
@@ -162,9 +164,16 @@ export function FocusTimer() {
         }
 
         if (timerMode === "POMODORO" && timerState === "WORK") {
+            const nextCount = (pomodoroCount || 0) + 1;
+            setPomodoroCount(nextCount);
+            const isLongBreak = nextCount % 4 === 0;
+            const breakDuration = isLongBreak
+                ? (pomodoroSettings.longBreak || 15) * 60
+                : (pomodoroSettings.break || 5) * 60;
+
             setPreviousMode("POMODORO");
             setTimerState("BREAK");
-            setTimeLeft(pomodoroSettings.break * 60);
+            setTimeLeft(breakDuration);
             if (pomodoroSettings.autoStartBreak) {
                 setIsActive(true);
             }
@@ -231,6 +240,8 @@ export function FocusTimer() {
         setDeepFocusMode,
         playSound,
         pomodoroSettings,
+        pomodoroCount,
+        setPomodoroCount,
         sessionName,
         selectedTodoId,
         selectedSubtaskId,
@@ -242,19 +253,20 @@ export function FocusTimer() {
         selectedTodo,
     ]);
 
-    const prevSettingsRef = useRef({ work: pomodoroSettings.work, break: pomodoroSettings.break });
+    const prevSettingsRef = useRef({ work: pomodoroSettings.work, break: pomodoroSettings.break, longBreak: pomodoroSettings.longBreak });
 
     useEffect(() => {
         const prev = prevSettingsRef.current;
-        if (pomodoroSettings.work !== prev.work || pomodoroSettings.break !== prev.break) {
-            prevSettingsRef.current = { work: pomodoroSettings.work, break: pomodoroSettings.break };
+        if (pomodoroSettings.work !== prev.work || pomodoroSettings.break !== prev.break || pomodoroSettings.longBreak !== prev.longBreak) {
+            prevSettingsRef.current = { work: pomodoroSettings.work, break: pomodoroSettings.break, longBreak: pomodoroSettings.longBreak };
             if (timerMode === "POMODORO" && timerState === "WORK") {
                 setTimeLeft(pomodoroSettings.work * 60);
             } else if (timerMode === "POMODORO" && timerState === "BREAK") {
-                setTimeLeft(pomodoroSettings.break * 60);
+                const isLongBreak = (pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0;
+                setTimeLeft(isLongBreak ? (pomodoroSettings.longBreak || 15) * 60 : pomodoroSettings.break * 60);
             }
         }
-    }, [pomodoroSettings.work, pomodoroSettings.break, timerMode, timerState, setTimeLeft]);
+    }, [pomodoroSettings.work, pomodoroSettings.break, pomodoroSettings.longBreak, pomodoroCount, timerMode, timerState, setTimeLeft]);
 
 
 
@@ -353,6 +365,40 @@ export function FocusTimer() {
                     <span>Flow</span>
                 </button>
             </div>
+
+            {/* Pomodoro Cycle & Progress Indicator */}
+            {timerMode === "POMODORO" && (
+                <div className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-secondary/40 border border-border/50 text-xs font-mono text-foreground/80 shadow-sm mb-4 animate-in fade-in duration-150">
+                    <div className="flex items-center gap-1.5">
+                        {[0, 1, 2, 3].map((index) => {
+                            const currentCycleStep = (pomodoroCount || 0) % 4;
+                            const isCompleted = index < currentCycleStep;
+                            const isCurrent = index === currentCycleStep && timerState === "WORK";
+                            return (
+                                <div
+                                    key={index}
+                                    className={cn(
+                                        "w-2 h-2 rounded-full transition-all duration-300",
+                                        isCompleted
+                                            ? "bg-primary shadow-[0_0_6px_rgba(255,255,255,0.7)]"
+                                            : isCurrent
+                                            ? "bg-primary/70 ring-2 ring-primary/30 animate-pulse"
+                                            : "bg-muted-foreground/30",
+                                    )}
+                                    title={`Pomodoro ${index + 1} of 4`}
+                                />
+                            );
+                        })}
+                    </div>
+                    <span className="text-[11px] font-medium text-foreground/90">
+                        {timerState === "BREAK"
+                            ? (pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0
+                                ? `Long Break (${pomodoroSettings.longBreak || 15}m)`
+                                : `Short Break (${pomodoroSettings.break || 5}m)`
+                            : `Pomodoro ${((pomodoroCount || 0) % 4) + 1} of 4`}
+                    </span>
+                </div>
+            )}
 
             <div className="flex flex-col items-center gap-4 mb-12 w-full">
                 <div className="text-[3.5rem] sm:text-[5rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow">
@@ -635,7 +681,7 @@ export function FocusTimer() {
 
                                     <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
                                         <Label className="font-medium">
-                                            Break Duration
+                                            Short Break Duration
                                         </Label>
                                         <div className="flex items-center gap-2">
                                             <Input
@@ -647,6 +693,30 @@ export function FocusTimer() {
                                                             parseInt(
                                                                 e.target.value,
                                                             ) || 5,
+                                                    })
+                                                }
+                                                className="w-16 h-8 text-center bg-background/50 border-none"
+                                            />
+                                            <span className="text-xs text-muted-foreground">
+                                                min
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
+                                        <Label className="font-medium">
+                                            Long Break Duration
+                                        </Label>
+                                        <div className="flex items-center gap-2">
+                                            <Input
+                                                type="number"
+                                                value={pomodoroSettings.longBreak || 15}
+                                                onChange={(e) =>
+                                                    setPomodoroSettings({
+                                                        longBreak:
+                                                            parseInt(
+                                                                e.target.value,
+                                                            ) || 15,
                                                     })
                                                 }
                                                 className="w-16 h-8 text-center bg-background/50 border-none"

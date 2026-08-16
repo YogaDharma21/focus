@@ -24,6 +24,8 @@ export const DeepFocusOverlay: React.FC = () => {
     addDistraction,
     addSession,
     pomodoroSettings,
+    pomodoroCount,
+    setPomodoroCount,
     todos,
     updateTodo,
     selectedTodoId,
@@ -72,6 +74,8 @@ export const DeepFocusOverlay: React.FC = () => {
     if (timerMode === 'POMODORO') {
       if (timerState === 'WORK') {
         const durationWorked = Math.max(60, (pomodoroSettings.work * 60) - timeLeft);
+        const nextCount = (pomodoroCount || 0) + 1;
+        setPomodoroCount(nextCount);
         
         addSession({
           id: crypto.randomUUID(),
@@ -90,11 +94,21 @@ export const DeepFocusOverlay: React.FC = () => {
           });
         }
 
-        electron.showNotification("Session Complete!", `Great work finishing "${title}"! Time for a break.`);
+        const isLongBreak = nextCount % 4 === 0;
+        const breakDuration = isLongBreak
+          ? (pomodoroSettings.longBreak || 15) * 60
+          : (pomodoroSettings.break || 5) * 60;
+
+        electron.showNotification(
+          isLongBreak ? "4 Pomodoros Completed!" : "Session Complete!",
+          isLongBreak 
+            ? `Great job completing 4 pomodoro sessions! Time for a ${pomodoroSettings.longBreak || 15} minute long break.`
+            : `Great work finishing "${title}"! Time for a break.`
+        );
         
         setPreviousMode('POMODORO');
         setTimerState('BREAK');
-        setTimeLeft(pomodoroSettings.break * 60);
+        setTimeLeft(breakDuration);
 
         if (pomodoroSettings.autoStartBreak) {
           setIsActive(true);
@@ -241,7 +255,41 @@ export const DeepFocusOverlay: React.FC = () => {
       <div />
 
       {/* Center Giant Clock & Subtle Controls */}
-      <div className="flex flex-col items-center justify-center space-y-8 my-auto">
+      <div className="flex flex-col items-center justify-center space-y-6 my-auto">
+        {/* Pomodoro Cycle & Progress Indicator */}
+        {timerMode === 'POMODORO' && (
+          <div className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-zinc-900/80 border border-zinc-800 text-xs font-mono text-zinc-300 shadow-sm animate-in fade-in duration-150">
+            <div className="flex items-center gap-1.5">
+              {[0, 1, 2, 3].map((index) => {
+                const currentCycleStep = (pomodoroCount || 0) % 4;
+                const isCompleted = index < currentCycleStep;
+                const isCurrent = index === currentCycleStep && timerState === 'WORK';
+                return (
+                  <div
+                    key={index}
+                    className={cn(
+                      "w-2 h-2 rounded-full transition-all duration-300",
+                      isCompleted
+                        ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.7)]"
+                        : isCurrent
+                        ? "bg-zinc-300 ring-2 ring-white/30"
+                        : "bg-zinc-700/60"
+                    )}
+                    title={`Pomodoro ${index + 1} of 4`}
+                  />
+                );
+              })}
+            </div>
+            <span className="text-[11px] font-medium text-zinc-300">
+              {timerState === 'BREAK'
+                ? ((pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0
+                    ? `Long Break (${pomodoroSettings.longBreak || 15}m)`
+                    : `Short Break (${pomodoroSettings.break || 5}m)`)
+                : `Pomodoro ${((pomodoroCount || 0) % 4) + 1} of 4`}
+            </span>
+          </div>
+        )}
+
         <h1 className="text-[120px] md:text-[150px] font-extrabold tracking-tight text-white leading-none font-sans select-none">
           {timeString}
         </h1>
