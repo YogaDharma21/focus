@@ -1,22 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useEffect, useRef, useSyncExternalStore } from "react";
 import { useAppStore } from "@/lib/store";
+import { useShallow } from "zustand/react/shallow";
 
 export function useMediaQuery(query: string): boolean {
-    const [matches, setMatches] = useState(false);
-
-    useEffect(() => {
-        const media = window.matchMedia(query);
-        if (media.matches !== matches) {
-            setMatches(media.matches);
-        }
-
-        const listener = () => setMatches(media.matches);
-        media.addEventListener("change", listener);
-
-        return () => media.removeEventListener("change", listener);
-    }, [matches, query]);
-
-    return matches;
+    return useSyncExternalStore(
+        (callback) => {
+            const media = window.matchMedia(query);
+            media.addEventListener("change", callback);
+            return () => media.removeEventListener("change", callback);
+        },
+        () => window.matchMedia(query).matches,
+        () => false
+    );
 }
 
 export function useTimerEngine() {
@@ -37,7 +32,26 @@ export function useTimerEngine() {
         setDeepFocusMode,
         soundEffectVolume,
         soundEffectEnabled,
-    } = useAppStore();
+    } = useAppStore(
+        useShallow((s) => ({
+            isActive: s.isActive,
+            timerMode: s.timerMode,
+            timerState: s.timerState,
+            previousMode: s.previousMode,
+            setTimeLeft: s.setTimeLeft,
+            setIsActive: s.setIsActive,
+            setTimerState: s.setTimerState,
+            setTimerMode: s.setTimerMode,
+            setPreviousMode: s.setPreviousMode,
+            pomodoroSettings: s.pomodoroSettings,
+            pomodoroCount: s.pomodoroCount,
+            setPomodoroCount: s.setPomodoroCount,
+            addSession: s.addSession,
+            setDeepFocusMode: s.setDeepFocusMode,
+            soundEffectVolume: s.soundEffectVolume,
+            soundEffectEnabled: s.soundEffectEnabled,
+        }))
+    );
 
     const handleAutoCompleteSession = React.useCallback(() => {
         setIsActive(false);

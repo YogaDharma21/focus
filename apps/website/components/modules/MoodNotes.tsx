@@ -3,6 +3,7 @@
 import React from "react";
 import { useState } from "react";
 import { useAppStore } from "@/lib/store";
+import { useShallow } from "zustand/react/shallow";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
@@ -29,7 +30,13 @@ const MOODS = [
 ];
 
 export function MoodNotes() {
-    const { moodNotes, addMoodNote, deleteMoodNote } = useAppStore();
+    const { moodNotes, addMoodNote, deleteMoodNote } = useAppStore(
+        useShallow((s) => ({
+            moodNotes: s.moodNotes,
+            addMoodNote: s.addMoodNote,
+            deleteMoodNote: s.deleteMoodNote,
+        }))
+    );
     const [selectedMood, setSelectedMood] = useState<string>("");
     const [noteText, setNoteText] = useState("");
 
