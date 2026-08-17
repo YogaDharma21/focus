@@ -497,6 +497,7 @@ export const useAppStore = create<AppState>()(
           timerState: 'WORK',
           timeLeft: 25 * 60,
           isActive: false,
+          isMusicPlaying: false,
           pomodoroSettings: { work: 25, break: 5, longBreak: 15, autoStartBreak: false, autoStartTimer: false },
           pomodoroCount: 0,
           background: 'dark',
