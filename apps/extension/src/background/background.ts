@@ -387,9 +387,12 @@ async function startBackgroundTimer() {
         restoreBlockedTabs();
 
         if (typeof chrome !== "undefined" && chrome.notifications) {
+          const iconUrl = typeof chrome.runtime?.getURL === "function"
+            ? chrome.runtime.getURL("icons/icon128.png")
+            : "icons/icon128.png";
           chrome.notifications.create({
             type: "basic",
-            iconUrl: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2'><circle cx='12' cy='12' r='10'/><path d='M12 6v6l4 2'/></svg>",
+            iconUrl,
             title: "Session Finished!",
             message: state.timerState === "WORK"
               ? "Pomodoro session complete! Starting break."
