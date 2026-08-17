@@ -86,8 +86,6 @@ apps/extension/
 │   ├── blocked/
 │   │   ├── Blocked.tsx        # Blocked site redirect page
 │   │   └── main.tsx           # Blocked page entry point
-│   ├── content/
-│   │   └── content.ts         # Content script injected into pages
 │   ├── lib/
 │   │   └── storage.ts         # Chrome storage wrapper (get/save/subscribe)
 │   ├── popup/
@@ -109,11 +107,9 @@ apps/extension/
 
 2. **Background Service Worker** (`background.ts`) — Runs independently of the popup. Handles the timer countdown/countup, session transitions, badge updates, desktop notifications, and enforces site blocking by monitoring tab events.
 
-3. **Content Script** (`content.ts`) — Injected into all pages at `document_start`. Works alongside the background script for page-level interactions.
+3. **Blocked Page** (`blocked.html` + `Blocked.tsx`) — A full-page redirect shown when a user tries to visit a blocked site during an active focus session.
 
-4. **Blocked Page** (`blocked.html` + `Blocked.tsx`) — A full-page redirect shown when a user tries to visit a blocked site during an active focus session.
-
-5. **Storage Layer** (`storage.ts`) — Wraps `chrome.storage.local` with typed get/save helpers and a `subscribeToStateChanges` listener for reactive UI updates.
+4. **Storage Layer** (`storage.ts`) — Wraps `chrome.storage.local` with typed get/save helpers and a `subscribeToStateChanges` listener for reactive UI updates.
 
 ---
 
@@ -177,7 +173,7 @@ The extension requests the following permissions (defined in `manifest.json`):
 | `notifications` | Desktop notifications when sessions complete |
 | `alarms` | Scheduling support for timer operations |
 | `activeTab` | Access to the currently active tab for shield enforcement |
-| `<all_urls>` (host) | Required for content script injection and universal site blocking |
+| `<all_urls>` (host) | Required for universal site blocking |
 
 ---
 
