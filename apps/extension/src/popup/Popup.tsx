@@ -269,9 +269,9 @@ export function Popup() {
     const starting = !state.isActive;
     const isWorkOrFlow = state.timerState === "WORK" || state.timerState === "FLOW";
     if (starting && isWorkOrFlow) {
-      updateState({ isActive: true, deepFocusMode: true });
+      updateState({ isActive: true, deepFocusMode: true, isMusicPlaying: true });
     } else {
-      updateState({ isActive: starting, deepFocusMode: false });
+      updateState({ isActive: starting, deepFocusMode: false, isMusicPlaying: false });
     }
   };
 
@@ -286,7 +286,7 @@ export function Popup() {
       defaultTime = 0;
     }
 
-    updateState({ isActive: false, deepFocusMode: false, timeLeft: defaultTime });
+    updateState({ isActive: false, deepFocusMode: false, timeLeft: defaultTime, isMusicPlaying: false });
   };
 
   const switchTimerModeAndState = (mode: "POMODORO" | "FLOW", timerState: "WORK" | "BREAK" | "FLOW") => {
@@ -305,6 +305,7 @@ export function Popup() {
       timerState,
       previousMode: prevMode,
       isActive: false,
+      isMusicPlaying: false,
       timeLeft: nextTime
     });
   };
@@ -383,9 +384,11 @@ export function Popup() {
     }
 
     const autoStart = isWorkOrFlow ? state.pomodoroSettings.autoStartBreak : state.pomodoroSettings.autoStartTimer;
+    const nextIsMusicPlaying = (nextState === "WORK" || nextState === "FLOW") && autoStart;
 
     updateState({
       isActive: autoStart,
+      isMusicPlaying: nextIsMusicPlaying,
       deepFocusMode: !isWorkOrFlow && autoStart,
       timerMode: nextState === "FLOW" ? "FLOW" : "POMODORO",
       timerState: nextState,
@@ -414,6 +417,7 @@ export function Popup() {
     };
     updateState({
       isActive: false,
+      isMusicPlaying: false,
       distractions: [...state.distractions, entry]
     });
     setShowDistractionPicker(false);
