@@ -457,6 +457,7 @@ export const useAppStore = create<AppState>()(
                         },
                     ],
                     mediaPlayerOpen: false,
+                    isMusicPlaying: false,
                     timerMode: "POMODORO",
                     timerState: "WORK",
                     previousMode: "POMODORO",

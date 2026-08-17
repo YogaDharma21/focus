@@ -34,9 +34,11 @@ export default function TabLayout() {
     setDeepFocusMode,
     addSession,
     incrementTodoSession,
+    setIsMusicPlaying,
   } = useAppStore();
 
   const prevActiveRef = React.useRef(isActive);
+  const prevTimerRef = React.useRef({ isActive, timerMode, timerState });
 
   React.useEffect(() => {
     const isWorkOrFlow = timerMode === 'STOPWATCH' || (timerMode === 'POMODORO' && timerState === 'WORK');
@@ -45,6 +47,26 @@ export default function TabLayout() {
     }
     prevActiveRef.current = isActive;
   }, [isActive, timerMode, timerState, deepFocusMode, setDeepFocusMode]);
+
+  React.useEffect(() => {
+    const prev = prevTimerRef.current;
+    const isRunningFocus = isActive && (
+      (timerMode === 'POMODORO' && timerState === 'WORK') ||
+      timerMode === 'STOPWATCH'
+    );
+    const wasRunningFocus = prev.isActive && (
+      (prev.timerMode === 'POMODORO' && prev.timerState === 'WORK') ||
+      prev.timerMode === 'STOPWATCH'
+    );
+
+    if (isRunningFocus && (!wasRunningFocus || prev.timerState === 'BREAK')) {
+      setIsMusicPlaying(true);
+    } else if (!isRunningFocus && (wasRunningFocus || timerState === 'BREAK')) {
+      setIsMusicPlaying(false);
+    }
+
+    prevTimerRef.current = { isActive, timerMode, timerState };
+  }, [isActive, timerMode, timerState, setIsMusicPlaying]);
 
   React.useEffect(() => {
     let interval: any = null;

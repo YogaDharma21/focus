@@ -32,6 +32,7 @@ export function useTimerEngine() {
         setDeepFocusMode,
         soundEffectVolume,
         soundEffectEnabled,
+        setIsMusicPlaying,
     } = useAppStore(
         useShallow((s) => ({
             isActive: s.isActive,
@@ -50,8 +51,31 @@ export function useTimerEngine() {
             setDeepFocusMode: s.setDeepFocusMode,
             soundEffectVolume: s.soundEffectVolume,
             soundEffectEnabled: s.soundEffectEnabled,
+            setIsMusicPlaying: s.setIsMusicPlaying,
         }))
     );
+
+    const prevTimerRef = useRef({ isActive, timerMode, timerState });
+
+    useEffect(() => {
+        const prev = prevTimerRef.current;
+        const isRunningFocus = isActive && (
+            (timerMode === "POMODORO" && timerState === "WORK") ||
+            timerMode === "STOPWATCH"
+        );
+        const wasRunningFocus = prev.isActive && (
+            (prev.timerMode === "POMODORO" && prev.timerState === "WORK") ||
+            prev.timerMode === "STOPWATCH"
+        );
+
+        if (isRunningFocus && (!wasRunningFocus || prev.timerState === "BREAK")) {
+            setIsMusicPlaying(true);
+        } else if (!isRunningFocus && (wasRunningFocus || timerState === "BREAK")) {
+            setIsMusicPlaying(false);
+        }
+
+        prevTimerRef.current = { isActive, timerMode, timerState };
+    }, [isActive, timerMode, timerState, setIsMusicPlaying]);
 
     const handleAutoCompleteSession = React.useCallback(() => {
         setIsActive(false);

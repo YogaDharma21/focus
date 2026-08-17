@@ -326,6 +326,7 @@ async function startBackgroundTimer() {
         const streaks = calculateStreaksFromSessions(newSessionList);
 
         const autoStart = isWork ? state.pomodoroSettings.autoStartBreak : state.pomodoroSettings.autoStartTimer;
+        const nextIsMusicPlaying = !isWork && autoStart;
 
         let updatedTodos = state.todos;
         if (isWork && state.selectedTodoId) {
@@ -349,6 +350,7 @@ async function startBackgroundTimer() {
 
         await saveStoredState({
           isActive: autoStart,
+          isMusicPlaying: nextIsMusicPlaying,
           deepFocusMode: !isWork && autoStart,
           timerMode: nextState === "FLOW" ? "FLOW" : "POMODORO",
           timerState: nextState,
@@ -367,6 +369,12 @@ async function startBackgroundTimer() {
           },
         });
 
+        if (nextIsMusicPlaying) {
+          sendToOffscreen("PLAY_MUSIC", { volume: state.musicVolume ?? 0.8 });
+        } else {
+          sendToOffscreen("PAUSE_MUSIC");
+        }
+
         if (autoStart) {
           startBackgroundTimer();
         }
@@ -379,9 +387,12 @@ async function startBackgroundTimer() {
         restoreBlockedTabs();
 
         if (typeof chrome !== "undefined" && chrome.notifications) {
+          const iconUrl = typeof chrome.runtime?.getURL === "function"
+            ? chrome.runtime.getURL("icons/icon128.png")
+            : "icons/icon128.png";
           chrome.notifications.create({
             type: "basic",
-            iconUrl: "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='128' height='128' viewBox='0 0 24 24' fill='none' stroke='%23000000' stroke-width='2'><circle cx='12' cy='12' r='10'/><path d='M12 6v6l4 2'/></svg>",
+            iconUrl,
             title: "Session Finished!",
             message: state.timerState === "WORK"
               ? "Pomodoro session complete! Starting break."
@@ -451,6 +462,7 @@ if (typeof chrome !== "undefined" && chrome.storage) {
   chrome.storage.onChanged.addListener(async (changes, areaName) => {
     if (areaName === "local" && changes.focus_extension_state_v6) {
       const newState: AppStateData = changes.focus_extension_state_v6.newValue;
+      const oldState: AppStateData | undefined = changes.focus_extension_state_v6.oldValue;
       if (newState?.isActive) {
         if (timerInterval === null) {
           startBackgroundTimer();
@@ -459,6 +471,14 @@ if (typeof chrome !== "undefined" && chrome.storage) {
         stopBackgroundTimer();
         updateBadge(newState?.timeLeft || 0, false, newState?.timerState || "WORK");
         restoreBlockedTabs();
+      }
+
+      if (newState && oldState && newState.isMusicPlaying !== oldState.isMusicPlaying) {
+        if (newState.isMusicPlaying) {
+          await sendToOffscreen("PLAY_MUSIC", { volume: newState.musicVolume ?? 0.8 });
+        } else {
+          await sendToOffscreen("PAUSE_MUSIC");
+        }
       }
     }
   });
