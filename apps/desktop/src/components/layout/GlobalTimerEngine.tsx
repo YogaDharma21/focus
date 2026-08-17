@@ -22,12 +22,34 @@ export const GlobalTimerEngine: React.FC = () => {
     updateTodo,
     selectedTodoId,
     addSession,
-    soundEffectEnabled,
     sessionName,
     previousMode,
     setPreviousMode,
-    setDeepFocusMode
+    setDeepFocusMode,
+    setIsMusicPlaying
   } = useDesktopStore();
+
+  const prevTimerRef = React.useRef({ isActive, timerMode, timerState });
+
+  useEffect(() => {
+    const prev = prevTimerRef.current;
+    const isRunningFocus = isActive && (
+      (timerMode === 'POMODORO' && timerState === 'WORK') ||
+      timerMode === 'STOPWATCH'
+    );
+    const wasRunningFocus = prev.isActive && (
+      (prev.timerMode === 'POMODORO' && prev.timerState === 'WORK') ||
+      prev.timerMode === 'STOPWATCH'
+    );
+
+    if (isRunningFocus && (!wasRunningFocus || prev.timerState === 'BREAK')) {
+      setIsMusicPlaying(true);
+    } else if (!isRunningFocus && (wasRunningFocus || timerState === 'BREAK')) {
+      setIsMusicPlaying(false);
+    }
+
+    prevTimerRef.current = { isActive, timerMode, timerState };
+  }, [isActive, timerMode, timerState, setIsMusicPlaying]);
 
 
 
