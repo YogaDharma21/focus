@@ -1,40 +1,8 @@
-import { defineConfig, build } from "vite";
+import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import fs from "fs";
-
-function buildContentScript() {
-  return {
-    name: "build-content-script",
-    async closeBundle() {
-      await build({
-        configFile: false,
-        plugins: [],
-        resolve: {
-          alias: {
-            "@": path.resolve(__dirname, "./src"),
-          },
-        },
-        build: {
-          emptyOutDir: false,
-          outDir: "dist",
-          lib: {
-            entry: path.resolve(__dirname, "src/content/content.ts"),
-            name: "content",
-            formats: ["iife"],
-            fileName: () => "content.js",
-          },
-          rollupOptions: {
-            output: {
-              extend: true,
-            },
-          },
-        },
-      });
-    },
-  };
-}
 
 function copyExtensionAssets() {
   return {
@@ -49,7 +17,7 @@ function copyExtensionAssets() {
 
 export default defineConfig({
   base: './',
-  plugins: [react(), tailwindcss(), buildContentScript(), copyExtensionAssets()],
+  plugins: [react(), tailwindcss(), copyExtensionAssets()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
