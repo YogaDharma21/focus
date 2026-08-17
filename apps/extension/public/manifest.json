@@ -34,13 +34,6 @@
     "service_worker": "background.js",
     "type": "module"
   },
-  "content_scripts": [
-    {
-      "matches": ["<all_urls>"],
-      "js": ["content.js"],
-      "run_at": "document_start"
-    }
-  ],
   "web_accessible_resources": [
     {
       "resources": ["blocked.html", "offscreen.html", "assets/*", "icons/*", "music1.mp3", "soundeffect.mp3"],
