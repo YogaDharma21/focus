@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { playCompletionSound } from '../../lib/sound';
 import { 
-  Play, Pause, RotateCcw, AlertTriangle, Settings, CheckCircle2, 
+  Play, Pause, RotateCcw, AlertTriangle, Focus, CheckCircle2, 
   ChevronDown, Check, CheckSquare2, Square, Coffee, Timer, Clock, ListTodo, Edit3, X, FileText
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
@@ -45,7 +45,6 @@ export const FocusTimer: React.FC = () => {
     setPreviousMode
   } = useDesktopStore();
 
-  const [showSettings, setShowSettings] = useState(false);
   const [showTaskDropdown, setShowTaskDropdown] = useState(false);
   const [showDistractionMenu, setShowDistractionMenu] = useState(false);
 
@@ -610,125 +609,14 @@ export const FocusTimer: React.FC = () => {
         </button>
 
         <button
-          onClick={() => setShowSettings(!showSettings)}
+          onClick={() => setDeepFocusMode(true)}
           className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-all flex items-center justify-center shadow-md active:scale-95"
-          title="Timer Settings"
+          title="Deep Focus Mode"
         >
-          <Settings className="w-4 h-4" />
+          <Focus className="w-4 h-4" />
         </button>
+
       </div>
-
-      {/* Settings Modal */}
-      {showSettings && (
-        <div 
-          onClick={() => {
-            setShowSettings(false);
-            if (!isActive) {
-              setTimeLeft(timerState === 'WORK' ? pomodoroSettings.work * 60 : pomodoroSettings.break * 60);
-            }
-          }}
-          className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-150"
-        >
-          <div 
-            onClick={(e) => e.stopPropagation()}
-            className="w-80 bg-zinc-900 p-6 rounded-2xl border border-zinc-800 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150"
-          >
-            <h3 className="text-sm font-semibold text-zinc-100">Pomodoro Settings</h3>
-            
-            <div className="space-y-3">
-              <div>
-                <label className="text-xs text-zinc-400 block mb-1">Work Duration (Minutes)</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={120}
-                  value={pomodoroSettings.work}
-                  onChange={(e) => setPomodoroSettings({ work: Number(e.target.value) || 25 })}
-                  className="w-full shadcn-input px-3 py-2 text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-zinc-400 block mb-1">Short Break Duration (Minutes)</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={60}
-                  value={pomodoroSettings.break}
-                  onChange={(e) => setPomodoroSettings({ break: Number(e.target.value) || 5 })}
-                  className="w-full shadcn-input px-3 py-2 text-xs"
-                />
-              </div>
-
-              <div>
-                <label className="text-xs text-zinc-400 block mb-1">Long Break Duration (Minutes)</label>
-                <input
-                  type="number"
-                  min={1}
-                  max={60}
-                  value={pomodoroSettings.longBreak || 15}
-                  onChange={(e) => setPomodoroSettings({ longBreak: Number(e.target.value) || 15 })}
-                  className="w-full shadcn-input px-3 py-2 text-xs"
-                />
-              </div>
-
-              <div 
-                className="flex items-center justify-between bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 mt-1 cursor-pointer"
-                onClick={() => setPomodoroSettings({ autoStartBreak: !pomodoroSettings.autoStartBreak })}
-              >
-                <div className="space-y-0.5">
-                  <span className="text-xs font-semibold text-white block">Auto-start Break</span>
-                  <span className="text-[10px] text-zinc-400">Launch break timer immediately after work</span>
-                </div>
-                <div className={`w-10 h-[22px] rounded-full p-[3px] transition-colors duration-200 shrink-0 ml-4 ${pomodoroSettings.autoStartBreak ? 'bg-zinc-200' : 'bg-zinc-600'}`}>
-                  <div className={`w-4 h-4 rounded-full transition-transform duration-200 ${pomodoroSettings.autoStartBreak ? 'translate-x-[18px] bg-zinc-900' : 'translate-x-0 bg-zinc-400'}`} />
-                </div>
-              </div>
-
-              <div 
-                className="flex items-center justify-between bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 mt-1 cursor-pointer"
-                onClick={() => setPomodoroSettings({ autoStartTimer: !pomodoroSettings.autoStartTimer })}
-              >
-                <div className="space-y-0.5">
-                  <span className="text-xs font-semibold text-white block">Auto-start Timer</span>
-                  <span className="text-[10px] text-zinc-400">Launch focus timer immediately after break</span>
-                </div>
-                <div className={`w-10 h-[22px] rounded-full p-[3px] transition-colors duration-200 shrink-0 ml-4 ${pomodoroSettings.autoStartTimer ? 'bg-zinc-200' : 'bg-zinc-600'}`}>
-                  <div className={`w-4 h-4 rounded-full transition-transform duration-200 ${pomodoroSettings.autoStartTimer ? 'translate-x-[18px] bg-zinc-900' : 'translate-x-0 bg-zinc-400'}`} />
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 mt-1">
-                <div className="space-y-0.5">
-                  <span className="text-xs font-semibold text-white block">Pomodoro Cycle Count</span>
-                  <span className="text-[10px] text-zinc-400">Currently Pomodoro {((pomodoroCount || 0) % 4) + 1} of 4</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={resetPomodoroCount}
-                  disabled={(pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) === 0}
-                  className="px-2.5 py-1 rounded-lg border border-zinc-700 text-xs font-medium text-zinc-200 hover:bg-zinc-800 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
-                >
-                  <RotateCcw className="w-3 h-3" />
-                  <span>Reset to 1 of 4</span>
-                </button>
-              </div>
-            </div>
-
-            <button
-              onClick={() => {
-                setShowSettings(false);
-                if (!isActive) {
-                  setTimeLeft(timerState === 'WORK' ? pomodoroSettings.work * 60 : pomodoroSettings.break * 60);
-                }
-              }}
-              className="w-full py-2 rounded-xl bg-zinc-100 text-zinc-950 font-semibold text-xs hover:bg-zinc-200 transition-colors"
-            >
-              Save Settings
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeStorage } from './storage';
 
-export type ViewType = 'FOCUS' | 'TODO' | 'JOURNAL' | 'NOTES';
+export type ViewType = 'FOCUS' | 'TODO' | 'JOURNAL' | 'NOTES' | 'SETTINGS';
 export type BackgroundType = 'dark' | 'gradient' | 'mountain' | 'library' | 'cafe' | 'anime-room';
 
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).substring(2, 9);

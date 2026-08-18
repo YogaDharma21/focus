@@ -5,12 +5,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
 import { Header } from '@/components/Header';
 import { BackgroundDisplay } from '@/components/modules/BackgroundDisplay';
-import { BackgroundSelector } from '@/components/modules/BackgroundSelector';
-import { InfoModal } from '@/components/modules/InfoModal';
 import { MediaPlayer } from '@/components/modules/MediaPlayer';
 import { DeepFocusOverlay } from '@/components/modules/DeepFocusOverlay';
 import { DynamicIslandTimer } from '@/components/modules/DynamicIslandTimer';
-import { Clock, ListCheck, BarChart2, Smile } from 'lucide-react-native';
+import { Clock, ListCheck, BarChart2, Smile, Settings } from 'lucide-react-native';
 
 import { useAppStore } from '@/lib/store';
 import { playCompletionSound } from '@/lib/sound';
@@ -18,8 +16,6 @@ import { playCompletionSound } from '@/lib/sound';
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
-  const [bgModalOpen, setBgModalOpen] = useState(false);
-  const [infoModalOpen, setInfoModalOpen] = useState(false);
 
   const {
     isActive,
@@ -141,10 +137,7 @@ export default function TabLayout() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <BackgroundDisplay />
-      <Header
-        onOpenBackgrounds={() => setBgModalOpen(true)}
-        onOpenInfo={() => setInfoModalOpen(true)}
-      />
+      <Header />
       <DynamicIslandTimer />
 
       <View style={styles.content}>
@@ -195,13 +188,18 @@ export default function TabLayout() {
               tabBarIcon: ({ color }) => <Smile size={22} color={color} />,
             }}
           />
+          <Tabs.Screen
+            name="settings"
+            options={{
+              title: 'Settings',
+              tabBarIcon: ({ color }) => <Settings size={22} color={color} />,
+            }}
+          />
         </Tabs>
       </View>
 
       <MediaPlayer />
       <DeepFocusOverlay />
-      <BackgroundSelector visible={bgModalOpen} onClose={() => setBgModalOpen(false)} />
-      <InfoModal visible={infoModalOpen} onClose={() => setInfoModalOpen(false)} />
     </View>
   );
 }
