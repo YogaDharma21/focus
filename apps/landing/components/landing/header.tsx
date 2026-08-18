@@ -1,8 +1,9 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Image from "next/image"
-import { Timer, Menu, X, ExternalLink } from "lucide-react"
+import { Menu, X, ExternalLink } from "lucide-react"
+import { gsap, useGSAP } from "@/lib/gsap"
 
 function GithubIcon({ className }: { className?: string }) {
   return (
@@ -19,6 +20,7 @@ function GithubIcon({ className }: { className?: string }) {
 export function Header() {
   const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const headerRef = useRef<HTMLElement>(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,8 +30,39 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll)
   }, [])
 
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+
+      mm.add(
+        {
+          reduceMotion: "(prefers-reduced-motion: reduce)",
+          animate: "(prefers-reduced-motion: no-preference)",
+        },
+        (context) => {
+          const { reduceMotion } = context.conditions as { reduceMotion: boolean }
+
+          if (reduceMotion) {
+            gsap.set(".header-elem", { autoAlpha: 1, y: 0 })
+            return
+          }
+
+          gsap.from(".header-elem", {
+            y: -16,
+            autoAlpha: 0,
+            duration: 0.6,
+            stagger: 0.08,
+            ease: "power3.out",
+          })
+        }
+      )
+    },
+    { scope: headerRef }
+  )
+
   return (
     <header
+      ref={headerRef}
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
         scrolled
           ? "bg-background/90 backdrop-blur-md border-b border-border py-3"
@@ -38,13 +71,13 @@ export function Header() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative flex items-center justify-between">
         {/* Brand Logo - Minimal with Actual Focus Target Icon */}
-        <a href="#" className="flex items-center gap-2.5">
+        <a href="#" className="header-elem flex items-center gap-2.5 group transition-transform active:scale-95">
           <Image
             src="/icon.png"
             alt="Focus App Icon"
             width={32}
             height={32}
-            className="size-8 rounded-lg object-contain"
+            className="size-8 rounded-lg object-contain transition-transform group-hover:scale-105"
           />
           <span className="font-bold text-lg tracking-tight text-foreground">
             Focus
@@ -52,46 +85,46 @@ export function Header() {
         </a>
 
         {/* Desktop Nav - Mathematically Centered */}
-        <nav className="hidden md:flex items-center gap-1 bg-muted/50 p-1 rounded-xl border border-border absolute left-1/2 -translate-x-1/2">
+        <nav className="header-elem hidden md:flex items-center gap-1 bg-muted/50 p-1 rounded-xl border border-border absolute left-1/2 -translate-x-1/2 shadow-sm backdrop-blur-sm">
           <a
             href="#ecosystem"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg transition-colors"
+            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-background/60 rounded-lg transition-all"
           >
             Ecosystem
           </a>
           <a
             href="#interactive-demo"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg transition-colors"
+            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-background/60 rounded-lg transition-all"
           >
             Try Demo
           </a>
           <a
             href="#features"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg transition-colors"
+            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-background/60 rounded-lg transition-all"
           >
             Features
           </a>
           <a
             href="#download"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg transition-colors"
+            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-background/60 rounded-lg transition-all"
           >
             Downloads
           </a>
           <a
             href="#faq"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg transition-colors"
+            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-background/60 rounded-lg transition-all"
           >
             FAQ
           </a>
         </nav>
 
         {/* Action Buttons */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="header-elem hidden md:flex items-center gap-3">
           <a
             href="https://github.com/YogaDharma21/focus"
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2 text-muted-foreground hover:text-foreground transition-colors"
+            className="p-2 text-muted-foreground hover:text-foreground transition-all hover:scale-105"
             title="GitHub Repository"
           >
             <GithubIcon className="size-5" />
@@ -100,7 +133,7 @@ export function Header() {
             href="https://focustracks.vercel.app"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-all hover:shadow-md hover:-translate-y-0.5"
           >
             Launch Web App
             <ExternalLink className="size-3.5" />
@@ -110,7 +143,7 @@ export function Header() {
         {/* Mobile Menu Trigger */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 text-muted-foreground hover:text-foreground"
+          className="header-elem md:hidden p-2 text-muted-foreground hover:text-foreground"
           aria-label="Toggle menu"
         >
           {mobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}

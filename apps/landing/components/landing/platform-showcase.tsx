@@ -1,11 +1,15 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import Image from "next/image"
 import { Globe, Monitor, Smartphone, Shield, Check, Code, ExternalLink } from "lucide-react"
+import { gsap, useGSAP } from "@/lib/gsap"
 
 export function PlatformShowcase() {
   const [activePlatform, setActivePlatform] = useState<string>("web")
+  const [selectedShotIndex, setSelectedShotIndex] = useState(0)
+  const sectionRef = useRef<HTMLElement>(null)
+  const previewShotRef = useRef<HTMLDivElement>(null)
 
   const apps = [
     {
@@ -105,13 +109,97 @@ export function PlatformShowcase() {
   ]
 
   const currentApp = apps.find((a) => a.id === activePlatform)!
-  const [selectedShotIndex, setSelectedShotIndex] = useState(0)
+
+  // Scroll-triggered entrance animations
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+
+      mm.add(
+        {
+          reduceMotion: "(prefers-reduced-motion: reduce)",
+          animate: "(prefers-reduced-motion: no-preference)",
+        },
+        (context) => {
+          const { reduceMotion } = context.conditions as { reduceMotion: boolean }
+
+          if (reduceMotion) {
+            gsap.set([".ecosystem-header", ".platform-card-btn", ".showcase-panel"], {
+              autoAlpha: 1,
+              y: 0,
+            })
+            return
+          }
+
+          gsap.from(".ecosystem-header", {
+            y: 30,
+            autoAlpha: 0,
+            duration: 0.7,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: ".ecosystem-header",
+              start: "top 85%",
+              toggleActions: "play none none none",
+            },
+          })
+
+          gsap.from(".platform-card-btn", {
+            y: 25,
+            autoAlpha: 0,
+            duration: 0.6,
+            stagger: 0.08,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: ".platform-cards-grid",
+              start: "top 85%",
+              toggleActions: "play none none none",
+            },
+          })
+
+          gsap.from(".showcase-panel", {
+            y: 35,
+            autoAlpha: 0,
+            duration: 0.8,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: ".showcase-panel",
+              start: "top 85%",
+              toggleActions: "play none none none",
+            },
+          })
+        }
+      )
+    },
+    { scope: sectionRef }
+  )
+
+  // Fluid transition when activePlatform or selected screenshot changes
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        if (previewShotRef.current) {
+          gsap.fromTo(
+            previewShotRef.current,
+            { autoAlpha: 0.4, scale: 0.98 },
+            { autoAlpha: 1, scale: 1, duration: 0.35, ease: "power2.out" }
+          )
+        }
+        gsap.fromTo(
+          ".showcase-info-item",
+          { autoAlpha: 0, x: -10 },
+          { autoAlpha: 1, x: 0, duration: 0.35, stagger: 0.04, ease: "power2.out" }
+        )
+      })
+    },
+    { scope: sectionRef, dependencies: [activePlatform, selectedShotIndex], revertOnUpdate: true }
+  )
 
   return (
-    <section id="ecosystem" className="py-20 bg-muted/30 border-y border-border relative">
+    <section ref={sectionRef} id="ecosystem" className="py-20 bg-muted/30 border-y border-border relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-12">
+        <div className="ecosystem-header text-center max-w-3xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-muted border border-border text-foreground text-xs font-medium mb-3">
             <span>Cross-Platform Ecosystem</span>
           </div>
@@ -124,7 +212,7 @@ export function PlatformShowcase() {
         </div>
 
         {/* Platform Selection Tabs */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-10">
+        <div className="platform-cards-grid grid grid-cols-2 md:grid-cols-4 gap-2.5 mb-10">
           {apps.map((app) => {
             const Icon = app.icon
             const isActive = activePlatform === app.id
@@ -135,21 +223,21 @@ export function PlatformShowcase() {
                   setActivePlatform(app.id)
                   setSelectedShotIndex(0)
                 }}
-                className={`p-4 rounded-xl border text-left transition-colors flex flex-col justify-between ${
+                className={`platform-card-btn p-4 rounded-xl border text-left transition-all flex flex-col justify-between hover:-translate-y-0.5 ${
                   isActive
-                    ? "bg-background border-foreground/40 text-foreground"
+                    ? "bg-background border-foreground/40 text-foreground shadow-sm ring-1 ring-border"
                     : "bg-card/50 border-border hover:bg-card text-muted-foreground"
                 }`}
               >
                 <div className="flex items-center justify-between mb-2">
                   <div
-                    className={`p-2 rounded-lg ${
+                    className={`p-2 rounded-lg transition-colors ${
                       isActive ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                     }`}
                   >
                     <Icon className="size-4" />
                   </div>
-                  <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                  <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded border border-border/50">
                     {app.path}
                   </span>
                 </div>
@@ -167,11 +255,11 @@ export function PlatformShowcase() {
         </div>
 
         {/* Active App Showcase Card */}
-        <div className="bg-card border border-border rounded-2xl p-6 lg:p-8">
+        <div className="showcase-panel bg-card border border-border rounded-2xl p-6 lg:p-8 shadow-sm">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
             {/* App Info Left */}
             <div className="lg:col-span-5 space-y-5">
-              <div className="flex items-center gap-2">
+              <div className="showcase-info-item flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-lg text-xs font-semibold bg-muted text-foreground border border-border">
                   {currentApp.name}
                 </span>
@@ -180,7 +268,7 @@ export function PlatformShowcase() {
                 </span>
               </div>
 
-              <div>
+              <div className="showcase-info-item">
                 <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
                   {currentApp.tagline}
                 </h3>
@@ -190,12 +278,12 @@ export function PlatformShowcase() {
               </div>
 
               {currentApp.url && (
-                <div>
+                <div className="showcase-info-item">
                   <a
                     href={currentApp.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-opacity"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium hover:opacity-90 transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
                   >
                     Launch Web App
                     <ExternalLink className="size-3.5" />
@@ -204,7 +292,7 @@ export function PlatformShowcase() {
               )}
 
               {/* Tech Badges */}
-              <div className="space-y-1.5">
+              <div className="showcase-info-item space-y-1.5">
                 <span className="text-[11px] font-semibold text-muted-foreground flex items-center gap-1">
                   <Code className="size-3" /> Tech Stack:
                 </span>
@@ -221,7 +309,7 @@ export function PlatformShowcase() {
               </div>
 
               {/* Feature List */}
-              <div className="space-y-2 pt-1">
+              <div className="showcase-info-item space-y-2 pt-1">
                 {currentApp.features.map((feat) => (
                   <div key={feat} className="flex items-center gap-2 text-xs text-foreground">
                     <Check className="size-3.5 text-foreground shrink-0" />
@@ -233,7 +321,10 @@ export function PlatformShowcase() {
 
             {/* Screenshots Right */}
             <div className="lg:col-span-7 space-y-3">
-              <div className="rounded-xl border border-border bg-background overflow-hidden flex items-center justify-center min-h-[300px] sm:min-h-[420px] p-2">
+              <div
+                ref={previewShotRef}
+                className="rounded-xl border border-border bg-background overflow-hidden flex items-center justify-center min-h-[300px] sm:min-h-[420px] p-2 transition-all shadow-inner"
+              >
                 {activePlatform === "mobile" ? (
                   <div className="w-full max-w-[260px] sm:max-w-[280px] rounded-[36px] border-4 border-neutral-800 bg-neutral-950 p-2 my-2 shadow-md overflow-hidden">
                     <div className="w-16 h-3 bg-neutral-800 rounded-full mx-auto mb-1.5" />
@@ -277,10 +368,10 @@ export function PlatformShowcase() {
                   <button
                     key={shot.name}
                     onClick={() => setSelectedShotIndex(idx)}
-                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors whitespace-nowrap ${
+                    className={`px-3 py-1 rounded-lg text-xs font-medium transition-all whitespace-nowrap ${
                       selectedShotIndex === idx
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-muted text-muted-foreground hover:text-foreground"
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
                     }`}
                   >
                     {shot.name}

@@ -1,7 +1,9 @@
 "use client"
 
+import { useRef } from "react"
 import Image from "next/image"
 import { ExternalLink } from "lucide-react"
+import { gsap, useGSAP } from "@/lib/gsap"
 
 function GithubIcon({ className }: { className?: string }) {
   return (
@@ -16,9 +18,45 @@ function GithubIcon({ className }: { className?: string }) {
 }
 
 export function Footer() {
+  const footerRef = useRef<HTMLElement>(null)
+
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+
+      mm.add(
+        {
+          reduceMotion: "(prefers-reduced-motion: reduce)",
+          animate: "(prefers-reduced-motion: no-preference)",
+        },
+        (context) => {
+          const { reduceMotion } = context.conditions as { reduceMotion: boolean }
+
+          if (reduceMotion) {
+            gsap.set(".footer-content", { autoAlpha: 1, y: 0 })
+            return
+          }
+
+          gsap.from(".footer-content", {
+            y: 16,
+            autoAlpha: 0,
+            duration: 0.6,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: footerRef.current,
+              start: "top 92%",
+              toggleActions: "play none none none",
+            },
+          })
+        }
+      )
+    },
+    { scope: footerRef }
+  )
+
   return (
-    <footer className="border-t border-border bg-card py-10">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <footer ref={footerRef} className="border-t border-border bg-card py-10">
+      <div className="footer-content max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-5">
           {/* Brand */}
           <div className="flex items-center gap-2">
@@ -41,31 +79,31 @@ export function Footer() {
               href="https://focustracks.vercel.app"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-foreground transition-colors flex items-center gap-1"
+              className="hover:text-foreground transition-all hover:scale-105 flex items-center gap-1"
             >
               <span>Launch Web App</span>
               <ExternalLink className="size-3" />
             </a>
-            <a href="#ecosystem" className="hover:text-foreground transition-colors">
+            <a href="#ecosystem" className="hover:text-foreground transition-all hover:scale-105">
               Ecosystem
             </a>
-            <a href="#interactive-demo" className="hover:text-foreground transition-colors">
+            <a href="#interactive-demo" className="hover:text-foreground transition-all hover:scale-105">
               Try Demo
             </a>
-            <a href="#features" className="hover:text-foreground transition-colors">
+            <a href="#features" className="hover:text-foreground transition-all hover:scale-105">
               Features
             </a>
-            <a href="#download" className="hover:text-foreground transition-colors">
+            <a href="#download" className="hover:text-foreground transition-all hover:scale-105">
               Downloads
             </a>
-            <a href="#faq" className="hover:text-foreground transition-colors">
+            <a href="#faq" className="hover:text-foreground transition-all hover:scale-105">
               FAQ
             </a>
             <a
               href="https://github.com/YogaDharma21/focus"
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-foreground transition-colors flex items-center gap-1"
+              className="hover:text-foreground transition-all hover:scale-105 flex items-center gap-1"
             >
               <GithubIcon className="size-3.5" />
               GitHub

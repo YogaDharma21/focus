@@ -1,8 +1,12 @@
 "use client"
 
+import { useRef } from "react"
 import { Globe, Monitor, Smartphone, Shield, Download, ExternalLink } from "lucide-react"
+import { gsap, useGSAP } from "@/lib/gsap"
 
 export function DownloadSection() {
+  const sectionRef = useRef<HTMLElement>(null)
+
   const downloads = [
     {
       title: "Focus Web",
@@ -46,11 +50,58 @@ export function DownloadSection() {
     },
   ]
 
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+
+      mm.add(
+        {
+          reduceMotion: "(prefers-reduced-motion: reduce)",
+          animate: "(prefers-reduced-motion: no-preference)",
+        },
+        (context) => {
+          const { reduceMotion } = context.conditions as { reduceMotion: boolean }
+
+          if (reduceMotion) {
+            gsap.set([".download-header", ".download-card"], { autoAlpha: 1, y: 0 })
+            return
+          }
+
+          gsap.from(".download-header", {
+            y: 30,
+            autoAlpha: 0,
+            duration: 0.7,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: ".download-header",
+              start: "top 85%",
+              toggleActions: "play none none none",
+            },
+          })
+
+          gsap.from(".download-card", {
+            y: 35,
+            autoAlpha: 0,
+            duration: 0.7,
+            stagger: 0.08,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: ".downloads-grid",
+              start: "top 85%",
+              toggleActions: "play none none none",
+            },
+          })
+        }
+      )
+    },
+    { scope: sectionRef }
+  )
+
   return (
-    <section id="download" className="py-20 bg-muted/30 border-t border-border relative">
+    <section ref={sectionRef} id="download" className="py-20 bg-muted/30 border-t border-border relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-12">
+        <div className="download-header text-center max-w-3xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-muted border border-border text-foreground text-xs font-medium mb-3">
             <Download className="size-3.5" />
             <span>Downloads</span>
@@ -64,28 +115,28 @@ export function DownloadSection() {
         </div>
 
         {/* Downloads Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
+        <div className="downloads-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {downloads.map((item) => {
             const Icon = item.icon
             return (
               <div
                 key={item.title}
-                className={`rounded-2xl p-5 border transition-colors flex flex-col justify-between ${
+                className={`download-card rounded-2xl p-5 border transition-all hover:-translate-y-1 hover:shadow-md flex flex-col justify-between ${
                   item.isPrimary
-                    ? "bg-card border-foreground/40"
-                    : "bg-card/60 border-border hover:border-border"
+                    ? "bg-card border-foreground/40 shadow-sm ring-1 ring-border"
+                    : "bg-card/60 border-border hover:border-border hover:bg-card"
                 }`}
               >
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <div
-                      className={`p-2.5 rounded-lg ${
+                      className={`p-2.5 rounded-lg transition-transform hover:scale-110 ${
                         item.isPrimary ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
                       }`}
                     >
                       <Icon className="size-5" />
                     </div>
-                    <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded">
+                    <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded border border-border/50">
                       {item.badge}
                     </span>
                   </div>
@@ -106,9 +157,9 @@ export function DownloadSection() {
                     href={item.buttonLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`w-full py-2 px-3 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1.5 ${
+                    className={`w-full py-2 px-3 rounded-lg text-xs font-medium transition-all hover:scale-[1.02] active:scale-[0.98] flex items-center justify-center gap-1.5 ${
                       item.isPrimary
-                        ? "bg-primary text-primary-foreground hover:opacity-90"
+                        ? "bg-primary text-primary-foreground hover:opacity-90 shadow-sm"
                         : "bg-muted hover:bg-muted/80 text-foreground"
                     }`}
                   >

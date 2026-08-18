@@ -1,10 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { ChevronDown, HelpCircle, ExternalLink } from "lucide-react"
+import { gsap, useGSAP } from "@/lib/gsap"
 
 export function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0)
+  const sectionRef = useRef<HTMLElement>(null)
+  const answerRefs = useRef<(HTMLDivElement | null)[]>([])
 
   const faqs = [
     {
@@ -35,11 +38,112 @@ export function FAQSection() {
     },
   ]
 
+  // ScrollTrigger entrance
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+
+      mm.add(
+        {
+          reduceMotion: "(prefers-reduced-motion: reduce)",
+          animate: "(prefers-reduced-motion: no-preference)",
+        },
+        (context) => {
+          const { reduceMotion } = context.conditions as { reduceMotion: boolean }
+
+          if (reduceMotion) {
+            gsap.set([".faq-header", ".faq-item"], { autoAlpha: 1, y: 0 })
+            return
+          }
+
+          gsap.from(".faq-header", {
+            y: 30,
+            autoAlpha: 0,
+            duration: 0.7,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: ".faq-header",
+              start: "top 85%",
+              toggleActions: "play none none none",
+            },
+          })
+
+          gsap.from(".faq-item", {
+            y: 25,
+            autoAlpha: 0,
+            duration: 0.6,
+            stagger: 0.08,
+            ease: "power2.out",
+            scrollTrigger: {
+              trigger: ".faq-list",
+              start: "top 85%",
+              toggleActions: "play none none none",
+            },
+          })
+        }
+      )
+    },
+    { scope: sectionRef }
+  )
+
+  // Fluid Accordion Animation with GSAP
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+
+      mm.add(
+        {
+          reduceMotion: "(prefers-reduced-motion: reduce)",
+          animate: "(prefers-reduced-motion: no-preference)",
+        },
+        (context) => {
+          const { reduceMotion } = context.conditions as { reduceMotion: boolean }
+
+          answerRefs.current.forEach((el, idx) => {
+            if (!el) return
+            const isOpen = openIndex === idx
+
+            if (reduceMotion) {
+              gsap.set(el, {
+                height: isOpen ? "auto" : 0,
+                autoAlpha: isOpen ? 1 : 0,
+                display: isOpen ? "block" : "none",
+              })
+              return
+            }
+
+            if (isOpen) {
+              gsap.set(el, { display: "block" })
+              gsap.fromTo(
+                el,
+                { height: 0, autoAlpha: 0 },
+                { height: "auto", autoAlpha: 1, duration: 0.35, ease: "power2.out" }
+              )
+            } else {
+              gsap.to(el, {
+                height: 0,
+                autoAlpha: 0,
+                duration: 0.25,
+                ease: "power2.inOut",
+                onComplete: () => {
+                  if (openIndex !== idx && el) {
+                    gsap.set(el, { display: "none" })
+                  }
+                },
+              })
+            }
+          })
+        }
+      )
+    },
+    { scope: sectionRef, dependencies: [openIndex], revertOnUpdate: true }
+  )
+
   return (
-    <section id="faq" className="py-20 relative">
+    <section ref={sectionRef} id="faq" className="py-20 relative">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-12">
+        <div className="faq-header text-center max-w-3xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-muted border border-border text-foreground text-xs font-medium mb-3">
             <HelpCircle className="size-3.5" />
             <span>FAQ</span>
@@ -53,13 +157,15 @@ export function FAQSection() {
         </div>
 
         {/* Accordion List */}
-        <div className="space-y-3">
+        <div className="faq-list space-y-3">
           {faqs.map((faq, idx) => {
             const isOpen = openIndex === idx
             return (
               <div
                 key={faq.question}
-                className="bg-card border border-border rounded-xl overflow-hidden transition-colors"
+                className={`faq-item bg-card border rounded-xl overflow-hidden transition-all ${
+                  isOpen ? "border-foreground/30 shadow-sm" : "border-border hover:border-border/80"
+                }`}
               >
                 <button
                   onClick={() => setOpenIndex(isOpen ? null : idx)}
@@ -67,13 +173,19 @@ export function FAQSection() {
                 >
                   <span>{faq.question}</span>
                   <ChevronDown
-                    className={`size-4 text-muted-foreground shrink-0 transition-transform duration-200 ${
+                    className={`size-4 text-muted-foreground shrink-0 transition-transform duration-300 ${
                       isOpen ? "rotate-180 text-foreground" : ""
                     }`}
                   />
                 </button>
 
-                {isOpen && (
+                <div
+                  ref={(el) => {
+                    answerRefs.current[idx] = el
+                  }}
+                  className="overflow-hidden"
+                  style={{ display: idx === 0 ? "block" : "none" }}
+                >
                   <div className="px-5 pb-5 text-xs text-muted-foreground leading-relaxed border-t border-border/50 pt-3 flex flex-col gap-3">
                     <p>{faq.answer}</p>
                     {faq.hasWebLink && (
@@ -81,14 +193,14 @@ export function FAQSection() {
                         href="https://focustracks.vercel.app"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium w-fit hover:opacity-90 transition-opacity"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium w-fit hover:opacity-90 transition-all hover:scale-[1.02] active:scale-[0.98]"
                       >
                         Launch Web App
                         <ExternalLink className="size-3" />
                       </a>
                     )}
                   </div>
-                )}
+                </div>
               </div>
             )
           })}

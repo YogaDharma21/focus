@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Timer, Coffee, Clock, Play, Pause, RotateCcw, Volume2, VolumeX, CheckCircle, Calculator, Headphones } from "lucide-react"
+import { gsap, useGSAP } from "@/lib/gsap"
 
 export function InteractiveTimer() {
   const [mode, setMode] = useState<"pomodoro" | "break" | "flow">("pomodoro")
@@ -12,6 +13,9 @@ export function InteractiveTimer() {
   const [volume, setVolume] = useState<number>(0.5) // Default volume at 50%
   const [selectedTask, setSelectedTask] = useState<string>("Landing Page Design")
   const audioRef = useRef<HTMLAudioElement | null>(null)
+  const sectionRef = useRef<HTMLElement>(null)
+  const timerDisplayRef = useRef<HTMLDivElement>(null)
+  const equalizerRef = useRef<HTMLDivElement>(null)
 
   // Initialize and update volume
   useEffect(() => {
@@ -88,6 +92,104 @@ export function InteractiveTimer() {
     }
   }
 
+  // GSAP ScrollTrigger entrance
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+
+      mm.add(
+        {
+          reduceMotion: "(prefers-reduced-motion: reduce)",
+          animate: "(prefers-reduced-motion: no-preference)",
+        },
+        (context) => {
+          const { reduceMotion } = context.conditions as { reduceMotion: boolean }
+
+          if (reduceMotion) {
+            gsap.set([".demo-header", ".demo-card"], { autoAlpha: 1, y: 0 })
+            return
+          }
+
+          gsap.from(".demo-header", {
+            y: 30,
+            autoAlpha: 0,
+            duration: 0.7,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: ".demo-header",
+              start: "top 85%",
+              toggleActions: "play none none none",
+            },
+          })
+
+          gsap.from(".demo-card", {
+            y: 40,
+            autoAlpha: 0,
+            duration: 0.8,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: ".demo-card",
+              start: "top 85%",
+              toggleActions: "play none none none",
+            },
+          })
+        }
+      )
+    },
+    { scope: sectionRef }
+  )
+
+  // GSAP Lofi Equalizer Bars animation
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        if (!equalizerRef.current) return
+
+        const bars = equalizerRef.current.querySelectorAll(".eq-bar")
+        if (isMusicPlaying) {
+          bars.forEach((bar, index) => {
+            gsap.to(bar, {
+              scaleY: 0.2 + ((index + 1) * 0.2),
+              duration: 0.25 + (index * 0.08),
+              repeat: -1,
+              yoyo: true,
+              ease: "sine.inOut",
+              transformOrigin: "bottom center",
+            })
+          })
+        } else {
+          gsap.killTweensOf(bars)
+          gsap.to(bars, {
+            scaleY: 0.2,
+            duration: 0.3,
+            ease: "power1.out",
+            transformOrigin: "bottom center",
+          })
+        }
+      })
+    },
+    { scope: sectionRef, dependencies: [isMusicPlaying], revertOnUpdate: true }
+  )
+
+  // Subtle pulse animation on timer digits when mode changes
+  useGSAP(
+    () => {
+      const mm = gsap.matchMedia()
+      mm.add("(prefers-reduced-motion: no-preference)", () => {
+        if (timerDisplayRef.current) {
+          gsap.fromTo(
+            timerDisplayRef.current,
+            { scale: 0.96, autoAlpha: 0.8 },
+            { scale: 1, autoAlpha: 1, duration: 0.35, ease: "back.out(1.5)" }
+          )
+        }
+      })
+    },
+    { scope: sectionRef, dependencies: [mode], revertOnUpdate: true }
+  )
+
   const tasks = [
     "Landing Page Design",
     "Focus Shield Integration",
@@ -96,13 +198,13 @@ export function InteractiveTimer() {
   ]
 
   return (
-    <section id="interactive-demo" className="py-20 relative">
+    <section ref={sectionRef} id="interactive-demo" className="py-20 relative">
       {/* Audio Element for Lofi Beats */}
       <audio ref={audioRef} src="/shortlofi.mp3" loop preload="auto" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center max-w-3xl mx-auto mb-12">
+        <div className="demo-header text-center max-w-3xl mx-auto mb-12">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-muted border border-border text-foreground text-xs font-medium mb-3">
             <span>Live Interactive Demo</span>
           </div>
@@ -115,14 +217,14 @@ export function InteractiveTimer() {
         </div>
 
         {/* Demo Card */}
-        <div className="max-w-2xl mx-auto bg-card border border-border rounded-2xl p-6 sm:p-8">
+        <div className="demo-card max-w-2xl mx-auto bg-card border border-border rounded-2xl p-6 sm:p-8 shadow-sm">
           {/* Mode Switcher Bar */}
           <div className="flex items-center justify-center gap-1 mb-6 p-1 bg-muted/60 rounded-xl max-w-xs sm:max-w-sm mx-auto border border-border/50">
             <button
               onClick={() => handleModeChange("pomodoro")}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
                 mode === "pomodoro"
-                  ? "bg-background text-foreground border border-border shadow-sm"
+                  ? "bg-background text-foreground border border-border shadow-sm scale-100"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -131,9 +233,9 @@ export function InteractiveTimer() {
             </button>
             <button
               onClick={() => handleModeChange("break")}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
                 mode === "break"
-                  ? "bg-background text-foreground border border-border shadow-sm"
+                  ? "bg-background text-foreground border border-border shadow-sm scale-100"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -142,9 +244,9 @@ export function InteractiveTimer() {
             </button>
             <button
               onClick={() => handleModeChange("flow")}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${
+              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-1.5 ${
                 mode === "flow"
-                  ? "bg-background text-foreground border border-border shadow-sm"
+                  ? "bg-background text-foreground border border-border shadow-sm scale-100"
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
@@ -163,10 +265,10 @@ export function InteractiveTimer() {
                 <button
                   key={task}
                   onClick={() => setSelectedTask(task)}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-all ${
                     selectedTask === task
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:text-foreground"
+                      ? "bg-primary text-primary-foreground shadow-sm scale-[1.02]"
+                      : "bg-muted text-muted-foreground hover:text-foreground hover:bg-muted/80"
                   }`}
                 >
                   {selectedTask === task && <CheckCircle className="inline size-3 mr-1" />}
@@ -176,14 +278,19 @@ export function InteractiveTimer() {
             </div>
           </div>
 
-          {/* Timer Display (No Circle) */}
+          {/* Timer Display */}
           <div className="flex flex-col items-center justify-center my-6">
-            <div className="text-[4rem] sm:text-[5.5rem] md:text-[7rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow select-none font-mono">
+            <div
+              ref={timerDisplayRef}
+              className={`text-[4rem] sm:text-[5.5rem] md:text-[7rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow select-none font-mono transition-opacity ${
+                isRunning ? "opacity-100" : "opacity-90"
+              }`}
+            >
               {mode === "flow" ? formatTime(flowSeconds) : formatTime(seconds)}
             </div>
 
             {mode === "flow" && (
-              <div className="mt-3 flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-muted px-3 py-1 rounded-lg border border-border">
+              <div className="mt-3 flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-muted px-3 py-1 rounded-lg border border-border shadow-sm">
                 <Calculator className="size-3.5 text-primary" />
                 <span>Calculated Break: {calculatedBreakMins} min</span>
               </div>
@@ -193,7 +300,7 @@ export function InteractiveTimer() {
             <div className="flex items-center gap-3 mt-8">
               <button
                 onClick={() => setIsRunning(!isRunning)}
-                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium text-xs hover:opacity-90 transition-opacity"
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground font-medium text-xs hover:opacity-90 transition-all hover:scale-[1.02] active:scale-[0.98] shadow-sm"
               >
                 {isRunning ? (
                   <>
@@ -207,7 +314,7 @@ export function InteractiveTimer() {
               </button>
               <button
                 onClick={resetTimer}
-                className="p-2.5 rounded-xl bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-colors"
+                className="p-2.5 rounded-xl bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground transition-all hover:scale-105 active:scale-95"
                 title="Reset Timer"
               >
                 <RotateCcw className="size-4" />
@@ -246,17 +353,25 @@ export function InteractiveTimer() {
                   </span>
                 </div>
 
-                {/* Play / Pause Toggle Button */}
+                {/* Play / Pause Toggle Button with Equalizer Wave */}
                 <button
                   onClick={toggleMusic}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-colors ${
+                  className={`px-3 py-1.5 rounded-lg text-xs font-medium flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98] ${
                     isMusicPlaying
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-primary text-primary-foreground shadow-sm"
                       : "bg-muted text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   <Headphones className="size-3.5" />
-                  <span>{isMusicPlaying ? "Playing Lofi-Beats" : "Play Lofi-Beats"}</span>
+                  <span>{isMusicPlaying ? "Playing Lofi" : "Play Lofi"}</span>
+
+                  {/* Equalizer Visualizer Bars */}
+                  <div ref={equalizerRef} className="flex items-end gap-0.5 h-3 w-4 px-0.5">
+                    <span className="eq-bar w-0.5 h-full bg-current rounded-full origin-bottom scale-y-[0.2]" />
+                    <span className="eq-bar w-0.5 h-full bg-current rounded-full origin-bottom scale-y-[0.2]" />
+                    <span className="eq-bar w-0.5 h-full bg-current rounded-full origin-bottom scale-y-[0.2]" />
+                    <span className="eq-bar w-0.5 h-full bg-current rounded-full origin-bottom scale-y-[0.2]" />
+                  </div>
                 </button>
               </div>
             </div>
