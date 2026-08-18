@@ -52,12 +52,12 @@ export function MoodNotes() {
         setNoteText("");
     };
 
-    const todayNotes = moodNotes.filter((n) => isToday(new Date(n.date)));
-    const pastNotes = moodNotes.filter((n) => !isToday(new Date(n.date))).reverse();
+    const todayNotes = React.useMemo(() => moodNotes.filter((n) => isToday(new Date(n.date))), [moodNotes]);
+    const pastNotes = React.useMemo(() => moodNotes.filter((n) => !isToday(new Date(n.date))).reverse(), [moodNotes]);
 
     return (
         <div className="h-full flex flex-col gap-6">
-            <Card className="p-6 bg-card/50 border-0 shadow-md backdrop-blur-sm rounded-[var(--radius)] space-y-4">
+            <Card className="p-6 bg-card border border-border/50 shadow-sm rounded-[var(--radius)] space-y-4">
                 <div className="flex items-center gap-2">
                     <NotebookPen className="w-4 h-4 text-primary" />
                     <h2 className="font-semibold text-lg">Mood Note</h2>
@@ -73,7 +73,7 @@ export function MoodNotes() {
                                 )
                             }
                             className={cn(
-                                "text-2xl p-3 rounded-lg transition-all",
+                                "text-2xl p-3 rounded-lg transition-transform duration-100",
                                 selectedMood === mood.value
                                     ? "bg-primary/20 ring-2 ring-primary"
                                     : "bg-background/50 hover:bg-background",
@@ -102,7 +102,7 @@ export function MoodNotes() {
             </Card>
 
             {todayNotes.length > 0 && (
-                <Card className="p-6 bg-primary/5 border-primary/10 shadow-md backdrop-blur-sm rounded-[var(--radius)]">
+                <Card className="p-6 bg-primary/5 border border-primary/10 shadow-sm rounded-[var(--radius)]">
                     <h3 className="text-sm font-medium text-muted-foreground mb-3">
                         Today
                     </h3>
@@ -147,7 +147,7 @@ export function MoodNotes() {
                             return (
                                 <Card
                                     key={note.id}
-                                    className="p-4 bg-card/50 border-0 shadow-sm backdrop-blur-sm rounded-[var(--radius)]"
+                                    className="p-4 bg-card border border-border/50 shadow-sm rounded-[var(--radius)]"
                                 >
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="flex items-start gap-3 min-w-0">
