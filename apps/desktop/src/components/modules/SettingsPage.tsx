@@ -220,11 +220,11 @@ export const SettingsPage: React.FC = () => {
         className="hidden"
       />
 
-      {/* Floating Feedback Notification */}
+      {/* Floating Feedback Notification (Positioned at top-right to avoid MediaPlayer overlap) */}
       {feedbackMessage && (
-        <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-3 duration-200">
+        <div className="fixed top-12 right-6 z-50 animate-in slide-in-from-top-3 duration-200 pointer-events-none">
           <div
-            className={`px-4 py-2.5 rounded-xl text-xs font-medium border shadow-2xl flex items-center gap-2 backdrop-blur-md ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-medium border shadow-2xl flex items-center gap-2 backdrop-blur-md pointer-events-auto ${
               feedbackMessage.type === 'success'
                 ? 'bg-zinc-900/95 text-zinc-100 border-zinc-700 shadow-black/50'
                 : 'bg-zinc-900/95 text-rose-300 border-rose-500/40 shadow-rose-950/30'
