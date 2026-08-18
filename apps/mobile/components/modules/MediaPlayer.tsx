@@ -246,53 +246,6 @@ export function MediaPlayer() {
                   ))}
                 </View>
               </View>
-
-              {/* Sound Effect (SFX) Volume Section */}
-              <View style={[styles.volumeSection, { borderColor: colors.border }]}>
-                <View style={styles.volumeHeader}>
-                  <TouchableOpacity 
-                    onPress={() => setSoundEffectEnabled(!soundEffectEnabled)}
-                    style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}
-                  >
-                    <BellRing size={16} color={soundEffectEnabled ? colors.text : colors.textMuted} />
-                    <Text style={[styles.volumeText, { color: colors.textMuted }]}>
-                      Sound Effect ({Math.round((soundEffectVolume ?? 0.8) * 100)}%)
-                    </Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => playTestCompletionSound()}
-                    style={{
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      gap: 4,
-                      backgroundColor: colors.inputBg,
-                      paddingHorizontal: 10,
-                      paddingVertical: 4,
-                      borderRadius: 8,
-                      borderWidth: 1,
-                      borderColor: colors.border,
-                    }}
-                  >
-                    <Volume1 size={14} color={colors.text} />
-                    <Text style={{ fontSize: 12, fontWeight: '600', color: colors.text }}>Test</Text>
-                  </TouchableOpacity>
-                </View>
-                <View style={styles.volumeBarRow}>
-                  {[0.2, 0.4, 0.6, 0.8, 1.0].map((v) => (
-                    <TouchableOpacity
-                      key={v}
-                      style={[
-                        styles.volumeStepBtn,
-                        {
-                          backgroundColor: (soundEffectVolume ?? 0.8) >= v ? colors.text : colors.inputBg,
-                          borderColor: colors.border,
-                        },
-                      ]}
-                      onPress={() => setSoundEffectVolume(v)}
-                    />
-                  ))}
-                </View>
-              </View>
             </ScrollView>
           </TouchableOpacity>
         </TouchableOpacity>

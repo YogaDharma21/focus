@@ -10,7 +10,7 @@ import { StatsJournal } from "@/components/modules/StatsJournal";
 import { DynamicIslandTimer } from "@/components/modules/DynamicIslandTimer";
 import { DeepFocusOverlay } from "@/components/modules/DeepFocusOverlay";
 import { BackgroundDisplay } from "@/components/modules/BackgroundDisplay";
-import { BackgroundSelector } from "@/components/modules/BackgroundSelector";
+import { SettingsPage } from "@/components/modules/SettingsPage";
 import { MoodTracker } from "@/components/modules/MoodTracker";
 import { useAppStore } from "@/lib/store";
 import { useTimerEngine } from "@/lib/hooks";
@@ -102,7 +102,6 @@ export default function Page() {
                                     <Focus className="w-5 h-5 sm:w-6 sm:h-6" />
                                 </span>
                             </button>
-                            <BackgroundSelector />
                             <InfoButton />
                         </div>
                     </header>
@@ -127,6 +126,12 @@ export default function Page() {
                         {currentView === "NOTES" && (
                             <div className="max-w-2xl mx-auto w-full pb-8 pt-12">
                                 <MoodTracker />
+                            </div>
+                        )}
+
+                        {currentView === "SETTINGS" && (
+                            <div className="max-w-2xl mx-auto w-full pb-8 pt-12">
+                                <SettingsPage />
                             </div>
                         )}
                     </div>

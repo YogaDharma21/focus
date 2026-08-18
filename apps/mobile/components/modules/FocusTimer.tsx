@@ -141,19 +141,8 @@ export function FocusTimer() {
 
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
   const [todoPickerOpen, setTodoPickerOpen] = useState(false);
-  const [settingsModalOpen, setSettingsModalOpen] = useState(false);
 
   const [isSessionFocused, setIsSessionFocused] = useState(false);
-  const [isWorkFocused, setIsWorkFocused] = useState(false);
-  const [isBreakFocused, setIsBreakFocused] = useState(false);
-  const [isLongBreakFocused, setIsLongBreakFocused] = useState(false);
-
-  // Settings inputs
-  const [workInput, setWorkInput] = useState(pomodoroSettings.work.toString());
-  const [breakInput, setBreakInput] = useState(pomodoroSettings.break.toString());
-  const [longBreakInput, setLongBreakInput] = useState((pomodoroSettings.longBreak || 15).toString());
-  const [autoBreak, setAutoBreak] = useState(pomodoroSettings.autoStartBreak);
-  const [autoTimer, setAutoTimer] = useState(pomodoroSettings.autoStartTimer);
 
 
 
@@ -286,35 +275,7 @@ export function FocusTimer() {
     }
   };
 
-  const handleSaveSettings = () => {
-    const w = parseInt(workInput, 10) || 25;
-    const b = parseInt(breakInput, 10) || 5;
-    const lb = parseInt(longBreakInput, 10) || 15;
-    setPomodoroSettings({ work: w, break: b, longBreak: lb, autoStartBreak: autoBreak, autoStartTimer: autoTimer });
-    if (!isActive && timerMode === 'POMODORO') {
-      const isLongBreak = (pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0;
-      setTimeLeft(timerState === 'WORK' ? w * 60 : (isLongBreak ? lb * 60 : b * 60));
-    }
-    setSettingsModalOpen(false);
-  };
 
-  const handleConfirmResetData = () => {
-    Alert.alert(
-      'Reset All Data',
-      'Are you sure you want to reset all app data? This cannot be undone.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Reset Everything',
-          style: 'destructive',
-          onPress: () => {
-            resetAllData();
-            setSettingsModalOpen(false);
-          },
-        },
-      ]
-    );
-  };
 
   const selectPomodoroWork = () => {
     setIsActive(false);
@@ -685,180 +646,8 @@ export function FocusTimer() {
           >
             <CheckCircle2 size={20} color={colors.text} />
           </TouchableOpacity>
-
-          {/* 5. Settings Button */}
-          <TouchableOpacity
-            style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => {
-              setWorkInput(pomodoroSettings.work.toString());
-              setBreakInput(pomodoroSettings.break.toString());
-              setLongBreakInput((pomodoroSettings.longBreak || 15).toString());
-              setAutoBreak(pomodoroSettings.autoStartBreak);
-              setAutoTimer(pomodoroSettings.autoStartTimer);
-              setSettingsModalOpen(true);
-            }}
-            activeOpacity={0.7}
-          >
-            <Settings size={20} color={colors.text} />
-          </TouchableOpacity>
         </View>
       </View>
-
-      {/* Settings Modal */}
-      <Modal visible={settingsModalOpen} transparent animationType="fade" onRequestClose={() => setSettingsModalOpen(false)}>
-        <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setSettingsModalOpen(false)}>
-          <TouchableOpacity activeOpacity={1} style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => {}}>
-            <Text style={[styles.modalTitle, { color: colors.text }]}>Timer & App Settings</Text>
-
-            {/* Pomodoro Duration Controls */}
-            <View style={styles.settingGroup}>
-              <Text style={[styles.settingLabel, { color: colors.text }]}>Pomodoro Work Time (mins)</Text>
-              <TextInput
-                style={[
-                  styles.settingInput,
-                  { color: colors.text, borderColor: isWorkFocused ? colors.text : colors.border, backgroundColor: colors.inputBg },
-                ]}
-                keyboardType="numeric"
-                value={workInput}
-                onChangeText={setWorkInput}
-                onFocus={() => setIsWorkFocused(true)}
-                onBlur={() => setIsWorkFocused(false)}
-              />
-            </View>
-
-            <View style={styles.settingGroup}>
-              <Text style={[styles.settingLabel, { color: colors.text }]}>Short Break Time (mins)</Text>
-              <TextInput
-                style={[
-                  styles.settingInput,
-                  { color: colors.text, borderColor: isBreakFocused ? colors.text : colors.border, backgroundColor: colors.inputBg },
-                ]}
-                keyboardType="numeric"
-                value={breakInput}
-                onChangeText={setBreakInput}
-                onFocus={() => setIsBreakFocused(true)}
-                onBlur={() => setIsBreakFocused(false)}
-              />
-            </View>
-
-            <View style={styles.settingGroup}>
-              <Text style={[styles.settingLabel, { color: colors.text }]}>Long Break Time (mins)</Text>
-              <TextInput
-                style={[
-                  styles.settingInput,
-                  { color: colors.text, borderColor: isLongBreakFocused ? colors.text : colors.border, backgroundColor: colors.inputBg },
-                ]}
-                keyboardType="numeric"
-                value={longBreakInput}
-                onChangeText={setLongBreakInput}
-                onFocus={() => setIsLongBreakFocused(true)}
-                onBlur={() => setIsLongBreakFocused(false)}
-              />
-            </View>
-
-            {/* Auto-start Break Toggle Card */}
-            <TouchableOpacity
-              style={[
-                styles.autoStartCard,
-                {
-                  backgroundColor: colors.inputBg,
-                  borderColor: colors.border,
-                },
-              ]}
-              onPress={() => setAutoBreak(!autoBreak)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.autoStartTextContainer}>
-                <Text style={[styles.autoStartTitle, { color: colors.text }]}>Auto-start Break</Text>
-                <Text style={[styles.autoStartSubtitle, { color: colors.textMuted }]}>
-                  Launch break timer immediately after work
-                </Text>
-              </View>
-              <CustomToggleSwitch value={autoBreak} onToggle={() => setAutoBreak(!autoBreak)} />
-            </TouchableOpacity>
-
-            {/* Auto-start Timer Toggle Card */}
-            <TouchableOpacity
-              style={[
-                styles.autoStartCard,
-                {
-                  backgroundColor: colors.inputBg,
-                  borderColor: colors.border,
-                },
-              ]}
-              onPress={() => setAutoTimer(!autoTimer)}
-              activeOpacity={0.7}
-            >
-              <View style={styles.autoStartTextContainer}>
-                <Text style={[styles.autoStartTitle, { color: colors.text }]}>Auto-start Timer</Text>
-                <Text style={[styles.autoStartSubtitle, { color: colors.textMuted }]}>
-                  Launch focus timer immediately after break
-                </Text>
-              </View>
-              <CustomToggleSwitch value={autoTimer} onToggle={() => setAutoTimer(!autoTimer)} />
-            </TouchableOpacity>
-
-            {/* Pomodoro Cycle Reset Card */}
-            <View
-              style={[
-                styles.autoStartCard,
-                {
-                  backgroundColor: colors.inputBg,
-                  borderColor: colors.border,
-                },
-              ]}
-            >
-              <View style={styles.autoStartTextContainer}>
-                <Text style={[styles.autoStartTitle, { color: colors.text }]}>Pomodoro Cycle Count</Text>
-                <Text style={[styles.autoStartSubtitle, { color: colors.textMuted }]}>
-                  Currently Pomodoro {((pomodoroCount || 0) % 4) + 1} of 4
-                </Text>
-              </View>
-              <TouchableOpacity
-                style={[
-                  styles.cycleResetModalBtn,
-                  {
-                    borderColor: colors.border,
-                    backgroundColor: colors.card,
-                    opacity: (pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) === 0 ? 0.4 : 1,
-                  },
-                ]}
-                onPress={resetPomodoroCount}
-                disabled={(pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) === 0}
-                activeOpacity={0.7}
-              >
-                <RotateCcw size={12} color={colors.text} />
-                <Text style={[styles.cycleResetModalBtnText, { color: colors.text }]}>Reset to 1 of 4</Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              style={[styles.saveSettingsBtn, { backgroundColor: colors.primary }]}
-              onPress={handleSaveSettings}
-            >
-              <Text style={{ color: colors.primaryForeground, fontWeight: '600' }}>Save Timer Settings</Text>
-            </TouchableOpacity>
-
-            {/* Reset App Data Section */}
-            <View style={[styles.resetSection, { borderColor: colors.border }]}>
-              <TouchableOpacity
-                style={styles.dangerResetBtn}
-                onPress={handleConfirmResetData}
-              >
-                <Trash2 size={16} color="#ef4444" />
-                <Text style={styles.dangerResetText}>Reset All App Data</Text>
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              style={[styles.closeModalBtn, { backgroundColor: colors.border, marginTop: 12 }]}
-              onPress={() => setSettingsModalOpen(false)}
-            >
-              <Text style={{ color: colors.text, fontWeight: '600' }}>Close</Text>
-            </TouchableOpacity>
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
 
       {/* Todo Selector Modal (Matches Reference Popover Image) */}
       <Modal visible={todoPickerOpen} transparent animationType="fade" onRequestClose={() => setTodoPickerOpen(false)}>

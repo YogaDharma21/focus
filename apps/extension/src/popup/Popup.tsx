@@ -24,7 +24,7 @@ import {
   BookOpen,
   X,
   MessageSquarePlus,
-  Settings,
+  Settings as SettingsIcon,
   AlertTriangle,
   FolderPlus,
   ArrowRight,
@@ -112,11 +112,9 @@ const BACKGROUND_THEMES: { id: BackgroundTheme; name: string }[] = [
 
 export function Popup() {
   const [state, setState] = useState<AppStateData | null>(getCachedState());
-  const [activeTab, setActiveTab] = useState<"timer" | "tasks" | "shield" | "notes" | "stats">("timer");
+  const [activeTab, setActiveTab] = useState<"timer" | "tasks" | "shield" | "notes" | "stats" | "settings">("timer");
   const [showInfoModal, setShowInfoModal] = useState(false);
-  const [showSettingsModal, setShowSettingsModal] = useState(false);
   const [showDistractionPicker, setShowDistractionPicker] = useState(false);
-  const [showThemePicker, setShowThemePicker] = useState(false);
   const [showFloatingTimerCard, setShowFloatingTimerCard] = useState(false);
   const [showTaskDropdown, setShowTaskDropdown] = useState(false);
   const [selectedTaskDetail, setSelectedTaskDetail] = useState<TodoItem | null>(null);
@@ -135,11 +133,6 @@ export function Popup() {
   const [newSubtaskText, setNewSubtaskText] = useState("");
 
   // Settings inputs
-  const [workMinsInput, setWorkMinsInput] = useState(25);
-  const [breakMinsInput, setBreakMinsInput] = useState(5);
-  const [longBreakMinsInput, setLongBreakMinsInput] = useState(15);
-  const [autoStartBreakInput, setAutoStartBreakInput] = useState(false);
-  const [autoStartTimerInput, setAutoStartTimerInput] = useState(false);
 
   // Music Player State & Controls
   const [isMusicExpanded, setIsMusicExpanded] = useState(false);
@@ -216,11 +209,6 @@ export function Popup() {
     getStoredState().then((initial) => {
       setState(initial);
       document.body.className = "dark";
-      setWorkMinsInput(initial.pomodoroSettings.work);
-      setBreakMinsInput(initial.pomodoroSettings.break);
-      setLongBreakMinsInput(initial.pomodoroSettings.longBreak || 15);
-      setAutoStartBreakInput(initial.pomodoroSettings.autoStartBreak);
-      setAutoStartTimerInput(initial.pomodoroSettings.autoStartTimer);
     });
 
     const unsubscribe = subscribeToStateChanges((updated) => {
@@ -428,36 +416,8 @@ export function Popup() {
     if (window.confirm("Are you sure you want to reset all extension data to defaults? This will clear all tasks, sessions, mood notes, and stats.")) {
       saveStoredState(DEFAULT_STATE).then((fresh) => {
         setState(fresh);
-        setShowSettingsModal(false);
       });
     }
-  };
-
-  // Save Settings
-  const saveSettings = (e: React.FormEvent) => {
-    e.preventDefault();
-    const work = Math.max(1, workMinsInput);
-    const brk = Math.max(1, breakMinsInput);
-    const longBrk = Math.max(1, longBreakMinsInput);
-    const isLongBreak = (state.pomodoroCount || 0) % 4 === 0 && (state.pomodoroCount || 0) > 0;
-    const newTimeLeft =
-      state.timerState === "WORK"
-        ? work * 60
-        : state.timerState === "BREAK"
-        ? (isLongBreak ? longBrk * 60 : brk * 60)
-        : state.timeLeft;
-
-    updateState({
-      pomodoroSettings: {
-        work,
-        break: brk,
-        longBreak: longBrk,
-        autoStartBreak: autoStartBreakInput,
-        autoStartTimer: autoStartTimerInput
-      },
-      timeLeft: state.isActive ? state.timeLeft : newTimeLeft
-    });
-    setShowSettingsModal(false);
   };
 
   // Goal input key handler (pressing Enter creates a task)
@@ -812,18 +772,7 @@ export function Popup() {
             <Focus className="w-4 h-4" />
           </button>
 
-          {/* Background Theme Selector Button with Paintbrush Icon */}
-          <button
-            onClick={() => setShowThemePicker(!showThemePicker)}
-            className={`p-1.5 rounded-lg border transition-all flex items-center justify-center ${
-              showThemePicker
-                ? "bg-white text-black border-white"
-                : "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800"
-            }`}
-            title="Change Background Theme"
-          >
-            <Paintbrush className="w-4 h-4" />
-          </button>
+          
 
           {/* Info Button */}
           <button
@@ -982,35 +931,6 @@ export function Popup() {
         </div>
       )}
 
-      {/* Background Theme Selector Picker Overlay */}
-      {showThemePicker && (
-        <div className={`absolute top-14 right-4 z-50 p-3 rounded-xl border shadow-2xl flex flex-col gap-1 text-xs font-mono animate-in fade-in duration-150 ${
-          "bg-neutral-950/90 border-neutral-700 text-white"
-        } backdrop-blur-md`}>
-          <div className="text-[10px] font-bold uppercase opacity-60 px-2 py-1">SELECT BACKGROUND THEME</div>
-          {BACKGROUND_THEMES.map((theme) => {
-            const isSelected = state.background === theme.id || (theme.id === "dark" && state.background === "default");
-            return (
-              <button
-                key={theme.id}
-                onClick={() => {
-                  updateState({ background: theme.id });
-                  setShowThemePicker(false);
-                }}
-                className={`px-3 py-1.5 rounded-lg text-left font-bold transition-all flex items-center justify-between gap-4 ${
-                  isSelected
-                    ? "bg-white text-black"
-                    : "hover:bg-neutral-800"
-                }`}
-              >
-                <span>{theme.name}</span>
-                {isSelected && <Check className="w-3 h-3" />}
-              </button>
-            );
-          })}
-        </div>
-      )}
-
       {/* Info Modal Overlay (Removed Manifest V3 text) */}
       {showInfoModal && (
         <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
@@ -1089,183 +1009,6 @@ export function Popup() {
               </button>
             ))}
           </div>
-        </div>
-      )}
-
-      {/* Timer Settings Modal */}
-      {showSettingsModal && (
-        <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
-          "bg-black/95 text-white"
-        }`}>
-          <div className="flex items-center justify-between pb-3">
-            <h2 className="text-sm font-bold font-sans">Timer Settings</h2>
-            <button
-              onClick={() => setShowSettingsModal(false)}
-              className={`p-1 rounded-lg border ${
-                "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800"
-              }`}
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          <form onSubmit={saveSettings} className="space-y-3 my-auto">
-            {/* Work Duration */}
-            <div className={`p-3 rounded-xl border flex items-center justify-between ${
-              "bg-neutral-900 border-neutral-800"
-            }`}>
-              <span className="text-xs font-bold font-sans">Work Duration</span>
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="number"
-                  min="1"
-                  max="120"
-                  value={workMinsInput}
-                  onChange={(e) => setWorkMinsInput(parseInt(e.target.value) || 25)}
-                  className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none ${
-                    "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]"
-                  }`}
-                />
-                <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>min</span>
-              </div>
-            </div>
-
-            {/* Short Break Duration */}
-            <div className={`p-3 rounded-xl border flex items-center justify-between ${
-              "bg-neutral-900 border-neutral-800"
-            }`}>
-              <span className="text-xs font-bold font-sans">Short Break Duration</span>
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="number"
-                  min="1"
-                  max="60"
-                  value={breakMinsInput}
-                  onChange={(e) => setBreakMinsInput(parseInt(e.target.value) || 5)}
-                  className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none ${
-                    "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]"
-                  }`}
-                />
-                <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>min</span>
-              </div>
-            </div>
-
-            {/* Long Break Duration */}
-            <div className={`p-3 rounded-xl border flex items-center justify-between ${
-              "bg-neutral-900 border-neutral-800"
-            }`}>
-              <span className="text-xs font-bold font-sans">Long Break Duration</span>
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="number"
-                  min="1"
-                  max="60"
-                  value={longBreakMinsInput}
-                  onChange={(e) => setLongBreakMinsInput(parseInt(e.target.value) || 15)}
-                  className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none ${
-                    "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]"
-                  }`}
-                />
-                <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>min</span>
-              </div>
-            </div>
-
-            {/* Auto-start Break Toggle */}
-            <div className={`p-3 rounded-xl border flex items-center justify-between ${
-              "bg-neutral-900 border-neutral-800"
-            }`}>
-              <div className="flex flex-col">
-                <span className="text-xs font-bold font-sans">Auto-start Break</span>
-                <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>
-                  Launch break timer immediately after work or flow
-                </span>
-              </div>
-              <div
-                onClick={() => setAutoStartBreakInput(!autoStartBreakInput)}
-                className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
-                  autoStartBreakInput
-                    ? "bg-white"
-                    : "bg-neutral-700"
-                }`}
-              >
-                <div
-                  className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                    autoStartBreakInput
-                      ? "left-[22px] bg-black"
-                      : "left-[2px] bg-neutral-400"
-                  }`}
-                />
-              </div>
-            </div>
-
-            {/* Auto-start Timer Toggle */}
-            <div className={`p-3 rounded-xl border flex items-center justify-between ${
-              "bg-neutral-900 border-neutral-800"
-            }`}>
-              <div className="flex flex-col">
-                <span className="text-xs font-bold font-sans">Auto-start Timer</span>
-                <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>
-                  Launch focus timer immediately after break
-                </span>
-              </div>
-              <div
-                onClick={() => setAutoStartTimerInput(!autoStartTimerInput)}
-                className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
-                  autoStartTimerInput
-                    ? "bg-white"
-                    : "bg-neutral-700"
-                }`}
-              >
-                <div
-                  className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                    autoStartTimerInput
-                      ? "left-[22px] bg-black"
-                      : "left-[2px] bg-neutral-400"
-                  }`}
-                />
-              </div>
-            </div>
-
-            {/* Pomodoro Cycle Reset */}
-            <div className={`p-3 rounded-xl border flex items-center justify-between ${
-              "bg-neutral-900 border-neutral-800"
-            }`}>
-              <div className="flex flex-col">
-                <span className="text-xs font-bold font-sans">Pomodoro Cycle Count</span>
-                <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>
-                  Currently Pomodoro {((state.pomodoroCount || 0) % 4) + 1} of 4
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => updateState({ pomodoroCount: 0 })}
-                disabled={(state.pomodoroCount || 0) % 4 === 0 && (state.pomodoroCount || 0) === 0}
-                className="px-2.5 py-1 rounded-lg border border-neutral-700 bg-neutral-800 text-xs font-medium text-neutral-200 hover:bg-neutral-700 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
-              >
-                <RotateCcw className="w-3 h-3" />
-                <span>Reset to 1 of 4</span>
-              </button>
-            </div>
-
-            <button
-              type="submit"
-              className={`w-full py-3 rounded-xl font-bold text-xs border transition-all mt-4 ${
-                "bg-neutral-800 text-white border-neutral-700 hover:bg-neutral-700"
-              }`}
-            >
-              Confirm Changes
-            </button>
-
-            <div className="pt-2">
-              <button
-                type="button"
-                onClick={resetAllData}
-                className="w-full py-2.5 rounded-xl font-mono font-bold text-xs border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-all"
-              >
-                Reset All Extension Data
-              </button>
-            </div>
-          </form>
         </div>
       )}
 
@@ -1613,7 +1356,8 @@ export function Popup() {
           { id: "tasks", label: "Tasks", icon: CheckSquare, badge: state.todos.filter(t => !t.completed).length },
           { id: "shield", label: "Shield", icon: Shield, activeIndicator: state.shield.enabled && state.isActive },
           { id: "notes", label: "Mood", icon: Smile, badge: state.moodNotes.length },
-          { id: "stats", label: "Stats", icon: BarChart3 }
+          { id: "stats", label: "Stats", icon: BarChart3 },
+          { id: "settings", label: "Settings", icon: SettingsIcon }
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -1621,7 +1365,7 @@ export function Popup() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`flex flex-col items-center gap-0.5 py-1 px-3 rounded-lg transition-all relative text-[10px] font-bold ${
+              className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-lg transition-all relative text-[10px] font-bold ${
                 isActive
                   ? "bg-white text-black font-extrabold shadow-sm"
                   : "text-neutral-400 hover:text-white hover:bg-neutral-800"
@@ -1753,44 +1497,6 @@ export function Popup() {
               </div>
             </div>
 
-            {/* Sound Effect (SFX) Volume Slider & Test */}
-            <div className="mt-2 pt-2 border-t border-neutral-800 space-y-1">
-              <div className="flex items-center justify-between text-[10px] opacity-60">
-                <span className="flex items-center gap-1">
-                  <BellRing className="w-3 h-3" />
-                  Sound Effect (SFX)
-                </span>
-                <span className="font-mono">{Math.round(soundEffectVolume * 100)}%</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={toggleSoundEffectEnabled}
-                  title={soundEffectEnabled ? "SFX Enabled" : "SFX Muted"}
-                  className={`p-1 rounded text-xs transition-colors shrink-0 ${
-                    soundEffectEnabled ? "bg-neutral-800 text-white border border-neutral-700" : "bg-neutral-950 text-neutral-500 border border-neutral-850"
-                  }`}
-                >
-                  <BellRing className="w-3 h-3" />
-                </button>
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  value={soundEffectVolume}
-                  onChange={(e) => handleSoundEffectVolumeChange(parseFloat(e.target.value))}
-                  className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer"
-                />
-                <button
-                  onClick={() => playTestSoundEffect()}
-                  title="Test Sound Effect"
-                  className="px-2 py-0.5 bg-neutral-800 hover:bg-neutral-700 border border-neutral-700 text-white rounded text-[10px] font-semibold transition-all shrink-0 active:scale-95 flex items-center gap-1"
-                >
-                  <Volume1 className="w-3 h-3 text-neutral-300" />
-                  Test
-                </button>
-              </div>
-            </div>
           </div>
         )}
       </div>
@@ -2141,16 +1847,7 @@ export function Popup() {
                 <CheckCircle className="w-4 h-4" />
               </button>
 
-              {/* Timer Settings Button */}
-              <button
-                onClick={() => setShowSettingsModal(true)}
-                className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
-                  "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
-                }`}
-                title="Timer Settings"
-              >
-                <Settings className="w-4 h-4" />
-              </button>
+              
             </div>
           </div>
         )}
@@ -2607,6 +2304,213 @@ export function Popup() {
                 </div>
               )}
             </div>
+          </div>
+        )}
+
+        {/* SETTINGS TAB */}
+        {activeTab === "settings" && (
+          <div className="flex flex-col gap-3 h-full overflow-y-auto pr-1">
+            {/* Timer Settings */}
+            <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
+              "bg-black/40 border-neutral-800"
+            }`}>
+              <span className="text-xs font-bold text-white uppercase tracking-wider">Timer Settings</span>
+              
+              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
+                "bg-neutral-900/60 border-neutral-800"
+              }`}>
+                <span className="text-xs font-bold text-white">Work Duration</span>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min={1}
+                    max={120}
+                    value={state.pomodoroSettings.work}
+                    onChange={(e) => updateState({ pomodoroSettings: { ...state.pomodoroSettings, work: parseInt(e.target.value) || 25 } })}
+                    className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none mono-input ${
+                      "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]"
+                    }`}
+                  />
+                  <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>min</span>
+                </div>
+              </div>
+
+              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
+                "bg-neutral-900/60 border-neutral-800"
+              }`}>
+                <span className="text-xs font-bold text-white">Short Break Duration</span>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min={1}
+                    max={60}
+                    value={state.pomodoroSettings.break}
+                    onChange={(e) => updateState({ pomodoroSettings: { ...state.pomodoroSettings, break: parseInt(e.target.value) || 5 } })}
+                    className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none mono-input ${
+                      "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]"
+                    }`}
+                  />
+                  <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>min</span>
+                </div>
+              </div>
+
+              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
+                "bg-neutral-900/60 border-neutral-800"
+              }`}>
+                <span className="text-xs font-bold text-white">Long Break Duration</span>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min={1}
+                    max={60}
+                    value={state.pomodoroSettings.longBreak || 15}
+                    onChange={(e) => updateState({ pomodoroSettings: { ...state.pomodoroSettings, longBreak: parseInt(e.target.value) || 15 } })}
+                    className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none mono-input ${
+                      "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]"
+                    }`}
+                  />
+                  <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>min</span>
+                </div>
+              </div>
+
+              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
+                "bg-neutral-900/60 border-neutral-800"
+              }`}>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-white">Auto-start Break</span>
+                </div>
+                <div
+                  onClick={() => updateState({ pomodoroSettings: { ...state.pomodoroSettings, autoStartBreak: !state.pomodoroSettings.autoStartBreak } })}
+                  className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
+                    state.pomodoroSettings.autoStartBreak ? "bg-white" : "bg-neutral-700"
+                  }`}
+                >
+                  <div
+                    className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
+                      state.pomodoroSettings.autoStartBreak ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
+                "bg-neutral-900/60 border-neutral-800"
+              }`}>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-white">Auto-start Timer</span>
+                </div>
+                <div
+                  onClick={() => updateState({ pomodoroSettings: { ...state.pomodoroSettings, autoStartTimer: !state.pomodoroSettings.autoStartTimer } })}
+                  className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
+                    state.pomodoroSettings.autoStartTimer ? "bg-white" : "bg-neutral-700"
+                  }`}
+                >
+                  <div
+                    className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
+                      state.pomodoroSettings.autoStartTimer ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
+                    }`}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Appearance Section */}
+            <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
+              "bg-black/40 border-neutral-800"
+            }`}>
+              <span className="text-xs font-bold text-white uppercase tracking-wider">Appearance</span>
+              <div className="grid grid-cols-2 gap-2">
+                {BACKGROUND_THEMES.map((theme) => {
+                  const isActive = state.background === theme.id || (theme.id === "dark" && state.background === "default");
+                  return (
+                    <button
+                      key={theme.id}
+                      onClick={() => updateState({ background: theme.id })}
+                      className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all border ${
+                        isActive
+                          ? "bg-neutral-800 text-white border-white/20"
+                          : "bg-neutral-900 text-neutral-400 border-neutral-800 hover:bg-neutral-800 hover:text-white"
+                      }`}
+                    >
+                      {theme.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Sound Section */}
+            <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
+              "bg-black/40 border-neutral-800"
+            }`}>
+              <span className="text-xs font-bold text-white uppercase tracking-wider">Sound</span>
+              
+              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
+                "bg-neutral-900/60 border-neutral-800"
+              }`}>
+                <span className="text-xs font-bold text-white">SFX Enabled</span>
+                <div
+                  onClick={toggleSoundEffectEnabled}
+                  className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
+                    soundEffectEnabled ? "bg-white" : "bg-neutral-700"
+                  }`}
+                >
+                  <div
+                    className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
+                      soundEffectEnabled ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
+                "bg-neutral-900/60 border-neutral-800"
+              }`}>
+                <div className="flex flex-col w-full gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-white">SFX Volume</span>
+                    <span className="font-mono text-xs">{Math.round(soundEffectVolume * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="1"
+                    step="0.05"
+                    value={soundEffectVolume}
+                    onChange={(e) => handleSoundEffectVolumeChange(parseFloat(e.target.value))}
+                    className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer"
+                  />
+                </div>
+              </div>
+
+              <button
+                onClick={() => playTestSoundEffect()}
+                className="w-full py-2.5 rounded-xl font-bold text-xs border border-neutral-700 bg-neutral-800 text-white hover:bg-neutral-700 transition-all flex items-center justify-center gap-2"
+              >
+                <Volume1 className="w-4 h-4" />
+                Test Sound Effect
+              </button>
+            </div>
+
+            {/* Data Section */}
+            <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
+              "bg-black/40 border-neutral-800"
+            }`}>
+              <span className="text-xs font-bold text-white uppercase tracking-wider">Data</span>
+              <button
+                onClick={() => {
+                  if (window.confirm("Are you sure you want to reset all extension data to defaults? This will clear all tasks, sessions, mood notes, and stats.")) {
+                    resetAllData();
+                  }
+                }}
+                className="w-full py-2.5 rounded-xl font-bold text-xs border border-red-900/50 bg-red-950/20 text-red-500 hover:bg-red-950/50 hover:text-red-400 transition-all"
+              >
+                Reset All Extension Data
+              </button>
+            </div>
+            
+            {/* Bottom Padding */}
+            <div className="h-4" />
           </div>
         )}
       </div>

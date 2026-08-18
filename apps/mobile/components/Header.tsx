@@ -284,14 +284,6 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
 
           <TouchableOpacity
             style={[styles.iconBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={onOpenBackgrounds}
-            activeOpacity={0.7}
-          >
-            <ImageIcon size={18} color={colors.text} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.iconBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
             onPress={onOpenInfo}
             activeOpacity={0.7}
           >
