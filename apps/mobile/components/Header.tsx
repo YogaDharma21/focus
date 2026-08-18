@@ -6,9 +6,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { useAppStore } from '@/lib/store';
 import { playCompletionSound } from '@/lib/sound';
 import {
-  Focus,
-  Image as ImageIcon,
-  Info,
   Timer,
   Coffee,
   Clock,
@@ -20,8 +17,8 @@ import {
 } from 'lucide-react-native';
 
 interface HeaderProps {
-  onOpenBackgrounds: () => void;
-  onOpenInfo: () => void;
+  onOpenBackgrounds?: () => void;
+  onOpenInfo?: () => void;
 }
 
 const DISTRACTION_CATEGORIES = [
@@ -32,7 +29,7 @@ const DISTRACTION_CATEGORIES = [
   'Other',
 ];
 
-export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
+export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
@@ -266,38 +263,6 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps) {
             </Text>
           </TouchableOpacity>
         )}
-
-        <View style={styles.actionsRow}>
-          <TouchableOpacity
-            style={[
-              styles.iconBtn,
-              {
-                backgroundColor: deepFocusMode ? colors.primary : colors.card,
-                borderColor: colors.border,
-              },
-            ]}
-            onPress={() => setDeepFocusMode(!deepFocusMode)}
-            activeOpacity={0.7}
-          >
-            <Focus size={18} color={deepFocusMode ? colors.primaryForeground : colors.text} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.iconBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={onOpenBackgrounds}
-            activeOpacity={0.7}
-          >
-            <ImageIcon size={18} color={colors.text} />
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.iconBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={onOpenInfo}
-            activeOpacity={0.7}
-          >
-            <Info size={18} color={colors.text} />
-          </TouchableOpacity>
-        </View>
       </View>
 
       {/* Expanded Floating Control Card Popover */}

@@ -4,18 +4,8 @@ import { useAppStore, TodoItem } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Play, Pause, RotateCcw, CheckCircle2, Settings, ChevronDown, ListTodo, FileText, Check, Square, CheckSquare2, Timer, Coffee, Clock } from "lucide-react";
+import { Play, Pause, RotateCcw, CheckCircle2, Focus, ChevronDown, ListTodo, FileText, Check, Square, CheckSquare2, Timer, Coffee, Clock } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
     Popover,
     PopoverContent,
@@ -95,7 +85,6 @@ export function FocusTimer() {
         }))
     );
 
-    const [settingsOpen, setSettingsOpen] = useState(false);
     const [taskSelectorOpen, setTaskSelectorOpen] = useState(false);
 
     const uncompletedTodos = useMemo(
@@ -700,187 +689,15 @@ export function FocusTimer() {
                         <CheckCircle2 className="size-4 sm:size-5" />
                     </Button>
 
-                    <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-                        <DialogTrigger asChild>
-                            <Button
-                                variant="outline"
-                                size="icon"
-                                className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 transition-all cursor-pointer"
-                                title="Timer Settings"
-                            >
-                                <Settings className="size-4 sm:size-5" />
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Timer Settings</DialogTitle>
-                            </DialogHeader>
-                            <div className="space-y-6 py-4">
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
-                                        <Label className="font-medium">
-                                            Work Duration
-                                        </Label>
-                                        <div className="flex items-center gap-2">
-                                            <Input
-                                                type="number"
-                                                value={pomodoroSettings.work}
-                                                onChange={(e) =>
-                                                    setPomodoroSettings({
-                                                        work:
-                                                            parseInt(
-                                                                e.target.value,
-                                                            ) || 25,
-                                                    })
-                                                }
-                                                className="w-16 h-8 text-center bg-background/50 border-none"
-                                            />
-                                            <span className="text-xs text-muted-foreground">
-                                                min
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
-                                        <Label className="font-medium">
-                                            Short Break Duration
-                                        </Label>
-                                        <div className="flex items-center gap-2">
-                                            <Input
-                                                type="number"
-                                                value={pomodoroSettings.break}
-                                                onChange={(e) =>
-                                                    setPomodoroSettings({
-                                                        break:
-                                                            parseInt(
-                                                                e.target.value,
-                                                            ) || 5,
-                                                    })
-                                                }
-                                                className="w-16 h-8 text-center bg-background/50 border-none"
-                                            />
-                                            <span className="text-xs text-muted-foreground">
-                                                min
-                                            </span>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
-                                        <Label className="font-medium">
-                                            Long Break Duration
-                                        </Label>
-                                        <div className="flex items-center gap-2">
-                                            <Input
-                                                type="number"
-                                                value={pomodoroSettings.longBreak || 15}
-                                                onChange={(e) =>
-                                                    setPomodoroSettings({
-                                                        longBreak:
-                                                            parseInt(
-                                                                e.target.value,
-                                                            ) || 15,
-                                                    })
-                                                }
-                                                className="w-16 h-8 text-center bg-background/50 border-none"
-                                            />
-                                            <span className="text-xs text-muted-foreground">
-                                                min
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div className="p-4 rounded-[var(--radius)] bg-primary/5 border border-primary/10 flex items-center justify-between shadow-inner">
-                                    <div className="space-y-0.5">
-                                        <Label className="text-base font-semibold">
-                                            Auto-start Break
-                                        </Label>
-                                        <p className="text-[10px] text-muted-foreground">
-                                            Launch break timer immediately after
-                                            work
-                                        </p>
-                                    </div>
-                                    <Switch
-                                        checked={pomodoroSettings.autoStartBreak}
-                                        onCheckedChange={(checked: boolean) =>
-                                            setPomodoroSettings({
-                                                autoStartBreak: checked,
-                                            })
-                                        }
-                                        className="scale-110"
-                                    />
-                                </div>
-
-                                <div className="p-4 rounded-[var(--radius)] bg-primary/5 border border-primary/10 flex items-center justify-between shadow-inner">
-                                    <div className="space-y-0.5">
-                                        <Label className="text-base font-semibold">
-                                            Auto-start Timer
-                                        </Label>
-                                        <p className="text-[10px] text-muted-foreground">
-                                            Launch focus timer immediately after break
-                                        </p>
-                                    </div>
-                                    <Switch
-                                        checked={pomodoroSettings.autoStartTimer}
-                                        onCheckedChange={(checked: boolean) =>
-                                            setPomodoroSettings({
-                                                autoStartTimer: checked,
-                                            })
-                                        }
-                                        className="scale-110"
-                                    />
-                                </div>
-
-                                <div className="p-3 rounded-[var(--radius)] bg-secondary/20 flex items-center justify-between">
-                                    <div className="space-y-0.5">
-                                        <Label className="font-medium text-xs">
-                                            Pomodoro Cycle Count
-                                        </Label>
-                                        <p className="text-[10px] text-muted-foreground">
-                                            Currently Pomodoro {((pomodoroCount || 0) % 4) + 1} of 4
-                                        </p>
-                                    </div>
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={resetPomodoroCount}
-                                        disabled={(pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) === 0}
-                                        className="text-xs h-8 px-2.5 cursor-pointer"
-                                    >
-                                        <RotateCcw className="w-3 h-3 mr-1.5" />
-                                        Reset to 1 of 4
-                                    </Button>
-                                </div>
-
-                                <Button
-                                    className="w-full mt-4"
-                                    onClick={() => setSettingsOpen(false)}
-                                >
-                                    Confirm Changes
-                                </Button>
-
-                                <div className="pt-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            if (
-                                                window.confirm(
-                                                    "Are you sure you want to reset all data to defaults? This will clear all tasks, sessions, mood notes, and stats.",
-                                                )
-                                            ) {
-                                                resetAllData();
-                                                setSettingsOpen(false);
-                                            }
-                                        }}
-                                        className="w-full py-2.5 rounded-md font-mono font-bold text-xs border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-all bg-transparent cursor-pointer"
-                                    >
-                                        Reset All Data
-                                    </button>
-                                </div>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 transition-all cursor-pointer"
+                        onClick={() => setDeepFocusMode(true)}
+                        title="Deep Focus Mode"
+                    >
+                        <Focus className="size-4 sm:size-5" />
+                    </Button>
                 </div>
             </div>
         </div>

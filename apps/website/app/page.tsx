@@ -1,8 +1,6 @@
 "use client";
 
-import { Focus } from "lucide-react";
 import { BottomNavbar } from "@/components/layout/BottomNavbar";
-import { InfoButton } from "@/components/layout/InfoModal";
 import { MediaPlayer } from "@/components/modules/MediaPlayer";
 import { FocusTimer } from "@/components/modules/FocusTimer";
 import { TodoList } from "@/components/modules/TodoList";
@@ -10,7 +8,7 @@ import { StatsJournal } from "@/components/modules/StatsJournal";
 import { DynamicIslandTimer } from "@/components/modules/DynamicIslandTimer";
 import { DeepFocusOverlay } from "@/components/modules/DeepFocusOverlay";
 import { BackgroundDisplay } from "@/components/modules/BackgroundDisplay";
-import { BackgroundSelector } from "@/components/modules/BackgroundSelector";
+import { SettingsPage } from "@/components/modules/SettingsPage";
 import { MoodTracker } from "@/components/modules/MoodTracker";
 import { useAppStore } from "@/lib/store";
 import { useTimerEngine } from "@/lib/hooks";
@@ -50,7 +48,6 @@ export default function Page() {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [deepFocusMode, setDeepFocusMode]);
 
-    const toggleFocusMode = () => setDeepFocusMode(!deepFocusMode);
 
     if (!mounted) return null;
 
@@ -88,22 +85,6 @@ export default function Page() {
 
                         <div className="flex items-center gap-1.5 sm:gap-2 relative z-30">
                             <MediaPlayer />
-                            <button
-                                onClick={toggleFocusMode}
-                                className={cn(
-                                    "flex flex-col items-center justify-center w-12 h-11 sm:w-16 sm:h-14 rounded-[var(--radius)] transition-all duration-300 ease-out group",
-                                    deepFocusMode
-                                        ? "text-primary-foreground bg-primary shadow-lg"
-                                        : "text-muted-foreground hover:text-foreground hover:bg-white/5",
-                                )}
-                                title="Toggle Deep Focus Mode"
-                            >
-                                <span className="transform transition-transform duration-300 group-hover:scale-105">
-                                    <Focus className="w-5 h-5 sm:w-6 sm:h-6" />
-                                </span>
-                            </button>
-                            <BackgroundSelector />
-                            <InfoButton />
                         </div>
                     </header>
 
@@ -127,6 +108,12 @@ export default function Page() {
                         {currentView === "NOTES" && (
                             <div className="max-w-2xl mx-auto w-full pb-8 pt-12">
                                 <MoodTracker />
+                            </div>
+                        )}
+
+                        {currentView === "SETTINGS" && (
+                            <div className="max-w-2xl mx-auto w-full pb-8 pt-12">
+                                <SettingsPage />
                             </div>
                         )}
                     </div>

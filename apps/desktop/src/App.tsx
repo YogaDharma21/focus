@@ -6,6 +6,7 @@ import { TodoList } from './components/modules/TodoList';
 import { StatsJournal } from './components/modules/StatsJournal';
 import { MoodTracker } from './components/modules/MoodTracker';
 import { MediaPlayer } from './components/modules/MediaPlayer';
+import { SettingsPage } from './components/modules/SettingsPage';
 import { BackgroundDisplay } from './components/modules/BackgroundDisplay';
 import { DeepFocusOverlay } from './components/modules/DeepFocusOverlay';
 import { FloatingTimerCapsule } from './components/layout/FloatingTimerCapsule';
@@ -66,6 +67,7 @@ export const App: React.FC = () => {
           {currentView === 'TODO' && <TodoList />}
           {currentView === 'JOURNAL' && <StatsJournal />}
           {currentView === 'NOTES' && <MoodTracker />}
+          {currentView === 'SETTINGS' && <SettingsPage />}
         </main>
       </div>
 
