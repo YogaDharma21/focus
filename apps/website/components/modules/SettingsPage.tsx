@@ -6,7 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Settings, Clock, Palette, Volume2, Trash2 } from "lucide-react";
+import { Settings, Clock, Palette, Volume2, Trash2, Info, Github, ExternalLink } from "lucide-react";
 
 export function SettingsPage() {
     const pomodoroSettings = useAppStore((s) => s.pomodoroSettings);
@@ -213,6 +213,37 @@ export function SettingsPage() {
                     >
                         Reset
                     </Button>
+                </div>
+            </div>
+            {/* About Section */}
+            <div className="bg-card/50 backdrop-blur-xl border border-white/10 rounded-[var(--radius)] p-5 space-y-4">
+                <div className="flex items-center gap-2 text-sm font-semibold text-foreground/80">
+                    <Info className="w-4 h-4" />
+                    <h2>About</h2>
+                </div>
+                
+                <div className="space-y-3 text-sm">
+                    <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
+                        <span className="font-medium">Version</span>
+                        <span className="text-xs font-mono text-muted-foreground">v0.0.1</span>
+                    </div>
+
+                    <div className="p-3 rounded-[var(--radius)] bg-secondary/20 text-xs text-muted-foreground leading-relaxed">
+                        A minimalist productivity suite designed to keep you in flow state. Features Pomodoro and Flow timers, task management with subtasks, productivity analytics, mood reflections, and ambient audio.
+                    </div>
+
+                    <a
+                        href="https://github.com/YogaDharma21/focus"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20 hover:bg-secondary/40 transition-colors text-xs font-medium text-foreground"
+                    >
+                        <div className="flex items-center gap-2">
+                            <Github className="w-4 h-4" />
+                            <span>GitHub Repository</span>
+                        </div>
+                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                    </a>
                 </div>
             </div>
         </div>

@@ -1,11 +1,9 @@
 import React from 'react';
-import { Timer, CheckSquare, BarChart3, Smile, Maximize2, Palette, Settings } from 'lucide-react';
-import { useDesktopStore, ViewType, BackgroundType } from '../../lib/store';
-import { ProjectInfoModal } from './ProjectInfoModal';
+import { Timer, CheckSquare, BarChart3, Smile, Settings } from 'lucide-react';
+import { useDesktopStore, ViewType } from '../../lib/store';
 
 export const SidebarNav: React.FC = () => {
-  const { currentView, setView, setDeepFocusMode, background, setBackground } = useDesktopStore();
-  const [showBgSelector, setShowBgSelector] = React.useState(false);
+  const { currentView, setView } = useDesktopStore();
 
   const navItems: { id: ViewType; label: string; icon: React.FC<{ className?: string }> }[] = [
     { id: "FOCUS", label: "Timer", icon: Timer },
@@ -13,14 +11,6 @@ export const SidebarNav: React.FC = () => {
     { id: "JOURNAL", label: "Stats", icon: BarChart3 },
     { id: "NOTES", label: "Mood", icon: Smile },
     { id: "SETTINGS", label: "Settings", icon: Settings },
-  ];
-
-  const backgrounds: { id: BackgroundType; label: string }[] = [
-    { id: "dark", label: "Dark Modern" },
-    { id: "mountain", label: "Mountain Mist" },
-    { id: "library", label: "Cozy Library" },
-    { id: "cafe", label: "Lo-Fi Cafe" },
-    { id: "anime-room", label: "Anime Room" },
   ];
 
   return (
@@ -51,22 +41,6 @@ export const SidebarNav: React.FC = () => {
             );
           })}
         </nav>
-      </div>
-
-      {/* Bottom: Zen Deep Focus & Project Info */}
-      <div className="space-y-1.5 pt-3 border-t border-zinc-800">
-
-        {/* Deep Focus Fullscreen Button */}
-        <button
-          onClick={() => setDeepFocusMode(true)}
-          className="w-full flex items-center gap-3 px-3 py-2 rounded-lg bg-zinc-100 text-zinc-950 hover:bg-zinc-200 transition-all text-xs font-semibold shadow-sm"
-        >
-          <Maximize2 className="w-4 h-4" />
-          <span className="hidden md:inline">Deep Focus</span>
-        </button>
-
-        {/* Project Info Button & Dialog */}
-        <ProjectInfoModal />
       </div>
     </aside>
   );

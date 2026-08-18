@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, StyleSheet, Animated } from 'react-native';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, StyleSheet, Animated, Linking } from 'react-native';
 import { useAppStore, BackgroundType } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
-import { Settings, Clock, Palette, Volume2, Trash2 } from 'lucide-react-native';
+import { Settings, Clock, Palette, Volume2, Trash2, Info, ExternalLink } from 'lucide-react-native';
 import { playCompletionSound } from '@/lib/sound';
 
 interface CustomToggleSwitchProps {
@@ -330,6 +330,36 @@ export function SettingsPage() {
           <Text style={styles.resetBtnText}>Reset All Data</Text>
         </TouchableOpacity>
       </View>
+
+      {/* About Section */}
+      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={styles.sectionHeader}>
+          <Info size={18} color={colors.text} />
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>About</Text>
+        </View>
+
+        <View style={styles.aboutGroup}>
+          <View style={[styles.aboutRow, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+            <Text style={[styles.aboutLabel, { color: colors.text }]}>Version</Text>
+            <Text style={[styles.aboutValue, { color: colors.textMuted }]}>v0.0.1</Text>
+          </View>
+
+          <View style={[styles.aboutCard, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+            <Text style={[styles.aboutDescription, { color: colors.textMuted }]}>
+              A minimalist productivity suite designed to keep you in flow state. Features Pomodoro and Flow timers, task management with subtasks, productivity analytics, mood reflections, and ambient audio.
+            </Text>
+          </View>
+
+          <TouchableOpacity
+            style={[styles.aboutLinkRow, { backgroundColor: colors.inputBg, borderColor: colors.border }]}
+            onPress={() => Linking.openURL('https://github.com/YogaDharma21/focus')}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.aboutLinkLabel, { color: colors.text }]}>GitHub Repository</Text>
+            <ExternalLink size={16} color={colors.textMuted} />
+          </TouchableOpacity>
+        </View>
+      </View>
     </ScrollView>
   );
 }
@@ -354,7 +384,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     borderWidth: 1,
     padding: 16,
-    marginBottom: 20,
+    marginBottom: 16,
   },
   sectionHeader: {
     flexDirection: 'row',
@@ -363,70 +393,73 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
+    fontSize: 16,
+    fontWeight: '700',
   },
   settingGroup: {
-    marginBottom: 16,
+    marginBottom: 12,
   },
   settingLabel: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 8,
+    fontSize: 13,
+    fontWeight: '600',
+    marginBottom: 6,
   },
   settingInput: {
     borderWidth: 1,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 10,
-    fontSize: 16,
+    fontSize: 14,
+    fontWeight: '500',
   },
   autoStartCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 14,
-    borderRadius: 12,
+    padding: 12,
+    borderRadius: 10,
     borderWidth: 1,
-    marginBottom: 12,
+    marginTop: 8,
   },
   autoStartTextContainer: {
     flex: 1,
-    paddingRight: 16,
+    marginRight: 10,
   },
   autoStartTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
     marginBottom: 2,
   },
   autoStartSubtitle: {
-    fontSize: 12,
+    fontSize: 11,
   },
   switchTouchable: {
-    padding: 4,
+    padding: 2,
   },
   switchTrack: {
     width: 44,
     height: 24,
     borderRadius: 12,
-    padding: 2,
+    justifyContent: 'center',
   },
   switchThumb: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
   },
   themeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 10,
+    gap: 8,
   },
   themeButton: {
     width: '48%',
     paddingVertical: 12,
+    paddingHorizontal: 10,
     borderRadius: 10,
     borderWidth: 1,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   themeButtonText: {
     fontSize: 14,
@@ -468,6 +501,46 @@ const styles = StyleSheet.create({
   resetBtnText: {
     color: '#ffffff',
     fontSize: 15,
+    fontWeight: '600',
+  },
+  aboutGroup: {
+    gap: 10,
+  },
+  aboutRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  aboutLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  aboutValue: {
+    fontSize: 12,
+    fontFamily: 'monospace',
+  },
+  aboutCard: {
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  aboutDescription: {
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  aboutLinkRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+  },
+  aboutLinkLabel: {
+    fontSize: 13,
     fontWeight: '600',
   },
 });

@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { playCompletionSound } from '../../lib/sound';
 import { 
-  Play, Pause, RotateCcw, AlertTriangle, Settings, CheckCircle2, 
+  Play, Pause, RotateCcw, AlertTriangle, Focus, CheckCircle2, 
   ChevronDown, Check, CheckSquare2, Square, Coffee, Timer, Clock, ListTodo, Edit3, X, FileText
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
@@ -45,7 +45,6 @@ export const FocusTimer: React.FC = () => {
     setPreviousMode
   } = useDesktopStore();
 
-  const [showSettings, setShowSettings] = useState(false);
   const [showTaskDropdown, setShowTaskDropdown] = useState(false);
   const [showDistractionMenu, setShowDistractionMenu] = useState(false);
 
@@ -607,6 +606,14 @@ export const FocusTimer: React.FC = () => {
           title={isActive ? "Finish / Complete Session" : "Start timer to complete session"}
         >
           <CheckCircle2 className="w-4 h-4" />
+        </button>
+
+        <button
+          onClick={() => setDeepFocusMode(true)}
+          className="w-12 h-12 rounded-2xl bg-zinc-900 border border-zinc-800/80 hover:bg-zinc-800 text-zinc-300 hover:text-white transition-all flex items-center justify-center shadow-md active:scale-95"
+          title="Deep Focus Mode"
+        >
+          <Focus className="w-4 h-4" />
         </button>
 
       </div>
