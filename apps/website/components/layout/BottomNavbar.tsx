@@ -42,7 +42,7 @@ export function BottomNavbar() {
         >
             <nav
                 className={cn(
-                    "flex items-center gap-2 p-2 bg-sidebar/80 backdrop-blur-xl border border-sidebar-border shadow-lg ring-1 ring-white/5 rounded-[var(--radius)]",
+                    "flex items-center gap-2 p-2 bg-sidebar border border-sidebar-border shadow-lg ring-1 ring-white/5 rounded-[var(--radius)]",
                     "flex-row md:flex-col",
                 )}
             >
