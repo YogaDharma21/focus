@@ -106,12 +106,12 @@ export function BackgroundDisplay() {
     return (
         <div
             className={cn(
-                "fixed inset-0 z-0 transition-all duration-700 ease-in-out",
+                "fixed inset-0 z-0 transition-all duration-700 ease-in-out pointer-events-none",
                 config.className
             )}
         >
             {config.svg}
-            <div className="absolute inset-0 bg-black/20 backdrop-blur-[2px]" />
+            <div className="absolute inset-0 bg-black/25" />
         </div>
     );
 }

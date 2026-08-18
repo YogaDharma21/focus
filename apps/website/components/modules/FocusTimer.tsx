@@ -350,7 +350,7 @@ export function FocusTimer() {
         <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center min-h-[50vh] relative">
             <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
 
-            <div className="flex gap-2 mb-3 p-1 bg-secondary/30 rounded-[var(--radius)] backdrop-blur-md">
+            <div className="flex gap-2 mb-3 p-1 bg-secondary/40 rounded-[var(--radius)] border border-border/30">
                 <button
                     onClick={() => {
                         setPreviousMode("POMODORO");
@@ -587,7 +587,7 @@ export function FocusTimer() {
                 </div>
 
                 {selectedTodo && selectedTodoSubtasks.length > 0 && (
-                    <div className="w-full max-w-sm border border-border/40 rounded-[var(--radius)] bg-card/30 backdrop-blur-sm overflow-hidden">
+                    <div className="w-full max-w-sm border border-border/40 rounded-[var(--radius)] bg-card overflow-hidden">
                         <div className="px-3 py-2 text-xs font-medium text-muted-foreground border-b border-border/30 flex items-center gap-1.5">
                             <ListTodo className="w-3 h-3" />
                             Subtasks
@@ -623,7 +623,7 @@ export function FocusTimer() {
                 )}
 
                 {selectedTodo && selectedTodo.notes && selectedTodo.notes.trim().length > 0 && (
-                    <div className="w-full max-w-sm border border-border/40 rounded-[var(--radius)] bg-card/30 backdrop-blur-sm overflow-hidden p-3 text-xs space-y-1">
+                    <div className="w-full max-w-sm border border-border/40 rounded-[var(--radius)] bg-card overflow-hidden p-3 text-xs space-y-1">
                         <div className="text-muted-foreground font-medium flex items-center gap-1.5 text-[11px] uppercase tracking-wider">
                             <FileText className="w-3 h-3 text-muted-foreground" /> Task Notes
                         </div>

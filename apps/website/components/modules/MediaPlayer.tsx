@@ -159,7 +159,7 @@ export function MediaPlayer() {
 
             {/* Expanded Floating Card Popup */}
             {mediaPlayerOpen && (
-                <div className="fixed right-4 sm:absolute sm:right-0 top-16 sm:top-full mt-2 w-[calc(100vw-2rem)] max-w-[320px] sm:w-80 bg-[#121214]/95 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200 space-y-3.5">
+                <div className="fixed right-4 sm:absolute sm:right-0 top-16 sm:top-full mt-2 w-[calc(100vw-2rem)] max-w-[320px] sm:w-80 bg-[#121214] border border-white/10 shadow-2xl rounded-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200 space-y-3.5">
                     {/* Header */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-white">

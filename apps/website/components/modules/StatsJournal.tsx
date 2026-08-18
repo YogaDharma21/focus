@@ -2,7 +2,7 @@
 
 import { useAppStore, Distraction } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
@@ -15,7 +15,21 @@ import {
     BarChart3,
     TrendingUp,
 } from "lucide-react";
-import { isSameDay, parseISO } from "date-fns";
+import { format } from "date-fns";
+
+const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const DISTRACTION_CATEGORIES = ["Phone", "Social Media", "Bathroom", "Meeting", "Other"];
+
+const getCategoryColor = (category: string) => {
+    const colors: Record<string, string> = {
+        "Phone": "bg-rose-500",
+        "Social Media": "bg-rose-500",
+        "Bathroom": "bg-rose-500",
+        "Meeting": "bg-rose-500",
+        "Other": "bg-rose-500",
+    };
+    return colors[category] || "bg-rose-500";
+};
 
 export function StatsJournal() {
     const { sessions, sessionStartTime, isActive, todos, distractions } =
@@ -31,29 +45,6 @@ export function StatsJournal() {
     const [currentTime, setCurrentTime] = useState(() => Date.now());
     const [showHours, setShowHours] = useState(false);
 
-    const today = new Date();
-
-    // Distraction stats
-    const totalDistractions = distractions.length;
-    const categoryCounts: Record<string, number> = {};
-    distractions.forEach((d: Distraction) => {
-        categoryCounts[d.category] = (categoryCounts[d.category] || 0) + 1;
-    });
-    const sortedCategories = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1]);
-    const mostCommon = sortedCategories[0];
-    const distractionCategories = ["Phone", "Social Media", "Bathroom", "Meeting", "Other"];
-
-    const getCategoryColor = (category: string) => {
-        const colors: Record<string, string> = {
-            "Phone": "bg-rose-500",
-            "Social Media": "bg-rose-500",
-            "Bathroom": "bg-rose-500",
-            "Meeting": "bg-rose-500",
-            "Other": "bg-rose-500",
-        };
-        return colors[category] || "bg-rose-500";
-    };
-
     useEffect(() => {
         if (!isActive || !sessionStartTime) return;
         const interval = setInterval(() => {
@@ -63,33 +54,59 @@ export function StatsJournal() {
     }, [isActive, sessionStartTime]);
 
     const liveElapsed = isActive && sessionStartTime
-        ? Math.floor((currentTime - new Date(sessionStartTime).getTime()) / 1000)
+        ? Math.max(0, Math.floor((currentTime - new Date(sessionStartTime).getTime()) / 1000))
         : 0;
 
-    const todaysSessions = sessions.filter((s) =>
-        s.date && isSameDay(parseISO(s.date), today),
-    );
+    const today = useMemo(() => new Date(), []);
+    const todayStr = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
 
-    const historicalSeconds = todaysSessions.reduce(
-        (acc, s) => acc + s.duration,
-        0,
-    );
+    // Distraction stats
+    const { totalDistractions, categoryCounts, mostCommon } = useMemo(() => {
+        const total = distractions.length;
+        const counts: Record<string, number> = {};
+        distractions.forEach((d: Distraction) => {
+            counts[d.category] = (counts[d.category] || 0) + 1;
+        });
+        const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]);
+        return {
+            totalDistractions: total,
+            categoryCounts: counts,
+            mostCommon: sorted[0],
+        };
+    }, [distractions]);
+
+    const historicalSeconds = useMemo(() => {
+        const todaysSessions = sessions.filter((s) =>
+            s.date && s.date.startsWith(todayStr)
+        );
+        return todaysSessions.reduce((acc, s) => acc + s.duration, 0);
+    }, [sessions, todayStr]);
+
     const totalSeconds = historicalSeconds + liveElapsed;
     const focusMinutes = Math.floor(totalSeconds / 60);
     const focusHours = (totalSeconds / 3600).toFixed(1);
 
-    const tasksCompletedToday = todos.filter(
-        (t) =>
-            t.completed &&
-            t.completedAt &&
-            isSameDay(parseISO(t.completedAt), today),
-    ).length;
+    const { tasksCompletedToday, tasksPending, completionRate } = useMemo(() => {
+        const completedToday = todos.filter(
+            (t) =>
+                t.completed &&
+                t.completedAt &&
+                t.completedAt.startsWith(todayStr),
+        ).length;
+        const pending = todos.filter((t) => !t.completed).length;
+        const rate = todos.length > 0
+            ? Math.round((todos.filter((t) => t.completed).length / todos.length) * 100)
+            : 0;
+        return {
+            tasksCompletedToday: completedToday,
+            tasksPending: pending,
+            completionRate: rate,
+        };
+    }, [todos, todayStr]);
 
-    const tasksPending = todos.filter((t) => !t.completed).length;
-
-    // Calculate proper consecutive day streak
-    const calculateStreak = () => {
-        if (sessions.length === 0) return 0;
+    // Calculate streaks
+    const { currentStreak, bestStreak } = useMemo(() => {
+        if (sessions.length === 0) return { currentStreak: 0, bestStreak: 0 };
 
         const uniqueDates = Array.from(
             new Set(sessions.map((s) => s.date.split("T")[0])),
@@ -112,75 +129,59 @@ export function StatsJournal() {
             }
         }
 
-        return streak;
-    };
-
-    const currentStreak = calculateStreak();
-
-    // Calculate best streak
-    const calculateBestStreak = () => {
-        if (sessions.length === 0) return 0;
-
-        const uniqueDates = Array.from(
-            new Set(sessions.map((s) => s.date.split("T")[0])),
-        ).sort();
-
-        let bestStreak = 1;
+        const sortedAsc = [...uniqueDates].sort();
+        let best = 1;
         let currentRun = 1;
 
-        for (let i = 1; i < uniqueDates.length; i++) {
-            const prev = new Date(uniqueDates[i - 1]);
-            const curr = new Date(uniqueDates[i]);
+        for (let i = 1; i < sortedAsc.length; i++) {
+            const prev = new Date(sortedAsc[i - 1]);
+            const curr = new Date(sortedAsc[i]);
             const diffDays = Math.floor((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
 
             if (diffDays === 1) {
                 currentRun++;
-                bestStreak = Math.max(bestStreak, currentRun);
+                best = Math.max(best, currentRun);
             } else {
                 currentRun = 1;
             }
         }
 
-        return bestStreak;
-    };
-
-    const bestStreak = calculateBestStreak();
+        return { currentStreak: streak, bestStreak: best };
+    }, [sessions]);
 
     // Calculate weekly minutes (Sun - Sat)
-    const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-    const getWeeklyMinutes = () => {
-        const weeklyMinutes: Record<string, number> = {
+    const { weeklyMinutes, maxWeeklyMins } = useMemo(() => {
+        const weekly: Record<string, number> = {
             Sun: 0, Mon: 0, Tue: 0, Wed: 0, Thu: 0, Fri: 0, Sat: 0
         };
 
         const currentDayOfWeek = today.getDay();
-        const distanceToSun = currentDayOfWeek;
         const sunday = new Date(today);
-        sunday.setDate(today.getDate() - distanceToSun);
+        sunday.setDate(today.getDate() - currentDayOfWeek);
         sunday.setHours(0, 0, 0, 0);
 
-        daysOfWeek.forEach((day, index) => {
+        DAYS_OF_WEEK.forEach((day, index) => {
             const targetDate = new Date(sunday);
             targetDate.setDate(sunday.getDate() + index);
+            const targetStr = format(targetDate, "yyyy-MM-dd");
 
             const daySessions = sessions.filter(
-                (s) => s.date && isSameDay(parseISO(s.date), targetDate)
+                (s) => s.date && s.date.startsWith(targetStr)
             );
-            const historicalSeconds = daySessions.reduce(
+            const histSecs = daySessions.reduce(
                 (acc, s) => acc + s.duration,
                 0
             );
-            const liveSeconds = isSameDay(today, targetDate) ? liveElapsed : 0;
-            const totalMinutes = Math.floor((historicalSeconds + liveSeconds) / 60);
-
-            weeklyMinutes[day] = totalMinutes;
+            const isTodayTarget = targetStr === todayStr;
+            const liveSecs = isTodayTarget ? liveElapsed : 0;
+            weekly[day] = Math.floor((histSecs + liveSecs) / 60);
         });
 
-        return weeklyMinutes;
-    };
-
-    const weeklyMinutes = getWeeklyMinutes();
-    const maxWeeklyMins = Math.max(120, ...Object.values(weeklyMinutes));
+        return {
+            weeklyMinutes: weekly,
+            maxWeeklyMins: Math.max(120, ...Object.values(weekly)),
+        };
+    }, [sessions, today, todayStr, liveElapsed]);
 
     const now = new Date();
     const currentHour = now.getHours();
@@ -193,7 +194,7 @@ export function StatsJournal() {
 
     return (
         <div className="h-full flex flex-col gap-6">
-            <Card className="p-4 bg-primary/5 border-primary/10 shadow-md backdrop-blur-sm rounded-[var(--radius)]">
+            <Card className="p-4 bg-primary/5 border border-primary/10 shadow-sm rounded-[var(--radius)]">
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
                         <div className="p-2 bg-primary/10 rounded-[var(--radius)] text-primary">
@@ -217,7 +218,7 @@ export function StatsJournal() {
 
             <div className="grid grid-cols-3 gap-4">
                 <Card
-                    className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border-primary/10 shadow-md backdrop-blur-sm rounded-[var(--radius)] cursor-pointer hover:bg-primary/10 transition-colors"
+                    className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border border-primary/10 shadow-sm rounded-[var(--radius)] cursor-pointer hover:bg-primary/10 transition-colors"
                     onClick={() => setShowHours(!showHours)}
                 >
                     <div className="p-2 bg-primary/10 border border-primary/20 rounded-[var(--radius)] text-primary mb-1">
@@ -231,7 +232,7 @@ export function StatsJournal() {
                     </span>
                 </Card>
 
-                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border-primary/10 shadow-md backdrop-blur-sm rounded-[var(--radius)]">
+                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border border-primary/10 shadow-sm rounded-[var(--radius)]">
                     <div className="p-2 bg-primary/10 border border-primary/20 rounded-[var(--radius)] text-primary mb-1">
                         <CheckCircle2 className="w-5 h-5" />
                     </div>
@@ -243,7 +244,7 @@ export function StatsJournal() {
                     </span>
                 </Card>
 
-                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border-primary/10 shadow-md backdrop-blur-sm rounded-[var(--radius)]">
+                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border border-primary/10 shadow-sm rounded-[var(--radius)]">
                     <div className="p-2 bg-primary/10 border border-primary/20 rounded-[var(--radius)] text-primary mb-1">
                         <List className="w-5 h-5" />
                     </div>
@@ -257,7 +258,7 @@ export function StatsJournal() {
             {/* Statistics Grid */}
             <div className="grid grid-cols-2 gap-4">
                 {/* Longest Streak */}
-                <Card className="p-4 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-3 rounded-[var(--radius)]">
+                <Card className="p-4 bg-card border border-border/50 shadow-sm flex flex-col gap-3 rounded-[var(--radius)]">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-[var(--radius)] bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 shadow-sm">
                             <Flame className="w-4 h-4" />
@@ -277,7 +278,7 @@ export function StatsJournal() {
                 </Card>
 
                 {/* Completion Rate */}
-                <Card className="p-4 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-3 rounded-[var(--radius)]">
+                <Card className="p-4 bg-card border border-border/50 shadow-sm flex flex-col gap-3 rounded-[var(--radius)]">
                     <div className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-[var(--radius)] bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 shadow-sm">
                             <Target className="w-4 h-4" />
@@ -286,7 +287,7 @@ export function StatsJournal() {
                     </div>
                     <div className="flex flex-col gap-1 pt-1">
                         <div className="text-2xl font-bold">
-                            {todos.length > 0 ? Math.round((todos.filter((t) => t.completed).length / todos.length) * 100) : 0}%
+                            {completionRate}%
                         </div>
                         <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                             <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground" />
@@ -297,7 +298,7 @@ export function StatsJournal() {
             </div>
 
             {/* Weekly Focus Trend Chart */}
-            <Card className="p-4 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col rounded-[var(--radius)] space-y-3">
+            <Card className="p-4 bg-card border border-border/50 shadow-sm flex flex-col rounded-[var(--radius)] space-y-3">
                 <div className="flex items-center gap-3">
                     <div className="w-9 h-9 rounded-[var(--radius)] bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 shadow-sm">
                         <TrendingUp className="w-4 h-4" />
@@ -306,7 +307,7 @@ export function StatsJournal() {
                 </div>
                 <div className="space-y-2">
                     <div className="flex items-end justify-between gap-2 h-24 pt-2">
-                        {daysOfWeek.map((day) => {
+                        {DAYS_OF_WEEK.map((day) => {
                             const minsLogged = weeklyMinutes[day] || 0;
                             const heightPercent =
                                 minsLogged > 0
@@ -343,7 +344,7 @@ export function StatsJournal() {
                 </div>
             </Card>
 
-            <Card className="p-6 bg-card/50 border-0 shadow-md backdrop-blur-sm flex flex-col gap-4 rounded-[var(--radius)]">
+            <Card className="p-6 bg-card border border-border/50 shadow-sm flex flex-col gap-4 rounded-[var(--radius)]">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <div className="w-9 h-9 rounded-[var(--radius)] bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 shadow-sm">
@@ -373,7 +374,7 @@ export function StatsJournal() {
                     </div>
                 ) : (
                     <div className="space-y-3">
-                        {distractionCategories.map((cat) => {
+                        {DISTRACTION_CATEGORIES.map((cat) => {
                             const count = categoryCounts[cat] || 0;
                             if (count === 0) return null;
                             const percentage = Math.round((count / totalDistractions) * 100);
