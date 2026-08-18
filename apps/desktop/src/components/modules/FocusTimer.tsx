@@ -26,6 +26,7 @@ export const FocusTimer: React.FC = () => {
     setPomodoroSettings,
     pomodoroCount,
     setPomodoroCount,
+    resetPomodoroCount,
     todos,
     addTodo,
     selectedTodoId,
@@ -305,7 +306,7 @@ export const FocusTimer: React.FC = () => {
 
       {/* Pomodoro Cycle & Progress Indicator */}
       {timerMode === 'POMODORO' && previousMode !== 'STOPWATCH' && (
-        <div className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-800 text-xs font-mono text-zinc-300 shadow-sm animate-in fade-in duration-150">
+        <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-zinc-900/90 border border-zinc-800 text-xs font-mono text-zinc-300 shadow-sm animate-in fade-in duration-150 group">
           <div className="flex items-center gap-1.5">
             {[0, 1, 2, 3].map((index) => {
               const currentCycleStep = (pomodoroCount || 0) % 4;
@@ -334,6 +335,16 @@ export const FocusTimer: React.FC = () => {
                   : `Short Break (${pomodoroSettings.break || 5}m)`)
               : `Pomodoro ${((pomodoroCount || 0) % 4) + 1} of 4`}
           </span>
+          {(pomodoroCount || 0) % 4 !== 0 && (
+            <button
+              type="button"
+              onClick={resetPomodoroCount}
+              className="p-0.5 rounded text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+              title="Reset pomodoro count to 1 of 4"
+            >
+              <RotateCcw className="w-3 h-3" />
+            </button>
+          )}
         </div>
       )}
 
@@ -685,6 +696,22 @@ export const FocusTimer: React.FC = () => {
                 <div className={`w-10 h-[22px] rounded-full p-[3px] transition-colors duration-200 shrink-0 ml-4 ${pomodoroSettings.autoStartTimer ? 'bg-zinc-200' : 'bg-zinc-600'}`}>
                   <div className={`w-4 h-4 rounded-full transition-transform duration-200 ${pomodoroSettings.autoStartTimer ? 'translate-x-[18px] bg-zinc-900' : 'translate-x-0 bg-zinc-400'}`} />
                 </div>
+              </div>
+
+              <div className="flex items-center justify-between bg-zinc-800/50 border border-zinc-700/50 rounded-xl px-4 py-3 mt-1">
+                <div className="space-y-0.5">
+                  <span className="text-xs font-semibold text-white block">Pomodoro Cycle Count</span>
+                  <span className="text-[10px] text-zinc-400">Currently Pomodoro {((pomodoroCount || 0) % 4) + 1} of 4</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={resetPomodoroCount}
+                  disabled={(pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) === 0}
+                  className="px-2.5 py-1 rounded-lg border border-zinc-700 text-xs font-medium text-zinc-200 hover:bg-zinc-800 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
+                >
+                  <RotateCcw className="w-3 h-3" />
+                  <span>Reset to 1 of 4</span>
+                </button>
               </div>
             </div>
 

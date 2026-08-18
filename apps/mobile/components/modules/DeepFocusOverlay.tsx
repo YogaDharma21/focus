@@ -5,7 +5,7 @@ import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
 import { Radius } from '@/constants/theme';
 import { playCompletionSound } from '@/lib/sound';
-import { Play, Pause, X, AlertTriangle, CheckCircle2, Plus, Music, Volume2, VolumeX } from 'lucide-react-native';
+import { Play, Pause, X, AlertTriangle, CheckCircle2, Plus, Music, Volume2, VolumeX, RotateCcw } from 'lucide-react-native';
 
 const DISTRACTION_CATEGORIES = [
   'Social Media',
@@ -37,6 +37,7 @@ export function DeepFocusOverlay() {
     pomodoroSettings,
     pomodoroCount,
     setPomodoroCount,
+    resetPomodoroCount,
     selectedTodoId,
     todos,
     incrementTodoSession,
@@ -213,6 +214,16 @@ export function DeepFocusOverlay() {
                       : `Short Break (${pomodoroSettings.break || 5}m)`)
                   : `Pomodoro ${((pomodoroCount || 0) % 4) + 1} of 4`}
               </Text>
+              {(pomodoroCount || 0) % 4 !== 0 && (
+                <TouchableOpacity
+                  onPress={resetPomodoroCount}
+                  style={styles.cycleResetBtn}
+                  activeOpacity={0.7}
+                  accessibilityLabel="Reset pomodoro count to 1 of 4"
+                >
+                  <RotateCcw size={11} color={colors.textMuted} />
+                </TouchableOpacity>
+              )}
             </View>
           )}
 
@@ -514,5 +525,9 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     alignItems: 'center',
+  },
+  cycleResetBtn: {
+    padding: 2,
+    marginLeft: 2,
   },
 });

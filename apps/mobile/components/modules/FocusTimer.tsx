@@ -132,6 +132,7 @@ export function FocusTimer() {
     setPomodoroSettings,
     pomodoroCount,
     setPomodoroCount,
+    resetPomodoroCount,
     resetAllData,
     toggleSubtask,
     incrementTodoSession,
@@ -480,6 +481,16 @@ export function FocusTimer() {
                     : `Short Break (${pomodoroSettings.break || 5}m)`)
                 : `Pomodoro ${((pomodoroCount || 0) % 4) + 1} of 4`}
             </Text>
+            {(pomodoroCount || 0) % 4 !== 0 && (
+              <TouchableOpacity
+                onPress={resetPomodoroCount}
+                style={styles.cycleResetBtn}
+                activeOpacity={0.7}
+                accessibilityLabel="Reset pomodoro count to 1 of 4"
+              >
+                <RotateCcw size={11} color={colors.textMuted} />
+              </TouchableOpacity>
+            )}
           </View>
         )}
 
@@ -786,6 +797,40 @@ export function FocusTimer() {
               </View>
               <CustomToggleSwitch value={autoTimer} onToggle={() => setAutoTimer(!autoTimer)} />
             </TouchableOpacity>
+
+            {/* Pomodoro Cycle Reset Card */}
+            <View
+              style={[
+                styles.autoStartCard,
+                {
+                  backgroundColor: colors.inputBg,
+                  borderColor: colors.border,
+                },
+              ]}
+            >
+              <View style={styles.autoStartTextContainer}>
+                <Text style={[styles.autoStartTitle, { color: colors.text }]}>Pomodoro Cycle Count</Text>
+                <Text style={[styles.autoStartSubtitle, { color: colors.textMuted }]}>
+                  Currently Pomodoro {((pomodoroCount || 0) % 4) + 1} of 4
+                </Text>
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.cycleResetModalBtn,
+                  {
+                    borderColor: colors.border,
+                    backgroundColor: colors.card,
+                    opacity: (pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) === 0 ? 0.4 : 1,
+                  },
+                ]}
+                onPress={resetPomodoroCount}
+                disabled={(pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) === 0}
+                activeOpacity={0.7}
+              >
+                <RotateCcw size={12} color={colors.text} />
+                <Text style={[styles.cycleResetModalBtnText, { color: colors.text }]}>Reset to 1 of 4</Text>
+              </TouchableOpacity>
+            </View>
 
             <TouchableOpacity
               style={[styles.saveSettingsBtn, { backgroundColor: colors.primary }]}
@@ -1336,5 +1381,22 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     lineHeight: 20,
     marginTop: 4,
+  },
+  cycleResetBtn: {
+    padding: 2,
+    marginLeft: 2,
+  },
+  cycleResetModalBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+  },
+  cycleResetModalBtnText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
 });
