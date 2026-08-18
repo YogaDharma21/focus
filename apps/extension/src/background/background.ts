@@ -252,29 +252,25 @@ async function startBackgroundTimer() {
     }
 
     timerInterval = setInterval(async () => {
-    const state = await getStoredState();
-    if (!state.isActive) {
-      stopBackgroundTimer();
-      updateBadge(state.timeLeft, false, state.timerState);
-      return;
-    }
+      const state = await getStoredState();
+      if (!state.isActive) {
+        stopBackgroundTimer();
+        updateBadge(state.timeLeft, false, state.timerState);
+        return;
+      }
 
-    if ((state.timerState === "WORK" || state.timerState === "FLOW") && state.shield.enabled) {
-      enforceTabBlocking(state);
-    }
-
-    if (state.timerState === "FLOW") {
-      // Stopwatch mode: count up
-      const nextTime = state.timeLeft + 1;
-      await saveStoredState({ timeLeft: nextTime });
-      updateBadge(nextTime, true, "FLOW");
-    } else {
-      // Countdown mode: WORK or BREAK
-      if (state.timeLeft > 0) {
-        const nextTime = state.timeLeft - 1;
+      if (state.timerState === "FLOW") {
+        // Stopwatch mode: count up
+        const nextTime = state.timeLeft + 1;
         await saveStoredState({ timeLeft: nextTime });
-        updateBadge(nextTime, true, state.timerState);
+        updateBadge(nextTime, true, "FLOW");
       } else {
+        // Countdown mode: WORK or BREAK
+        if (state.timeLeft > 0) {
+          const nextTime = state.timeLeft - 1;
+          await saveStoredState({ timeLeft: nextTime });
+          updateBadge(nextTime, true, state.timerState);
+        } else {
         // Session complete automatically when countdown finishes (00:00)
         stopBackgroundTimer();
 
@@ -461,19 +457,33 @@ if (typeof chrome !== "undefined" && chrome.alarms) {
 if (typeof chrome !== "undefined" && chrome.storage) {
   chrome.storage.onChanged.addListener(async (changes, areaName) => {
     if (areaName === "local" && changes.focus_extension_state_v6) {
-      const newState: AppStateData = changes.focus_extension_state_v6.newValue;
+      const newState: AppStateData | undefined = changes.focus_extension_state_v6.newValue;
       const oldState: AppStateData | undefined = changes.focus_extension_state_v6.oldValue;
-      if (newState?.isActive) {
+      if (!newState) return;
+
+      const wasActive = Boolean(oldState?.isActive);
+      const isNowActive = Boolean(newState.isActive);
+
+      if (isNowActive) {
         if (timerInterval === null) {
           startBackgroundTimer();
+        } else {
+          // If shield was toggled or blocked sites updated during an active session
+          const oldShield = oldState ? JSON.stringify(oldState.shield) : "";
+          const newShield = JSON.stringify(newState.shield);
+          if (oldShield !== newShield && newState.shield.enabled) {
+            enforceTabBlocking(newState);
+          }
         }
       } else {
         stopBackgroundTimer();
-        updateBadge(newState?.timeLeft || 0, false, newState?.timerState || "WORK");
-        restoreBlockedTabs();
+        updateBadge(newState.timeLeft || 0, false, newState.timerState || "WORK");
+        if (wasActive) {
+          restoreBlockedTabs();
+        }
       }
 
-      if (newState && oldState && newState.isMusicPlaying !== oldState.isMusicPlaying) {
+      if (oldState && newState.isMusicPlaying !== oldState.isMusicPlaying) {
         if (newState.isMusicPlaying) {
           await sendToOffscreen("PLAY_MUSIC", { volume: newState.musicVolume ?? 0.8 });
         } else {
