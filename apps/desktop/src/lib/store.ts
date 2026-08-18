@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export type ViewType = "FOCUS" | "TODO" | "JOURNAL" | "NOTES";
+export type ViewType = "FOCUS" | "TODO" | "JOURNAL" | "NOTES" | "SETTINGS";
 export type BackgroundType = "dark" | "gradient" | "mountain" | "library" | "cafe" | "anime-room";
 
 export interface Group {
