@@ -133,9 +133,24 @@ export function PlatformShowcase() {
           }
 
           gsap.from(".ecosystem-header", {
-            y: 30,
+            y: 22,
             autoAlpha: 0,
-            duration: 0.7,
+            duration: 0.9,
+            ease: "power3.out",
+            clearProps: "all",
+            scrollTrigger: {
+              trigger: sectionRef.current,
+              start: "top 88%",
+              once: true,
+            },
+          })
+
+          gsap.from(".platform-card-btn", {
+            y: 18,
+            autoAlpha: 0,
+            scale: 0.985,
+            duration: 0.95,
+            stagger: 0.1,
             ease: "power3.out",
             clearProps: "all",
             scrollTrigger: {
@@ -145,29 +160,16 @@ export function PlatformShowcase() {
             },
           })
 
-          gsap.from(".platform-card-btn", {
-            y: 25,
-            autoAlpha: 0,
-            duration: 0.6,
-            stagger: 0.08,
-            ease: "power2.out",
-            clearProps: "all",
-            scrollTrigger: {
-              trigger: sectionRef.current,
-              start: "top 80%",
-              once: true,
-            },
-          })
-
           gsap.from(".showcase-panel", {
-            y: 35,
+            y: 22,
             autoAlpha: 0,
-            duration: 0.8,
+            scale: 0.985,
+            duration: 1.0,
             ease: "power3.out",
             clearProps: "all",
             scrollTrigger: {
               trigger: sectionRef.current,
-              start: "top 75%",
+              start: "top 80%",
               once: true,
             },
           })
@@ -185,8 +187,8 @@ export function PlatformShowcase() {
         if (previewShotRef.current) {
           gsap.fromTo(
             previewShotRef.current,
-            { opacity: 0.5, scale: 0.985 },
-            { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out", clearProps: "transform,opacity" }
+            { opacity: 0.7, scale: 0.99 },
+            { opacity: 1, scale: 1, duration: 0.45, ease: "power2.out", clearProps: "transform,opacity" }
           )
         }
       })

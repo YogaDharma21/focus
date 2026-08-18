@@ -4,6 +4,7 @@ import { Geist_Mono, Inter } from "next/font/google"
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
 import { SmoothScroll } from "@/components/smooth-scroll"
+import { ScrollEffects } from "@/components/scroll-effects"
 import { cn } from "@/lib/utils"
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" })
@@ -54,7 +55,10 @@ export default function RootLayout({
     >
       <body>
         <ThemeProvider>
-          <SmoothScroll>{children}</SmoothScroll>
+          <SmoothScroll>
+            <ScrollEffects />
+            {children}
+          </SmoothScroll>
         </ThemeProvider>
       </body>
     </html>

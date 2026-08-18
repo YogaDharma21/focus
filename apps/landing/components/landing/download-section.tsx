@@ -68,28 +68,29 @@ export function DownloadSection() {
           }
 
           gsap.from(".download-header", {
-            y: 30,
+            y: 22,
             autoAlpha: 0,
-            duration: 0.7,
+            duration: 0.9,
             ease: "power3.out",
             clearProps: "all",
             scrollTrigger: {
               trigger: sectionRef.current,
-              start: "top 85%",
+              start: "top 88%",
               once: true,
             },
           })
 
           gsap.from(".download-card", {
-            y: 35,
+            y: 20,
             autoAlpha: 0,
-            duration: 0.7,
-            stagger: 0.08,
-            ease: "power2.out",
+            scale: 0.98,
+            duration: 0.95,
+            stagger: 0.12,
+            ease: "power3.out",
             clearProps: "all",
             scrollTrigger: {
               trigger: sectionRef.current,
-              start: "top 80%",
+              start: "top 85%",
               once: true,
             },
           })

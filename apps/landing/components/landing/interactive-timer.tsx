@@ -111,27 +111,28 @@ export function InteractiveTimer() {
           }
 
           gsap.from(".demo-header", {
-            y: 30,
+            y: 22,
             autoAlpha: 0,
-            duration: 0.7,
+            duration: 0.9,
             ease: "power3.out",
             clearProps: "all",
             scrollTrigger: {
               trigger: sectionRef.current,
-              start: "top 85%",
+              start: "top 88%",
               once: true,
             },
           })
 
           gsap.from(".demo-card", {
-            y: 40,
+            y: 24,
             autoAlpha: 0,
-            duration: 0.8,
+            scale: 0.985,
+            duration: 1.05,
             ease: "power3.out",
             clearProps: "all",
             scrollTrigger: {
               trigger: sectionRef.current,
-              start: "top 80%",
+              start: "top 82%",
               once: true,
             },
           })

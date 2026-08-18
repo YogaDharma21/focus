@@ -56,28 +56,28 @@ export function FAQSection() {
           }
 
           gsap.from(".faq-header", {
-            y: 30,
+            y: 22,
             autoAlpha: 0,
-            duration: 0.7,
+            duration: 0.9,
             ease: "power3.out",
             clearProps: "all",
             scrollTrigger: {
               trigger: sectionRef.current,
-              start: "top 85%",
+              start: "top 88%",
               once: true,
             },
           })
 
           gsap.from(".faq-item", {
-            y: 25,
+            y: 18,
             autoAlpha: 0,
-            duration: 0.6,
-            stagger: 0.08,
+            duration: 0.85,
+            stagger: 0.09,
             ease: "power2.out",
             clearProps: "all",
             scrollTrigger: {
               trigger: sectionRef.current,
-              start: "top 80%",
+              start: "top 85%",
               once: true,
             },
           })
