@@ -111,7 +111,7 @@ export function BackgroundDisplay({ theme }: BackgroundDisplayProps) {
   return (
     <div className={`absolute inset-0 pointer-events-none overflow-hidden z-0 transition-all duration-700 ease-in-out ${config.className}`}>
       {config.svg}
-      <div className="absolute inset-0 bg-black/25 backdrop-blur-[1px]" />
+      <div className="absolute inset-0 bg-black/30" />
     </div>
   );
 }
