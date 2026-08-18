@@ -123,6 +123,7 @@ export function Popup() {
 
   // Deep Focus Mode: auto-activate when timer starts
   const prevIsActiveRef = useRef(state?.isActive ?? false);
+  const isInitialLoadRef = useRef(true);
 
   // Local inputs
   const [newTaskText, setNewTaskText] = useState("");
@@ -234,6 +235,11 @@ export function Popup() {
   // Auto-activate deep focus when timer starts (Pomodoro or Flow), auto-exit when timer stops/finishes
   useEffect(() => {
     if (!state) return;
+    if (isInitialLoadRef.current) {
+      isInitialLoadRef.current = false;
+      prevIsActiveRef.current = state.isActive;
+      return;
+    }
     const isWorkOrFlow = state.timerState === "WORK" || state.timerState === "FLOW";
     if (state.isActive && !prevIsActiveRef.current && !state.deepFocusMode && isWorkOrFlow) {
       updateState({ deepFocusMode: true });
@@ -763,8 +769,8 @@ export function Popup() {
       <BackgroundDisplay theme={state.background} />
       {/* Top Header */}
       <header className={`px-4 py-3 flex items-center justify-between z-10 ${
-        "bg-neutral-950/80"
-      } backdrop-blur-sm`}>
+        "bg-neutral-950/95 border-b border-neutral-800/50"
+      }`}>
         <div className="flex items-center gap-2.5">
           <img src="/icons/icon32.png" className="w-7 h-7 rounded-lg object-contain border border-neutral-700 shadow-sm" alt="Focus Logo" />
           <div>
@@ -842,8 +848,8 @@ export function Popup() {
 
       {/* Floating Timer Card Overlay (Matching Provided Mockups) */}
       {activeTab !== "timer" && showFloatingTimerCard && (
-        <div className={`absolute top-14 left-3 right-3 z-50 p-3.5 rounded-2xl border shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 ${
-          "bg-neutral-900/95 border-neutral-800 text-white shadow-black/80"
+        <div className={`absolute top-14 left-3 right-3 z-50 p-3.5 rounded-2xl border shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${
+          "bg-neutral-900 border-neutral-800 text-white shadow-black/80"
         }`}>
           {/* Header Row: Emoji + Mode Name & Live Timer */}
           <div className="flex items-center justify-between mb-3">
@@ -985,8 +991,8 @@ export function Popup() {
       {/* Background Theme Selector Picker Overlay */}
       {showThemePicker && (
         <div className={`absolute top-14 right-4 z-50 p-3 rounded-xl border shadow-2xl flex flex-col gap-1 text-xs font-mono animate-in fade-in duration-150 ${
-          "bg-neutral-950/90 border-neutral-700 text-white"
-        } backdrop-blur-md`}>
+          "bg-neutral-950 border-neutral-700 text-white"
+        }`}>
           <div className="text-[10px] font-bold uppercase opacity-60 px-2 py-1">SELECT BACKGROUND THEME</div>
           {BACKGROUND_THEMES.map((theme) => {
             const isSelected = state.background === theme.id || (theme.id === "dark" && state.background === "default");
@@ -1013,7 +1019,7 @@ export function Popup() {
 
       {/* Info Modal Overlay (Removed Manifest V3 text) */}
       {showInfoModal && (
-        <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
+        <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between animate-in fade-in duration-200 ${
           "bg-black/95 text-white"
         }`}>
           <div className="flex items-center justify-between pb-3">
@@ -1056,7 +1062,7 @@ export function Popup() {
 
       {/* Distraction Picker Modal */}
       {showDistractionPicker && (
-        <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
+        <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between animate-in fade-in duration-200 ${
           "bg-black/95 text-white"
         }`}>
           <div className="flex items-center justify-between pb-3">
@@ -1094,7 +1100,7 @@ export function Popup() {
 
       {/* Timer Settings Modal */}
       {showSettingsModal && (
-        <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between backdrop-blur-md animate-in fade-in duration-200 ${
+        <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between animate-in fade-in duration-200 ${
           "bg-black/95 text-white"
         }`}>
           <div className="flex items-center justify-between pb-3">
@@ -1271,7 +1277,7 @@ export function Popup() {
 
       {/* Task Detail View Modal */}
       {selectedTaskDetail && (
-        <div className={`absolute inset-0 z-50 p-4 flex flex-col justify-between backdrop-blur-md overflow-y-auto animate-in fade-in duration-200 ${
+        <div className={`absolute inset-0 z-50 p-4 flex flex-col justify-between overflow-y-auto animate-in fade-in duration-200 ${
           "bg-[#0b0b0b] text-white"
         }`}>
           {/* Header */}
@@ -1893,8 +1899,8 @@ export function Popup() {
             <div className="w-full max-w-[280px] mb-2 relative">
               {/* Task Selector Dropdown Menu (Pops UPWARDS so Timer Controls below remain visible!) */}
               {showTaskDropdown && (
-                <div className={`absolute bottom-full left-0 right-0 mb-1.5 z-50 p-2 rounded-lg border shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-1 ${
-                  "bg-neutral-900/95 border-neutral-800 text-white"
+                <div className={`absolute bottom-full left-0 right-0 mb-1.5 z-50 p-2 rounded-lg border shadow-2xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-1 ${
+                  "bg-neutral-900 border-neutral-800 text-white"
                 }`}>
                   <div className="flex items-center justify-between px-2 py-1">
                     <span className="text-[10px] font-mono font-bold uppercase opacity-60">FOCUS TOPIC</span>
