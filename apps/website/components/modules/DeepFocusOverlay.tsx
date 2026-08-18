@@ -2,7 +2,7 @@
 
 import { useAppStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
-import { Pause, Play, X, CheckCircle2, Music, Volume2, VolumeX } from "lucide-react";
+import { Pause, Play, X, CheckCircle2, Music, Volume2, VolumeX, RotateCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -21,6 +21,7 @@ export function DeepFocusOverlay() {
         pomodoroSettings,
         pomodoroCount,
         setPomodoroCount,
+        resetPomodoroCount,
         setTimeLeft,
         setTimerState,
         setTimerMode,
@@ -50,6 +51,7 @@ export function DeepFocusOverlay() {
             pomodoroSettings: s.pomodoroSettings,
             pomodoroCount: s.pomodoroCount,
             setPomodoroCount: s.setPomodoroCount,
+            resetPomodoroCount: s.resetPomodoroCount,
             setTimeLeft: s.setTimeLeft,
             setTimerState: s.setTimerState,
             setTimerMode: s.setTimerMode,
@@ -339,7 +341,7 @@ export function DeepFocusOverlay() {
             <div className="flex flex-col items-center gap-4">
                 {/* Pomodoro Cycle & Progress Indicator */}
                 {timerMode === "POMODORO" && previousMode !== "STOPWATCH" && (
-                    <div className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-secondary/40 border border-border/50 text-xs font-mono text-foreground/80 shadow-sm animate-in fade-in duration-150">
+                    <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-secondary/40 border border-border/50 text-xs font-mono text-foreground/80 shadow-sm animate-in fade-in duration-150 group">
                         <div className="flex items-center gap-1.5">
                             {[0, 1, 2, 3].map((index) => {
                                 const currentCycleStep = (pomodoroCount || 0) % 4;
@@ -368,6 +370,16 @@ export function DeepFocusOverlay() {
                                     : `Short Break (${pomodoroSettings.break || 5}m)`
                                 : `Pomodoro ${((pomodoroCount || 0) % 4) + 1} of 4`}
                         </span>
+                        {(pomodoroCount || 0) % 4 !== 0 && (
+                            <button
+                                type="button"
+                                onClick={resetPomodoroCount}
+                                className="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors cursor-pointer"
+                                title="Reset pomodoro count to 1 of 4"
+                            >
+                                <RotateCcw className="w-3 h-3" />
+                            </button>
+                        )}
                     </div>
                 )}
 

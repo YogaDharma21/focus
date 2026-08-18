@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { playCompletionSound } from '../../lib/sound';
-import { X, Play, Pause, AlertTriangle, CheckCircle2, Music, Volume2, VolumeX } from 'lucide-react';
+import { X, Play, Pause, AlertTriangle, CheckCircle2, Music, Volume2, VolumeX, RotateCcw } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
 import { cn } from '../../lib/utils';
@@ -26,6 +26,7 @@ export const DeepFocusOverlay: React.FC = () => {
     pomodoroSettings,
     pomodoroCount,
     setPomodoroCount,
+    resetPomodoroCount,
     todos,
     updateTodo,
     selectedTodoId,
@@ -267,7 +268,7 @@ export const DeepFocusOverlay: React.FC = () => {
       <div className="flex flex-col items-center justify-center space-y-6 my-auto">
         {/* Pomodoro Cycle & Progress Indicator */}
         {timerMode === 'POMODORO' && previousMode !== 'STOPWATCH' && (
-          <div className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-zinc-900/80 border border-zinc-800 text-xs font-mono text-zinc-300 shadow-sm animate-in fade-in duration-150">
+          <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-zinc-900/80 border border-zinc-800 text-xs font-mono text-zinc-300 shadow-sm animate-in fade-in duration-150 group">
             <div className="flex items-center gap-1.5">
               {[0, 1, 2, 3].map((index) => {
                 const currentCycleStep = (pomodoroCount || 0) % 4;
@@ -296,6 +297,16 @@ export const DeepFocusOverlay: React.FC = () => {
                     : `Short Break (${pomodoroSettings.break || 5}m)`)
                 : `Pomodoro ${((pomodoroCount || 0) % 4) + 1} of 4`}
             </span>
+            {(pomodoroCount || 0) % 4 !== 0 && (
+              <button
+                type="button"
+                onClick={resetPomodoroCount}
+                className="p-0.5 rounded text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                title="Reset pomodoro count to 1 of 4"
+              >
+                <RotateCcw className="w-3 h-3" />
+              </button>
+            )}
           </div>
         )}
 
