@@ -4,18 +4,8 @@ import { useAppStore, TodoItem } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Play, Pause, RotateCcw, CheckCircle2, Settings, ChevronDown, ListTodo, FileText, Check, Square, CheckSquare2, Timer, Coffee, Clock } from "lucide-react";
+import { Play, Pause, RotateCcw, CheckCircle2, Focus, ChevronDown, ListTodo, FileText, Check, Square, CheckSquare2, Timer, Coffee, Clock } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import {
     Popover,
     PopoverContent,
@@ -699,6 +689,15 @@ export function FocusTimer() {
                         <CheckCircle2 className="size-4 sm:size-5" />
                     </Button>
 
+                    <Button
+                        variant="outline"
+                        size="icon"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 transition-all cursor-pointer"
+                        onClick={() => setDeepFocusMode(true)}
+                        title="Deep Focus Mode"
+                    >
+                        <Focus className="size-4 sm:size-5" />
+                    </Button>
                 </div>
             </div>
         </div>

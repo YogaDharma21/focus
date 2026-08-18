@@ -1,5 +1,5 @@
 import React from 'react';
-import { Settings, Clock, Palette, Volume2, Trash2, BellRing, Volume1 } from 'lucide-react';
+import { Settings, Clock, Palette, Volume2, Trash2, BellRing, Volume1, Info, Github, ExternalLink, Sparkles } from 'lucide-react';
 import { useDesktopStore, BackgroundType } from '../../lib/store';
 
 export const SettingsPage: React.FC = () => {
@@ -224,6 +224,38 @@ export const SettingsPage: React.FC = () => {
               <Trash2 className="w-4 h-4" />
               Reset All Data
             </button>
+          </div>
+
+          {/* About Section */}
+          <div className="bg-zinc-900/80 border border-zinc-800 rounded-xl p-5 shadow-sm space-y-4">
+            <div className="flex items-center gap-2 mb-2">
+              <Info className="w-4 h-4 text-zinc-400" />
+              <h2 className="text-sm font-semibold text-zinc-200 uppercase tracking-wider">About</h2>
+            </div>
+
+            <div className="space-y-3 text-xs">
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-zinc-950/50 border border-zinc-800/80">
+                <span className="font-semibold text-zinc-200">Version</span>
+                <span className="font-mono text-zinc-400">v0.0.1</span>
+              </div>
+
+              <div className="p-3.5 rounded-xl bg-zinc-950/50 border border-zinc-800/80 text-zinc-400 leading-relaxed">
+                A minimalist, high-performance desktop productivity suite designed to keep you in flow state. Features flexible Pomodoro and Flow timers, smart break calculation, task management with subtasks, streak and distraction analytics, mood reflections, and ambient music.
+              </div>
+
+              <a
+                href="https://github.com/YogaDharma21/focus"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between p-3.5 rounded-xl bg-zinc-950/50 border border-zinc-800/80 hover:bg-zinc-800/60 text-zinc-200 hover:text-white transition-colors"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Github className="w-4 h-4 text-zinc-400" />
+                  <span className="font-medium">GitHub Repository</span>
+                </div>
+                <ExternalLink className="w-3.5 h-3.5 text-zinc-500" />
+              </a>
+            </div>
           </div>
         </div>
       </div>

@@ -21,8 +21,7 @@ import {
   AlertTriangle,
   Plus,
   CheckCircle2,
-  Settings,
-  Trash2,
+  Focus,
   CheckSquare,
   Square,
   ListCheck,
@@ -645,6 +644,15 @@ export function FocusTimer() {
             activeOpacity={0.7}
           >
             <CheckCircle2 size={20} color={colors.text} />
+          </TouchableOpacity>
+
+          {/* 5. Deep Focus Mode Button */}
+          <TouchableOpacity
+            style={[styles.secondaryActionBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => setDeepFocusMode(true)}
+            activeOpacity={0.7}
+          >
+            <Focus size={18} color={colors.text} />
           </TouchableOpacity>
         </View>
       </View>

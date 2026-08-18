@@ -5,7 +5,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
 import { Header } from '@/components/Header';
 import { BackgroundDisplay } from '@/components/modules/BackgroundDisplay';
-import { InfoModal } from '@/components/modules/InfoModal';
 import { MediaPlayer } from '@/components/modules/MediaPlayer';
 import { DeepFocusOverlay } from '@/components/modules/DeepFocusOverlay';
 import { DynamicIslandTimer } from '@/components/modules/DynamicIslandTimer';
@@ -17,7 +16,6 @@ import { playCompletionSound } from '@/lib/sound';
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
-  const [infoModalOpen, setInfoModalOpen] = useState(false);
 
   const {
     isActive,
@@ -139,10 +137,7 @@ export default function TabLayout() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <BackgroundDisplay />
-      <Header
-        onOpenBackgrounds={() => {}}
-        onOpenInfo={() => setInfoModalOpen(true)}
-      />
+      <Header />
       <DynamicIslandTimer />
 
       <View style={styles.content}>
@@ -205,7 +200,6 @@ export default function TabLayout() {
 
       <MediaPlayer />
       <DeepFocusOverlay />
-      <InfoModal visible={infoModalOpen} onClose={() => setInfoModalOpen(false)} />
     </View>
   );
 }

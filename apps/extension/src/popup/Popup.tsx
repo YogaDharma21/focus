@@ -113,7 +113,6 @@ const BACKGROUND_THEMES: { id: BackgroundTheme; name: string }[] = [
 export function Popup() {
   const [state, setState] = useState<AppStateData | null>(getCachedState());
   const [activeTab, setActiveTab] = useState<"timer" | "tasks" | "shield" | "notes" | "stats" | "settings">("timer");
-  const [showInfoModal, setShowInfoModal] = useState(false);
   const [showDistractionPicker, setShowDistractionPicker] = useState(false);
   const [showFloatingTimerCard, setShowFloatingTimerCard] = useState(false);
   const [showTaskDropdown, setShowTaskDropdown] = useState(false);
@@ -762,37 +761,6 @@ export function Popup() {
             )}
           </button>
         )}
-
-        {/* Action Controls: Deep Focus + Background Switcher (Paintbrush icon) + Info */}
-        <div className="flex items-center gap-1.5">
-          {/* Deep Focus Mode Toggle Button */}
-          <button
-            onClick={() => updateState({ deepFocusMode: !state.deepFocusMode })}
-            className={`p-1.5 rounded-lg border transition-all flex items-center justify-center ${
-              state.deepFocusMode
-                ? "bg-white text-black border-white"
-                : "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800"
-            }`}
-            title="Toggle Deep Focus Mode"
-          >
-            <Focus className="w-4 h-4" />
-          </button>
-
-          
-
-          {/* Info Button */}
-          <button
-            onClick={() => setShowInfoModal(!showInfoModal)}
-            className={`p-1.5 rounded-lg border transition-all flex items-center justify-center ${
-              showInfoModal
-                ? "bg-white text-black border-white"
-                : "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800"
-            }`}
-            title="Focus Extension Info"
-          >
-            <Info className="w-4 h-4" />
-          </button>
-        </div>
       </header>
 
       {/* Floating Timer Card Overlay (Matching Provided Mockups) */}
@@ -937,48 +905,7 @@ export function Popup() {
         </div>
       )}
 
-      {/* Info Modal Overlay (Removed Manifest V3 text) */}
-      {showInfoModal && (
-        <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between animate-in fade-in duration-200 ${
-          "bg-black/95 text-white"
-        }`}>
-          <div className="flex items-center justify-between pb-3">
-            <div className="flex items-center gap-2">
-              <Info className="w-4 h-4" />
-              <h2 className="text-sm font-bold font-mono uppercase tracking-wider">ABOUT FOCUS EXTENSION</h2>
-            </div>
-            <button
-              onClick={() => setShowInfoModal(false)}
-              className={`p-1 rounded-lg border ${
-                "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800"
-              }`}
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
 
-          <div className={`my-auto text-xs leading-relaxed p-4 rounded-xl border text-center font-medium opacity-90 ${"border-neutral-800"}`}>
-            Focus is a minimalist, monochrome extension designed for distraction-free deep work, pomodoro tracking, and site blocking.
-          </div>
-
-          <div className="space-y-2 pt-2">
-            <button
-              onClick={openGithubLink}
-              className={`w-full py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 border transition-all ${
-                "bg-white text-black border-white hover:bg-neutral-200"
-              }`}
-            >
-              <Github className="w-4 h-4" />
-              <span>View Source on GitHub Pages</span>
-              <ExternalLink className="w-3.5 h-3.5" />
-            </button>
-
-            <div className="text-[10px] font-mono text-center opacity-50">
-              Focus Extension v0.0.1
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Distraction Picker Modal */}
       {showDistractionPicker && (
@@ -1853,7 +1780,18 @@ export function Popup() {
                 <CheckCircle className="w-4 h-4" />
               </button>
 
-              
+              {/* Deep Focus Mode Button */}
+              <button
+                onClick={() => updateState({ deepFocusMode: !state.deepFocusMode })}
+                className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
+                  state.deepFocusMode
+                    ? "bg-white text-black border-white"
+                    : "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
+                }`}
+                title="Deep Focus Mode"
+              >
+                <Focus className="w-4 h-4" />
+              </button>
             </div>
           </div>
         )}
@@ -2513,6 +2451,34 @@ export function Popup() {
               >
                 Reset All Extension Data
               </button>
+            </div>
+
+            {/* About Section */}
+            <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
+              "bg-black/40 border-neutral-800"
+            }`}>
+              <span className="text-xs font-bold text-white uppercase tracking-wider">About</span>
+              <div className="space-y-2 text-xs">
+                <div className="flex items-center justify-between bg-neutral-900/60 border border-neutral-800 rounded-xl px-4 py-3">
+                  <span className="font-medium text-white">Version</span>
+                  <span className="font-mono text-neutral-400">v0.0.1</span>
+                </div>
+
+                <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-3.5 text-neutral-400 leading-relaxed">
+                  Focus is a minimalist, monochrome productivity extension designed for distraction-free deep work, pomodoro tracking, and site blocking.
+                </div>
+
+                <button
+                  onClick={openGithubLink}
+                  className="w-full py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-between border border-neutral-800 bg-neutral-900/60 hover:bg-neutral-800 text-white transition-all cursor-pointer"
+                >
+                  <div className="flex items-center gap-2">
+                    <Github className="w-4 h-4" />
+                    <span>GitHub Repository</span>
+                  </div>
+                  <ExternalLink className="w-3.5 h-3.5 text-neutral-400" />
+                </button>
+              </div>
             </div>
             
             {/* Bottom Padding */}
