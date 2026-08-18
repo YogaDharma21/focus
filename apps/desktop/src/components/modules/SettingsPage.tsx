@@ -277,7 +277,7 @@ export const SettingsPage: React.FC = () => {
   ];
 
   return (
-    <div className="max-w-4xl mx-auto w-full pb-24 animate-in fade-in duration-200">
+    <div className="max-w-4xl mx-auto w-full pb-24 animate-in fade-in duration-200 select-none">
       {/* Hidden file input for backup restore */}
       <input
         ref={fileInputRef}
@@ -291,14 +291,14 @@ export const SettingsPage: React.FC = () => {
       {feedbackMessage && (
         <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-3 duration-200">
           <div
-            className={`px-4 py-2.5 rounded-xl text-xs font-medium border shadow-xl flex items-center gap-2 backdrop-blur-md ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-medium border shadow-2xl flex items-center gap-2 backdrop-blur-md ${
               feedbackMessage.type === 'success'
-                ? 'bg-zinc-900/90 text-emerald-300 border-emerald-500/30 shadow-emerald-950/20'
-                : 'bg-zinc-900/90 text-rose-300 border-rose-500/30 shadow-rose-950/20'
+                ? 'bg-zinc-900/95 text-zinc-100 border-zinc-700 shadow-black/50'
+                : 'bg-zinc-900/95 text-rose-300 border-rose-500/40 shadow-rose-950/30'
             }`}
           >
             {feedbackMessage.type === 'success' ? (
-              <Check className="w-4 h-4 text-emerald-400" />
+              <Check className="w-4 h-4 text-zinc-300" />
             ) : (
               <ShieldAlert className="w-4 h-4 text-rose-400" />
             )}
@@ -311,7 +311,7 @@ export const SettingsPage: React.FC = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 pb-6 border-b border-zinc-800/80">
         <div className="flex items-center gap-3.5">
           <div className="w-11 h-11 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-100 shadow-inner">
-            <Settings className="w-5 h-5" />
+            <Settings className="w-5 h-5 text-zinc-300" />
           </div>
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-zinc-100 tracking-tight">Settings</h1>
@@ -354,7 +354,7 @@ export const SettingsPage: React.FC = () => {
               }}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-medium whitespace-nowrap transition-all ${
                 isActiveTab
-                  ? 'bg-zinc-100 text-zinc-950 font-semibold shadow-md'
+                  ? 'bg-zinc-100 text-zinc-950 font-semibold shadow-sm'
                   : 'bg-zinc-900/60 border border-zinc-800/80 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/70 hover:border-zinc-700'
               }`}
             >
@@ -375,7 +375,7 @@ export const SettingsPage: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
-                  <Clock className="w-4 h-4 text-emerald-400" />
+                  <Clock className="w-4 h-4 text-zinc-300" />
                 </div>
                 <div>
                   <h2 className="text-sm font-semibold text-zinc-100 tracking-tight">Timer & Focus Durations</h2>
@@ -390,7 +390,7 @@ export const SettingsPage: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-semibold text-zinc-200">Work Duration</span>
-                    <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/40 border border-emerald-800/40 px-2 py-0.5 rounded-md">
+                    <span className="text-xs font-mono font-semibold text-zinc-100 bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-md">
                       {pomodoroSettings.work} min
                     </span>
                   </div>
@@ -432,7 +432,7 @@ export const SettingsPage: React.FC = () => {
                       onClick={() => handleTimerSettingChange({ work: p })}
                       className={`text-[10px] px-2 py-1 rounded-md font-mono transition-all ${
                         pomodoroSettings.work === p
-                          ? 'bg-emerald-500 text-zinc-950 font-bold shadow-sm'
+                          ? 'bg-zinc-100 text-zinc-950 font-bold shadow-sm'
                           : 'bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
                       }`}
                     >
@@ -447,7 +447,7 @@ export const SettingsPage: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-semibold text-zinc-200">Short Break</span>
-                    <span className="text-xs font-mono font-bold text-sky-400 bg-sky-950/40 border border-sky-800/40 px-2 py-0.5 rounded-md">
+                    <span className="text-xs font-mono font-semibold text-zinc-100 bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-md">
                       {pomodoroSettings.break} min
                     </span>
                   </div>
@@ -489,7 +489,7 @@ export const SettingsPage: React.FC = () => {
                       onClick={() => handleTimerSettingChange({ break: p })}
                       className={`text-[10px] px-2 py-1 rounded-md font-mono transition-all ${
                         pomodoroSettings.break === p
-                          ? 'bg-sky-500 text-zinc-950 font-bold shadow-sm'
+                          ? 'bg-zinc-100 text-zinc-950 font-bold shadow-sm'
                           : 'bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
                       }`}
                     >
@@ -504,7 +504,7 @@ export const SettingsPage: React.FC = () => {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-xs font-semibold text-zinc-200">Long Break</span>
-                    <span className="text-xs font-mono font-bold text-indigo-400 bg-indigo-950/40 border border-indigo-800/40 px-2 py-0.5 rounded-md">
+                    <span className="text-xs font-mono font-semibold text-zinc-100 bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-md">
                       {pomodoroSettings.longBreak || 15} min
                     </span>
                   </div>
@@ -546,7 +546,7 @@ export const SettingsPage: React.FC = () => {
                       onClick={() => handleTimerSettingChange({ longBreak: p })}
                       className={`text-[10px] px-2 py-1 rounded-md font-mono transition-all ${
                         (pomodoroSettings.longBreak || 15) === p
-                          ? 'bg-indigo-500 text-zinc-950 font-bold shadow-sm'
+                          ? 'bg-zinc-100 text-zinc-950 font-bold shadow-sm'
                           : 'bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
                       }`}
                     >
@@ -575,10 +575,10 @@ export const SettingsPage: React.FC = () => {
                   </span>
                 </div>
                 <div className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${
-                  pomodoroSettings.autoStartBreak ? 'bg-emerald-500' : 'bg-zinc-700'
+                  pomodoroSettings.autoStartBreak ? 'bg-zinc-200' : 'bg-zinc-700'
                 }`}>
-                  <div className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 ${
-                    pomodoroSettings.autoStartBreak ? 'translate-x-5' : 'translate-x-0'
+                  <div className={`w-5 h-5 rounded-full transition-transform duration-200 ${
+                    pomodoroSettings.autoStartBreak ? 'translate-x-5 bg-zinc-900 shadow-sm' : 'translate-x-0 bg-zinc-400'
                   }`} />
                 </div>
               </div>
@@ -599,10 +599,10 @@ export const SettingsPage: React.FC = () => {
                   </span>
                 </div>
                 <div className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${
-                  pomodoroSettings.autoStartTimer ? 'bg-emerald-500' : 'bg-zinc-700'
+                  pomodoroSettings.autoStartTimer ? 'bg-zinc-200' : 'bg-zinc-700'
                 }`}>
-                  <div className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 ${
-                    pomodoroSettings.autoStartTimer ? 'translate-x-5' : 'translate-x-0'
+                  <div className={`w-5 h-5 rounded-full transition-transform duration-200 ${
+                    pomodoroSettings.autoStartTimer ? 'translate-x-5 bg-zinc-900 shadow-sm' : 'translate-x-0 bg-zinc-400'
                   }`} />
                 </div>
               </div>
@@ -635,13 +635,13 @@ export const SettingsPage: React.FC = () => {
         )}
 
         {/* ========================================================================= */}
-        {/* 2. APPEARANCE & THEMES SECTION                                           */}
+        {/* 2. APPEARANCE & THEMES SECTION (COLORS PERMITTED HERE)                     */}
         {/* ========================================================================= */}
         {isTabVisible('appearance') && (
           <section className="space-y-4 animate-in fade-in duration-150">
             <div className="flex items-center gap-2.5">
               <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
-                <Palette className="w-4 h-4 text-purple-400" />
+                <Palette className="w-4 h-4 text-zinc-300" />
               </div>
               <div>
                 <h2 className="text-sm font-semibold text-zinc-100 tracking-tight">Appearance & Workspace Themes</h2>
@@ -711,7 +711,7 @@ export const SettingsPage: React.FC = () => {
           <section className="space-y-4 animate-in fade-in duration-150">
             <div className="flex items-center gap-2.5">
               <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
-                <Volume2 className="w-4 h-4 text-cyan-400" />
+                <Volume2 className="w-4 h-4 text-zinc-300" />
               </div>
               <div>
                 <h2 className="text-sm font-semibold text-zinc-100 tracking-tight">Sound & Notifications</h2>
@@ -730,7 +730,7 @@ export const SettingsPage: React.FC = () => {
                 >
                   <div className="space-y-1 pr-4">
                     <span className="text-xs font-semibold text-zinc-200 flex items-center gap-2 group-hover:text-white">
-                      <BellRing className="w-3.5 h-3.5 text-cyan-400" />
+                      <BellRing className="w-3.5 h-3.5 text-zinc-400" />
                       Session Chimes (SFX)
                     </span>
                     <span className="text-[11px] text-zinc-400 block leading-tight">
@@ -738,10 +738,10 @@ export const SettingsPage: React.FC = () => {
                     </span>
                   </div>
                   <div className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${
-                    soundEffectEnabled ? 'bg-cyan-500' : 'bg-zinc-700'
+                    soundEffectEnabled ? 'bg-zinc-200' : 'bg-zinc-700'
                   }`}>
-                    <div className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 ${
-                      soundEffectEnabled ? 'translate-x-5' : 'translate-x-0'
+                    <div className={`w-5 h-5 rounded-full transition-transform duration-200 ${
+                      soundEffectEnabled ? 'translate-x-5 bg-zinc-900 shadow-sm' : 'translate-x-0 bg-zinc-400'
                     }`} />
                   </div>
                 </div>
@@ -755,11 +755,11 @@ export const SettingsPage: React.FC = () => {
                       ) : soundEffectVolume < 0.5 ? (
                         <Volume1 className="w-3.5 h-3.5 text-zinc-400" />
                       ) : (
-                        <Volume2 className="w-3.5 h-3.5 text-cyan-400" />
+                        <Volume2 className="w-3.5 h-3.5 text-zinc-300" />
                       )}
                       Chime Volume
                     </span>
-                    <span className="font-mono font-bold text-zinc-200">
+                    <span className="font-mono font-semibold text-zinc-200">
                       {Math.round((soundEffectVolume ?? 0.8) * 100)}%
                     </span>
                   </div>
@@ -771,7 +771,7 @@ export const SettingsPage: React.FC = () => {
                     disabled={!soundEffectEnabled}
                     value={soundEffectVolume ?? 0.8}
                     onChange={(e) => setSoundEffectVolume(Number(e.target.value))}
-                    className="w-full h-2 bg-zinc-950 rounded-lg accent-cyan-400 cursor-pointer disabled:opacity-40"
+                    className="w-full h-2 bg-zinc-950 rounded-lg accent-zinc-200 cursor-pointer disabled:opacity-40"
                   />
                 </div>
 
@@ -782,7 +782,7 @@ export const SettingsPage: React.FC = () => {
                     disabled={!soundEffectEnabled}
                     className="w-full sm:w-auto px-4 py-2 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-200 hover:text-white rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm disabled:opacity-40"
                   >
-                    <Volume1 className="w-3.5 h-3.5 text-cyan-400" />
+                    <Volume1 className="w-3.5 h-3.5 text-zinc-400" />
                     Play Test Chime
                   </button>
                 </div>
@@ -792,7 +792,7 @@ export const SettingsPage: React.FC = () => {
               <div className="bg-zinc-900/70 border border-zinc-800/90 rounded-2xl p-5 space-y-4 shadow-sm flex flex-col justify-between">
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <Music className="w-4 h-4 text-emerald-400" />
+                    <Music className="w-4 h-4 text-zinc-300" />
                     <span className="text-xs font-semibold text-zinc-200">Ambient Music Volume</span>
                   </div>
                   <p className="text-[11px] text-zinc-400 leading-relaxed">
@@ -803,7 +803,7 @@ export const SettingsPage: React.FC = () => {
                 <div className="space-y-2 pt-2 border-t border-zinc-800/60">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-zinc-400 font-medium">Player Volume</span>
-                    <span className="font-mono font-bold text-zinc-200">
+                    <span className="font-mono font-semibold text-zinc-200">
                       {Math.round((volume ?? 0.8) * 100)}%
                     </span>
                   </div>
@@ -814,13 +814,13 @@ export const SettingsPage: React.FC = () => {
                     step={0.05}
                     value={volume ?? 0.8}
                     onChange={(e) => setVolume(Number(e.target.value))}
-                    className="w-full h-2 bg-zinc-950 rounded-lg accent-emerald-400 cursor-pointer"
+                    className="w-full h-2 bg-zinc-950 rounded-lg accent-zinc-200 cursor-pointer"
                   />
                 </div>
 
                 <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80 text-[11px]">
                   <span className="text-zinc-400">Default Audio Source</span>
-                  <span className="font-mono font-semibold text-emerald-400 uppercase bg-emerald-950/40 px-2 py-0.5 rounded border border-emerald-800/30">
+                  <span className="font-mono font-semibold text-zinc-300 uppercase bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700">
                     {mediaType}
                   </span>
                 </div>
@@ -836,7 +836,7 @@ export const SettingsPage: React.FC = () => {
           <section className="space-y-4 animate-in fade-in duration-150">
             <div className="flex items-center gap-2.5">
               <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
-                <Monitor className="w-4 h-4 text-amber-400" />
+                <Monitor className="w-4 h-4 text-zinc-300" />
               </div>
               <div>
                 <h2 className="text-sm font-semibold text-zinc-100 tracking-tight">System & Window Preferences</h2>
@@ -854,7 +854,7 @@ export const SettingsPage: React.FC = () => {
               >
                 <div className="space-y-1 pr-4">
                   <span className="text-xs font-semibold text-zinc-200 flex items-center gap-2 group-hover:text-white">
-                    <Pin className="w-3.5 h-3.5 text-amber-400" />
+                    <Pin className="w-3.5 h-3.5 text-zinc-400" />
                     Always On Top (Float Mode)
                   </span>
                   <span className="text-[11px] text-zinc-400 block leading-tight">
@@ -862,10 +862,10 @@ export const SettingsPage: React.FC = () => {
                   </span>
                 </div>
                 <div className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${
-                  isAlwaysOnTop ? 'bg-amber-500' : 'bg-zinc-700'
+                  isAlwaysOnTop ? 'bg-zinc-200' : 'bg-zinc-700'
                 }`}>
-                  <div className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform duration-200 ${
-                    isAlwaysOnTop ? 'translate-x-5' : 'translate-x-0'
+                  <div className={`w-5 h-5 rounded-full transition-transform duration-200 ${
+                    isAlwaysOnTop ? 'translate-x-5 bg-zinc-900 shadow-sm' : 'translate-x-0 bg-zinc-400'
                   }`} />
                 </div>
               </div>
@@ -878,7 +878,7 @@ export const SettingsPage: React.FC = () => {
                     Trigger system native notification toasts when sessions conclude.
                   </span>
                   {notificationStatus && (
-                    <span className="text-[10px] text-amber-400 font-mono block mt-1">{notificationStatus}</span>
+                    <span className="text-[10px] text-zinc-400 font-mono block mt-1">{notificationStatus}</span>
                   )}
                 </div>
                 <button
@@ -922,13 +922,13 @@ export const SettingsPage: React.FC = () => {
         )}
 
         {/* ========================================================================= */}
-        {/* 5. DATA & STORAGE SECTION                                                */}
+        {/* 5. DATA & STORAGE SECTION (DANGER ZONE COLORS PERMITTED HERE)             */}
         {/* ========================================================================= */}
         {isTabVisible('data') && (
           <section className="space-y-4 animate-in fade-in duration-150">
             <div className="flex items-center gap-2.5">
               <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
-                <Database className="w-4 h-4 text-emerald-400" />
+                <Database className="w-4 h-4 text-zinc-300" />
               </div>
               <div>
                 <h2 className="text-sm font-semibold text-zinc-100 tracking-tight">Data, Storage & Backup</h2>
@@ -961,7 +961,7 @@ export const SettingsPage: React.FC = () => {
               <div className="p-5 rounded-2xl bg-zinc-900/70 border border-zinc-800/90 space-y-3 flex flex-col justify-between shadow-sm">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <Download className="w-4 h-4 text-emerald-400" />
+                    <Download className="w-4 h-4 text-zinc-300" />
                     <h3 className="text-xs font-bold text-zinc-200">Export Backup</h3>
                   </div>
                   <p className="text-[11px] text-zinc-400 leading-relaxed">
@@ -972,7 +972,7 @@ export const SettingsPage: React.FC = () => {
                   onClick={handleExportData}
                   className="w-full px-4 py-2.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-100 rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm"
                 >
-                  <Download className="w-3.5 h-3.5" />
+                  <Download className="w-3.5 h-3.5 text-zinc-400" />
                   Download JSON Backup
                 </button>
               </div>
@@ -980,7 +980,7 @@ export const SettingsPage: React.FC = () => {
               <div className="p-5 rounded-2xl bg-zinc-900/70 border border-zinc-800/90 space-y-3 flex flex-col justify-between shadow-sm">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <Upload className="w-4 h-4 text-sky-400" />
+                    <Upload className="w-4 h-4 text-zinc-300" />
                     <h3 className="text-xs font-bold text-zinc-200">Restore Backup</h3>
                   </div>
                   <p className="text-[11px] text-zinc-400 leading-relaxed">
@@ -991,13 +991,13 @@ export const SettingsPage: React.FC = () => {
                   onClick={() => fileInputRef.current?.click()}
                   className="w-full px-4 py-2.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-100 rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm"
                 >
-                  <Upload className="w-3.5 h-3.5" />
+                  <Upload className="w-3.5 h-3.5 text-zinc-400" />
                   Select File to Restore
                 </button>
               </div>
             </div>
 
-            {/* Danger Zone: Reset All Data */}
+            {/* Danger Zone: Reset All Data (Color Permitted Here) */}
             <div className="p-5 rounded-2xl bg-rose-950/20 border border-rose-900/40 space-y-3 shadow-sm">
               <div className="flex items-center gap-2">
                 <ShieldAlert className="w-4 h-4 text-rose-400" />
@@ -1012,7 +1012,7 @@ export const SettingsPage: React.FC = () => {
                     setResetConfirmText('');
                     setShowResetModal(true);
                   }}
-                  className="px-4 py-2.5 bg-rose-600/10 hover:bg-rose-600/20 border border-rose-500/30 text-rose-400 hover:text-rose-300 rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center gap-2 shadow-sm"
+                  className="px-4 py-2.5 bg-rose-600/15 hover:bg-rose-600/25 border border-rose-500/30 text-rose-400 hover:text-rose-300 rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center gap-2 shadow-sm"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                   Reset All Workspace Data
@@ -1029,7 +1029,7 @@ export const SettingsPage: React.FC = () => {
           <section className="space-y-4 animate-in fade-in duration-150">
             <div className="flex items-center gap-2.5">
               <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
-                <Info className="w-4 h-4 text-zinc-400" />
+                <Info className="w-4 h-4 text-zinc-300" />
               </div>
               <div>
                 <h2 className="text-sm font-semibold text-zinc-100 tracking-tight">About Focus Desktop</h2>
@@ -1091,7 +1091,7 @@ export const SettingsPage: React.FC = () => {
       </div>
 
       {/* ========================================================================= */}
-      {/* RESET CONFIRMATION MODAL                                                  */}
+      {/* RESET CONFIRMATION MODAL (DANGER ZONE - COLOR PERMITTED)                  */}
       {/* ========================================================================= */}
       {showResetModal && (
         <div
@@ -1150,4 +1150,5 @@ export const SettingsPage: React.FC = () => {
     </div>
   );
 };
+
 
