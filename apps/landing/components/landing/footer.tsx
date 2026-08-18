@@ -33,7 +33,7 @@ export function Footer() {
           const { reduceMotion } = context.conditions as { reduceMotion: boolean }
 
           if (reduceMotion) {
-            gsap.set(".footer-content", { autoAlpha: 1, y: 0 })
+            gsap.set(".footer-content", { autoAlpha: 1, y: 0, clearProps: "all" })
             return
           }
 
@@ -42,10 +42,11 @@ export function Footer() {
             autoAlpha: 0,
             duration: 0.6,
             ease: "power2.out",
+            clearProps: "all",
             scrollTrigger: {
               trigger: footerRef.current,
-              start: "top 92%",
-              toggleActions: "play none none none",
+              start: "top 95%",
+              once: true,
             },
           })
         }

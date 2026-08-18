@@ -71,7 +71,7 @@ export function FeaturesGrid() {
           const { reduceMotion } = context.conditions as { reduceMotion: boolean }
 
           if (reduceMotion) {
-            gsap.set([".features-header", ".feature-card"], { autoAlpha: 1, y: 0 })
+            gsap.set([".features-header", ".feature-card"], { autoAlpha: 1, y: 0, clearProps: "all" })
             return
           }
 
@@ -80,10 +80,11 @@ export function FeaturesGrid() {
             autoAlpha: 0,
             duration: 0.7,
             ease: "power3.out",
+            clearProps: "all",
             scrollTrigger: {
-              trigger: ".features-header",
+              trigger: sectionRef.current,
               start: "top 85%",
-              toggleActions: "play none none none",
+              once: true,
             },
           })
 
@@ -93,10 +94,11 @@ export function FeaturesGrid() {
             duration: 0.7,
             stagger: 0.08,
             ease: "power2.out",
+            clearProps: "all",
             scrollTrigger: {
-              trigger: ".features-grid",
-              start: "top 85%",
-              toggleActions: "play none none none",
+              trigger: sectionRef.current,
+              start: "top 80%",
+              once: true,
             },
           })
         }

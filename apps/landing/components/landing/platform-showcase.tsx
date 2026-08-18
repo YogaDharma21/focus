@@ -127,6 +127,7 @@ export function PlatformShowcase() {
             gsap.set([".ecosystem-header", ".platform-card-btn", ".showcase-panel"], {
               autoAlpha: 1,
               y: 0,
+              clearProps: "all",
             })
             return
           }
@@ -136,10 +137,11 @@ export function PlatformShowcase() {
             autoAlpha: 0,
             duration: 0.7,
             ease: "power3.out",
+            clearProps: "all",
             scrollTrigger: {
-              trigger: ".ecosystem-header",
+              trigger: sectionRef.current,
               start: "top 85%",
-              toggleActions: "play none none none",
+              once: true,
             },
           })
 
@@ -149,10 +151,11 @@ export function PlatformShowcase() {
             duration: 0.6,
             stagger: 0.08,
             ease: "power2.out",
+            clearProps: "all",
             scrollTrigger: {
-              trigger: ".platform-cards-grid",
-              start: "top 85%",
-              toggleActions: "play none none none",
+              trigger: sectionRef.current,
+              start: "top 80%",
+              once: true,
             },
           })
 
@@ -161,10 +164,11 @@ export function PlatformShowcase() {
             autoAlpha: 0,
             duration: 0.8,
             ease: "power3.out",
+            clearProps: "all",
             scrollTrigger: {
-              trigger: ".showcase-panel",
-              start: "top 85%",
-              toggleActions: "play none none none",
+              trigger: sectionRef.current,
+              start: "top 75%",
+              once: true,
             },
           })
         }
@@ -181,18 +185,13 @@ export function PlatformShowcase() {
         if (previewShotRef.current) {
           gsap.fromTo(
             previewShotRef.current,
-            { autoAlpha: 0.4, scale: 0.98 },
-            { autoAlpha: 1, scale: 1, duration: 0.35, ease: "power2.out" }
+            { opacity: 0.5, scale: 0.985 },
+            { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out", clearProps: "transform,opacity" }
           )
         }
-        gsap.fromTo(
-          ".showcase-info-item",
-          { autoAlpha: 0, x: -10 },
-          { autoAlpha: 1, x: 0, duration: 0.35, stagger: 0.04, ease: "power2.out" }
-        )
       })
     },
-    { scope: sectionRef, dependencies: [activePlatform, selectedShotIndex], revertOnUpdate: true }
+    { scope: sectionRef, dependencies: [activePlatform, selectedShotIndex] }
   )
 
   return (

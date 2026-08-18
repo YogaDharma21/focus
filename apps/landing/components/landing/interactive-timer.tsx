@@ -106,7 +106,7 @@ export function InteractiveTimer() {
           const { reduceMotion } = context.conditions as { reduceMotion: boolean }
 
           if (reduceMotion) {
-            gsap.set([".demo-header", ".demo-card"], { autoAlpha: 1, y: 0 })
+            gsap.set([".demo-header", ".demo-card"], { autoAlpha: 1, y: 0, clearProps: "all" })
             return
           }
 
@@ -115,10 +115,11 @@ export function InteractiveTimer() {
             autoAlpha: 0,
             duration: 0.7,
             ease: "power3.out",
+            clearProps: "all",
             scrollTrigger: {
-              trigger: ".demo-header",
+              trigger: sectionRef.current,
               start: "top 85%",
-              toggleActions: "play none none none",
+              once: true,
             },
           })
 
@@ -127,10 +128,11 @@ export function InteractiveTimer() {
             autoAlpha: 0,
             duration: 0.8,
             ease: "power3.out",
+            clearProps: "all",
             scrollTrigger: {
-              trigger: ".demo-card",
-              start: "top 85%",
-              toggleActions: "play none none none",
+              trigger: sectionRef.current,
+              start: "top 80%",
+              once: true,
             },
           })
         }

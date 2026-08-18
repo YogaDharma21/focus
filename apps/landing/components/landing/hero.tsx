@@ -65,17 +65,25 @@ export function Hero() {
               autoAlpha: 1,
               y: 0,
               scale: 1,
+              clearProps: "all",
             })
             return
           }
 
-          const tl = gsap.timeline({ defaults: { ease: "power3.out" } })
+          const tl = gsap.timeline({
+            defaults: { ease: "power3.out" },
+            onComplete: () => {
+              gsap.set([".hero-title", ".hero-sub", ".hero-cta-btn", ".hero-badge-item"], {
+                clearProps: "opacity,visibility",
+              })
+            },
+          })
 
           tl.from(".hero-title", {
             y: 28,
             autoAlpha: 0,
             duration: 0.8,
-            delay: 0.1,
+            delay: 0.05,
           })
             .from(
               ".hero-sub",
@@ -110,10 +118,10 @@ export function Hero() {
             .from(
               ".hero-preview-frame",
               {
-                y: 40,
+                y: 35,
                 autoAlpha: 0,
-                scale: 0.96,
-                duration: 0.9,
+                scale: 0.97,
+                duration: 0.85,
                 ease: "power2.out",
               },
               "-=0.4"
@@ -121,13 +129,13 @@ export function Hero() {
 
           // Subtle scroll parallax on hero preview
           gsap.to(".hero-preview-frame", {
-            yPercent: 4,
+            yPercent: 3,
             ease: "none",
             scrollTrigger: {
               trigger: heroRef.current,
               start: "top top",
               end: "bottom top",
-              scrub: 1.2,
+              scrub: 1,
             },
           })
         }
@@ -144,13 +152,13 @@ export function Hero() {
         if (previewContainerRef.current) {
           gsap.fromTo(
             previewContainerRef.current,
-            { autoAlpha: 0.5, scale: 0.985 },
-            { autoAlpha: 1, scale: 1, duration: 0.4, ease: "power2.out" }
+            { opacity: 0.6, scale: 0.99 },
+            { opacity: 1, scale: 1, duration: 0.3, ease: "power2.out", clearProps: "transform,opacity" }
           )
         }
       })
     },
-    { scope: heroRef, dependencies: [activeTab], revertOnUpdate: true }
+    { scope: heroRef, dependencies: [activeTab] }
   )
 
   return (

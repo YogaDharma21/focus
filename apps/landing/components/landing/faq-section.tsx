@@ -7,7 +7,6 @@ import { gsap, useGSAP } from "@/lib/gsap"
 export function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(0)
   const sectionRef = useRef<HTMLElement>(null)
-  const answerRefs = useRef<(HTMLDivElement | null)[]>([])
 
   const faqs = [
     {
@@ -52,7 +51,7 @@ export function FAQSection() {
           const { reduceMotion } = context.conditions as { reduceMotion: boolean }
 
           if (reduceMotion) {
-            gsap.set([".faq-header", ".faq-item"], { autoAlpha: 1, y: 0 })
+            gsap.set([".faq-header", ".faq-item"], { autoAlpha: 1, y: 0, clearProps: "all" })
             return
           }
 
@@ -61,10 +60,11 @@ export function FAQSection() {
             autoAlpha: 0,
             duration: 0.7,
             ease: "power3.out",
+            clearProps: "all",
             scrollTrigger: {
-              trigger: ".faq-header",
+              trigger: sectionRef.current,
               start: "top 85%",
-              toggleActions: "play none none none",
+              once: true,
             },
           })
 
@@ -74,69 +74,17 @@ export function FAQSection() {
             duration: 0.6,
             stagger: 0.08,
             ease: "power2.out",
+            clearProps: "all",
             scrollTrigger: {
-              trigger: ".faq-list",
-              start: "top 85%",
-              toggleActions: "play none none none",
+              trigger: sectionRef.current,
+              start: "top 80%",
+              once: true,
             },
           })
         }
       )
     },
     { scope: sectionRef }
-  )
-
-  // Fluid Accordion Animation with GSAP
-  useGSAP(
-    () => {
-      const mm = gsap.matchMedia()
-
-      mm.add(
-        {
-          reduceMotion: "(prefers-reduced-motion: reduce)",
-          animate: "(prefers-reduced-motion: no-preference)",
-        },
-        (context) => {
-          const { reduceMotion } = context.conditions as { reduceMotion: boolean }
-
-          answerRefs.current.forEach((el, idx) => {
-            if (!el) return
-            const isOpen = openIndex === idx
-
-            if (reduceMotion) {
-              gsap.set(el, {
-                height: isOpen ? "auto" : 0,
-                autoAlpha: isOpen ? 1 : 0,
-                display: isOpen ? "block" : "none",
-              })
-              return
-            }
-
-            if (isOpen) {
-              gsap.set(el, { display: "block" })
-              gsap.fromTo(
-                el,
-                { height: 0, autoAlpha: 0 },
-                { height: "auto", autoAlpha: 1, duration: 0.35, ease: "power2.out" }
-              )
-            } else {
-              gsap.to(el, {
-                height: 0,
-                autoAlpha: 0,
-                duration: 0.25,
-                ease: "power2.inOut",
-                onComplete: () => {
-                  if (openIndex !== idx && el) {
-                    gsap.set(el, { display: "none" })
-                  }
-                },
-              })
-            }
-          })
-        }
-      )
-    },
-    { scope: sectionRef, dependencies: [openIndex], revertOnUpdate: true }
   )
 
   return (
@@ -170,6 +118,7 @@ export function FAQSection() {
                 <button
                   onClick={() => setOpenIndex(isOpen ? null : idx)}
                   className="w-full p-5 text-left flex items-center justify-between gap-4 font-semibold text-sm text-foreground hover:text-primary transition-colors"
+                  aria-expanded={isOpen}
                 >
                   <span>{faq.question}</span>
                   <ChevronDown
@@ -180,25 +129,25 @@ export function FAQSection() {
                 </button>
 
                 <div
-                  ref={(el) => {
-                    answerRefs.current[idx] = el
-                  }}
-                  className="overflow-hidden"
-                  style={{ display: idx === 0 ? "block" : "none" }}
+                  className={`grid transition-[grid-template-rows,opacity] duration-300 ease-in-out ${
+                    isOpen ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"
+                  }`}
                 >
-                  <div className="px-5 pb-5 text-xs text-muted-foreground leading-relaxed border-t border-border/50 pt-3 flex flex-col gap-3">
-                    <p>{faq.answer}</p>
-                    {faq.hasWebLink && (
-                      <a
-                        href="https://focustracks.vercel.app"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium w-fit hover:opacity-90 transition-all hover:scale-[1.02] active:scale-[0.98]"
-                      >
-                        Launch Web App
-                        <ExternalLink className="size-3" />
-                      </a>
-                    )}
+                  <div className="overflow-hidden">
+                    <div className="px-5 pb-5 text-xs text-muted-foreground leading-relaxed border-t border-border/50 pt-3 flex flex-col gap-3">
+                      <p>{faq.answer}</p>
+                      {faq.hasWebLink && (
+                        <a
+                          href="https://focustracks.vercel.app"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium w-fit hover:opacity-90 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                        >
+                          Launch Web App
+                          <ExternalLink className="size-3" />
+                        </a>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
