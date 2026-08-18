@@ -440,7 +440,7 @@ export function TodoList() {
                 open={!!editingTaskId}
                 onOpenChange={(open) => !open && setEditingTaskId(null)}
             >
-                <DialogContent className="sm:max-w-lg md:max-w-xl max-h-[90vh] overflow-y-auto p-6 space-y-6 bg-background/95 backdrop-blur-md border-border/60 shadow-2xl rounded-2xl">
+                <DialogContent className="sm:max-w-lg md:max-w-xl max-h-[90vh] overflow-y-auto overscroll-contain p-6 space-y-6 bg-background border-border/60 shadow-2xl rounded-2xl">
                     {editingTask && (
                         <div className="space-y-6">
                             <DialogHeader className="space-y-3">
