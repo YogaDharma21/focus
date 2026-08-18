@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { MoodNote } from "../../types";
 import { format, isValid, getDaysInMonth } from "date-fns";
 import { Smile, Meh, Moon, Frown, Zap, ChevronLeft, ChevronRight, Sparkles, Trash2, Calendar as CalendarIcon, CalendarDays } from "lucide-react";
@@ -113,7 +113,21 @@ export function MoodTracker({
     text?: string;
   } | null>(null);
 
-  const selectedDateNote = moodNotes.find((n) => n.date.slice(0, 10) === selectedDateKey);
+  const notesMap = useMemo(() => {
+    const map = new Map<string, MoodNote>();
+    moodNotes.forEach((n) => {
+      if (n?.date) {
+        map.set(n.date.slice(0, 10), n);
+      }
+    });
+    return map;
+  }, [moodNotes]);
+
+  const daysInMonths = useMemo(() => {
+    return Array.from({ length: 12 }, (_, monthIdx) => getDaysInMonth(new Date(selectedYear, monthIdx, 1)));
+  }, [selectedYear]);
+
+  const selectedDateNote = notesMap.get(selectedDateKey);
   const currentSelectedMoodKey = normalizeMoodKey(selectedDateNote?.mood);
 
   useEffect(() => {
@@ -139,29 +153,28 @@ export function MoodTracker({
   };
 
   const activeDateKey = hoveredDateInfo?.dateStr || selectedDateKey;
-  const activeNoteObj = moodNotes.find((n) => n.date.slice(0, 10) === activeDateKey);
+  const activeNoteObj = notesMap.get(activeDateKey);
   const activeMoodKey = normalizeMoodKey(activeNoteObj?.mood);
   const activeFormattedDate = formatDateShort(activeDateKey);
 
-  const yearNotes = moodNotes.filter((n) => {
-    const d = new Date(n.date);
-    return isValid(d) && d.getFullYear() === selectedYear;
-  });
-
-  const stats: Record<MoodType, number> = {
-    amazing: 0,
-    ok: 0,
-    tired: 0,
-    sad: 0,
-    stressed: 0,
-  };
-
-  yearNotes.forEach((n) => {
-    const key = normalizeMoodKey(n.mood);
-    if (key) {
-      stats[key]++;
-    }
-  });
+  const stats = useMemo(() => {
+    const s: Record<MoodType, number> = {
+      amazing: 0,
+      ok: 0,
+      tired: 0,
+      sad: 0,
+      stressed: 0,
+    };
+    moodNotes.forEach((n) => {
+      if (!n?.date) return;
+      const d = new Date(n.date);
+      if (isValid(d) && d.getFullYear() === selectedYear) {
+        const key = normalizeMoodKey(n.mood);
+        if (key) s[key]++;
+      }
+    });
+    return s;
+  }, [moodNotes, selectedYear]);
 
   const totalTrackedDays = Object.values(stats).reduce((a, b) => a + b, 0);
 
@@ -347,14 +360,14 @@ export function MoodTracker({
                   </div>
 
                   {Array.from({ length: 12 }, (_, monthIdx) => {
-                    const monthDaysCount = getDaysInMonth(new Date(selectedYear, monthIdx, 1));
+                    const monthDaysCount = daysInMonths[monthIdx];
                     const isValidDay = dayNum <= monthDaysCount;
                     
                     const monthStr = (monthIdx + 1).toString().padStart(2, "0");
                     const dayStr = dayNum.toString().padStart(2, "0");
                     const dateKey = `${selectedYear}-${monthStr}-${dayStr}`;
 
-                    const noteObj = moodNotes.find((n) => n.date.slice(0, 10) === dateKey);
+                    const noteObj = notesMap.get(dateKey);
                     const moodKey = normalizeMoodKey(noteObj?.mood);
                     const cfg = moodKey ? MOOD_CONFIGS[moodKey] : null;
 
