@@ -44,6 +44,7 @@ export function FocusTimer() {
         setPomodoroSettings,
         pomodoroCount,
         setPomodoroCount,
+        resetPomodoroCount,
         todos,
         addTodo,
         updateTodo,
@@ -77,6 +78,7 @@ export function FocusTimer() {
             setPomodoroSettings: s.setPomodoroSettings,
             pomodoroCount: s.pomodoroCount,
             setPomodoroCount: s.setPomodoroCount,
+            resetPomodoroCount: s.resetPomodoroCount,
             todos: s.todos,
             addTodo: s.addTodo,
             updateTodo: s.updateTodo,
@@ -418,7 +420,7 @@ export function FocusTimer() {
 
             {/* Pomodoro Cycle & Progress Indicator */}
             {timerMode === "POMODORO" && previousMode !== "STOPWATCH" && (
-                <div className="flex items-center gap-3 px-3.5 py-1.5 rounded-full bg-secondary/40 border border-border/50 text-xs font-mono text-foreground/80 shadow-sm mb-4 animate-in fade-in duration-150">
+                <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-secondary/40 border border-border/50 text-xs font-mono text-foreground/80 shadow-sm mb-4 animate-in fade-in duration-150 group">
                     <div className="flex items-center gap-1.5">
                         {[0, 1, 2, 3].map((index) => {
                             const currentCycleStep = (pomodoroCount || 0) % 4;
@@ -447,6 +449,16 @@ export function FocusTimer() {
                                 : `Short Break (${pomodoroSettings.break || 5}m)`
                             : `Pomodoro ${((pomodoroCount || 0) % 4) + 1} of 4`}
                     </span>
+                    {(pomodoroCount || 0) % 4 !== 0 && (
+                        <button
+                            type="button"
+                            onClick={resetPomodoroCount}
+                            className="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors cursor-pointer"
+                            title="Reset pomodoro count to 1 of 4"
+                        >
+                            <RotateCcw className="w-3 h-3" />
+                        </button>
+                    )}
                 </div>
             )}
 
@@ -817,6 +829,28 @@ export function FocusTimer() {
                                         }
                                         className="scale-110"
                                     />
+                                </div>
+
+                                <div className="p-3 rounded-[var(--radius)] bg-secondary/20 flex items-center justify-between">
+                                    <div className="space-y-0.5">
+                                        <Label className="font-medium text-xs">
+                                            Pomodoro Cycle Count
+                                        </Label>
+                                        <p className="text-[10px] text-muted-foreground">
+                                            Currently Pomodoro {((pomodoroCount || 0) % 4) + 1} of 4
+                                        </p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={resetPomodoroCount}
+                                        disabled={(pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) === 0}
+                                        className="text-xs h-8 px-2.5 cursor-pointer"
+                                    >
+                                        <RotateCcw className="w-3 h-3 mr-1.5" />
+                                        Reset to 1 of 4
+                                    </Button>
                                 </div>
 
                                 <Button

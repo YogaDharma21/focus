@@ -749,6 +749,7 @@ export function Popup() {
           }}
           onToggleMusic={toggleMusicPlay}
           onSetMusicVolume={handleMusicVolumeChange}
+          onResetPomodoroCount={() => updateState({ pomodoroCount: 0 })}
           onExit={() => updateState({ deepFocusMode: false })}
         />
       </div>
@@ -1223,6 +1224,27 @@ export function Popup() {
                   }`}
                 />
               </div>
+            </div>
+
+            {/* Pomodoro Cycle Reset */}
+            <div className={`p-3 rounded-xl border flex items-center justify-between ${
+              "bg-neutral-900 border-neutral-800"
+            }`}>
+              <div className="flex flex-col">
+                <span className="text-xs font-bold font-sans">Pomodoro Cycle Count</span>
+                <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>
+                  Currently Pomodoro {((state.pomodoroCount || 0) % 4) + 1} of 4
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => updateState({ pomodoroCount: 0 })}
+                disabled={(state.pomodoroCount || 0) % 4 === 0 && (state.pomodoroCount || 0) === 0}
+                className="px-2.5 py-1 rounded-lg border border-neutral-700 bg-neutral-800 text-xs font-medium text-neutral-200 hover:bg-neutral-700 hover:text-white transition-colors disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-1.5 cursor-pointer"
+              >
+                <RotateCcw className="w-3 h-3" />
+                <span>Reset to 1 of 4</span>
+              </button>
             </div>
 
             <button
@@ -1819,7 +1841,7 @@ export function Popup() {
 
             {/* Pomodoro Cycle & Progress Indicator */}
             {state.timerMode === "POMODORO" && state.previousMode !== "FLOW" && (
-              <div className="flex items-center gap-2.5 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-mono text-neutral-300 shadow-sm mt-1 mb-0.5">
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-mono text-neutral-300 shadow-sm mt-1 mb-0.5 group">
                 <div className="flex items-center gap-1.5">
                   {[0, 1, 2, 3].map((index) => {
                     const currentCycleStep = (state.pomodoroCount || 0) % 4;
@@ -1847,6 +1869,16 @@ export function Popup() {
                         : `Short Break (${state.pomodoroSettings.break || 5}m)`)
                     : `Pomodoro ${((state.pomodoroCount || 0) % 4) + 1} of 4`}
                 </span>
+                {(state.pomodoroCount || 0) % 4 !== 0 && (
+                  <button
+                    type="button"
+                    onClick={() => updateState({ pomodoroCount: 0 })}
+                    className="p-0.5 rounded text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer"
+                    title="Reset pomodoro count to 1 of 4"
+                  >
+                    <RotateCcw className="w-2.5 h-2.5" />
+                  </button>
+                )}
               </div>
             )}
 
