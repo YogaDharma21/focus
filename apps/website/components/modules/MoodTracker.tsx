@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useAppStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
 import { Card } from "@/components/ui/card";
@@ -109,14 +109,27 @@ export function MoodTracker() {
                 deleteMoodNote: s.deleteMoodNote,
             }))
         );
-    const today = new Date();
-    const todayStr = format(today, "yyyy-MM-dd");
+    const today = useMemo(() => new Date(), []);
+    const todayStr = useMemo(() => format(today, "yyyy-MM-dd"), [today]);
     
-    const [selectedYear, setSelectedYear] = useState<number>(today.getFullYear());
+    const [selectedYear, setSelectedYear] = useState<number>(() => today.getFullYear());
     const [selectedDateKey, setSelectedDateKey] = useState<string>(todayStr);
     
-    const initialNote = moodNotes.find((n) => n.date.slice(0, 10) === todayStr);
-    const [selectedMood, setSelectedMood] = useState<MoodType | null>(() => normalizeMoodKey(initialNote?.mood));
+    const moodNotesByDate = useMemo(() => {
+        const map = new Map<string, { mood: MoodType | null; text?: string; id: string }>();
+        moodNotes.forEach((n) => {
+            const key = n.date.slice(0, 10);
+            map.set(key, {
+                mood: normalizeMoodKey(n.mood),
+                text: n.text,
+                id: n.id,
+            });
+        });
+        return map;
+    }, [moodNotes]);
+
+    const initialNote = moodNotesByDate.get(todayStr);
+    const [selectedMood, setSelectedMood] = useState<MoodType | null>(() => initialNote?.mood ?? null);
     const [descriptionText, setDescriptionText] = useState(() => initialNote?.text || "");
     const [hoveredDateInfo, setHoveredDateInfo] = useState<{
         dateStr: string;
@@ -125,14 +138,18 @@ export function MoodTracker() {
         text?: string;
     } | null>(null);
 
+    const monthDaysCounts = useMemo(() => {
+        return Array.from({ length: 12 }, (_, m) => getDaysInMonth(new Date(selectedYear, m, 1)));
+    }, [selectedYear]);
+
     // Get note for currently selected date
-    const selectedDateNote = moodNotes.find((n) => n.date.slice(0, 10) === selectedDateKey);
-    const currentSelectedMoodKey = normalizeMoodKey(selectedDateNote?.mood);
+    const selectedDateNote = moodNotesByDate.get(selectedDateKey);
+    const currentSelectedMoodKey = selectedDateNote?.mood ?? null;
 
     const handleSelectDate = (dateStr: string) => {
         setSelectedDateKey(dateStr);
-        const note = moodNotes.find((n) => n.date.slice(0, 10) === dateStr);
-        setSelectedMood(normalizeMoodKey(note?.mood));
+        const note = moodNotesByDate.get(dateStr);
+        setSelectedMood(note?.mood ?? null);
         setDescriptionText(note?.text || "");
     };
 
@@ -165,37 +182,37 @@ export function MoodTracker() {
 
     // Calculate active date info for bottom banner (hovered date or clicked/selected date)
     const activeDateKey = hoveredDateInfo?.dateStr || selectedDateKey;
-    const activeNoteObj = moodNotes.find((n) => n.date.slice(0, 10) === activeDateKey);
-    const activeMoodKey = normalizeMoodKey(activeNoteObj?.mood);
+    const activeNoteObj = moodNotesByDate.get(activeDateKey);
+    const activeMoodKey = activeNoteObj?.mood ?? null;
     const activeFormattedDate = formatDateShort(activeDateKey);
 
     // Calculate mood stats for selected year
-    const yearNotes = moodNotes.filter((n) => {
-        const d = new Date(n.date);
-        return isValid(d) && d.getFullYear() === selectedYear;
-    });
-
-    const stats: Record<MoodType, number> = {
-        amazing: 0,
-        ok: 0,
-        tired: 0,
-        sad: 0,
-        stressed: 0,
-    };
-
-    yearNotes.forEach((n) => {
-        const key = normalizeMoodKey(n.mood);
-        if (key) {
-            stats[key]++;
-        }
-    });
-
-    const totalTrackedDays = Object.values(stats).reduce((a, b) => a + b, 0);
+    const { stats, totalTrackedDays } = useMemo(() => {
+        const s: Record<MoodType, number> = {
+            amazing: 0,
+            ok: 0,
+            tired: 0,
+            sad: 0,
+            stressed: 0,
+        };
+        let total = 0;
+        moodNotes.forEach((n) => {
+            const d = new Date(n.date);
+            if (isValid(d) && d.getFullYear() === selectedYear) {
+                const key = normalizeMoodKey(n.mood);
+                if (key) {
+                    s[key]++;
+                    total++;
+                }
+            }
+        });
+        return { stats: s, totalTrackedDays: total };
+    }, [moodNotes, selectedYear]);
 
     return (
         <div className="space-y-6 pb-12 animate-in fade-in duration-300">
             {/* Top Interactive Logger Card */}
-            <Card className="p-6 bg-card/50 border-0 shadow-md backdrop-blur-xl rounded-[var(--radius)] space-y-4">
+            <Card className="p-6 bg-card border border-border/50 shadow-sm rounded-[var(--radius)] space-y-4">
                 <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5">
                         <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 shrink-0">
@@ -236,13 +253,13 @@ export function MoodTracker() {
                                 type="button"
                                 onClick={() => setSelectedMood(key)}
                                 className={cn(
-                                    "flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl transition-all duration-200 border group cursor-pointer",
+                                    "flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl transition-transform duration-100 border group cursor-pointer",
                                     isSelected
                                         ? cfg.pillSelectedClass
                                         : "bg-neutral-800/40 hover:bg-neutral-800 border-neutral-700/60 text-white"
                                 )}
                             >
-                                <span className="transition-transform duration-200 group-hover:scale-110">
+                                <span className="transition-transform duration-100 group-hover:scale-110">
                                     {cfg.icon}
                                 </span>
                                 <span className={cn(
@@ -296,7 +313,7 @@ export function MoodTracker() {
             </Card>
 
             {/* Yearly Pixel Grid Container */}
-            <Card className="p-6 bg-card/50 border-0 shadow-md backdrop-blur-xl rounded-[var(--radius)] space-y-6">
+            <Card className="p-6 bg-card border border-border/50 shadow-sm rounded-[var(--radius)] space-y-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/40 pb-4">
                     <div>
                         <h3 className="font-semibold text-lg flex items-center gap-2.5">
@@ -371,20 +388,20 @@ export function MoodTracker() {
 
                                     {/* 12 Month Cells for this Day */}
                                     {Array.from({ length: 12 }, (_, monthIdx) => {
-                                        const monthDaysCount = getDaysInMonth(new Date(selectedYear, monthIdx, 1));
+                                        const monthDaysCount = monthDaysCounts[monthIdx];
                                         const isValidDay = dayNum <= monthDaysCount;
                                         
                                         const monthStr = (monthIdx + 1).toString().padStart(2, "0");
                                         const dayStr = dayNum.toString().padStart(2, "0");
                                         const dateKey = `${selectedYear}-${monthStr}-${dayStr}`;
 
-                                        const noteObj = moodNotes.find((n) => n.date.slice(0, 10) === dateKey);
-                                        const moodKey = normalizeMoodKey(noteObj?.mood);
+                                        const noteObj = moodNotesByDate.get(dateKey);
+                                        const moodKey = noteObj?.mood ?? null;
                                         const cfg = moodKey ? MOOD_CONFIGS[moodKey] : null;
 
                                         const isSelectedCell = selectedDateKey === dateKey;
                                         const isCellToday = selectedYear === today.getFullYear() &&
-                                            monthIdx === today.getMonth() &&
+                                             monthIdx === today.getMonth() &&
                                             dayNum === today.getDate();
 
                                         if (!isValidDay) {
@@ -418,7 +435,7 @@ export function MoodTracker() {
                                                 }}
                                                 onMouseLeave={() => setHoveredDateInfo(null)}
                                                 className={cn(
-                                                    "aspect-square w-full rounded-[4px] transition-all duration-150 cursor-pointer relative group",
+                                                    "aspect-square w-full rounded-[4px] transition-transform duration-100 cursor-pointer relative group",
                                                     cfg
                                                         ? `${cfg.bgClass} shadow-sm scale-100 hover:scale-125 z-10`
                                                         : "bg-muted/20 hover:bg-muted/50 border border-border/20 hover:border-primary/40",

@@ -66,7 +66,7 @@ export function SettingsPage() {
             </div>
 
             {/* Timer Section */}
-            <div className="bg-card/50 backdrop-blur-xl border border-white/10 rounded-[var(--radius)] p-5 space-y-4">
+            <div className="bg-card border border-border/50 rounded-[var(--radius)] p-5 space-y-4 shadow-sm">
                 <div className="flex items-center gap-2 text-sm font-semibold text-foreground/80">
                     <Clock className="w-4 h-4" />
                     <h2>Timer</h2>
@@ -126,7 +126,7 @@ export function SettingsPage() {
             </div>
 
             {/* Appearance Section */}
-            <div className="bg-card/50 backdrop-blur-xl border border-white/10 rounded-[var(--radius)] p-5 space-y-4">
+            <div className="bg-card border border-border/50 rounded-[var(--radius)] p-5 space-y-4 shadow-sm">
                 <div className="flex items-center gap-2 text-sm font-semibold text-foreground/80">
                     <Palette className="w-4 h-4" />
                     <h2>Appearance</h2>
@@ -151,7 +151,7 @@ export function SettingsPage() {
             </div>
 
             {/* Sound Section */}
-            <div className="bg-card/50 backdrop-blur-xl border border-white/10 rounded-[var(--radius)] p-5 space-y-4">
+            <div className="bg-card border border-border/50 rounded-[var(--radius)] p-5 space-y-4 shadow-sm">
                 <div className="flex items-center gap-2 text-sm font-semibold text-foreground/80">
                     <Volume2 className="w-4 h-4" />
                     <h2>Sound</h2>
@@ -190,7 +190,7 @@ export function SettingsPage() {
             </div>
 
             {/* Data Section */}
-            <div className="bg-card/50 backdrop-blur-xl border border-white/10 rounded-[var(--radius)] p-5 space-y-4">
+            <div className="bg-card border border-border/50 rounded-[var(--radius)] p-5 space-y-4 shadow-sm">
                 <div className="flex items-center gap-2 text-sm font-semibold text-foreground/80">
                     <Trash2 className="w-4 h-4" />
                     <h2>Data</h2>
@@ -216,7 +216,7 @@ export function SettingsPage() {
                 </div>
             </div>
             {/* About Section */}
-            <div className="bg-card/50 backdrop-blur-xl border border-white/10 rounded-[var(--radius)] p-5 space-y-4">
+            <div className="bg-card border border-border/50 rounded-[var(--radius)] p-5 space-y-4 shadow-sm">
                 <div className="flex items-center gap-2 text-sm font-semibold text-foreground/80">
                     <Info className="w-4 h-4" />
                     <h2>About</h2>
