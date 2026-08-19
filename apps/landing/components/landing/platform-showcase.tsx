@@ -12,7 +12,7 @@ export function PlatformShowcase() {
       id: "web",
       name: "Focus Web",
       path: "apps/website",
-      url: "https://focustracks.vercel.app",
+      url: "https://app.focustrackers.my.id",
       icon: Globe,
       tech: ["Next.js 16", "React 19", "Tailwind CSS", "Zustand"],
       tagline: "Full-featured web application available in your browser.",

@@ -38,21 +38,21 @@ export function Header() {
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative flex items-center justify-between">
         {/* Brand Logo - Minimal with Actual Focus Target Icon */}
-        <a href="#" className="flex items-center gap-2.5">
+        <a href="#" className="flex items-center gap-2.5" aria-label="FocusTrackers Home">
           <Image
             src="/icon.png"
-            alt="Focus App Icon"
+            alt="FocusTrackers Application Icon"
             width={32}
             height={32}
             className="size-8 rounded-lg object-contain"
           />
           <span className="font-bold text-lg tracking-tight text-foreground">
-            Focus
+            FocusTrackers
           </span>
         </a>
 
         {/* Desktop Nav - Mathematically Centered */}
-        <nav className="hidden md:flex items-center gap-1 bg-muted/50 p-1 rounded-xl border border-border absolute left-1/2 -translate-x-1/2">
+        <nav aria-label="Primary navigation" className="hidden md:flex items-center gap-1 bg-muted/50 p-1 rounded-xl border border-border absolute left-1/2 -translate-x-1/2">
           <a
             href="#ecosystem"
             className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg transition-colors"
@@ -93,11 +93,12 @@ export function Header() {
             rel="noopener noreferrer"
             className="p-2 text-muted-foreground hover:text-foreground transition-colors"
             title="GitHub Repository"
+            aria-label="GitHub Repository"
           >
             <GithubIcon className="size-5" />
           </a>
           <a
-            href="https://focustracks.vercel.app"
+            href="https://app.focustrackers.my.id"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
@@ -161,12 +162,13 @@ export function Header() {
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+              aria-label="GitHub Repository"
             >
               <GithubIcon className="size-5" />
               GitHub
             </a>
             <a
-              href="https://focustracks.vercel.app"
+              href="https://app.focustrackers.my.id"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-semibold bg-primary text-primary-foreground"
