@@ -24,12 +24,12 @@ export function Footer() {
           <div className="flex items-center gap-2">
             <Image
               src="/icon.png"
-              alt="Focus App Icon"
+              alt="FocusTrackers Application Icon"
               width={28}
               height={28}
               className="size-7 rounded-md object-contain"
             />
-            <span className="font-bold text-sm text-foreground">Focus</span>
+            <span className="font-bold text-sm text-foreground">FocusTrackers</span>
             <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded-md bg-muted border border-border text-muted-foreground">
               v0.0.1
             </span>
@@ -38,7 +38,7 @@ export function Footer() {
           {/* Links */}
           <div className="flex flex-wrap items-center justify-center gap-5 text-xs text-muted-foreground font-medium">
             <a
-              href="https://focustracks.vercel.app"
+              href="https://app.focustrackers.my.id"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-foreground transition-colors flex items-center gap-1"
@@ -66,6 +66,7 @@ export function Footer() {
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-foreground transition-colors flex items-center gap-1"
+              aria-label="GitHub Repository"
             >
               <GithubIcon className="size-3.5" />
               GitHub
@@ -74,7 +75,7 @@ export function Footer() {
 
           {/* License & Version */}
           <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium">
-            <span>Focus v0.0.1</span>
+            <span>FocusTrackers v0.0.1</span>
             <span>•</span>
             <span>MIT License</span>
           </div>
