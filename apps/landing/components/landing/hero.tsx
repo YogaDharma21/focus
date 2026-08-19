@@ -14,7 +14,7 @@ export function Hero() {
       icon: Globe,
       badge: "Next.js 16",
       imgSrc: "/screenshots/website/screenshot-main.png",
-      alt: "Focus Web Application",
+      alt: "FocusTrackers Web Application Timer and Task Interface",
     },
     {
       id: "desktop",
@@ -22,7 +22,7 @@ export function Hero() {
       icon: Monitor,
       badge: "Electron & Vite",
       imgSrc: "/screenshots/desktop/Screenshot-timer.png",
-      alt: "Focus Desktop Application",
+      alt: "FocusTrackers Desktop Application with System Tray Support",
     },
     {
       id: "mobile",
@@ -30,7 +30,7 @@ export function Hero() {
       icon: Smartphone,
       badge: "Expo & React Native",
       imgSrc: "/screenshots/mobile/screenshot-focus.jpeg",
-      alt: "Focus Mobile Application",
+      alt: "FocusTrackers Mobile Application for iOS and Android",
     },
     {
       id: "extension",
@@ -38,7 +38,7 @@ export function Hero() {
       icon: Shield,
       badge: "Focus Shield",
       imgSrc: "/screenshots/extension/Screenshot-timer.png",
-      alt: "Focus Browser Extension",
+      alt: "FocusTrackers Browser Extension with Focus Shield Site Blocker",
     },
   ]
 
@@ -63,7 +63,7 @@ export function Hero() {
         {/* CTAs */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
           <a
-            href="https://focustracks.vercel.app"
+            href="https://app.focustrackers.my.id"
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"
