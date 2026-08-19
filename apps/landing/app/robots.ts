@@ -9,7 +9,7 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ["/api/"],
       },
     ],
-    sitemap: "https://focustrackers.my.id/sitemap.xml",
-    host: "https://focustrackers.my.id",
+    sitemap: "https://www.focustrackers.my.id/sitemap.xml",
+    host: "https://www.focustrackers.my.id",
   }
 }
