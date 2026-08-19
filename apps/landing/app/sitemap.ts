@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next"
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  const baseUrl = "https://focustrackers.my.id"
+  const baseUrl = "https://www.focustrackers.my.id"
 
   return [
     {

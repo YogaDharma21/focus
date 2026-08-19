@@ -13,7 +13,7 @@ const fontMono = Geist_Mono({
 })
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://focustrackers.my.id"),
+  metadataBase: new URL("https://www.focustrackers.my.id"),
   title: {
     default: "FocusTrackers - Master Your Attention & Stay in Flow",
     template: "%s | FocusTrackers",
@@ -35,11 +35,11 @@ export const metadata: Metadata = {
     "Break Calculator",
     "Cross-Platform Productivity",
   ],
-  authors: [{ name: "FocusTrackers Team", url: "https://focustrackers.my.id" }],
+  authors: [{ name: "FocusTrackers Team", url: "https://www.focustrackers.my.id" }],
   creator: "FocusTrackers Team",
   publisher: "FocusTrackers",
   alternates: {
-    canonical: "https://focustrackers.my.id/",
+    canonical: "https://www.focustrackers.my.id/",
   },
   robots: {
     index: true,
@@ -55,7 +55,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://focustrackers.my.id",
+    url: "https://www.focustrackers.my.id",
     siteName: "FocusTrackers",
     title: "FocusTrackers - Master Your Attention & Stay in Flow",
     description:
@@ -92,27 +92,27 @@ const jsonLd = {
   "@graph": [
     {
       "@type": "WebSite",
-      "@id": "https://focustrackers.my.id/#website",
-      "url": "https://focustrackers.my.id",
+      "@id": "https://www.focustrackers.my.id/#website",
+      "url": "https://www.focustrackers.my.id",
       "name": "FocusTrackers",
       "description":
         "Minimalist productivity suite with Pomodoro and Flow timers, smart break calculations, website blocker, and ambient audio.",
       "publisher": {
-        "@id": "https://focustrackers.my.id/#organization",
+        "@id": "https://www.focustrackers.my.id/#organization",
       },
       "inLanguage": "en-US",
     },
     {
       "@type": "Organization",
-      "@id": "https://focustrackers.my.id/#organization",
+      "@id": "https://www.focustrackers.my.id/#organization",
       "name": "FocusTrackers",
-      "url": "https://focustrackers.my.id",
-      "logo": "https://focustrackers.my.id/icon.png",
+      "url": "https://www.focustrackers.my.id",
+      "logo": "https://www.focustrackers.my.id/icon.png",
       "sameAs": ["https://github.com/YogaDharma21/focus"],
     },
     {
       "@type": "SoftwareApplication",
-      "@id": "https://focustrackers.my.id/#software",
+      "@id": "https://www.focustrackers.my.id/#software",
       "name": "FocusTrackers",
       "applicationCategory": "ProductivityApplication",
       "operatingSystem": "Web, Windows, macOS, Linux, iOS, Android, Chromium",
@@ -121,8 +121,8 @@ const jsonLd = {
         "price": "0",
         "priceCurrency": "USD",
       },
-      "url": "https://focustrackers.my.id",
-      "image": "https://focustrackers.my.id/screenshots/website/screenshot-main.png",
+      "url": "https://www.focustrackers.my.id",
+      "image": "https://www.focustrackers.my.id/screenshots/website/screenshot-main.png",
       "description":
         "The minimalist, all-in-one productivity suite with Pomodoro & Flow timers, 1/5th break calculation, Focus Shield website blocker, ambient soundscapes, and cross-platform sync across Web, Desktop, Mobile, and Browser Extension.",
       "softwareVersion": "0.0.1",
@@ -138,7 +138,7 @@ const jsonLd = {
     },
     {
       "@type": "FAQPage",
-      "@id": "https://focustrackers.my.id/#faq",
+      "@id": "https://www.focustrackers.my.id/#faq",
       "mainEntity": [
         {
           "@type": "Question",
