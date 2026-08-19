@@ -10,7 +10,7 @@ export function DownloadSection() {
       icon: Globe,
       description: "Access your timers and tasks directly in any web browser without installation.",
       buttonText: "Launch Web App",
-      buttonLink: "https://focustracks.vercel.app",
+      buttonLink: "https://app.focustrackers.my.id",
       badge: "Web App",
       isPrimary: true,
     },
