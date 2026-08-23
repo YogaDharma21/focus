@@ -61,7 +61,8 @@ export const DEFAULT_STATE: AppStateData = {
   musicVolume: 0.8,
   soundEffectVolume: 0.8,
   soundEffectEnabled: true,
-  autoPauseOnExternalAudio: false
+  autoPauseOnExternalAudio: false,
+  autoPauseFadeDuration: 2
 };
 
 export const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
