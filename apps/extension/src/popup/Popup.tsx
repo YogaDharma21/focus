@@ -141,6 +141,7 @@ export function Popup() {
   const musicVolume = state?.musicVolume ?? 0.8;
   const soundEffectVolume = state?.soundEffectVolume ?? 0.8;
   const soundEffectEnabled = state?.soundEffectEnabled ?? true;
+  const autoPauseOnExternalAudio = state?.autoPauseOnExternalAudio ?? false;
 
   const handleMusicVolumeChange = (v: number) => {
     updateState({ musicVolume: v });
@@ -168,6 +169,14 @@ export function Popup() {
     updateState({ soundEffectEnabled: next });
     if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
       chrome.runtime.sendMessage({ target: "background", action: "SET_SOUND_EFFECT_ENABLED", enabled: next });
+    }
+  };
+
+  const toggleAutoPauseOnExternalAudio = () => {
+    const next = !autoPauseOnExternalAudio;
+    updateState({ autoPauseOnExternalAudio: next });
+    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({ target: "background", action: "SET_AUTO_PAUSE_ON_EXTERNAL_AUDIO", enabled: next });
     }
   };
 
@@ -2402,6 +2411,27 @@ export function Popup() {
                   <div
                     className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
                       soundEffectEnabled ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
+                "bg-neutral-900/60 border-neutral-800"
+              }`}>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-white">Auto-Pause on Audio</span>
+                  <span className="text-[10px] text-neutral-500">Pause music when other tabs play audio</span>
+                </div>
+                <div
+                  onClick={toggleAutoPauseOnExternalAudio}
+                  className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center shrink-0 ${
+                    autoPauseOnExternalAudio ? "bg-white" : "bg-neutral-700"
+                  }`}
+                >
+                  <div
+                    className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
+                      autoPauseOnExternalAudio ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
                     }`}
                   />
                 </div>
