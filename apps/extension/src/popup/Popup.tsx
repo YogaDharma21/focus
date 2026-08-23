@@ -142,6 +142,7 @@ export function Popup() {
   const soundEffectVolume = state?.soundEffectVolume ?? 0.8;
   const soundEffectEnabled = state?.soundEffectEnabled ?? true;
   const autoPauseOnExternalAudio = state?.autoPauseOnExternalAudio ?? false;
+  const autoPauseFadeDuration = state?.autoPauseFadeDuration ?? 2;
 
   const handleMusicVolumeChange = (v: number) => {
     updateState({ musicVolume: v });
@@ -177,6 +178,13 @@ export function Popup() {
     updateState({ autoPauseOnExternalAudio: next });
     if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
       chrome.runtime.sendMessage({ target: "background", action: "SET_AUTO_PAUSE_ON_EXTERNAL_AUDIO", enabled: next });
+    }
+  };
+
+  const handleAutoPauseFadeDurationChange = (d: number) => {
+    updateState({ autoPauseFadeDuration: d });
+    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({ target: "background", action: "SET_AUTO_PAUSE_FADE_DURATION", duration: d });
     }
   };
 
@@ -2436,6 +2444,38 @@ export function Popup() {
                   />
                 </div>
               </div>
+
+              {autoPauseOnExternalAudio && (
+                <div className={`flex items-center justify-between rounded-xl px-4 py-3 border transition-all ${
+                  "bg-neutral-900/60 border-neutral-800"
+                }`}>
+                  <div className="flex flex-col w-full gap-2">
+                    <div className="flex items-center justify-between">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-white">Resume Fade Speed</span>
+                        <span className="text-[10px] text-neutral-500">Fade transition duration</span>
+                      </div>
+                      <span className="font-mono text-xs text-white">
+                        {autoPauseFadeDuration === 0 ? "Instant (0s)" : `${autoPauseFadeDuration}s`}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="5"
+                      step="0.5"
+                      value={autoPauseFadeDuration}
+                      onChange={(e) => handleAutoPauseFadeDurationChange(parseFloat(e.target.value))}
+                      className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer"
+                    />
+                    <div className="flex justify-between text-[9px] text-neutral-500 font-mono">
+                      <span>0s (Instant)</span>
+                      <span>2.5s</span>
+                      <span>5s</span>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
                 "bg-neutral-900/60 border-neutral-800"
