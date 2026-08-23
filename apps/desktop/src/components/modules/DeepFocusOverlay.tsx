@@ -242,7 +242,7 @@ export const DeepFocusOverlay: React.FC = () => {
                 type="range"
                 min={0}
                 max={1}
-                step={0.05}
+                step={0.01}
                 value={volume}
                 onChange={(e) => setVolume(Number(e.target.value))}
                 className="w-full h-1 bg-zinc-800 rounded-lg accent-zinc-100 cursor-pointer"

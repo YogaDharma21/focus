@@ -648,7 +648,7 @@ export const SettingsPage: React.FC = () => {
                   type="range"
                   min={0}
                   max={1}
-                  step={0.05}
+                  step={0.01}
                   disabled={!soundEffectEnabled}
                   value={soundEffectVolume ?? 0.8}
                   onChange={(e) => setSoundEffectVolume(Number(e.target.value))}
@@ -692,7 +692,7 @@ export const SettingsPage: React.FC = () => {
                   type="range"
                   min={0}
                   max={1}
-                  step={0.05}
+                  step={0.01}
                   value={volume ?? 0.8}
                   onChange={(e) => setVolume(Number(e.target.value))}
                   className="w-full h-2 bg-zinc-950 rounded-lg accent-zinc-200 cursor-pointer"

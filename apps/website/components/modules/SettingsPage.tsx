@@ -174,7 +174,7 @@ export function SettingsPage() {
                         type="range"
                         min="0"
                         max="100"
-                        step="5"
+                        step="1"
                         value={soundEffectVolume ?? 80}
                         onChange={(e) => setSoundEffectVolume(parseInt(e.target.value))}
                         className="w-32 sm:w-48"
