@@ -234,6 +234,7 @@ export function MediaPlayer() {
                                     type="range"
                                     min="0"
                                     max="100"
+                                    step="1"
                                     value={isMusicMuted ? 0 : musicVolume}
                                     onChange={handleVolumeChange}
                                     className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"

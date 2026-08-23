@@ -10,9 +10,9 @@ import {
 import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
-import { Play, Pause, Music, Volume2, Volume1, BellRing, X, ChevronUp, ChevronDown } from 'lucide-react-native';
+import { VolumeSlider } from '@/components/ui/VolumeSlider';
+import { Play, Pause, Music, Volume2, X, ChevronUp, ChevronDown } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { playTestCompletionSound } from '@/lib/sound';
 
 export function MediaPlayer() {
   const insets = useSafeAreaInsets();
@@ -230,21 +230,10 @@ export function MediaPlayer() {
                     Music Volume ({Math.round(musicVolume * 100)}%)
                   </Text>
                 </View>
-                <View style={styles.volumeBarRow}>
-                  {[0.2, 0.4, 0.6, 0.8, 1.0].map((v) => (
-                    <TouchableOpacity
-                      key={v}
-                      style={[
-                        styles.volumeStepBtn,
-                        {
-                          backgroundColor: musicVolume >= v ? colors.text : colors.inputBg,
-                          borderColor: colors.border,
-                        },
-                      ]}
-                      onPress={() => changeVolume(v)}
-                    />
-                  ))}
-                </View>
+                <VolumeSlider
+                  value={musicVolume}
+                  onValueChange={changeVolume}
+                />
               </View>
             </ScrollView>
           </TouchableOpacity>

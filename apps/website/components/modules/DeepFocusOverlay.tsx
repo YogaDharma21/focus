@@ -315,6 +315,7 @@ export function DeepFocusOverlay() {
                                 type="range"
                                 min="0"
                                 max="100"
+                                step="1"
                                 value={isMusicMuted ? 0 : musicVolume}
                                 onChange={(e) => {
                                     const val = parseInt(e.target.value, 10);
