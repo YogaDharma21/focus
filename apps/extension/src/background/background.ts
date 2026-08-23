@@ -109,10 +109,19 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
             musicAutoPaused = false;
             getStoredState().then((s) => {
               if (s.isMusicPlaying) {
-                sendToOffscreen("PLAY_MUSIC", { volume: s.musicVolume ?? 0.8 });
+                sendToOffscreen("PLAY_MUSIC", {
+                  volume: s.musicVolume ?? 0.8,
+                  fadeDuration: s.autoPauseFadeDuration ?? 2
+                });
               }
             });
           }
+          sendResponse({ success: true });
+        });
+        return true;
+      } else if (message.action === "SET_AUTO_PAUSE_FADE_DURATION") {
+        const duration = typeof message.duration === "number" ? Math.max(0, Math.min(10, message.duration)) : 2;
+        saveStoredState({ autoPauseFadeDuration: duration }).then(() => {
           sendResponse({ success: true });
         });
         return true;
@@ -459,11 +468,13 @@ async function handleAudibleChange(tabBecameAudible: boolean, tabUrl?: string) {
     if (tabUrl.startsWith(extensionOrigin)) return;
   }
 
+  const fadeDuration = typeof state.autoPauseFadeDuration === "number" ? state.autoPauseFadeDuration : 2;
+
   if (tabBecameAudible) {
     // External tab started playing audio — auto-pause music if it's playing
     if (state.isMusicPlaying && !musicAutoPaused) {
       musicAutoPaused = true;
-      await sendToOffscreen("PAUSE_MUSIC");
+      await sendToOffscreen("PAUSE_MUSIC", { fadeDuration });
     }
   } else {
     // A tab stopped being audible — check if ANY other tab is still audible
@@ -472,7 +483,10 @@ async function handleAudibleChange(tabBecameAudible: boolean, tabUrl?: string) {
       if (!stillAudible) {
         musicAutoPaused = false;
         if (state.isMusicPlaying) {
-          await sendToOffscreen("PLAY_MUSIC", { volume: state.musicVolume ?? 0.8 });
+          await sendToOffscreen("PLAY_MUSIC", {
+            volume: state.musicVolume ?? 0.8,
+            fadeDuration
+          });
         }
       }
     }
