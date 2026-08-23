@@ -3,6 +3,7 @@ import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, StyleSheet,
 import { useAppStore, BackgroundType } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
 import { Settings, Clock, Palette, Volume2, Trash2, Info, ExternalLink } from 'lucide-react-native';
+import { VolumeSlider } from '@/components/ui/VolumeSlider';
 import { playCompletionSound } from '@/lib/sound';
 
 interface CustomToggleSwitchProps {
@@ -288,22 +289,16 @@ export function SettingsPage() {
         </TouchableOpacity>
 
         <View style={styles.volumeGroup}>
-          <Text style={[styles.settingLabel, { color: colors.text }]}>SFX Volume</Text>
-          <View style={styles.volumeBarRow}>
-            {[0.2, 0.4, 0.6, 0.8, 1.0].map((v) => (
-              <TouchableOpacity
-                key={v}
-                style={[
-                  styles.volumeStepBtn,
-                  {
-                    backgroundColor: (soundEffectVolume ?? 0.8) >= v ? colors.text : colors.inputBg,
-                    borderColor: colors.border,
-                  },
-                ]}
-                onPress={() => setSoundEffectVolume(v)}
-              />
-            ))}
+          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+            <Text style={[styles.settingLabel, { color: colors.text, marginBottom: 0 }]}>SFX Volume</Text>
+            <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textMuted }}>
+              {Math.round((soundEffectVolume ?? 0.8) * 100)}%
+            </Text>
           </View>
+          <VolumeSlider
+            value={soundEffectVolume ?? 0.8}
+            onValueChange={setSoundEffectVolume}
+          />
         </View>
 
         <TouchableOpacity
