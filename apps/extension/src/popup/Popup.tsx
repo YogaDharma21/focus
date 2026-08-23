@@ -315,7 +315,6 @@ export function Popup() {
       timerState,
       previousMode: prevMode,
       isActive: false,
-      isMusicPlaying: false,
       timeLeft: nextTime
     });
   };
