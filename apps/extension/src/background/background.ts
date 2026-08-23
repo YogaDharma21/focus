@@ -6,9 +6,37 @@ let timerInterval: ReturnType<typeof setInterval> | null = null;
 const KEEPALIVE_ALARM = "focus-keepalive";
 const OFFSCREEN_DOCUMENT_PATH = "offscreen.html";
 
-// In-memory flag: true when music was auto-paused due to external tab audio.
-// Not persisted to storage to avoid triggering the storage.onChanged play/pause sync.
-let musicAutoPaused = false;
+// ─── Auto-Pause State Persistence ─────────────────────────────────────────
+// Persisted in chrome.storage.session so state survives service worker sleep/wakeups
+// without modifying focus_extension_state_v6.
+const SESSION_MUSIC_AUTO_PAUSED_KEY = "focus_music_auto_paused";
+let cachedMusicAutoPaused = false;
+
+async function getMusicAutoPaused(): Promise<boolean> {
+  if (typeof chrome !== "undefined" && chrome.storage?.session) {
+    try {
+      const res = await chrome.storage.session.get(SESSION_MUSIC_AUTO_PAUSED_KEY);
+      if (res && typeof res[SESSION_MUSIC_AUTO_PAUSED_KEY] === "boolean") {
+        cachedMusicAutoPaused = res[SESSION_MUSIC_AUTO_PAUSED_KEY];
+        return cachedMusicAutoPaused;
+      }
+    } catch {
+      // Fallback to cache if storage.session is unavailable
+    }
+  }
+  return cachedMusicAutoPaused;
+}
+
+async function setMusicAutoPaused(val: boolean): Promise<void> {
+  cachedMusicAutoPaused = val;
+  if (typeof chrome !== "undefined" && chrome.storage?.session) {
+    try {
+      await chrome.storage.session.set({ [SESSION_MUSIC_AUTO_PAUSED_KEY]: val });
+    } catch {
+      // Ignore if session storage fails
+    }
+  }
+}
 
 // ─── Offscreen Audio Helpers ───────────────────────────────────────────
 
@@ -24,20 +52,35 @@ async function hasOffscreenDocument(): Promise<boolean> {
   return contexts.length > 0;
 }
 
+let creatingOffscreenPromise: Promise<void> | null = null;
+
 async function ensureOffscreenDocument() {
   if (typeof chrome === "undefined" || !chrome.offscreen) return;
   const exists = await hasOffscreenDocument();
-  if (!exists) {
+  if (exists) return;
+
+  if (creatingOffscreenPromise) {
+    await creatingOffscreenPromise;
+    return;
+  }
+
+  creatingOffscreenPromise = (async () => {
     try {
       await chrome.offscreen.createDocument({
         url: OFFSCREEN_DOCUMENT_PATH,
         reasons: [chrome.offscreen.Reason.AUDIO_PLAYBACK],
         justification: "Background music playback and timer completion sound effects",
       });
-    } catch (e) {
-      console.log("Offscreen document creation error:", e);
+    } catch (e: any) {
+      if (!String(e?.message || e).includes("Only a single offscreen document may be created")) {
+        console.log("Offscreen document creation error:", e);
+      }
+    } finally {
+      creatingOffscreenPromise = null;
     }
-  }
+  })();
+
+  await creatingOffscreenPromise;
 }
 
 async function sendToOffscreen(action: string, payload: Record<string, any> = {}) {
@@ -49,7 +92,17 @@ async function sendToOffscreen(action: string, payload: Record<string, any> = {}
       ...payload
     });
   } catch (e) {
-    console.log("Error sending message to offscreen:", e);
+    // Retry once in case the newly created offscreen document is still attaching its message listener
+    try {
+      await new Promise((r) => setTimeout(r, 80));
+      return await chrome.runtime.sendMessage({
+        target: "offscreen",
+        action,
+        ...payload
+      });
+    } catch (retryErr) {
+      console.log("Error sending message to offscreen:", retryErr);
+    }
   }
 }
 
@@ -63,8 +116,16 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
           const nextPlaying = !state.isMusicPlaying;
           await saveStoredState({ isMusicPlaying: nextPlaying });
           if (nextPlaying) {
-            await sendToOffscreen("PLAY_MUSIC", { volume: state.musicVolume ?? 0.8 });
+            const autoPauseEnabled = Boolean(state.autoPauseOnExternalAudio);
+            const isExternalAudible = autoPauseEnabled ? await checkAnyTabAudible() : false;
+            if (isExternalAudible) {
+              await setMusicAutoPaused(true);
+            } else {
+              await setMusicAutoPaused(false);
+              await sendToOffscreen("PLAY_MUSIC", { volume: state.musicVolume ?? 0.8 });
+            }
           } else {
+            await setMusicAutoPaused(false);
             await sendToOffscreen("PAUSE_MUSIC");
           }
           sendResponse({ isMusicPlaying: nextPlaying });
@@ -103,19 +164,9 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
         sendResponse({ success: true });
         return true;
       } else if (message.action === "SET_AUTO_PAUSE_ON_EXTERNAL_AUDIO") {
-        saveStoredState({ autoPauseOnExternalAudio: Boolean(message.enabled) }).then(() => {
-          // If feature is being disabled while music is auto-paused, resume playback
-          if (!message.enabled && musicAutoPaused) {
-            musicAutoPaused = false;
-            getStoredState().then((s) => {
-              if (s.isMusicPlaying) {
-                sendToOffscreen("PLAY_MUSIC", {
-                  volume: s.musicVolume ?? 0.8,
-                  fadeDuration: s.autoPauseFadeDuration ?? 2
-                });
-              }
-            });
-          }
+        const enabled = Boolean(message.enabled);
+        saveStoredState({ autoPauseOnExternalAudio: enabled }).then(async () => {
+          await syncExternalAudioState("SET_AUTO_PAUSE_ON_EXTERNAL_AUDIO");
           sendResponse({ success: true });
         });
         return true;
@@ -435,10 +486,10 @@ async function startBackgroundTimer() {
 
 /**
  * Checks whether any non-extension tab is currently producing audio.
- * Excludes the extension's own pages (offscreen document, popup, blocked page).
+ * Excludes the extension's own pages (offscreen document, popup, blocked page) and muted tabs.
  */
 async function checkAnyTabAudible(): Promise<boolean> {
-  if (typeof chrome === "undefined" || !chrome.tabs) return false;
+  if (typeof chrome === "undefined" || !chrome.tabs || !chrome.tabs.query) return false;
   return new Promise((resolve) => {
     chrome.tabs.query({ audible: true }, (tabs) => {
       if (!tabs || tabs.length === 0) {
@@ -446,49 +497,55 @@ async function checkAnyTabAudible(): Promise<boolean> {
         return;
       }
       const extensionOrigin = chrome.runtime.getURL("");
-      const hasExternalAudio = tabs.some(
-        (t) => t.url && !t.url.startsWith(extensionOrigin)
-      );
+      const hasExternalAudio = tabs.some((t) => {
+        // Tab must be audible and not explicitly muted
+        if (!t.audible || t.mutedInfo?.muted) return false;
+        // Ignore extension's own pages if url is available
+        if (t.url && t.url.startsWith(extensionOrigin)) return false;
+        return true;
+      });
       resolve(hasExternalAudio);
     });
   });
 }
 
 /**
- * Called when a tab's audible state changes or an audible tab is removed.
- * Handles auto-pausing and auto-resuming the extension's music.
+ * Centralized coordinator for ambient music auto-pause based on external tab audio.
+ * Idempotent and safe to call on any tab event, storage change, or service worker init.
  */
-async function handleAudibleChange(tabBecameAudible: boolean, tabUrl?: string) {
+async function syncExternalAudioState(_reason?: string) {
   const state = await getStoredState();
-  if (!state.autoPauseOnExternalAudio) return;
+  const autoPauseEnabled = Boolean(state.autoPauseOnExternalAudio);
+  const isMusicPlaying = Boolean(state.isMusicPlaying);
+  const fadeDuration = typeof state.autoPauseFadeDuration === "number" ? state.autoPauseFadeDuration : 2;
+  const musicVolume = state.musicVolume ?? 0.8;
+  const wasAutoPaused = await getMusicAutoPaused();
 
-  // Ignore audible changes from the extension's own pages
-  if (tabUrl) {
-    const extensionOrigin = chrome.runtime.getURL("");
-    if (tabUrl.startsWith(extensionOrigin)) return;
+  if (!autoPauseEnabled) {
+    if (wasAutoPaused) {
+      await setMusicAutoPaused(false);
+      if (isMusicPlaying) {
+        await sendToOffscreen("PLAY_MUSIC", { volume: musicVolume, fadeDuration });
+      }
+    }
+    return;
   }
 
-  const fadeDuration = typeof state.autoPauseFadeDuration === "number" ? state.autoPauseFadeDuration : 2;
+  const isExternalAudible = await checkAnyTabAudible();
 
-  if (tabBecameAudible) {
-    // External tab started playing audio — auto-pause music if it's playing
-    if (state.isMusicPlaying && !musicAutoPaused) {
-      musicAutoPaused = true;
+  if (isExternalAudible) {
+    // External tab is playing unmuted audio
+    if (isMusicPlaying && !wasAutoPaused) {
+      await setMusicAutoPaused(true);
       await sendToOffscreen("PAUSE_MUSIC", { fadeDuration });
     }
   } else {
-    // A tab stopped being audible — check if ANY other tab is still audible
-    if (musicAutoPaused) {
-      const stillAudible = await checkAnyTabAudible();
-      if (!stillAudible) {
-        musicAutoPaused = false;
-        if (state.isMusicPlaying) {
-          await sendToOffscreen("PLAY_MUSIC", {
-            volume: state.musicVolume ?? 0.8,
-            fadeDuration
-          });
-        }
-      }
+    // No external tab is producing audio
+    if (isMusicPlaying && wasAutoPaused) {
+      await setMusicAutoPaused(false);
+      await sendToOffscreen("PLAY_MUSIC", { volume: musicVolume, fadeDuration });
+    } else if (!isMusicPlaying && wasAutoPaused) {
+      await setMusicAutoPaused(false);
     }
   }
 }
@@ -511,9 +568,14 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
       }
     }
 
-    // External audio detection
-    if (changeInfo.audible !== undefined) {
-      handleAudibleChange(changeInfo.audible, tab.url);
+    // External audio detection (handles audible toggle, mute/unmute, navigation, discarding)
+    if (
+      changeInfo.audible !== undefined ||
+      changeInfo.mutedInfo !== undefined ||
+      changeInfo.status === "loading" ||
+      changeInfo.discarded !== undefined
+    ) {
+      syncExternalAudioState("tabs.onUpdated");
     }
   });
 
@@ -531,12 +593,17 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
     }
   });
 
-  // When an audible tab is closed, check if music should resume
+  // When an audible tab is closed, sync audio state
   chrome.tabs.onRemoved.addListener(async () => {
-    if (musicAutoPaused) {
-      handleAudibleChange(false);
-    }
+    syncExternalAudioState("tabs.onRemoved");
   });
+
+  // When a tab is replaced (e.g. prerendered tab swap), sync audio state
+  if (chrome.tabs.onReplaced) {
+    chrome.tabs.onReplaced.addListener(async () => {
+      syncExternalAudioState("tabs.onReplaced");
+    });
+  }
 }
 
 // ─── Alarm Listener (keepalive wakeup) ─────────────────────────────────
@@ -586,11 +653,17 @@ if (typeof chrome !== "undefined" && chrome.storage) {
       }
 
       if (oldState && newState.isMusicPlaying !== oldState.isMusicPlaying) {
-        // User manually toggled music — reset auto-pause tracking
-        musicAutoPaused = false;
         if (newState.isMusicPlaying) {
-          await sendToOffscreen("PLAY_MUSIC", { volume: newState.musicVolume ?? 0.8 });
+          const autoPauseEnabled = Boolean(newState.autoPauseOnExternalAudio);
+          const isExternalAudible = autoPauseEnabled ? await checkAnyTabAudible() : false;
+          if (isExternalAudible) {
+            await setMusicAutoPaused(true);
+          } else {
+            await setMusicAutoPaused(false);
+            await sendToOffscreen("PLAY_MUSIC", { volume: newState.musicVolume ?? 0.8 });
+          }
         } else {
+          await setMusicAutoPaused(false);
           await sendToOffscreen("PAUSE_MUSIC");
         }
       }
@@ -598,9 +671,24 @@ if (typeof chrome !== "undefined" && chrome.storage) {
   });
 }
 
+// ─── Runtime Lifecycle Listeners ───────────────────────────────────────
+
+if (typeof chrome !== "undefined" && chrome.runtime) {
+  if (chrome.runtime.onStartup) {
+    chrome.runtime.onStartup.addListener(() => {
+      setMusicAutoPaused(false);
+    });
+  }
+  if (chrome.runtime.onInstalled) {
+    chrome.runtime.onInstalled.addListener(() => {
+      setMusicAutoPaused(false);
+    });
+  }
+}
+
 // ─── Init ──────────────────────────────────────────────────────────────
 
-getStoredState().then((state) => {
+getStoredState().then(async (state) => {
   if (state.isActive) {
     startBackgroundTimer();
   } else {
@@ -608,7 +696,15 @@ getStoredState().then((state) => {
     restoreBlockedTabs();
   }
   if (state.isMusicPlaying) {
-    sendToOffscreen("PLAY_MUSIC", { volume: state.musicVolume ?? 0.8 });
+    const autoPauseEnabled = Boolean(state.autoPauseOnExternalAudio);
+    const isExternalAudible = autoPauseEnabled ? await checkAnyTabAudible() : false;
+    const wasAutoPaused = await getMusicAutoPaused();
+    if (autoPauseEnabled && (isExternalAudible || wasAutoPaused)) {
+      await setMusicAutoPaused(true);
+    } else {
+      await setMusicAutoPaused(false);
+      sendToOffscreen("PLAY_MUSIC", { volume: state.musicVolume ?? 0.8 });
+    }
   }
 });
 
