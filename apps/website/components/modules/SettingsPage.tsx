@@ -174,15 +174,16 @@ export function SettingsPage() {
                         type="range"
                         min="0"
                         max="100"
-                        step="5"
+                        step="1"
+                        disabled={!soundEffectEnabled}
                         value={soundEffectVolume ?? 80}
                         onChange={(e) => setSoundEffectVolume(parseInt(e.target.value))}
-                        className="w-32 sm:w-48"
+                        className="w-32 sm:w-48 h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md disabled:opacity-40"
                     />
                 </div>
 
                 <div className="flex justify-end pt-2">
-                    <Button variant="outline" onClick={playTestSoundEffect} className="gap-2">
+                    <Button variant="outline" onClick={playTestSoundEffect} disabled={!soundEffectEnabled} className="gap-2">
                         <Volume2 className="w-4 h-4" />
                         Test Sound
                     </Button>

@@ -5,7 +5,8 @@ import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
 import { Radius } from '@/constants/theme';
 import { playCompletionSound } from '@/lib/sound';
-import { Play, Pause, X, AlertTriangle, CheckCircle2, Plus, Music, Volume2, VolumeX, RotateCcw } from 'lucide-react-native';
+import { VolumeSlider } from '@/components/ui/VolumeSlider';
+import { Play, Pause, X, AlertTriangle, CheckCircle2, Plus, Music, RotateCcw } from 'lucide-react-native';
 
 const DISTRACTION_CATEGORIES = [
   'Social Media',
@@ -313,22 +314,10 @@ export function DeepFocusOverlay() {
                 <Text style={{ color: colors.textMuted, fontSize: 13, marginTop: 4 }}>
                   Volume: {Math.round(musicVolume * 100)}%
                 </Text>
-                <View style={{ flexDirection: 'row', gap: 6 }}>
-                  {[0.2, 0.4, 0.6, 0.8, 1.0].map((v) => (
-                    <TouchableOpacity
-                      key={v}
-                      onPress={() => setMusicVolume(v)}
-                      style={{
-                        flex: 1,
-                        height: 28,
-                        borderRadius: 6,
-                        backgroundColor: musicVolume >= v ? colors.text : colors.inputBg,
-                        borderWidth: 1,
-                        borderColor: colors.border,
-                      }}
-                    />
-                  ))}
-                </View>
+                <VolumeSlider
+                  value={musicVolume}
+                  onValueChange={setMusicVolume}
+                />
               </View>
 
               <TouchableOpacity

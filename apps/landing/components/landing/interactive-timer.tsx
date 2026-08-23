@@ -235,7 +235,7 @@ export function InteractiveTimer() {
                     type="range"
                     min="0"
                     max="1"
-                    step="0.05"
+                    step="0.01"
                     value={volume}
                     onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
                     className="w-16 sm:w-20 h-1 bg-muted-foreground/30 rounded-lg appearance-none cursor-pointer accent-primary"

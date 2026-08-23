@@ -1439,7 +1439,7 @@ export function Popup() {
                   type="range"
                   min="0"
                   max="1"
-                  step="0.05"
+                  step="0.01"
                   value={musicVolume}
                   onChange={(e) => handleMusicVolumeChange(parseFloat(e.target.value))}
                   className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer"
@@ -2489,7 +2489,7 @@ export function Popup() {
                     type="range"
                     min="0"
                     max="1"
-                    step="0.05"
+                    step="0.01"
                     value={soundEffectVolume}
                     onChange={(e) => handleSoundEffectVolumeChange(parseFloat(e.target.value))}
                     className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer"

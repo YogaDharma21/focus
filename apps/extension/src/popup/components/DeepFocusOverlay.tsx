@@ -124,7 +124,7 @@ export function DeepFocusOverlay({
                 type="range"
                 min="0"
                 max="1"
-                step="0.05"
+                step="0.01"
                 value={state.musicVolume ?? 0.8}
                 onChange={(e) => onSetMusicVolume(parseFloat(e.target.value))}
                 className="w-full h-1 bg-neutral-800 rounded-lg accent-neutral-100 cursor-pointer"
