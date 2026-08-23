@@ -1,6 +1,7 @@
 let musicAudio: HTMLAudioElement | null = null;
 let currentFadeInterval: ReturnType<typeof setInterval> | null = null;
 let targetMusicVolume = 0.8;
+let playPromise: Promise<void> | null = null;
 
 function getAudio(): HTMLAudioElement {
   if (!musicAudio) {
@@ -19,6 +20,30 @@ function clearFade() {
     clearInterval(currentFadeInterval);
     currentFadeInterval = null;
   }
+}
+
+async function safePlay(audio: HTMLAudioElement): Promise<void> {
+  try {
+    playPromise = audio.play();
+    await playPromise;
+  } catch (err: any) {
+    if (err?.name !== "AbortError") {
+      console.error("Offscreen audio play error:", err);
+    }
+  } finally {
+    playPromise = null;
+  }
+}
+
+async function safePause(audio: HTMLAudioElement): Promise<void> {
+  if (playPromise) {
+    try {
+      await playPromise;
+    } catch {
+      // Ignore AbortError when play is aborted by pause
+    }
+  }
+  audio.pause();
 }
 
 if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage) {
@@ -42,7 +67,7 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
           const totalSteps = Math.max(1, Math.round(durationMs / stepInterval));
           const delta = (targetMusicVolume - startVol) / totalSteps;
 
-          audio.play().then(() => {
+          safePlay(audio).then(() => {
             currentFadeInterval = setInterval(() => {
               const nextVol = audio.volume + delta;
               if (nextVol >= targetMusicVolume - 0.005 || audio.paused) {
@@ -52,18 +77,12 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
                 audio.volume = Math.max(0, Math.min(1, nextVol));
               }
             }, stepInterval);
-            sendResponse({ status: "playing", fading: true });
-          }).catch((err) => {
-            console.error("Offscreen audio play error:", err);
-            sendResponse({ status: "error", error: String(err) });
           });
+          sendResponse({ status: "playing", fading: true });
         } else {
           audio.volume = targetMusicVolume;
-          audio.play().then(() => {
+          safePlay(audio).then(() => {
             sendResponse({ status: "playing" });
-          }).catch((err) => {
-            console.error("Offscreen audio play error:", err);
-            sendResponse({ status: "error", error: String(err) });
           });
         }
         return true;
@@ -81,10 +100,10 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
           const totalSteps = Math.max(1, Math.round(durationMs / stepInterval));
           const delta = startVol / totalSteps;
 
-          currentFadeInterval = setInterval(() => {
+          currentFadeInterval = setInterval(async () => {
             const nextVol = audio.volume - delta;
             if (nextVol <= 0.005 || audio.paused) {
-              audio.pause();
+              await safePause(audio);
               audio.volume = targetMusicVolume;
               clearFade();
             } else {
@@ -93,11 +112,12 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
           }, stepInterval);
           sendResponse({ status: "fading_out" });
         } else {
-          audio.pause();
-          audio.volume = targetMusicVolume;
+          safePause(audio).then(() => {
+            audio.volume = targetMusicVolume;
+          });
           sendResponse({ status: "paused" });
         }
-        break;
+        return true;
       }
 
       case "SET_MUSIC_VOLUME": {
