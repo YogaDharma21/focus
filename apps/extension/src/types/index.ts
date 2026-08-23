@@ -104,4 +104,5 @@ export interface AppStateData {
   musicVolume?: number;
   soundEffectVolume?: number;
   soundEffectEnabled?: boolean;
+  autoPauseOnExternalAudio?: boolean;
 }
