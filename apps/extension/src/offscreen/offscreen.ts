@@ -58,6 +58,17 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
         }
         clearFade();
 
+        // Restore playback position if the offscreen document was recycled
+        if (typeof message.currentTime === "number" && message.currentTime > 0) {
+          const duration = audio.duration;
+          if (isFinite(duration) && duration > 0) {
+            audio.currentTime = message.currentTime % duration;
+          } else {
+            // Duration not yet known (new Audio element), restore once metadata loads
+            audio.currentTime = message.currentTime;
+          }
+        }
+
         const fadeDuration = typeof message.fadeDuration === "number" ? message.fadeDuration : 0;
         if (fadeDuration > 0 && targetMusicVolume > 0) {
           const startVol = audio.paused ? 0 : audio.volume;
@@ -92,6 +103,9 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
         const audio = getAudio();
         clearFade();
 
+        // Capture playback position before pausing so the background can persist it
+        const pausedAt = audio.currentTime || 0;
+
         const fadeDuration = typeof message.fadeDuration === "number" ? message.fadeDuration : 0;
         if (fadeDuration > 0 && !audio.paused && audio.volume > 0.01) {
           const startVol = audio.volume;
@@ -110,12 +124,12 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
               audio.volume = Math.max(0, Math.min(1, nextVol));
             }
           }, stepInterval);
-          sendResponse({ status: "fading_out" });
+          sendResponse({ status: "fading_out", currentTime: pausedAt });
         } else {
           safePause(audio).then(() => {
             audio.volume = targetMusicVolume;
           });
-          sendResponse({ status: "paused" });
+          sendResponse({ status: "paused", currentTime: pausedAt });
         }
         return true;
       }
