@@ -7,24 +7,48 @@ let playPromise: Promise<void> | null = null;
 let cachedMusicPosition = 0;
 let lastSaveTime = 0;
 let pendingSaveTimeout: ReturnType<typeof setTimeout> | null = null;
+let isRestoringPosition = false;
 
 async function loadPersistedMusicPosition(): Promise<number> {
-  if (typeof chrome !== "undefined" && chrome.storage?.session) {
-    try {
-      const res = await chrome.storage.session.get(SESSION_MUSIC_POSITION_KEY);
-      if (res && typeof res[SESSION_MUSIC_POSITION_KEY] === "number" && isFinite(res[SESSION_MUSIC_POSITION_KEY])) {
-        cachedMusicPosition = res[SESSION_MUSIC_POSITION_KEY];
-        return cachedMusicPosition;
+  if (typeof chrome !== "undefined") {
+    if (chrome.storage?.session) {
+      try {
+        const res = await chrome.storage.session.get(SESSION_MUSIC_POSITION_KEY);
+        if (res && typeof res[SESSION_MUSIC_POSITION_KEY] === "number" && isFinite(res[SESSION_MUSIC_POSITION_KEY]) && res[SESSION_MUSIC_POSITION_KEY] > 0) {
+          cachedMusicPosition = res[SESSION_MUSIC_POSITION_KEY];
+          return cachedMusicPosition;
+        }
+      } catch {
+        // Fallback to local storage
       }
-    } catch {
-      // Fallback to cache if storage.session is unavailable
+    }
+    if (chrome.storage?.local) {
+      try {
+        const res = await chrome.storage.local.get(SESSION_MUSIC_POSITION_KEY);
+        if (res && typeof res[SESSION_MUSIC_POSITION_KEY] === "number" && isFinite(res[SESSION_MUSIC_POSITION_KEY]) && res[SESSION_MUSIC_POSITION_KEY] > 0) {
+          cachedMusicPosition = res[SESSION_MUSIC_POSITION_KEY];
+          return cachedMusicPosition;
+        }
+      } catch {
+        // Fallback to cache
+      }
     }
   }
   return cachedMusicPosition;
 }
 
+function writePositionToStorage(position: number) {
+  if (typeof chrome === "undefined") return;
+  if (chrome.storage?.session) {
+    chrome.storage.session.set({ [SESSION_MUSIC_POSITION_KEY]: position }).catch(() => {});
+  }
+  if (chrome.storage?.local) {
+    chrome.storage.local.set({ [SESSION_MUSIC_POSITION_KEY]: position }).catch(() => {});
+  }
+}
+
 function persistMusicPosition(pos: number, immediate = false): void {
-  if (!isFinite(pos) || pos < 0) return;
+  if (!isFinite(pos) || pos < 0 || isRestoringPosition) return;
   cachedMusicPosition = pos;
 
   const now = Date.now();
@@ -34,9 +58,7 @@ function persistMusicPosition(pos: number, immediate = false): void {
       pendingSaveTimeout = null;
     }
     lastSaveTime = now;
-    if (typeof chrome !== "undefined" && chrome.storage?.session) {
-      chrome.storage.session.set({ [SESSION_MUSIC_POSITION_KEY]: pos }).catch(() => {});
-    }
+    writePositionToStorage(pos);
     return;
   }
 
@@ -46,46 +68,66 @@ function persistMusicPosition(pos: number, immediate = false): void {
       clearTimeout(pendingSaveTimeout);
       pendingSaveTimeout = null;
     }
-    if (typeof chrome !== "undefined" && chrome.storage?.session) {
-      chrome.storage.session.set({ [SESSION_MUSIC_POSITION_KEY]: pos }).catch(() => {});
-    }
+    writePositionToStorage(pos);
   } else if (!pendingSaveTimeout) {
     pendingSaveTimeout = setTimeout(() => {
       pendingSaveTimeout = null;
       lastSaveTime = Date.now();
-      if (typeof chrome !== "undefined" && chrome.storage?.session) {
-        chrome.storage.session.set({ [SESSION_MUSIC_POSITION_KEY]: cachedMusicPosition }).catch(() => {});
-      }
+      writePositionToStorage(cachedMusicPosition);
     }, 1000 - (now - lastSaveTime));
   }
 }
 
-function applyPlaybackPosition(audio: HTMLAudioElement, targetPos: number): void {
-  if (!isFinite(targetPos) || targetPos <= 0) return;
+async function prepareAndPlayAudio(audio: HTMLAudioElement, targetPosition?: number): Promise<void> {
+  const pos = typeof targetPosition === "number" && isFinite(targetPosition) && targetPosition > 0
+    ? targetPosition
+    : await loadPersistedMusicPosition();
 
-  const setTime = () => {
-    try {
-      if (audio.duration && targetPos >= audio.duration - 0.5) {
-        audio.currentTime = 0;
-      } else if (Math.abs(audio.currentTime - targetPos) > 0.3) {
-        audio.currentTime = targetPos;
+  if (pos > 0) {
+    isRestoringPosition = true;
+    if (audio.readyState >= 1) {
+      try {
+        if (!audio.duration || pos < audio.duration - 0.5) {
+          audio.currentTime = pos;
+        } else {
+          audio.currentTime = 0;
+        }
+      } catch (e) {
+        console.warn("Could not set currentTime on ready audio:", e);
       }
-    } catch (err) {
-      console.warn("Could not set audio.currentTime:", err);
-    }
-  };
+      isRestoringPosition = false;
+    } else {
+      await new Promise<void>((resolve) => {
+        let settled = false;
+        const cleanupAndResolve = () => {
+          if (settled) return;
+          settled = true;
+          audio.removeEventListener("loadedmetadata", onMetadata);
+          audio.removeEventListener("canplay", onMetadata);
+          audio.removeEventListener("error", onMetadata);
+          try {
+            if (!audio.duration || pos < audio.duration - 0.5) {
+              audio.currentTime = pos;
+            } else {
+              audio.currentTime = 0;
+            }
+          } catch (e) {
+            console.warn("Could not set currentTime on metadata load:", e);
+          }
+          isRestoringPosition = false;
+          resolve();
+        };
 
-  if (audio.readyState >= 1) {
-    setTime();
-  } else {
-    const onMetadata = () => {
-      setTime();
-      audio.removeEventListener("loadedmetadata", onMetadata);
-      audio.removeEventListener("canplay", onMetadata);
-    };
-    audio.addEventListener("loadedmetadata", onMetadata, { once: true });
-    audio.addEventListener("canplay", onMetadata, { once: true });
+        const onMetadata = () => cleanupAndResolve();
+        audio.addEventListener("loadedmetadata", onMetadata);
+        audio.addEventListener("canplay", onMetadata);
+        audio.addEventListener("error", onMetadata);
+        setTimeout(cleanupAndResolve, 350);
+      });
+    }
   }
+
+  await safePlay(audio);
 }
 
 function getAudio(): HTMLAudioElement {
@@ -93,24 +135,26 @@ function getAudio(): HTMLAudioElement {
     const url = (typeof chrome !== "undefined" && chrome.runtime?.getURL)
       ? chrome.runtime.getURL("music1.mp3")
       : "/music1.mp3";
-    musicAudio = new Audio(url);
+    musicAudio = new Audio();
+    musicAudio.preload = "auto";
     musicAudio.loop = true;
     musicAudio.volume = targetMusicVolume;
+    musicAudio.src = url;
 
     musicAudio.addEventListener("timeupdate", () => {
-      if (musicAudio && !musicAudio.paused && musicAudio.currentTime > 0) {
+      if (musicAudio && !musicAudio.paused && !isRestoringPosition && musicAudio.currentTime > 0) {
         persistMusicPosition(musicAudio.currentTime, false);
       }
     });
 
     musicAudio.addEventListener("pause", () => {
-      if (musicAudio) {
+      if (musicAudio && !isRestoringPosition) {
         persistMusicPosition(musicAudio.currentTime, true);
       }
     });
 
     musicAudio.addEventListener("seeking", () => {
-      if (musicAudio) {
+      if (musicAudio && !isRestoringPosition) {
         persistMusicPosition(musicAudio.currentTime, true);
       }
     });
@@ -120,20 +164,37 @@ function getAudio(): HTMLAudioElement {
     });
 
     loadPersistedMusicPosition().then((savedPos) => {
-      if (savedPos > 0 && musicAudio) {
-        applyPlaybackPosition(musicAudio, savedPos);
+      if (savedPos > 0 && musicAudio && musicAudio.paused) {
+        isRestoringPosition = true;
+        if (musicAudio.readyState >= 1) {
+          if (!musicAudio.duration || savedPos < musicAudio.duration - 0.5) {
+            musicAudio.currentTime = savedPos;
+          }
+          isRestoringPosition = false;
+        } else {
+          const onMeta = () => {
+            if (musicAudio) {
+              if (!musicAudio.duration || savedPos < musicAudio.duration - 0.5) {
+                musicAudio.currentTime = savedPos;
+              }
+            }
+            isRestoringPosition = false;
+            musicAudio?.removeEventListener("loadedmetadata", onMeta);
+          };
+          musicAudio.addEventListener("loadedmetadata", onMeta, { once: true });
+        }
       }
     });
   }
   return musicAudio;
 }
 
-// Preload persisted position on offscreen document init
+// Preload persisted position on offscreen document initialization
 loadPersistedMusicPosition();
 
 if (typeof window !== "undefined") {
   window.addEventListener("beforeunload", () => {
-    if (musicAudio) {
+    if (musicAudio && !isRestoringPosition) {
       persistMusicPosition(musicAudio.currentTime, true);
     }
   });
@@ -186,10 +247,6 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
           ? message.position
           : cachedMusicPosition;
 
-        if (positionToRestore > 0) {
-          applyPlaybackPosition(audio, positionToRestore);
-        }
-
         const fadeDuration = typeof message.fadeDuration === "number" ? message.fadeDuration : 0;
         if (fadeDuration > 0 && targetMusicVolume > 0) {
           const startVol = audio.paused ? 0 : audio.volume;
@@ -199,7 +256,7 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
           const totalSteps = Math.max(1, Math.round(durationMs / stepInterval));
           const delta = (targetMusicVolume - startVol) / totalSteps;
 
-          safePlay(audio).then(() => {
+          prepareAndPlayAudio(audio, positionToRestore).then(() => {
             currentFadeInterval = setInterval(() => {
               const nextVol = audio.volume + delta;
               if (nextVol >= targetMusicVolume - 0.005 || audio.paused) {
@@ -213,7 +270,7 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
           sendResponse({ status: "playing", fading: true });
         } else {
           audio.volume = targetMusicVolume;
-          safePlay(audio).then(() => {
+          prepareAndPlayAudio(audio, positionToRestore).then(() => {
             sendResponse({ status: "playing" });
           });
         }

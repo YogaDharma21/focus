@@ -7,23 +7,42 @@ const KEEPALIVE_ALARM = "focus-keepalive";
 const OFFSCREEN_DOCUMENT_PATH = "offscreen.html";
 
 // ─── Auto-Pause State Persistence ─────────────────────────────────────────
-// Persisted in chrome.storage.session so state survives service worker sleep/wakeups
-// without modifying focus_extension_state_v6.
+// Persisted in both chrome.storage.session and chrome.storage.local so state survives
+// service worker suspension and offscreen document recreation reliably.
 const SESSION_MUSIC_AUTO_PAUSED_KEY = "focus_music_auto_paused";
 const SESSION_MUSIC_POSITION_KEY = "focus_music_position";
 let cachedMusicAutoPaused = false;
 let cachedMusicPosition = 0;
 
+if (typeof chrome !== "undefined" && chrome.storage?.session?.setAccessLevel) {
+  chrome.storage.session.setAccessLevel({
+    accessLevel: "TRUSTED_AND_UNTRUSTED_CONTEXTS"
+  }).catch(() => {});
+}
+
 async function getMusicAutoPaused(): Promise<boolean> {
-  if (typeof chrome !== "undefined" && chrome.storage?.session) {
-    try {
-      const res = await chrome.storage.session.get(SESSION_MUSIC_AUTO_PAUSED_KEY);
-      if (res && typeof res[SESSION_MUSIC_AUTO_PAUSED_KEY] === "boolean") {
-        cachedMusicAutoPaused = res[SESSION_MUSIC_AUTO_PAUSED_KEY];
-        return cachedMusicAutoPaused;
+  if (typeof chrome !== "undefined") {
+    if (chrome.storage?.session) {
+      try {
+        const res = await chrome.storage.session.get(SESSION_MUSIC_AUTO_PAUSED_KEY);
+        if (res && typeof res[SESSION_MUSIC_AUTO_PAUSED_KEY] === "boolean") {
+          cachedMusicAutoPaused = res[SESSION_MUSIC_AUTO_PAUSED_KEY];
+          return cachedMusicAutoPaused;
+        }
+      } catch {
+        // Fallback to local
       }
-    } catch {
-      // Fallback to cache if storage.session is unavailable
+    }
+    if (chrome.storage?.local) {
+      try {
+        const res = await chrome.storage.local.get(SESSION_MUSIC_AUTO_PAUSED_KEY);
+        if (res && typeof res[SESSION_MUSIC_AUTO_PAUSED_KEY] === "boolean") {
+          cachedMusicAutoPaused = res[SESSION_MUSIC_AUTO_PAUSED_KEY];
+          return cachedMusicAutoPaused;
+        }
+      } catch {
+        // Fallback to cache
+      }
     }
   }
   return cachedMusicAutoPaused;
@@ -31,25 +50,43 @@ async function getMusicAutoPaused(): Promise<boolean> {
 
 async function setMusicAutoPaused(val: boolean): Promise<void> {
   cachedMusicAutoPaused = val;
-  if (typeof chrome !== "undefined" && chrome.storage?.session) {
-    try {
-      await chrome.storage.session.set({ [SESSION_MUSIC_AUTO_PAUSED_KEY]: val });
-    } catch {
-      // Ignore if session storage fails
+  if (typeof chrome !== "undefined") {
+    if (chrome.storage?.session) {
+      try {
+        await chrome.storage.session.set({ [SESSION_MUSIC_AUTO_PAUSED_KEY]: val });
+      } catch {}
+    }
+    if (chrome.storage?.local) {
+      try {
+        await chrome.storage.local.set({ [SESSION_MUSIC_AUTO_PAUSED_KEY]: val });
+      } catch {}
     }
   }
 }
 
 async function getMusicPosition(): Promise<number> {
-  if (typeof chrome !== "undefined" && chrome.storage?.session) {
-    try {
-      const res = await chrome.storage.session.get(SESSION_MUSIC_POSITION_KEY);
-      if (res && typeof res[SESSION_MUSIC_POSITION_KEY] === "number" && isFinite(res[SESSION_MUSIC_POSITION_KEY])) {
-        cachedMusicPosition = res[SESSION_MUSIC_POSITION_KEY];
-        return cachedMusicPosition;
+  if (typeof chrome !== "undefined") {
+    if (chrome.storage?.session) {
+      try {
+        const res = await chrome.storage.session.get(SESSION_MUSIC_POSITION_KEY);
+        if (res && typeof res[SESSION_MUSIC_POSITION_KEY] === "number" && isFinite(res[SESSION_MUSIC_POSITION_KEY]) && res[SESSION_MUSIC_POSITION_KEY] > 0) {
+          cachedMusicPosition = res[SESSION_MUSIC_POSITION_KEY];
+          return cachedMusicPosition;
+        }
+      } catch {
+        // Fallback to local
       }
-    } catch {
-      // Fallback to cache
+    }
+    if (chrome.storage?.local) {
+      try {
+        const res = await chrome.storage.local.get(SESSION_MUSIC_POSITION_KEY);
+        if (res && typeof res[SESSION_MUSIC_POSITION_KEY] === "number" && isFinite(res[SESSION_MUSIC_POSITION_KEY]) && res[SESSION_MUSIC_POSITION_KEY] > 0) {
+          cachedMusicPosition = res[SESSION_MUSIC_POSITION_KEY];
+          return cachedMusicPosition;
+        }
+      } catch {
+        // Fallback to cache
+      }
     }
   }
   return cachedMusicPosition;
@@ -57,11 +94,16 @@ async function getMusicPosition(): Promise<number> {
 
 async function setMusicPosition(pos: number): Promise<void> {
   cachedMusicPosition = pos;
-  if (typeof chrome !== "undefined" && chrome.storage?.session) {
-    try {
-      await chrome.storage.session.set({ [SESSION_MUSIC_POSITION_KEY]: pos });
-    } catch {
-      // Ignore
+  if (typeof chrome !== "undefined") {
+    if (chrome.storage?.session) {
+      try {
+        await chrome.storage.session.set({ [SESSION_MUSIC_POSITION_KEY]: pos });
+      } catch {}
+    }
+    if (chrome.storage?.local) {
+      try {
+        await chrome.storage.local.set({ [SESSION_MUSIC_POSITION_KEY]: pos });
+      } catch {}
     }
   }
 }
