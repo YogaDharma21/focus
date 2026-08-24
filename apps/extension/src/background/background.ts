@@ -10,7 +10,9 @@ const OFFSCREEN_DOCUMENT_PATH = "offscreen.html";
 // Persisted in chrome.storage.session so state survives service worker sleep/wakeups
 // without modifying focus_extension_state_v6.
 const SESSION_MUSIC_AUTO_PAUSED_KEY = "focus_music_auto_paused";
+const SESSION_MUSIC_CURRENT_TIME_KEY = "focus_music_current_time";
 let cachedMusicAutoPaused = false;
+let cachedMusicCurrentTime = 0;
 
 async function getMusicAutoPaused(): Promise<boolean> {
   if (typeof chrome !== "undefined" && chrome.storage?.session) {
@@ -32,6 +34,32 @@ async function setMusicAutoPaused(val: boolean): Promise<void> {
   if (typeof chrome !== "undefined" && chrome.storage?.session) {
     try {
       await chrome.storage.session.set({ [SESSION_MUSIC_AUTO_PAUSED_KEY]: val });
+    } catch {
+      // Ignore if session storage fails
+    }
+  }
+}
+
+async function getMusicCurrentTime(): Promise<number> {
+  if (typeof chrome !== "undefined" && chrome.storage?.session) {
+    try {
+      const res = await chrome.storage.session.get(SESSION_MUSIC_CURRENT_TIME_KEY);
+      if (res && typeof res[SESSION_MUSIC_CURRENT_TIME_KEY] === "number") {
+        cachedMusicCurrentTime = res[SESSION_MUSIC_CURRENT_TIME_KEY];
+        return cachedMusicCurrentTime;
+      }
+    } catch {
+      // Fallback to cache if storage.session is unavailable
+    }
+  }
+  return cachedMusicCurrentTime;
+}
+
+async function setMusicCurrentTime(val: number): Promise<void> {
+  cachedMusicCurrentTime = val;
+  if (typeof chrome !== "undefined" && chrome.storage?.session) {
+    try {
+      await chrome.storage.session.set({ [SESSION_MUSIC_CURRENT_TIME_KEY]: val });
     } catch {
       // Ignore if session storage fails
     }
@@ -521,6 +549,7 @@ async function performSyncExternalAudioState(_reason?: string): Promise<void> {
   if (!isMusicPlaying) {
     if (wasAutoPaused) {
       await setMusicAutoPaused(false);
+      await setMusicCurrentTime(0);
     }
     await sendToOffscreen("PAUSE_MUSIC");
     return;
@@ -530,6 +559,7 @@ async function performSyncExternalAudioState(_reason?: string): Promise<void> {
   if (!autoPauseEnabled) {
     if (wasAutoPaused) {
       await setMusicAutoPaused(false);
+      await setMusicCurrentTime(0);
     }
     await sendToOffscreen("PLAY_MUSIC", { volume: musicVolume, fadeDuration });
     return;
@@ -538,15 +568,26 @@ async function performSyncExternalAudioState(_reason?: string): Promise<void> {
   const isExternalAudible = await checkAnyTabAudible();
 
   if (isExternalAudible) {
-    // External tab is playing audio -> Ambient music MUST be paused
-    await setMusicAutoPaused(true);
-    await sendToOffscreen("PAUSE_MUSIC", { fadeDuration });
+    if (!wasAutoPaused) {
+      // First detection of external audio -> pause music and save playback position.
+      // Only do this on the initial transition. Repeated PAUSE_MUSIC calls while
+      // already paused would hit a recycled offscreen document (fresh Audio element
+      // at currentTime=0) and overwrite the saved position with 0.
+      await setMusicAutoPaused(true);
+      const pauseResult = await sendToOffscreen("PAUSE_MUSIC", { fadeDuration });
+      if (pauseResult && typeof pauseResult.currentTime === "number") {
+        await setMusicCurrentTime(pauseResult.currentTime);
+      }
+    }
+    // Already auto-paused: skip. Position is already saved in session storage.
   } else {
     // No external tab is producing audio
     if (wasAutoPaused) {
-      // Resume from auto-pause
+      // Resume from auto-pause - restore saved playback position
+      const savedTime = await getMusicCurrentTime();
       await setMusicAutoPaused(false);
-      await sendToOffscreen("PLAY_MUSIC", { volume: musicVolume, fadeDuration });
+      await setMusicCurrentTime(0);
+      await sendToOffscreen("PLAY_MUSIC", { volume: musicVolume, fadeDuration, currentTime: savedTime });
     } else {
       // Ensure music is playing
       await sendToOffscreen("PLAY_MUSIC", { volume: musicVolume });
@@ -679,12 +720,14 @@ if (typeof chrome !== "undefined" && chrome.runtime) {
   if (chrome.runtime.onStartup) {
     chrome.runtime.onStartup.addListener(() => {
       setMusicAutoPaused(false);
+      setMusicCurrentTime(0);
       scheduleSyncExternalAudioState("runtime.onStartup");
     });
   }
   if (chrome.runtime.onInstalled) {
     chrome.runtime.onInstalled.addListener(() => {
       setMusicAutoPaused(false);
+      setMusicCurrentTime(0);
       scheduleSyncExternalAudioState("runtime.onInstalled");
     });
   }
