@@ -10,7 +10,9 @@ const OFFSCREEN_DOCUMENT_PATH = "offscreen.html";
 // Persisted in chrome.storage.session so state survives service worker sleep/wakeups
 // without modifying focus_extension_state_v6.
 const SESSION_MUSIC_AUTO_PAUSED_KEY = "focus_music_auto_paused";
+const SESSION_MUSIC_POSITION_KEY = "focus_music_position";
 let cachedMusicAutoPaused = false;
+let cachedMusicPosition = 0;
 
 async function getMusicAutoPaused(): Promise<boolean> {
   if (typeof chrome !== "undefined" && chrome.storage?.session) {
@@ -34,6 +36,32 @@ async function setMusicAutoPaused(val: boolean): Promise<void> {
       await chrome.storage.session.set({ [SESSION_MUSIC_AUTO_PAUSED_KEY]: val });
     } catch {
       // Ignore if session storage fails
+    }
+  }
+}
+
+async function getMusicPosition(): Promise<number> {
+  if (typeof chrome !== "undefined" && chrome.storage?.session) {
+    try {
+      const res = await chrome.storage.session.get(SESSION_MUSIC_POSITION_KEY);
+      if (res && typeof res[SESSION_MUSIC_POSITION_KEY] === "number" && isFinite(res[SESSION_MUSIC_POSITION_KEY])) {
+        cachedMusicPosition = res[SESSION_MUSIC_POSITION_KEY];
+        return cachedMusicPosition;
+      }
+    } catch {
+      // Fallback to cache
+    }
+  }
+  return cachedMusicPosition;
+}
+
+async function setMusicPosition(pos: number): Promise<void> {
+  cachedMusicPosition = pos;
+  if (typeof chrome !== "undefined" && chrome.storage?.session) {
+    try {
+      await chrome.storage.session.set({ [SESSION_MUSIC_POSITION_KEY]: pos });
+    } catch {
+      // Ignore
     }
   }
 }
@@ -517,6 +545,7 @@ async function performSyncExternalAudioState(_reason?: string): Promise<void> {
   const fadeDuration = typeof state.autoPauseFadeDuration === "number" ? state.autoPauseFadeDuration : 2;
   const musicVolume = state.musicVolume ?? 0.8;
   const wasAutoPaused = await getMusicAutoPaused();
+  const currentPos = await getMusicPosition();
 
   if (!isMusicPlaying) {
     if (wasAutoPaused) {
@@ -531,7 +560,7 @@ async function performSyncExternalAudioState(_reason?: string): Promise<void> {
     if (wasAutoPaused) {
       await setMusicAutoPaused(false);
     }
-    await sendToOffscreen("PLAY_MUSIC", { volume: musicVolume, fadeDuration });
+    await sendToOffscreen("PLAY_MUSIC", { volume: musicVolume, fadeDuration, position: currentPos });
     return;
   }
 
@@ -546,10 +575,10 @@ async function performSyncExternalAudioState(_reason?: string): Promise<void> {
     if (wasAutoPaused) {
       // Resume from auto-pause
       await setMusicAutoPaused(false);
-      await sendToOffscreen("PLAY_MUSIC", { volume: musicVolume, fadeDuration });
+      await sendToOffscreen("PLAY_MUSIC", { volume: musicVolume, fadeDuration, position: currentPos });
     } else {
       // Ensure music is playing
-      await sendToOffscreen("PLAY_MUSIC", { volume: musicVolume });
+      await sendToOffscreen("PLAY_MUSIC", { volume: musicVolume, position: currentPos });
     }
   }
 }
