@@ -141,6 +141,11 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
     if (message.target === "background") {
       if (message.action === "TOGGLE_MUSIC") {
         getStoredState().then(async (state) => {
+          const soundEnabled = state.soundEnabled ?? true;
+          if (!soundEnabled) {
+            sendResponse({ isMusicPlaying: false });
+            return;
+          }
           const nextPlaying = !state.isMusicPlaying;
           await saveStoredState({ isMusicPlaying: nextPlaying });
           await scheduleSyncExternalAudioState("TOGGLE_MUSIC");
@@ -164,10 +169,20 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
           sendResponse({ success: true });
         });
         return true;
+      } else if (message.action === "SET_SOUND_ENABLED") {
+        const enabled = Boolean(message.enabled);
+        saveStoredState({ soundEnabled: enabled }).then(async () => {
+          if (!enabled) {
+            await sendToOffscreen("PAUSE_MUSIC");
+          }
+          sendResponse({ success: true });
+        });
+        return true;
       } else if (message.action === "PLAY_SOUND_EFFECT") {
         getStoredState().then((state) => {
-          const enabled = state.soundEffectEnabled ?? true;
-          if (enabled || message.force) {
+          const masterEnabled = state.soundEnabled ?? true;
+          const sfxEnabled = state.soundEffectEnabled ?? true;
+          if ((masterEnabled && sfxEnabled) || message.force) {
             const rawVol = typeof message.volume === "number" ? message.volume : (state.soundEffectVolume ?? 0.8);
             const vol = Math.max(0, Math.min(1, rawVol));
             sendToOffscreen("PLAY_SOUND_EFFECT", { volume: vol });
@@ -416,7 +431,8 @@ async function startBackgroundTimer() {
         const streaks = calculateStreaksFromSessions(newSessionList);
 
         const autoStart = isWork ? state.pomodoroSettings.autoStartBreak : state.pomodoroSettings.autoStartTimer;
-        const nextIsMusicPlaying = !isWork && autoStart;
+        const soundEnabled = state.soundEnabled ?? true;
+        const nextIsMusicPlaying = !isWork && autoStart && soundEnabled;
 
         let updatedTodos = state.todos;
         if (isWork && state.selectedTodoId) {
@@ -540,13 +556,14 @@ function scheduleSyncExternalAudioState(reason?: string): Promise<void> {
 
 async function performSyncExternalAudioState(_reason?: string): Promise<void> {
   const state = await getStoredState();
+  const soundEnabled = state.soundEnabled ?? true;
   const autoPauseEnabled = Boolean(state.autoPauseOnExternalAudio);
   const isMusicPlaying = Boolean(state.isMusicPlaying);
   const fadeDuration = typeof state.autoPauseFadeDuration === "number" ? state.autoPauseFadeDuration : 2;
   const musicVolume = state.musicVolume ?? 0.8;
   const wasAutoPaused = await getMusicAutoPaused();
 
-  if (!isMusicPlaying) {
+  if (!isMusicPlaying || !soundEnabled) {
     if (wasAutoPaused) {
       await setMusicAutoPaused(false);
       await setMusicCurrentTime(0);
@@ -705,7 +722,8 @@ if (typeof chrome !== "undefined" && chrome.storage) {
         newState.isMusicPlaying !== oldState.isMusicPlaying ||
         newState.autoPauseOnExternalAudio !== oldState.autoPauseOnExternalAudio ||
         newState.musicVolume !== oldState.musicVolume ||
-        newState.autoPauseFadeDuration !== oldState.autoPauseFadeDuration;
+        newState.autoPauseFadeDuration !== oldState.autoPauseFadeDuration ||
+        newState.soundEnabled !== oldState.soundEnabled;
 
       if (musicChanged) {
         scheduleSyncExternalAudioState("storage.onChanged");
