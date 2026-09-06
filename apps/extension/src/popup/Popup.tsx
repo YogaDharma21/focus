@@ -140,6 +140,7 @@ export function Popup() {
   const isMusicPlaying = state?.isMusicPlaying ?? false;
   const musicVolume = state?.musicVolume ?? 0.8;
   const soundEffectVolume = state?.soundEffectVolume ?? 0.8;
+  const soundEnabled = state?.soundEnabled ?? true;
   const soundEffectEnabled = state?.soundEffectEnabled ?? true;
   const autoPauseOnExternalAudio = state?.autoPauseOnExternalAudio ?? false;
   const autoPauseFadeDuration = state?.autoPauseFadeDuration ?? 2;
@@ -170,6 +171,14 @@ export function Popup() {
     updateState({ soundEffectEnabled: next });
     if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
       chrome.runtime.sendMessage({ target: "background", action: "SET_SOUND_EFFECT_ENABLED", enabled: next });
+    }
+  };
+
+  const toggleSoundEnabled = () => {
+    const next = !soundEnabled;
+    updateState({ soundEnabled: next, isMusicPlaying: false });
+    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({ target: "background", action: "SET_SOUND_ENABLED", enabled: next });
     }
   };
 
@@ -279,7 +288,7 @@ export function Popup() {
     const starting = !state.isActive;
     const isWorkOrFlow = state.timerState === "WORK" || state.timerState === "FLOW";
     if (starting && isWorkOrFlow) {
-      updateState({ isActive: true, deepFocusMode: true, isMusicPlaying: true });
+      updateState({ isActive: true, deepFocusMode: true, isMusicPlaying: soundEnabled });
     } else {
       updateState({ isActive: starting, deepFocusMode: false, isMusicPlaying: false });
     }
@@ -1344,7 +1353,9 @@ export function Popup() {
       {/* Floating Music Player Bar */}
       <div className="px-3 pt-2 z-20">
         <div className={`flex items-center justify-between p-2 px-3 rounded-2xl border shadow-md transition-all ${
-          "bg-neutral-900/90 border-neutral-800 text-white"
+          soundEnabled
+            ? "bg-neutral-900/90 border-neutral-800 text-white"
+            : "bg-neutral-900/50 border-neutral-800/50 text-neutral-500"
         }`}>
           <div
             onClick={() => setIsMusicExpanded(!isMusicExpanded)}
@@ -1353,16 +1364,20 @@ export function Popup() {
             <Music className="w-4 h-4 text-current shrink-0" />
             <div className="flex-1 min-w-0">
               <div className="text-xs font-semibold truncate">Lofi-Beats</div>
+              {!soundEnabled && <div className="text-[9px] text-neutral-600">Sound disabled</div>}
             </div>
           </div>
 
           <div className="flex items-center gap-1.5 shrink-0">
             <button
               onClick={toggleMusicPlay}
-              className={`w-7 h-7 rounded-lg flex items-center justify-center shadow hover:scale-105 active:scale-95 transition-all ${
-                "bg-white text-black"
+              disabled={!soundEnabled}
+              className={`w-7 h-7 rounded-lg flex items-center justify-center shadow transition-all ${
+                soundEnabled
+                  ? "bg-white text-black hover:scale-105 active:scale-95"
+                  : "bg-neutral-800 text-neutral-600 cursor-not-allowed"
               }`}
-              title={isMusicPlaying ? "Pause" : "Play"}
+              title={!soundEnabled ? "Sound is disabled" : isMusicPlaying ? "Pause" : "Play"}
             >
               {isMusicPlaying ? (
                 <Pause className="w-3.5 h-3.5 fill-current" />
@@ -1387,7 +1402,9 @@ export function Popup() {
         {/* Expanded Music Player Drawer */}
         {isMusicExpanded && (
           <div className={`mt-1.5 p-3 rounded-xl border shadow-xl transition-all ${
-            "bg-neutral-900 border-neutral-800 text-white"
+            soundEnabled
+              ? "bg-neutral-900 border-neutral-800 text-white"
+              : "bg-neutral-900/50 border-neutral-800/50 text-neutral-500"
           }`}>
             <div className="flex items-center justify-between mb-2 pb-1.5">
               <div className="flex items-center gap-2 text-xs font-bold">
@@ -1402,16 +1419,24 @@ export function Popup() {
               </button>
             </div>
 
+            {!soundEnabled && (
+              <div className="mb-2 p-2 rounded-lg bg-neutral-800/50 border border-neutral-700/50 text-center">
+                <span className="text-[10px] text-neutral-500 font-medium">Sound is disabled. Enable it in Settings.</span>
+              </div>
+            )}
+
             <div
-              onClick={toggleMusicPlay}
-              className={`flex items-center justify-between p-2 rounded-lg border cursor-pointer transition-all ${
-                isMusicPlaying
-                  ? ("bg-neutral-800 border-neutral-700")
-                  : ("bg-neutral-950/50 border-neutral-800/50")
+              onClick={soundEnabled ? toggleMusicPlay : undefined}
+              className={`flex items-center justify-between p-2 rounded-lg border transition-all ${
+                !soundEnabled
+                  ? "bg-neutral-950/30 border-neutral-800/30 opacity-50 cursor-not-allowed"
+                  : isMusicPlaying
+                    ? "bg-neutral-800 border-neutral-700 cursor-pointer"
+                    : "bg-neutral-950/50 border-neutral-800/50 cursor-pointer"
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <Music className={`w-4 h-4 ${isMusicPlaying ? "text-primary animate-pulse" : "opacity-50"}`} />
+                <Music className={`w-4 h-4 ${soundEnabled && isMusicPlaying ? "text-primary animate-pulse" : "opacity-50"}`} />
                 <div>
                   <div className="text-xs font-bold">Lofi-Beats</div>
                 </div>
@@ -1427,7 +1452,7 @@ export function Popup() {
             </div>
 
             {/* Music Volume Slider */}
-            <div className="mt-2 pt-2 border-t border-neutral-800 space-y-1">
+            <div className={`mt-2 pt-2 border-t border-neutral-800 space-y-1 ${!soundEnabled ? "opacity-40" : ""}`}>
               <div className="flex items-center justify-between text-[10px] opacity-60">
                 <span>Music Volume</span>
                 <span className="font-mono">{Math.round(musicVolume * 100)}%</span>
@@ -1441,7 +1466,8 @@ export function Popup() {
                   step="0.01"
                   value={musicVolume}
                   onChange={(e) => handleMusicVolumeChange(parseFloat(e.target.value))}
-                  className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer"
+                  disabled={!soundEnabled}
+                  className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -2404,41 +2430,66 @@ export function Popup() {
               "bg-black/40 border-neutral-800"
             }`}>
               <span className="text-xs font-bold text-white uppercase tracking-wider">Sound</span>
-              
+
               <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
                 "bg-neutral-900/60 border-neutral-800"
               }`}>
-                <span className="text-xs font-bold text-white">SFX Enabled</span>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-white">Sound</span>
+                  <span className="text-[10px] text-neutral-500">Enable or disable all sound</span>
+                </div>
                 <div
-                  onClick={toggleSoundEffectEnabled}
+                  onClick={toggleSoundEnabled}
                   className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
-                    soundEffectEnabled ? "bg-white" : "bg-neutral-700"
+                    soundEnabled ? "bg-white" : "bg-neutral-700"
                   }`}
                 >
                   <div
                     className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                      soundEffectEnabled ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
+                      soundEnabled ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
                     }`}
                   />
                 </div>
               </div>
 
-              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
-                "bg-neutral-900/60 border-neutral-800"
+              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border transition-all ${
+                soundEnabled
+                  ? "bg-neutral-900/60 border-neutral-800"
+                  : "bg-neutral-900/30 border-neutral-800/50 opacity-50"
+              }`}>
+                <span className="text-xs font-bold text-white">SFX Enabled</span>
+                <div
+                  onClick={soundEnabled ? toggleSoundEffectEnabled : undefined}
+                  className={`relative w-11 h-6 rounded-full transition-colors flex items-center ${
+                    soundEffectEnabled && soundEnabled ? "bg-white cursor-pointer" : "bg-neutral-700"
+                  } ${!soundEnabled ? "cursor-not-allowed" : "cursor-pointer"}`}
+                >
+                  <div
+                    className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
+                      soundEffectEnabled && soundEnabled ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border transition-all ${
+                soundEnabled
+                  ? "bg-neutral-900/60 border-neutral-800"
+                  : "bg-neutral-900/30 border-neutral-800/50 opacity-50"
               }`}>
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-white">Auto-Pause on Audio</span>
                   <span className="text-[10px] text-neutral-500">Pause music when other tabs play audio</span>
                 </div>
                 <div
-                  onClick={toggleAutoPauseOnExternalAudio}
-                  className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center shrink-0 ${
-                    autoPauseOnExternalAudio ? "bg-white" : "bg-neutral-700"
-                  }`}
+                  onClick={soundEnabled ? toggleAutoPauseOnExternalAudio : undefined}
+                  className={`relative w-11 h-6 rounded-full transition-colors flex items-center shrink-0 ${
+                    autoPauseOnExternalAudio && soundEnabled ? "bg-white cursor-pointer" : "bg-neutral-700"
+                  } ${!soundEnabled ? "cursor-not-allowed" : "cursor-pointer"}`}
                 >
                   <div
                     className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                      autoPauseOnExternalAudio ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
+                      autoPauseOnExternalAudio && soundEnabled ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
                     }`}
                   />
                 </div>
@@ -2476,8 +2527,10 @@ export function Popup() {
                 </div>
               )}
 
-              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
-                "bg-neutral-900/60 border-neutral-800"
+              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border transition-all ${
+                soundEnabled
+                  ? "bg-neutral-900/60 border-neutral-800"
+                  : "bg-neutral-900/30 border-neutral-800/50 opacity-50"
               }`}>
                 <div className="flex flex-col w-full gap-2">
                   <div className="flex items-center justify-between">
@@ -2491,14 +2544,20 @@ export function Popup() {
                     step="0.01"
                     value={soundEffectVolume}
                     onChange={(e) => handleSoundEffectVolumeChange(parseFloat(e.target.value))}
-                    className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer"
+                    disabled={!soundEnabled}
+                    className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer disabled:cursor-not-allowed"
                   />
                 </div>
               </div>
 
               <button
                 onClick={() => playTestSoundEffect()}
-                className="w-full py-2.5 rounded-xl font-bold text-xs border border-neutral-700 bg-neutral-800 text-white hover:bg-neutral-700 transition-all flex items-center justify-center gap-2"
+                disabled={!soundEnabled}
+                className={`w-full py-2.5 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-2 ${
+                  soundEnabled
+                    ? "border-neutral-700 bg-neutral-800 text-white hover:bg-neutral-700"
+                    : "border-neutral-800/50 bg-neutral-900/30 text-neutral-600 cursor-not-allowed"
+                }`}
               >
                 <Volume1 className="w-4 h-4" />
                 Test Sound Effect

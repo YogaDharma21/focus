@@ -57,6 +57,7 @@ export const DEFAULT_STATE: AppStateData = {
     }
   },
   deepFocusMode: false,
+  soundEnabled: true,
   isMusicPlaying: false,
   musicVolume: 0.8,
   soundEffectVolume: 0.8,
