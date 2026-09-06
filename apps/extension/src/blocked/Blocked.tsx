@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ShieldAlert, Timer } from "lucide-react";
+import { Pause, ShieldAlert, Timer } from "lucide-react";
 import { AppStateData } from "../types";
 import { getStoredState, saveStoredState, subscribeToStateChanges } from "../lib/storage";
 import "../index.css";
@@ -56,6 +56,11 @@ export function Blocked() {
     }
   };
 
+  const pauseTimer = async () => {
+    if (!state) return;
+    await saveStoredState({ isActive: false });
+  };
+
   const mins = state ? Math.floor(state.timeLeft / 60) : 0;
   const secs = state ? state.timeLeft % 60 : 0;
   const timeFormatted = `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
@@ -91,23 +96,24 @@ export function Blocked() {
 
         {/* Live Timer Card */}
         {state && (
-          <div className="w-full p-4 rounded-xl border flex items-center justify-between mb-6 bg-neutral-900 border-neutral-800">
-            <div className="flex items-center gap-3">
-              <Timer className="w-5 h-5" />
-              <div className="text-left">
-                <div className="text-[10px] font-mono opacity-60 uppercase">Session Time Remaining</div>
-                <div className="text-lg font-bold font-mono">{timeFormatted}</div>
-              </div>
-            </div>
-
-            <div className="text-[10px] font-mono font-bold uppercase px-2.5 py-1 rounded border bg-black text-white border-neutral-700">
-              {state.sessionName || "WORK SESSION"}
+          <div className="w-full p-4 rounded-xl border flex items-center gap-3 mb-6 bg-neutral-900 border-neutral-800">
+            <Timer className="w-5 h-5 shrink-0" />
+            <div className="text-left">
+              <div className="text-[10px] font-mono opacity-60 uppercase">Session Time Remaining</div>
+              <div className="text-lg font-bold font-mono">{timeFormatted}</div>
             </div>
           </div>
         )}
 
         {/* Actions */}
-        <div className="w-full">
+        <div className="w-full flex flex-col gap-2">
+          <button
+            onClick={pauseTimer}
+            className="w-full py-3 px-4 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 border transition-all bg-white text-black border-white hover:bg-neutral-200"
+          >
+            <Pause className="w-3.5 h-3.5" />
+            Pause Timer
+          </button>
           <button
             onClick={pauseShieldTemporarily}
             className="w-full py-3 px-4 rounded-xl font-semibold text-xs border transition-all bg-neutral-900 border-neutral-800 text-neutral-300 hover:bg-neutral-800"
