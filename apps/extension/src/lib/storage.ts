@@ -39,7 +39,8 @@ export const DEFAULT_STATE: AppStateData = {
       "reddit.com",
       "tiktok.com",
       "youtube.com"
-    ]
+    ],
+    allowedSites: []
   },
   stats: {
     todayMinutes: 0,
@@ -176,7 +177,7 @@ let cachedState: AppStateData | null = null;
 if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
   chrome.storage.local.get([STORAGE_KEY], (result) => {
     if (result && result[STORAGE_KEY]) {
-      cachedState = { ...DEFAULT_STATE, ...result[STORAGE_KEY] };
+      cachedState = migrateState({ ...DEFAULT_STATE, ...result[STORAGE_KEY] });
     }
   });
 }
@@ -184,13 +185,20 @@ if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
 if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.onChanged) {
   chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName === "local" && changes[STORAGE_KEY] && changes[STORAGE_KEY].newValue) {
-      cachedState = { ...DEFAULT_STATE, ...changes[STORAGE_KEY].newValue };
+      cachedState = migrateState({ ...DEFAULT_STATE, ...changes[STORAGE_KEY].newValue });
     }
   });
 }
 
 export function getCachedState(): AppStateData | null {
   return cachedState;
+}
+
+function migrateState(fresh: AppStateData): AppStateData {
+  if (fresh.shield && !('allowedSites' in fresh.shield)) {
+    fresh.shield = Object.assign({}, fresh.shield, { allowedSites: [] });
+  }
+  return fresh;
 }
 
 export async function getStoredState(): Promise<AppStateData> {
@@ -202,7 +210,7 @@ export async function getStoredState(): Promise<AppStateData> {
     return new Promise((resolve) => {
       chrome.storage.local.get([STORAGE_KEY], (result) => {
         if (result[STORAGE_KEY]) {
-          const fresh = { ...DEFAULT_STATE, ...result[STORAGE_KEY] };
+          const fresh = migrateState({ ...DEFAULT_STATE, ...result[STORAGE_KEY] });
           cachedState = fresh;
           resolve(fresh);
         } else {
@@ -216,7 +224,7 @@ export async function getStoredState(): Promise<AppStateData> {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
-      const fresh = { ...DEFAULT_STATE, ...JSON.parse(raw) };
+      const fresh = migrateState({ ...DEFAULT_STATE, ...JSON.parse(raw) });
       cachedState = fresh;
       return fresh;
     }
@@ -252,7 +260,7 @@ export function subscribeToStateChanges(callback: (newState: AppStateData) => vo
   if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.onChanged) {
     const listener = (changes: { [key: string]: chrome.storage.StorageChange }, areaName: string) => {
       if (areaName === "local" && changes[STORAGE_KEY] && changes[STORAGE_KEY].newValue) {
-        const fresh = { ...DEFAULT_STATE, ...changes[STORAGE_KEY].newValue };
+        const fresh = migrateState({ ...DEFAULT_STATE, ...changes[STORAGE_KEY].newValue });
         cachedState = fresh;
         callback(fresh);
       }
