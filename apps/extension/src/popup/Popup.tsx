@@ -128,6 +128,7 @@ export function Popup() {
   const [newGroupName, setNewGroupName] = useState("");
   const [showAddGroupInput, setShowAddGroupInput] = useState(false);
   const [newSiteUrl, setNewSiteUrl] = useState("");
+  const [newAllowedSite, setNewAllowedSite] = useState("");
   const [newMoodText, setNewMoodText] = useState("");
   const [selectedMood, setSelectedMood] = useState(MOOD_EMOJIS[1]);
   const [newSubtaskText, setNewSubtaskText] = useState("");
@@ -583,6 +584,31 @@ export function Popup() {
       shield: {
         ...state.shield,
         blockedSites: state.shield.blockedSites.filter(s => s !== site)
+      }
+    });
+  };
+
+  const addAllowedSite = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAllowedSite.trim()) return;
+    let clean = newAllowedSite.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "");
+    if (!clean) return;
+    if (state.shield.allowedSites.includes(clean)) return;
+
+    updateState({
+      shield: {
+        ...state.shield,
+        allowedSites: [...state.shield.allowedSites, clean]
+      }
+    });
+    setNewAllowedSite("");
+  };
+
+  const removeAllowedSite = (site: string) => {
+    updateState({
+      shield: {
+        ...state.shield,
+        allowedSites: state.shield.allowedSites.filter(s => s !== site)
       }
     });
   };
@@ -2050,6 +2076,47 @@ export function Popup() {
                   </button>
                 </div>
               ))}
+
+              <div className="mt-3 pt-3 border-t border-neutral-800">
+                <div className={`text-[10px] font-mono uppercase tracking-wider mb-1 ${"text-neutral-500"}`}>
+                  Unblocked Sites ({state.shield.allowedSites.length})
+                </div>
+                <p className="text-[10px] text-neutral-600 mb-2">
+                  These domains bypass the shield even if a parent domain is blocked.
+                </p>
+                <form onSubmit={addAllowedSite} className="flex gap-2 mb-2">
+                  <input
+                    type="text"
+                    value={newAllowedSite}
+                    onChange={(e) => setNewAllowedSite(e.target.value)}
+                    placeholder="Allow domain (e.g. music.youtube.com)..."
+                    className={`flex-1 px-3 py-2 rounded-xl text-xs font-mono border focus:outline-none ${
+                      "bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-white"
+                    }`}
+                  />
+                  <button
+                    type="submit"
+                    className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
+                      "bg-neutral-800 border-neutral-700 text-white hover:bg-neutral-700"
+                    }`}
+                  >
+                    Allow
+                  </button>
+                </form>
+                {state.shield.allowedSites.map((site) => (
+                  <div
+                    key={site}
+                    className={`px-3 py-2 rounded-xl border flex items-center justify-between text-xs font-mono ${
+                      "bg-neutral-900/60 border-neutral-800 text-neutral-300"
+                    }`}
+                  >
+                    <span className="text-[11px]">{site}</span>
+                    <button onClick={() => removeAllowedSite(site)} className={`p-1 ${"text-neutral-500 hover:text-white"}`}>
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

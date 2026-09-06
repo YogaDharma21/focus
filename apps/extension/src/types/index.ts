@@ -59,6 +59,7 @@ export interface Distraction {
 export interface ShieldConfig {
   enabled: boolean;
   blockedSites: string[];
+  allowedSites: string[];
 }
 
 export interface AppStateData {
