@@ -199,7 +199,7 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
 
 // ─── URL Blocking Helpers ──────────────────────────────────────────────
 
-function isUrlBlocked(targetUrl: string, blockedSites: string[]): boolean {
+function isUrlBlocked(targetUrl: string, blockedSites: string[], allowedSites: string[] = []): boolean {
   if (!targetUrl || targetUrl.startsWith("chrome://") || targetUrl.startsWith("chrome-extension://") || targetUrl.startsWith("about:")) {
     return false;
   }
@@ -210,6 +210,14 @@ function isUrlBlocked(targetUrl: string, blockedSites: string[]): boolean {
     hostname = parsed.hostname.toLowerCase();
   } catch {
     hostname = targetUrl.toLowerCase();
+  }
+
+  if (allowedSites.some((site) => {
+    const cleanSite = site.toLowerCase().trim().replace(/^https?:\/\//, "").replace(/^www\./, "");
+    if (!cleanSite) return false;
+    return hostname.includes(cleanSite) || targetUrl.toLowerCase().includes(cleanSite);
+  })) {
+    return false;
   }
 
   return blockedSites.some((site) => {
@@ -233,7 +241,7 @@ async function enforceTabBlocking(state?: AppStateData) {
   chrome.tabs.query({}, (tabs) => {
     if (!tabs) return;
     for (const tab of tabs) {
-      if (tab.id && tab.url && isUrlBlocked(tab.url, currentState.shield.blockedSites)) {
+      if (tab.id && tab.url && isUrlBlocked(tab.url, currentState.shield.blockedSites, currentState.shield.allowedSites)) {
         const blockedPageUrl = chrome.runtime.getURL(
           `blocked.html?target=${encodeURIComponent(tab.url)}`
         );
@@ -604,7 +612,7 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
     if (url) {
       const state = await getStoredState();
       if (state.shield.enabled && state.isActive && (state.timerState === "WORK" || state.timerState === "FLOW")) {
-        if (isUrlBlocked(url, state.shield.blockedSites)) {
+        if (isUrlBlocked(url, state.shield.blockedSites, state.shield.allowedSites)) {
           const blockedPageUrl = chrome.runtime.getURL(
             `blocked.html?target=${encodeURIComponent(url)}`
           );
@@ -621,7 +629,7 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
     const state = await getStoredState();
     if (state.shield.enabled && state.isActive && (state.timerState === "WORK" || state.timerState === "FLOW")) {
       chrome.tabs.get(activeInfo.tabId, (tab) => {
-        if (tab?.id && tab.url && isUrlBlocked(tab.url, state.shield.blockedSites)) {
+        if (tab?.id && tab.url && isUrlBlocked(tab.url, state.shield.blockedSites, state.shield.allowedSites)) {
           const blockedPageUrl = chrome.runtime.getURL(
             `blocked.html?target=${encodeURIComponent(tab.url)}`
           );
