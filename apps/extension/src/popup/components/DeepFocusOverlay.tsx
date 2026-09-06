@@ -70,15 +70,17 @@ export function DeepFocusOverlay({
         <button
           onClick={() => setShowMusicMenu(!showMusicMenu)}
           className={`h-8 px-2.5 rounded-full border transition-all flex items-center gap-1.5 text-xs font-semibold ${
-            state.isMusicPlaying
-              ? "bg-neutral-800 border-neutral-700 text-white ring-1 ring-neutral-600 shadow"
-              : "bg-neutral-900/60 border-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-800/60"
+            !(state.soundEnabled ?? true)
+              ? "bg-neutral-900/30 border-neutral-800/50 text-neutral-600 cursor-not-allowed"
+              : state.isMusicPlaying
+                ? "bg-neutral-800 border-neutral-700 text-white ring-1 ring-neutral-600 shadow"
+                : "bg-neutral-900/60 border-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-800/60"
           }`}
-          title={state.isMusicPlaying ? "Lofi-Beats: Playing" : "Lofi-Beats: Paused"}
+          title={!(state.soundEnabled ?? true) ? "Sound is disabled" : state.isMusicPlaying ? "Lofi-Beats: Playing" : "Lofi-Beats: Paused"}
         >
-          <Music className={`w-3.5 h-3.5 ${state.isMusicPlaying ? "text-white animate-pulse" : ""}`} />
+          <Music className={`w-3.5 h-3.5 ${(state.soundEnabled ?? true) && state.isMusicPlaying ? "text-white animate-pulse" : ""}`} />
           <span>Lofi-Beats</span>
-          {state.isMusicPlaying && (
+          {(state.soundEnabled ?? true) && state.isMusicPlaying && (
             <span className="flex items-center gap-0.5 h-2.5 ml-0.5">
               <span className="w-0.5 h-2 bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
               <span className="w-0.5 h-2.5 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
@@ -89,6 +91,11 @@ export function DeepFocusOverlay({
 
         {showMusicMenu && (
           <div className="absolute top-full left-0 mt-2 w-56 p-3 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl z-[200] space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-150">
+            {!(state.soundEnabled ?? true) && (
+              <div className="p-2 rounded-lg bg-neutral-800/50 border border-neutral-700/50 text-center">
+                <span className="text-[10px] text-neutral-500 font-medium">Sound is disabled. Enable it in Settings.</span>
+              </div>
+            )}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 text-neutral-200">
                 <Music className="w-3.5 h-3.5 text-neutral-400" />
@@ -96,10 +103,13 @@ export function DeepFocusOverlay({
               </div>
               <button
                 onClick={onToggleMusic}
+                disabled={!(state.soundEnabled ?? true)}
                 className={`px-2 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${
-                  state.isMusicPlaying
-                    ? "bg-white text-black hover:bg-white/90 shadow"
-                    : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
+                  !(state.soundEnabled ?? true)
+                    ? "bg-neutral-800 text-neutral-600 cursor-not-allowed"
+                    : state.isMusicPlaying
+                      ? "bg-white text-black hover:bg-white/90 shadow"
+                      : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
                 }`}
               >
                 {state.isMusicPlaying ? (
@@ -114,7 +124,7 @@ export function DeepFocusOverlay({
               </button>
             </div>
 
-            <div className="flex items-center gap-2 pt-1 border-t border-neutral-800">
+            <div className={`flex items-center gap-2 pt-1 border-t border-neutral-800 ${!(state.soundEnabled ?? true) ? "opacity-40" : ""}`}>
               {state.musicVolume === 0 ? (
                 <VolumeX className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
               ) : (
@@ -127,7 +137,8 @@ export function DeepFocusOverlay({
                 step="0.01"
                 value={state.musicVolume ?? 0.8}
                 onChange={(e) => onSetMusicVolume(parseFloat(e.target.value))}
-                className="w-full h-1 bg-neutral-800 rounded-lg accent-neutral-100 cursor-pointer"
+                disabled={!(state.soundEnabled ?? true)}
+                className="w-full h-1 bg-neutral-800 rounded-lg accent-neutral-100 cursor-pointer disabled:cursor-not-allowed"
               />
             </div>
           </div>
