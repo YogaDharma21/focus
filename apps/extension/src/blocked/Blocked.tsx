@@ -31,6 +31,25 @@ export function Blocked() {
 
   useEffect(() => {
     if (!state || !targetUrl) return;
+
+    // Check if the target URL is in the allowed (unblocked) sites list
+    let targetHostname = "";
+    try {
+      targetHostname = new URL(targetUrl).hostname.toLowerCase();
+    } catch {
+      targetHostname = targetUrl.toLowerCase();
+    }
+    const isAllowed = (state.shield.allowedSites || []).some((site) => {
+      const cleanSite = site.toLowerCase().trim().replace(/^https?:\/\//, "").replace(/^www\./, "");
+      if (!cleanSite) return false;
+      return targetHostname.includes(cleanSite) || targetUrl.toLowerCase().includes(cleanSite);
+    });
+
+    if (isAllowed) {
+      window.location.href = targetUrl;
+      return;
+    }
+
     const isBlockingActive =
       state.shield.enabled &&
       state.isActive &&
