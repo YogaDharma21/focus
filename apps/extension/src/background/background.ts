@@ -260,7 +260,7 @@ async function enforceTabBlocking(state?: AppStateData) {
         const blockedPageUrl = chrome.runtime.getURL(
           `blocked.html?target=${encodeURIComponent(tab.url)}`
         );
-        chrome.tabs.update(tab.id, { url: blockedPageUrl });
+        chrome.tabs.update(tab.id, { url: blockedPageUrl }).catch(() => {});
 
         saveStoredState({
           distractions: [
@@ -291,7 +291,7 @@ async function restoreBlockedTabs() {
           const blockedUrl = new URL(tab.url);
           const targetUrl = blockedUrl.searchParams.get("target");
           if (targetUrl) {
-            chrome.tabs.update(tab.id, { url: targetUrl });
+            chrome.tabs.update(tab.id, { url: targetUrl }).catch(() => {});
           }
         } catch {}
       }
@@ -633,7 +633,7 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
           const blockedPageUrl = chrome.runtime.getURL(
             `blocked.html?target=${encodeURIComponent(url)}`
           );
-          chrome.tabs.update(tabId, { url: blockedPageUrl });
+          chrome.tabs.update(tabId, { url: blockedPageUrl }).catch(() => {});
         }
       }
     }
@@ -650,7 +650,7 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
           const blockedPageUrl = chrome.runtime.getURL(
             `blocked.html?target=${encodeURIComponent(tab.url)}`
           );
-          chrome.tabs.update(tab.id, { url: blockedPageUrl });
+          chrome.tabs.update(tab.id, { url: blockedPageUrl }).catch(() => {});
         }
       });
     }
