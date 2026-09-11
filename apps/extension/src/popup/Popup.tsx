@@ -1344,7 +1344,7 @@ export function Popup() {
       )}
 
       {/* Main Navigation Bar */}
-      <nav className={`flex items-center justify-between px-3 py-1.5 z-10 ${
+      <nav className={`flex items-center gap-1 px-3 py-2 z-10 ${
         "bg-neutral-900/60"
       }`}>
         {[
@@ -1360,24 +1360,24 @@ export function Popup() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`flex flex-col items-center gap-0.5 py-1 px-2 rounded-lg transition-all relative text-[10px] font-bold ${
+              className={`flex items-center gap-1.5 rounded-xl transition-all relative text-[11px] font-bold ${
                 isActive
-                  ? "bg-white text-black font-extrabold shadow-sm"
-                  : "text-neutral-400 hover:text-white hover:bg-neutral-800"
+                  ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 shadow-[0_0_12px_rgba(16,185,129,0.15)]"
+                  : "text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800/60 px-2.5 py-1.5 border border-transparent"
               }`}
             >
               <div className="relative">
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className="w-4 h-4" />
                 {tab.badge !== undefined && tab.badge > 0 && (
-                  <span className={`absolute -top-1.5 -right-2 text-[9px] font-mono font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center ${
-                    "bg-neutral-800 text-white border border-neutral-600"
+                  <span className={`absolute -top-1.5 -right-2 text-[8px] font-mono font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center ${
+                    "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
                   }`}>
                     {tab.badge}
                   </span>
                 )}
                 {tab.activeIndicator && (
-                  <span className={`absolute -top-1 -right-1 w-2 h-2 rounded-full animate-ping ${
-                    "bg-white"
+                  <span className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full animate-ping ${
+                    "bg-emerald-400"
                   }`} />
                 )}
               </div>
