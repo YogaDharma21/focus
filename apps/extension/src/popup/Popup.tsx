@@ -772,10 +772,11 @@ export function Popup() {
     }`}>
       <BackgroundDisplay theme={state.background} />
       {/* Top Header */}
-      <header className={`px-4 py-3 flex items-center justify-between z-10 ${
+      <header className={`px-4 py-3 flex items-center z-10 ${
         "bg-neutral-950/95 border-b border-neutral-800/50"
       }`}>
-        <div className="flex items-center gap-2.5">
+        {/* Left: Logo */}
+        <div className="flex-1 flex items-center gap-2.5">
           <img src="/icons/icon32.png" className="w-7 h-7 rounded-lg object-contain border border-neutral-700 shadow-sm" alt="Focus Logo" />
           <div>
             <h1 className="text-sm font-extrabold tracking-wider uppercase font-heading">
@@ -784,28 +785,45 @@ export function Popup() {
           </div>
         </div>
 
-        {/* Floating Mini Timer Pill in Navbar Middle (Visible when outside Timer tab) */}
+        {/* Center: Timer Pill (Visible when outside Timer tab) */}
         {activeTab !== "timer" && (
-          <button
-            onClick={() => setShowFloatingTimerCard(!showFloatingTimerCard)}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold transition-all shadow-sm ${
-              showFloatingTimerCard
-                ? "bg-white text-black border-white"
-                : "bg-neutral-900/90 border-neutral-800 text-white hover:bg-neutral-800"
-            } ${state.isActive ? ("border-emerald-500/60 ring-1 ring-emerald-500/40") : ""}`}
-            title="Toggle Floating Timer Controls"
-          >
-            <span className="flex items-center">
-              {state.timerState === "WORK" ? <TimerIcon className="w-3 h-3" /> : state.timerState === "BREAK" ? <Coffee className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
-            </span>
-            <span className="font-extrabold font-mono text-[11px] tracking-tight">
-              {timeFormatted}
-            </span>
-            {state.isActive && (
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            )}
-          </button>
+          <div className="flex-1 flex justify-center">
+            <button
+              onClick={() => setShowFloatingTimerCard(!showFloatingTimerCard)}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold transition-all shadow-sm ${
+                showFloatingTimerCard
+                  ? "bg-white text-black border-white"
+                  : "bg-neutral-900/90 border-neutral-800 text-white hover:bg-neutral-800"
+              } ${state.isActive ? ("border-emerald-500/60 ring-1 ring-emerald-500/40") : ""}`}
+              title="Toggle Floating Timer Controls"
+            >
+              <span className="flex items-center">
+                {state.timerState === "WORK" ? <TimerIcon className="w-3 h-3" /> : state.timerState === "BREAK" ? <Coffee className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+              </span>
+              <span className="font-extrabold font-mono text-[11px] tracking-tight">
+                {timeFormatted}
+              </span>
+              {state.isActive && (
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              )}
+            </button>
+          </div>
         )}
+
+        {/* Right: Settings */}
+        <div className="flex-1 flex justify-end">
+          <button
+            onClick={() => setActiveTab("settings")}
+            className={`p-1.5 rounded-lg transition-all ${
+              activeTab === "settings"
+                ? "bg-white text-black"
+                : "text-neutral-400 hover:text-white hover:bg-neutral-800"
+            }`}
+            title="Settings"
+          >
+            <SettingsIcon className="w-4 h-4" />
+          </button>
+        </div>
       </header>
 
       {/* Floating Timer Card Overlay (Matching Provided Mockups) */}
@@ -1334,8 +1352,7 @@ export function Popup() {
           { id: "tasks", label: "Tasks", icon: CheckSquare, badge: state.todos.filter(t => !t.completed).length },
           { id: "shield", label: "Shield", icon: Shield, activeIndicator: state.shield.enabled && state.isActive },
           { id: "notes", label: "Mood", icon: Smile, badge: state.moodNotes.length },
-          { id: "stats", label: "Stats", icon: BarChart3 },
-          { id: "settings", label: "Settings", icon: SettingsIcon }
+          { id: "stats", label: "Stats", icon: BarChart3 }
         ].map((tab) => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
