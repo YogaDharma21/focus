@@ -15,9 +15,19 @@ function copyExtensionAssets() {
   };
 }
 
+function stripModulePreload() {
+  return {
+    name: "strip-module-preload",
+    enforce: "post",
+    transformIndexHtml(html) {
+      return html.replace(/<link[^>]*rel="modulepreload"[^>]*>\s*/g, "");
+    },
+  };
+}
+
 export default defineConfig({
   base: './',
-  plugins: [react(), tailwindcss(), copyExtensionAssets()],
+  plugins: [react(), tailwindcss(), copyExtensionAssets(), stripModulePreload()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
@@ -26,6 +36,7 @@ export default defineConfig({
   build: {
     outDir: "dist",
     emptyOutDir: true,
+    modulePreload: { polyfill: false },
     rollupOptions: {
       input: {
         popup: path.resolve(__dirname, "popup.html"),
