@@ -179,7 +179,7 @@ export function MoodTracker({
   const totalTrackedDays = Object.values(stats).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="flex flex-col gap-2.5 h-full overflow-y-auto pr-0.5">
+    <div className="flex flex-col gap-2.5 h-full overflow-y-auto stable-scrollbar">
       {/* Quick Input & Inspector Card */}
       <div className={`p-3 rounded-xl border flex flex-col gap-2 ${
         "bg-neutral-900 border-neutral-800"
