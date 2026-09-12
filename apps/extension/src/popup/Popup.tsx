@@ -794,7 +794,7 @@ export function Popup() {
                 showFloatingTimerCard
                   ? "bg-white text-black border-white"
                   : "bg-neutral-900/90 border-neutral-800 text-white hover:bg-neutral-800"
-              } ${state.isActive ? ("border-emerald-500/60 ring-1 ring-emerald-500/40") : ""}`}
+              } ${state.isActive ? ("border-white/60 ring-1 ring-white/30") : ""}`}
               title="Toggle Floating Timer Controls"
             >
               <span className="flex items-center">
@@ -804,7 +804,7 @@ export function Popup() {
                 {timeFormatted}
               </span>
               {state.isActive && (
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
               )}
             </button>
           </div>
