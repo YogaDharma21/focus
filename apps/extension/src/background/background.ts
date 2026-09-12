@@ -142,7 +142,8 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
       if (message.action === "TOGGLE_MUSIC") {
         getStoredState().then(async (state) => {
           const soundEnabled = state.soundEnabled ?? true;
-          if (!soundEnabled) {
+          const musicEnabled = state.musicEnabled ?? true;
+          if (!soundEnabled || !musicEnabled) {
             sendResponse({ isMusicPlaying: false });
             return;
           }
@@ -174,6 +175,16 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
         saveStoredState({ soundEnabled: enabled }).then(async () => {
           if (!enabled) {
             await sendToOffscreen("PAUSE_MUSIC");
+          }
+          sendResponse({ success: true });
+        });
+        return true;
+      } else if (message.action === "SET_MUSIC_ENABLED") {
+        const enabled = Boolean(message.enabled);
+        saveStoredState({ musicEnabled: enabled }).then(async () => {
+          if (!enabled) {
+            await sendToOffscreen("PAUSE_MUSIC");
+            await saveStoredState({ isMusicPlaying: false });
           }
           sendResponse({ success: true });
         });
@@ -440,7 +451,8 @@ async function startBackgroundTimer() {
 
         const autoStart = isWork ? state.pomodoroSettings.autoStartBreak : state.pomodoroSettings.autoStartTimer;
         const soundEnabled = state.soundEnabled ?? true;
-        const nextIsMusicPlaying = !isWork && autoStart && soundEnabled;
+        const musicEnabled = state.musicEnabled ?? true;
+        const nextIsMusicPlaying = !isWork && autoStart && soundEnabled && musicEnabled;
 
         let updatedTodos = state.todos;
         if (isWork && state.selectedTodoId) {
@@ -565,13 +577,14 @@ function scheduleSyncExternalAudioState(reason?: string): Promise<void> {
 async function performSyncExternalAudioState(_reason?: string): Promise<void> {
   const state = await getStoredState();
   const soundEnabled = state.soundEnabled ?? true;
+  const musicEnabled = state.musicEnabled ?? true;
   const autoPauseEnabled = Boolean(state.autoPauseOnExternalAudio);
   const isMusicPlaying = Boolean(state.isMusicPlaying);
   const fadeDuration = typeof state.autoPauseFadeDuration === "number" ? state.autoPauseFadeDuration : 2;
   const musicVolume = state.musicVolume ?? 0.8;
   const wasAutoPaused = await getMusicAutoPaused();
 
-  if (!isMusicPlaying || !soundEnabled) {
+  if (!isMusicPlaying || !soundEnabled || !musicEnabled) {
     if (wasAutoPaused) {
       await setMusicAutoPaused(false);
       await setMusicCurrentTime(0);
@@ -731,7 +744,8 @@ if (typeof chrome !== "undefined" && chrome.storage) {
         newState.autoPauseOnExternalAudio !== oldState.autoPauseOnExternalAudio ||
         newState.musicVolume !== oldState.musicVolume ||
         newState.autoPauseFadeDuration !== oldState.autoPauseFadeDuration ||
-        newState.soundEnabled !== oldState.soundEnabled;
+        newState.soundEnabled !== oldState.soundEnabled ||
+        newState.musicEnabled !== oldState.musicEnabled;
 
       if (musicChanged) {
         scheduleSyncExternalAudioState("storage.onChanged");
