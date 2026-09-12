@@ -1019,7 +1019,7 @@ export function Popup() {
 
       {/* Task Detail View Modal */}
       {selectedTaskDetail && (
-        <div className={`absolute inset-0 z-50 p-4 flex flex-col justify-between overflow-y-auto animate-in fade-in duration-200 ${
+        <div className={`absolute inset-0 z-50 p-4 flex flex-col justify-between overflow-y-auto stable-scrollbar animate-in fade-in duration-200 ${
           "bg-[#0b0b0b] text-white"
         }`}>
           {/* Header */}
@@ -1035,7 +1035,7 @@ export function Popup() {
             </button>
           </div>
 
-          <div className="space-y-3.5 my-2 text-xs overflow-y-auto pr-1 flex-1">
+          <div className="space-y-3.5 my-2 text-xs overflow-y-auto stable-scrollbar pr-1 flex-1">
             {/* Task Title */}
             <div>
               <input
@@ -1312,7 +1312,7 @@ export function Popup() {
                 />
               </form>
 
-              <div className="space-y-1.5 max-h-36 overflow-y-auto">
+              <div className="space-y-1.5 max-h-36 overflow-y-auto stable-scrollbar">
                 {(selectedTaskDetail.subtasks || []).map(sub => (
                   <div key={sub.id} className={`p-2 rounded-xl border flex items-center justify-between text-xs ${
                     "bg-neutral-800/40 border-neutral-700/40"
@@ -1369,10 +1369,10 @@ export function Popup() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`flex items-center gap-1.5 rounded-xl transition-all relative text-[11px] font-bold ${
+              className={`flex items-center gap-1.5 rounded-xl transition-colors relative text-[11px] font-bold px-3 py-1.5 min-h-[30px] ${
                 isActive
-                  ? "bg-white text-black px-3 py-1.5 shadow-sm"
-                  : "text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800/60 px-2.5 py-1.5 border border-transparent"
+                  ? "bg-white text-black shadow-sm"
+                  : "text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800/60"
               }`}
             >
               <div className="relative">
@@ -1535,7 +1535,7 @@ export function Popup() {
       <div className="flex-1 overflow-y-auto p-4 z-10 relative">
         {/* TIMER TAB */}
         {activeTab === "timer" && (
-          <div className="flex flex-col items-center justify-between min-h-full pb-1 pt-1 gap-2">
+          <div className="flex flex-col items-center justify-between min-h-full overflow-y-auto stable-scrollbar pb-1 pt-1 gap-2">
             {/* 3-Way Mode Switcher (Pomodoro, Break, Flow - No Minutes in Toggle Labels!) */}
             <div className={`flex items-center p-1 rounded-lg border w-full max-w-[320px] ${
               "bg-neutral-900 border-neutral-800"
@@ -1675,7 +1675,7 @@ export function Popup() {
                   </div>
 
                   {/* Tasks List */}
-                  <div className="max-h-36 overflow-y-auto space-y-0.5">
+                  <div className="max-h-36 overflow-y-auto stable-scrollbar space-y-0.5">
                     {state.todos.filter(t => !t.completed).length === 0 ? (
                       <div className="px-3 py-2 text-[11px] font-mono opacity-50 italic text-center">
                         No pending tasks
@@ -1792,7 +1792,7 @@ export function Popup() {
                     {(selectedTask.subtasks || []).filter(s => s.completed).length} / {(selectedTask.subtasks || []).length}
                   </span>
                 </div>
-                <div className="space-y-1 max-h-24 overflow-y-auto pt-1 text-[11px]">
+                <div className="space-y-1 max-h-24 overflow-y-auto stable-scrollbar pt-1 text-[11px]">
                   {selectedTask.subtasks!.map(s => (
                     <div key={s.id} className="flex items-center gap-1.5">
                       <button onClick={() => toggleSubtask(selectedTask.id, s.id)}>
@@ -1895,7 +1895,7 @@ export function Popup() {
 
         {/* TASKS TAB */}
         {activeTab === "tasks" && (
-          <div className="flex flex-col h-full gap-2.5">
+          <div className="flex flex-col h-full overflow-y-auto stable-scrollbar gap-2.5">
             {/* Task Group Filter Tabs */}
             <div className="flex items-center justify-between gap-1 overflow-x-auto pb-1">
               <div className="flex items-center gap-1 overflow-x-auto">
@@ -1965,7 +1965,7 @@ export function Popup() {
               </button>
             </form>
 
-            <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+            <div className="flex-1 overflow-y-auto stable-scrollbar space-y-2 pr-1">
               {state.todos.filter(t => (t.groupId || "current") === activeGroupId).length === 0 ? (
                 <div className={`text-center py-12 text-xs font-mono ${"text-neutral-600"}`}>
                   NO TASKS IN THIS GROUP. ADD ONE ABOVE.
@@ -2062,7 +2062,7 @@ export function Popup() {
 
         {/* SHIELD TAB */}
         {activeTab === "shield" && (
-          <div className="flex flex-col gap-3 h-full">
+          <div className="flex flex-col gap-3 h-full overflow-y-auto stable-scrollbar">
             <div className={`p-3 rounded-xl border flex items-center justify-between ${
               state.shield.enabled
                 ? "bg-neutral-900 border-neutral-800 text-white"
@@ -2139,7 +2139,7 @@ export function Popup() {
               </div>
 
               {shieldListTab === "blocked" && (
-                <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
+                <div className="flex-1 overflow-y-auto stable-scrollbar space-y-1.5 pr-1">
                   {state.shield.blockedSites.map((site) => (
                     <div
                       key={site}
@@ -2157,7 +2157,7 @@ export function Popup() {
               )}
 
               {shieldListTab === "unblocked" && (
-                <div className="flex-1 overflow-y-auto space-y-1.5 pr-1">
+                <div className="flex-1 overflow-y-auto stable-scrollbar space-y-1.5 pr-1">
                   {state.shield.allowedSites.length === 0 && (
                     <p className="text-[10px] text-neutral-600 mb-1">
                       No unblocked domains yet.
@@ -2194,7 +2194,7 @@ export function Popup() {
 
         {/* STATS TAB */}
         {activeTab === "stats" && (
-          <div className="flex flex-col gap-3 h-full overflow-y-auto pr-1">
+          <div className="flex flex-col gap-3 h-full overflow-y-auto stable-scrollbar">
             {/* Day Progress Card (First Card in Stats) */}
             {(() => {
               const now = new Date();
@@ -2397,7 +2397,7 @@ export function Popup() {
 
         {/* SETTINGS TAB */}
         {activeTab === "settings" && (
-          <div className="flex flex-col gap-3 h-full overflow-y-auto pr-1">
+          <div className="flex flex-col gap-3 h-full overflow-y-auto stable-scrollbar">
             {/* Timer Settings */}
             <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
               "bg-black/40 border-neutral-800"
