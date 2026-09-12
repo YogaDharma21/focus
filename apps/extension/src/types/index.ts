@@ -102,6 +102,7 @@ export interface AppStateData {
 
   deepFocusMode?: boolean;
   soundEnabled?: boolean;
+  musicEnabled?: boolean;
   isMusicPlaying?: boolean;
   musicVolume?: number;
   soundEffectVolume?: number;
