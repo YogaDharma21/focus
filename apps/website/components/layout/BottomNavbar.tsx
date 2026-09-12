@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppStore, ViewType } from "@/lib/store";
-import { Timer, CheckSquare, BarChart2, Smile, Settings } from "lucide-react";
+import { Timer, CheckSquare, BarChart2, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function BottomNavbar() {
@@ -23,11 +23,6 @@ export function BottomNavbar() {
             label: "Stats",
             value: "JOURNAL",
             icon: <BarChart2 className="w-5 h-5" />,
-        },
-        {
-            label: "Mood",
-            value: "NOTES",
-            icon: <Smile className="w-5 h-5" />,
         },
         { label: "Settings", value: "SETTINGS", icon: <Settings className="w-5 h-5" /> },
     ];

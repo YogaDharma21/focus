@@ -42,7 +42,6 @@ import {
   CheckCircle2 as TaskDone,
   Calendar,
   ListChecks,
-  Smile,
   Sparkles,
   ListFilter,
   FileText,
@@ -52,7 +51,6 @@ import {
   Focus,
 } from "lucide-react";
 import { format } from "date-fns";
-import { MoodTracker } from "./components/MoodTracker";
 import { BackgroundDisplay } from "./components/BackgroundDisplay";
 import { DeepFocusOverlay } from "./components/DeepFocusOverlay";
 import { Progress } from "../components/ui/progress";
@@ -82,17 +80,6 @@ function formatTaskDueDate(dueDate?: string, dueTime?: string): string {
     return dueDate;
   }
 }
-
-const MOOD_EMOJIS = [
-  "😄 Happy",
-  "😊 Calm",
-  "😐 Normal",
-  "😔 Sad",
-  "😤 Frustrated",
-  "😴 Exhausted",
-  "🤯 Overwhelmed"
-];
-
 const DISTRACTION_CATEGORIES = [
   "Phone",
   "Social Media",
@@ -112,7 +99,7 @@ const BACKGROUND_THEMES: { id: BackgroundTheme; name: string }[] = [
 
 export function Popup() {
   const [state, setState] = useState<AppStateData | null>(getCachedState());
-  const [activeTab, setActiveTab] = useState<"timer" | "tasks" | "shield" | "notes" | "stats" | "settings">("timer");
+  const [activeTab, setActiveTab] = useState<"timer" | "tasks" | "shield" | "stats" | "settings">("timer");
   const [showDistractionPicker, setShowDistractionPicker] = useState(false);
   const [showFloatingTimerCard, setShowFloatingTimerCard] = useState(false);
   const [showTaskDropdown, setShowTaskDropdown] = useState(false);
@@ -129,8 +116,6 @@ export function Popup() {
   const [showAddGroupInput, setShowAddGroupInput] = useState(false);
   const [newSiteUrl, setNewSiteUrl] = useState("");
   const [shieldListTab, setShieldListTab] = useState<"blocked" | "unblocked">("blocked");
-  const [newMoodText, setNewMoodText] = useState("");
-  const [selectedMood, setSelectedMood] = useState(MOOD_EMOJIS[1]);
   const [newSubtaskText, setNewSubtaskText] = useState("");
 
   // Settings inputs
@@ -453,7 +438,7 @@ export function Popup() {
 
   // Reset All Extension Data to Factory Defaults
   const resetAllData = () => {
-    if (window.confirm("Are you sure you want to reset all extension data to defaults? This will clear all tasks, sessions, mood notes, and stats.")) {
+    if (window.confirm("Are you sure you want to reset all extension data to defaults? This will clear all tasks, sessions, and stats.")) {
       saveStoredState(DEFAULT_STATE).then((fresh) => {
         setState(fresh);
       });
@@ -623,87 +608,6 @@ export function Popup() {
         allowedSites: state.shield.allowedSites.filter(s => s !== site)
       }
     });
-  };
-
-  // Mood Notes Handlers
-  const addMoodNote = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newMoodText.trim()) return;
-    const note = {
-      id: crypto.randomUUID(),
-      date: new Date().toISOString().split("T")[0],
-      mood: selectedMood,
-      text: newMoodText.trim()
-    };
-    updateState({ moodNotes: [note, ...state.moodNotes] });
-    setNewMoodText("");
-  };
-
-  const deleteMoodNote = (id: string) => {
-    updateState({ moodNotes: state.moodNotes.filter(n => n.id !== id) });
-  };
-
-  const setMoodForDate = (dateKey: string, mood: string, text?: string) => {
-    const notes = state.moodNotes || [];
-    const targetDate = dateKey.slice(0, 10);
-    const existingIndex = notes.findIndex((n) => n.date.slice(0, 10) === targetDate);
-
-    if (!mood) {
-      if (existingIndex >= 0) {
-        updateState({ moodNotes: notes.filter((_, idx) => idx !== existingIndex) });
-      }
-      return;
-    }
-
-    if (existingIndex >= 0) {
-      const updated = [...notes];
-      updated[existingIndex] = {
-        ...updated[existingIndex],
-        mood,
-        text: text !== undefined ? text : updated[existingIndex].text,
-      };
-      updateState({ moodNotes: updated });
-    } else {
-      const newNote = {
-        id: crypto.randomUUID(),
-        date: dateKey,
-        mood,
-        text: text || "",
-      };
-      updateState({ moodNotes: [newNote, ...notes] });
-    }
-  };
-
-  const cycleMoodForDate = (dateKey: string) => {
-    const notes = state.moodNotes || [];
-    const targetDate = dateKey.slice(0, 10);
-    const existing = notes.find((n) => n.date.slice(0, 10) === targetDate);
-
-    const currentMoodRaw = existing?.mood;
-    let currentMood = "";
-    if (currentMoodRaw) {
-      if (currentMoodRaw === "amazing" || currentMoodRaw === "😊" || currentMoodRaw === "🤩" || currentMoodRaw === "Happy" || currentMoodRaw === "Excited") currentMood = "amazing";
-      else if (currentMoodRaw === "ok" || currentMoodRaw === "🙂" || currentMoodRaw === "😐" || currentMoodRaw === "Okay") currentMood = "ok";
-      else if (currentMoodRaw === "tired" || currentMoodRaw === "😴" || currentMoodRaw === "Tired") currentMood = "tired";
-      else if (currentMoodRaw === "sad" || currentMoodRaw === "😔" || currentMoodRaw === "Sad") currentMood = "sad";
-      else if (currentMoodRaw === "stressed" || currentMoodRaw === "😤" || currentMoodRaw === "Stressed") currentMood = "stressed";
-      else currentMood = currentMoodRaw;
-    }
-
-    const cycle = ["amazing", "ok", "tired", "sad", "stressed"];
-    let nextMood = "";
-    if (!currentMood) {
-      nextMood = "amazing";
-    } else {
-      const idx = cycle.indexOf(currentMood);
-      if (idx === -1 || idx === cycle.length - 1) {
-        nextMood = "";
-      } else {
-        nextMood = cycle[idx + 1];
-      }
-    }
-
-    setMoodForDate(dateKey, nextMood);
   };
 
   const openGithubLink = () => {
@@ -1360,7 +1264,6 @@ export function Popup() {
           { id: "timer", label: "Timer", icon: TimerIcon },
           { id: "tasks", label: "Tasks", icon: CheckSquare, badge: state.todos.filter(t => !t.completed).length },
           { id: "shield", label: "Shield", icon: Shield, activeIndicator: state.shield.enabled && state.isActive },
-          { id: "notes", label: "Mood", icon: Smile, badge: state.moodNotes.length },
           { id: "stats", label: "Stats", icon: BarChart3 }
         ].map((tab) => {
           const Icon = tab.icon;
@@ -2182,16 +2085,6 @@ export function Popup() {
           </div>
         )}
 
-        {/* MOOD TRACKER TAB */}
-        {activeTab === "notes" && (
-          <MoodTracker
-            moodNotes={state.moodNotes}
-            onSetMoodForDate={setMoodForDate}
-            onCycleMoodForDate={cycleMoodForDate}
-            onDeleteMoodNote={deleteMoodNote}
-          />
-        )}
-
         {/* STATS TAB */}
         {activeTab === "stats" && (
           <div className="flex flex-col gap-3 h-full overflow-y-auto stable-scrollbar">
@@ -2696,7 +2589,7 @@ export function Popup() {
               <span className="text-xs font-bold text-white uppercase tracking-wider">Data</span>
               <button
                 onClick={() => {
-                  if (window.confirm("Are you sure you want to reset all extension data to defaults? This will clear all tasks, sessions, mood notes, and stats.")) {
+                  if (window.confirm("Are you sure you want to reset all extension data to defaults? This will clear all tasks, sessions, and stats.")) {
                     resetAllData();
                   }
                 }}

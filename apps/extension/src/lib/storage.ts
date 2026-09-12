@@ -26,7 +26,6 @@ export const DEFAULT_STATE: AppStateData = {
     { id: "current", name: "Current Tasks", type: "system" },
     { id: "finished", name: "Finished", type: "system" }
   ],
-  moodNotes: [],
   sessions: [],
   distractions: [],
   shield: {
@@ -196,10 +195,15 @@ export function getCachedState(): AppStateData | null {
 }
 
 function migrateState(fresh: AppStateData): AppStateData {
-  if (fresh.shield && !('allowedSites' in fresh.shield)) {
-    fresh.shield = Object.assign({}, fresh.shield, { allowedSites: [] });
+  const { moodNotes: _moodNotes, ...stateWithoutMood } = fresh as AppStateData & {
+    moodNotes?: unknown;
+  };
+  const migrated = stateWithoutMood as AppStateData;
+
+  if (migrated.shield && !('allowedSites' in migrated.shield)) {
+    migrated.shield = Object.assign({}, migrated.shield, { allowedSites: [] });
   }
-  return fresh;
+  return migrated;
 }
 
 export async function getStoredState(): Promise<AppStateData> {

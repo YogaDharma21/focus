@@ -33,13 +33,6 @@ export interface TodoItem {
   completedAt?: string;
 }
 
-export interface MoodNote {
-  id: string;
-  date: string;
-  mood: string;
-  text: string;
-}
-
 export interface Session {
   id: string;
   date: string;
@@ -86,7 +79,6 @@ export interface AppStateData {
   
   todos: TodoItem[];
   groups: Group[];
-  moodNotes: MoodNote[];
   sessions: Session[];
   distractions: Distraction[];
   

@@ -7,7 +7,7 @@
 [![Vite](https://img.shields.io/badge/Vite-6.1-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Status](https://img.shields.io/badge/Status-In_Development-orange?style=for-the-badge)]()
 
-**Focus Desktop** is a modern, cross-platform Electron application for the Focus productivity suite. Built with Vite, React 19, TypeScript, and Tailwind CSS, it offers a desktop-native focus environment complete with a frameless custom window, compact floating timer capsule, customizable themes, task management, ambient sound player, mood tracking, and detailed session stats.
+**Focus Desktop** is a modern, cross-platform Electron application for the Focus productivity suite. Built with Vite, React 19, TypeScript, and Tailwind CSS, it offers a desktop-native focus environment complete with a frameless custom window, compact floating timer capsule, customizable themes, task management, ambient sound player, and detailed session stats.
 
 > This desktop client is part of the [Focus](../../README.md) monorepo and is currently **in active development**.
 
@@ -26,9 +26,6 @@
 
 ### Stats & Analytics
 ![Stats](./public/Screenshot-stats.png)
-
-### Mood & Notes
-![Notes](./public/Screenshot-notes.png)
 
 </details>
 
@@ -51,10 +48,6 @@
 ### Ambient Sound Player & Custom Backgrounds
 - Built-in ambient background sounds and focus tracks.
 - Dynamic theme selection including dark gradients, cozy cafes, mountain landscapes, and animated aesthetic scenes.
-
-### Mood & Reflections
-- Daily mood logger with custom status options.
-- Free-form text notes and daily reflection journaling attached to mood logs.
 
 ### Stats & Analytics
 - Live breakdown of total focus minutes, task completion count, and streak metrics.
@@ -80,7 +73,7 @@ apps/desktop/
 ├── src/
 │   ├── components/
 │   │   ├── layout/            # TitleBar, SidebarNav, FloatingTimerCapsule, GlobalTimerEngine
-│   │   └── modules/           # FocusTimer, TodoList, StatsJournal, MoodTracker, DeepFocusOverlay
+│   │   └── modules/           # FocusTimer, TodoList, StatsJournal, DeepFocusOverlay
 │   ├── lib/                   # Store, utilities, and helper modules
 │   ├── App.tsx                # Main view router & overlay container
 │   ├── main.tsx               # React application entry point

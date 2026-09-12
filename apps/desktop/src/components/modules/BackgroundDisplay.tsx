@@ -7,16 +7,16 @@ export const BackgroundDisplay: React.FC = () => {
   const getBgStyle = () => {
     switch (background) {
       case 'mountain':
-        // Cool dark mist mountain mood
+        // Cool dark mist mountain atmosphere
         return 'bg-[#0a0e17]';
       case 'library':
-        // Warm dark mahogany library study mood
+        // Warm dark mahogany library study atmosphere
         return 'bg-[#120e0b]';
       case 'cafe':
-        // Warm lo-fi coffee lounge mood
+        // Warm lo-fi coffee lounge atmosphere
         return 'bg-[#140f12]';
       case 'anime-room':
-        // Midnight lavender/indigo anime room mood
+        // Midnight lavender/indigo anime room atmosphere
         return 'bg-[#0d0a14]';
       default:
         // Solid dark modern

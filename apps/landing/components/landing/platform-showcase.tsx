@@ -24,13 +24,11 @@ export function PlatformShowcase() {
         "Deep Focus full-screen mode with hotkeys (Esc / F)",
         "Lofi beats player & minimalist visual themes",
         "Comprehensive stats & streak tracking",
-        "Mood logs and post-session reflections",
       ],
       screenshots: [
         { name: "Timer Session", src: "/screenshots/website/screenshot-main.png" },
         { name: "Task Management", src: "/screenshots/website/screenshot-tasks.png" },
         { name: "Stats & Analytics", src: "/screenshots/website/screenshot-stats.png" },
-        { name: "Mood & Reflections", src: "/screenshots/website/screenshot-mood.png" },
       ],
     },
     {
@@ -53,7 +51,6 @@ export function PlatformShowcase() {
         { name: "Timer View", src: "/screenshots/desktop/Screenshot-timer.png" },
         { name: "Task List", src: "/screenshots/desktop/Screenshot-tasks.png" },
         { name: "Analytics", src: "/screenshots/desktop/Screenshot-stats.png" },
-        { name: "Notes & Reflections", src: "/screenshots/desktop/Screenshot-notes.png" },
       ],
     },
     {
@@ -76,7 +73,6 @@ export function PlatformShowcase() {
         { name: "Mobile Timer", src: "/screenshots/mobile/screenshot-focus.jpeg" },
         { name: "Mobile Tasks", src: "/screenshots/mobile/screenshot-tasks.jpeg" },
         { name: "Mobile Stats", src: "/screenshots/mobile/screenshot-stats.jpeg" },
-        { name: "Mobile Reflections", src: "/screenshots/mobile/screenshot-mood.jpeg" },
       ],
     },
     {

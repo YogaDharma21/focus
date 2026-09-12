@@ -1,6 +1,6 @@
 "use client"
 
-import { Timer, Shield, CheckSquare, Music, BarChart3, Heart } from "lucide-react"
+import { Timer, Shield, CheckSquare, Music, BarChart3 } from "lucide-react"
 
 export function FeaturesGrid() {
   const features = [
@@ -43,14 +43,6 @@ export function FeaturesGrid() {
       description:
         "Visualize your daily focus minutes, task completion rates, current streak metrics, and peak focus hours.",
       badge: "Analytics",
-    },
-    {
-      icon: Heart,
-      title: "Mood & Daily Reflections",
-      subtitle: "Journal your state of mind",
-      description:
-        "Log your energy level and mood after every focus session to discover your peak productivity windows.",
-      badge: "Reflections",
     },
   ]
 
