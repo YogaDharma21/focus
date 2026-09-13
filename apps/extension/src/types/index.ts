@@ -53,8 +53,6 @@ export interface ShieldConfig {
 }
 
 export interface TimerSettings {
-  breakDuration: number; // minutes
-  useSmartBreak?: boolean;
   autoStartBreak?: boolean;
   autoStartTimer?: boolean;
 }

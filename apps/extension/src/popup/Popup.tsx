@@ -342,12 +342,7 @@ export function Popup() {
 
     const completedTasksCount = state.todos.filter(t => t.completed).length;
 
-    let breakDuration: number;
-    if (state.timerSettings?.useSmartBreak) {
-      breakDuration = Math.max(1, Math.floor(state.timeLeft / 5));
-    } else {
-      breakDuration = (state.timerSettings?.breakDuration ?? 5) * 60;
-    }
+    const breakDuration = Math.max(1, Math.floor(state.timeLeft / 5));
 
     const autoStartBreak = Boolean(state.timerSettings?.autoStartBreak);
 
@@ -2215,72 +2210,12 @@ export function Popup() {
                 "bg-card/60 border-border"
               }`}>
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-foreground">Break Duration</span>
-                  <span className="text-[10px] text-muted-foreground">Default break length in minutes</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <input
-                    type="number"
-                    min={1}
-                    max={60}
-                    value={state.timerSettings?.breakDuration ?? 5}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value) || 5;
-                      updateState({
-                        timerSettings: {
-                          breakDuration: Math.max(1, Math.min(60, val)),
-                          useSmartBreak: state.timerSettings?.useSmartBreak ?? false,
-                          autoStartBreak: state.timerSettings?.autoStartBreak ?? false,
-                          autoStartTimer: state.timerSettings?.autoStartTimer ?? false,
-                        }
-                      });
-                    }}
-                    className="w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none bg-secondary border-border text-foreground [color-scheme:dark]"
-                  />
-                  <span className="text-[10px] font-mono text-muted-foreground">min</span>
-                </div>
-              </div>
-
-              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
-                "bg-card/60 border-border"
-              }`}>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-foreground">Smart Break</span>
-                  <span className="text-[10px] text-muted-foreground">Auto-calculate break as 1/5th of focus time</span>
-                </div>
-                <div
-                  onClick={() => updateState({
-                    timerSettings: {
-                      breakDuration: state.timerSettings?.breakDuration ?? 5,
-                      useSmartBreak: !(state.timerSettings?.useSmartBreak ?? false),
-                      autoStartBreak: state.timerSettings?.autoStartBreak ?? false,
-                      autoStartTimer: state.timerSettings?.autoStartTimer ?? false,
-                    }
-                  })}
-                  className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
-                    state.timerSettings?.useSmartBreak ? "bg-primary" : "bg-secondary"
-                  }`}
-                >
-                  <div
-                    className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                      state.timerSettings?.useSmartBreak ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
-                    }`}
-                  />
-                </div>
-              </div>
-
-              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
-                "bg-card/60 border-border"
-              }`}>
-                <div className="flex flex-col">
                   <span className="text-xs font-bold text-foreground">Auto-start Break</span>
                   <span className="text-[10px] text-muted-foreground">Start break countdown automatically</span>
                 </div>
                 <div
                   onClick={() => updateState({
                     timerSettings: {
-                      breakDuration: state.timerSettings?.breakDuration ?? 5,
-                      useSmartBreak: state.timerSettings?.useSmartBreak ?? false,
                       autoStartBreak: !(state.timerSettings?.autoStartBreak ?? false),
                       autoStartTimer: state.timerSettings?.autoStartTimer ?? false,
                     }
@@ -2307,8 +2242,6 @@ export function Popup() {
                 <div
                   onClick={() => updateState({
                     timerSettings: {
-                      breakDuration: state.timerSettings?.breakDuration ?? 5,
-                      useSmartBreak: state.timerSettings?.useSmartBreak ?? false,
                       autoStartBreak: state.timerSettings?.autoStartBreak ?? false,
                       autoStartTimer: !(state.timerSettings?.autoStartTimer ?? false),
                     }
