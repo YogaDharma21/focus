@@ -689,8 +689,16 @@ export const SettingsPage: React.FC = () => {
               <span className="text-lg font-bold font-mono text-foreground">{groups?.length || 0}</span>
             </div>
           </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="p-5 rounded-2xl bg-secondary/70 border border-border space-y-3 flex flex-col justify-between shadow-sm">
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <Download className="w-4 h-4 text-muted-foreground" />
+                  <h3 className="text-xs font-bold text-foreground">Export Backup</h3>
+                </div>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Download a full JSON archive containing all tasks, completed sessions, notes, and custom preferences.
+                  Download a full JSON archive containing all tasks, completed sessions, and custom preferences.
                 </p>
               </div>
               <button
@@ -772,6 +780,7 @@ export const SettingsPage: React.FC = () => {
 
             <p className="text-xs text-foreground leading-relaxed bg-secondary/60 p-4 rounded-xl border border-border">
               Focus Desktop is engineered for deep flow state work. Featuring customizable Pomodoro and stopwatch flow timers, intelligent break sequencing, hierarchical task management, daily streak analytics, and embedded Lo-Fi audio stream support.
+            </p>
 
             <div className="pt-3 border-t border-border flex flex-col sm:flex-row gap-3">
               <a
@@ -812,6 +821,7 @@ export const SettingsPage: React.FC = () => {
 
             <p className="text-xs text-foreground leading-relaxed bg-secondary/60 p-3.5 rounded-xl border border-border">
               All tasks, subtasks, focus logs, and custom presets will be permanently cleared from local storage.
+            </p>
 
             <div className="space-y-2">
               <label className="text-[11px] text-muted-foreground block">
