@@ -193,7 +193,7 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
         getStoredState().then((state) => {
           const masterEnabled = state.soundEnabled ?? true;
           const sfxEnabled = state.soundEffectEnabled ?? true;
-          if ((masterEnabled && sfxEnabled) || message.force) {
+          if (masterEnabled && sfxEnabled) {
             const rawVol = typeof message.volume === "number" ? message.volume : (state.soundEffectVolume ?? 0.8);
             const vol = Math.max(0, Math.min(1, rawVol));
             sendToOffscreen("PLAY_SOUND_EFFECT", { volume: vol });
@@ -399,49 +399,28 @@ async function startBackgroundTimer() {
         } else {
           stopBackgroundTimer();
 
-          const loggedDuration = state.timeLeft > 0 ? state.timeLeft : 1;
-
-          const newSessionList = [
-            ...state.sessions,
-            {
-              id: crypto.randomUUID(),
-              date: new Date().toISOString(),
-              duration: loggedDuration,
-              mode: state.timerMode,
-              sessionName: state.sessionName || "Focus Session",
-            },
-          ];
-
-          const updatedWeekly = getWeeklyMinutesFromSessions(newSessionList);
-          const updatedTodayMins = getTodayMinutesFromSessions(newSessionList);
-          const streaks = calculateStreaksFromSessions(newSessionList);
-
+          const autoStart = Boolean(state.timerSettings?.autoStartTimer);
           const soundEnabled = state.soundEnabled ?? true;
           const musicEnabled = state.musicEnabled ?? true;
+          const sfxEnabled = state.soundEffectEnabled ?? true;
 
           await saveStoredState({
-            isActive: false,
-            isMusicPlaying: false,
+            isActive: autoStart,
+            isMusicPlaying: autoStart && soundEnabled && musicEnabled,
             deepFocusMode: false,
             timerMode: "FLOW",
             timerState: "FLOW",
             previousMode: "FLOW",
             timeLeft: 0,
-            todos: state.todos,
-            sessions: newSessionList,
-            stats: {
-              ...state.stats,
-              todayMinutes: updatedTodayMins,
-              weeklyMinutes: updatedWeekly,
-              streakDays: streaks.current,
-              longestStreak: streaks.best,
-              completedTasksCount: state.stats.completedTasksCount,
-            },
           });
 
-          updateBadge(0, false, "FLOW");
+          if (autoStart) {
+            startBackgroundTimer();
+          }
 
-          if (state.soundEffectEnabled ?? true) {
+          updateBadge(0, autoStart, "FLOW");
+
+          if (soundEnabled && sfxEnabled) {
             sendToOffscreen("PLAY_SOUND_EFFECT", { volume: state.soundEffectVolume ?? 0.8 });
           }
           restoreBlockedTabs();

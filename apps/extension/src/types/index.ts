@@ -52,6 +52,11 @@ export interface ShieldConfig {
   allowedSites: string[];
 }
 
+export interface TimerSettings {
+  autoStartBreak?: boolean;
+  autoStartTimer?: boolean;
+}
+
 export interface AppStateData {
   themeMode: ThemeMode;
   
@@ -64,6 +69,8 @@ export interface AppStateData {
   sessionName: string;
   selectedTodoId: string | null;
   
+  timerSettings?: TimerSettings;
+
   todos: TodoItem[];
   groups: Group[];
   sessions: Session[];

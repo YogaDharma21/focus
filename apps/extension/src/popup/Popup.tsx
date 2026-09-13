@@ -185,6 +185,7 @@ export function Popup() {
   };
 
   const playSoundEffect = (overrideVolume?: number) => {
+    if (!soundEnabled || !soundEffectEnabled) return;
     const vol = typeof overrideVolume === "number" ? overrideVolume : soundEffectVolume;
     if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
       chrome.runtime.sendMessage({ target: "background", action: "PLAY_SOUND_EFFECT", volume: vol });
@@ -198,9 +199,10 @@ export function Popup() {
   };
 
   const playTestSoundEffect = (overrideVolume?: number) => {
+    if (!soundEnabled || !soundEffectEnabled) return;
     const vol = typeof overrideVolume === "number" ? overrideVolume : soundEffectVolume;
     if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
-      chrome.runtime.sendMessage({ target: "background", action: "PLAY_SOUND_EFFECT", volume: vol, force: true });
+      chrome.runtime.sendMessage({ target: "background", action: "PLAY_SOUND_EFFECT", volume: vol });
     } else {
       try {
         const audio = new Audio("/soundeffect.mp3");
@@ -301,6 +303,21 @@ export function Popup() {
   };
 
   const completeSession = () => {
+    // If in BREAK mode, finishing session concludes the break immediately and returns to Flow
+    if (state.timerState === "BREAK") {
+      playSoundEffect();
+      updateState({
+        isActive: false,
+        isMusicPlaying: false,
+        deepFocusMode: false,
+        timerMode: "FLOW",
+        timerState: "FLOW",
+        previousMode: "FLOW",
+        timeLeft: 0,
+      });
+      return;
+    }
+
     playSoundEffect();
 
     if (state.isActive && typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
@@ -324,10 +341,13 @@ export function Popup() {
     const streaks = calculateStreaksFromSessions(newSessionList);
 
     const completedTasksCount = state.todos.filter(t => t.completed).length;
+
     const breakDuration = Math.max(1, Math.floor(state.timeLeft / 5));
 
+    const autoStartBreak = Boolean(state.timerSettings?.autoStartBreak);
+
     updateState({
-      isActive: false,
+      isActive: autoStartBreak,
       isMusicPlaying: false,
       deepFocusMode: false,
       timerMode: "FLOW",
@@ -617,7 +637,10 @@ export function Popup() {
         {activeTab !== "timer" && (
           <div className="flex-1 flex justify-center">
             <button
-              onClick={() => setShowFloatingTimerCard(!showFloatingTimerCard)}
+              onClick={() => {
+                setShowFloatingTimerCard(!showFloatingTimerCard);
+                setShowFloatingTaskDropdown(false);
+              }}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold transition-all shadow-sm ${
                 showFloatingTimerCard
                   ? "bg-primary text-primary-foreground border-primary"
@@ -656,38 +679,44 @@ export function Popup() {
 
       {/* Floating Timer Card Overlay */}
       {activeTab !== "timer" && showFloatingTimerCard && (
-        <div className={`absolute top-14 left-3 right-3 z-50 p-3.5 rounded-2xl border shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${
+        <div className={`absolute top-14 left-3 right-3 z-40 p-3.5 rounded-2xl border shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${
           "bg-card border-border text-foreground shadow-background/80"
         }`}>
-          {/* Single Row: Time + Live Indicator + Start/Pause */}
-          <div className="flex items-center gap-2">
-            <span className="flex items-center">
-              {state.timerState === "BREAK" ? <Coffee className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
-            </span>
-            <span className="text-2xl font-black font-mono tracking-tight tabular-nums">
-              {timeFormatted}
-            </span>
-            {state.isActive && <span className="w-2 h-2 rounded-full bg-black animate-pulse" />}
-          </div>
-
-
-          {/* Tag & Group Badge Row */}
-          <div className="flex items-center justify-between mb-3 px-0.5">
-            <span className={`px-2.5 py-1 rounded-lg text-xs font-bold font-sans border ${
-              "bg-secondary border-border text-secondary-foreground"
-            }`}>
-              {selectedTask ? selectedTask.text : (state.sessionName || "Work")}
-            </span>
+          {/* Top Row: Time + Task Selector */}
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="flex items-center">
+                {state.timerState === "BREAK" ? <Coffee className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+              </span>
+              <span className="text-2xl font-black font-mono tracking-tight tabular-nums">
+                {timeFormatted}
+              </span>
+              {state.isActive && <span className="w-2 h-2 rounded-full bg-foreground animate-pulse" />}
+            </div>
 
             <button
-              onClick={() => {
-                setActiveTab("timer");
-                setShowFloatingTimerCard(false);
-              }}
-              className="text-[10px] font-bold font-mono opacity-70 hover:opacity-100 flex items-center gap-1"
+              type="button"
+              onClick={() => setShowFloatingTaskDropdown(!showFloatingTaskDropdown)}
+              className="px-2.5 py-1 rounded-lg text-xs font-bold font-sans border bg-secondary border-border text-secondary-foreground hover:bg-accent transition-colors flex items-center gap-1.5 max-w-[220px] truncate cursor-pointer"
+              title="Select or switch focus task"
             >
-              <span>Open Timer</span>
-              <ArrowRight className="w-3 h-3" />
+              {selectedTask ? (
+                <>
+                  <span className="truncate">{selectedTask.text}</span>
+                  <ChevronDown className={`w-3 h-3 shrink-0 ${showFloatingTaskDropdown ? "rotate-180" : ""} transition-transform opacity-70`} />
+                </>
+              ) : state.sessionName ? (
+                <>
+                  <span className="truncate">{state.sessionName}</span>
+                  <ChevronDown className={`w-3 h-3 shrink-0 ${showFloatingTaskDropdown ? "rotate-180" : ""} transition-transform opacity-70`} />
+                </>
+              ) : (
+                <>
+                  <ListTodo className="w-3.5 h-3.5 shrink-0 opacity-70" />
+                  <span className="opacity-80 truncate">Select task</span>
+                  <ChevronDown className={`w-3 h-3 shrink-0 ${showFloatingTaskDropdown ? "rotate-180" : ""} transition-transform opacity-70`} />
+                </>
+              )}
             </button>
           </div>
 
@@ -695,21 +724,22 @@ export function Popup() {
           <div className="flex items-center gap-2">
             {/* Complete Session Button */}
             <button
-              disabled={!state.isActive}
+              disabled={state.timerState === "BREAK" ? false : !state.isActive}
               onClick={() => {
-                if (!state.isActive) return;
+                if (state.timerState !== "BREAK" && !state.isActive) return;
                 completeSession();
                 setShowFloatingTimerCard(false);
+                setShowFloatingTaskDropdown(false);
               }}
               className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                !state.isActive
+                state.timerState !== "BREAK" && !state.isActive
                   ? "bg-card border-border text-muted-foreground cursor-not-allowed opacity-50"
-                  : "bg-secondary border-border hover:bg-accent text-foreground"
+                  : "bg-secondary border-border hover:bg-accent text-foreground cursor-pointer"
               }`}
-              title={state.isActive ? "Complete Session" : "Start timer to complete session"}
+              title={state.timerState === "BREAK" ? "Finish Break & Return to Flow" : (state.isActive ? "Complete Session" : "Start timer to complete session")}
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Complete</span>
+              <span>{state.timerState === "BREAK" ? "Finish Break" : "Complete"}</span>
             </button>
 
             {/* Log Distraction Button */}
@@ -718,6 +748,7 @@ export function Popup() {
               onClick={() => {
                 if (!state.isActive) return;
                 setShowFloatingTimerCard(false);
+                setShowFloatingTaskDropdown(false);
                 setShowDistractionPicker(true);
               }}
               className={`p-2 rounded-xl border transition-all ${
@@ -750,149 +781,100 @@ export function Popup() {
               )}
             </button>
           </div>
-
-{/* Second Row: Task Context + Actions */}
-           <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-neutral-800">
-             <button
-               onClick={() => setShowFloatingTaskDropdown(!showFloatingTaskDropdown)}
-               className={`px-2 py-0.5 rounded-lg text-[10px] font-bold font-sans border bg-neutral-800/80 border-neutral-700 text-neutral-300 truncate max-w-[140px] hover:bg-neutral-700 transition-colors text-left w-full flex items-center gap-1.5`}
-             >
-               {(selectedTask || state.sessionName) ? (
-                 <>
-                   {selectedTask ? selectedTask.text : state.sessionName}
-                 </>
-               ) : (
-                 <span className="text-neutral-500">Select task or add custom</span>
-               )}
-               <ChevronDown className={`w-3 h-3 ${showFloatingTaskDropdown ? "rotate-180" : ""} transition-transform`} />
-             </button>
-             <div className="flex items-center gap-1.5 shrink-0">
-              <button
-                disabled={!state.isActive}
-                onClick={() => {
-                  if (!state.isActive) return;
-                  completeSession();
-                  setShowFloatingTimerCard(false);
-                }}
-                className={`py-1 px-2.5 rounded-lg border text-[10px] font-bold flex items-center justify-center gap-1 transition-all ${
-                  !state.isActive
-                    ? "bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed opacity-50"
-                    : "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-white"
-                }`}
-                title={state.isActive ? "Complete Session" : "Start timer to complete session"}
-              >
-                <CheckCircle2 className="w-3 h-3" />
-                <span>Complete</span>
-              </button>
-              <button
-                disabled={!state.isActive}
-                onClick={() => {
-                  if (!state.isActive) return;
-                  setShowFloatingTimerCard(false);
-                  setShowDistractionPicker(true);
-                }}
-                className={`py-1 px-2.5 rounded-lg border text-[10px] font-bold flex items-center justify-center gap-1 transition-all ${
-                  !state.isActive
-                    ? "bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed opacity-50"
-                    : "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-neutral-300"
-                }`}
-                title={state.isActive ? "Log Distraction" : "Start timer to log distraction"}
-              >
-                <AlertTriangle className="w-3 h-3" />
-                <span>Distraction</span>
-              </button>
-            </div>
-          </div>
         </div>
       )}
 
-
-
       {/* Floating Task Dropdown */}
       {activeTab !== "timer" && showFloatingTimerCard && showFloatingTaskDropdown && (
-        <div className={`absolute top-14 left-3 right-3 z-50 p-2.5 rounded-2xl border shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${"bg-neutral-900 border-neutral-800 text-white shadow-black/80"}`}>
-          <div className="flex items-center justify-between px-2 py-1.5">
-            <span className="text-[10px] font-mono font-bold uppercase opacity-60">FOCUS TOPIC</span>
+        <>
+          <div
+            className="fixed inset-0 z-45"
+            onClick={() => setShowFloatingTaskDropdown(false)}
+          />
+          <div className={`absolute top-14 left-3 right-3 z-50 p-2.5 rounded-2xl border shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${"bg-card border-border text-foreground shadow-2xl"}`}>
+            <div className="flex items-center justify-between px-2 py-1.5">
+              <span className="text-[10px] font-mono font-bold uppercase opacity-60">FOCUS TOPIC</span>
+              <button
+                type="button"
+                onClick={() => setShowFloatingTaskDropdown(false)}
+                className="text-[10px] font-mono opacity-50 hover:opacity-100 p-1"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            {/* Custom Focus Option */}
             <button
               type="button"
-              onClick={() => setShowFloatingTaskDropdown(false)}
-              className="text-[10px] font-mono opacity-50 hover:opacity-100"
+              onClick={() => {
+                updateState({ selectedTodoId: null, sessionName: "" });
+                setShowFloatingTaskDropdown(false);
+              }}
+              className={`w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all ${!selectedTask ? "bg-primary/10 text-foreground font-bold" : "hover:bg-secondary/80 text-muted-foreground"}`}
             >
-              <X className="w-3 h-3" />
-            </button>
-          </div>
-
-          {/* Custom Focus Option */}
-          <button
-            type="button"
-            onClick={() => {
-              updateState({ selectedTodoId: null, sessionName: "" });
-              setShowFloatingTaskDropdown(false);
-            }}
-            className={`w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all ${!selectedTask ? "bg-white/10 text-white font-bold" : "hover:bg-neutral-800/80 text-neutral-300"}`}
-          >
-            <div className="flex items-center gap-2">
-              <Edit3 className={`w-3.5 h-3.5 shrink-0 ${"text-white"}`} />
-              <div className="flex flex-col">
-                <span className="leading-tight">Custom Focus</span>
-                <span className={`text-[10px] font-mono ${"text-neutral-400"}`}>Type custom goal</span>
+              <div className="flex items-center gap-2">
+                <Edit3 className="w-3.5 h-3.5 shrink-0 text-foreground" />
+                <div className="flex flex-col">
+                  <span className="leading-tight">Custom Focus</span>
+                  <span className="text-[10px] font-mono text-muted-foreground">Type custom goal</span>
+                </div>
               </div>
-            </div>
-            {!selectedTask && <Check className="w-3.5 h-3.5" />}
-          </button>
+              {!selectedTask && <Check className="w-3.5 h-3.5" />}
+            </button>
 
-          {/* Task List Header */}
-          <div className="px-2 pt-1 text-[10px] font-mono font-bold uppercase opacity-50">MY TASKS</div>
+            {/* Task List Header */}
+            <div className="px-2 pt-1 text-[10px] font-mono font-bold uppercase opacity-50 text-muted-foreground">MY TASKS</div>
 
-          {/* Tasks List */}
-          <div className="max-h-36 overflow-y-auto stable-scrollbar space-y-0.5">
-            {state.todos.filter(t => !t.completed).length === 0 ? (
-              <div className="px-3 py-2 text-[11px] font-mono opacity-50 italic text-center">No pending tasks</div>
-            ) : (
-              state.todos.filter(t => !t.completed).map((task) => {
-                const hasDueDate = Boolean(task.dueDate);
-                const hasSubtasks = Boolean(task.subtasks && task.subtasks.length > 0);
-                const hasMetadata = hasDueDate || hasSubtasks;
+            {/* Tasks List */}
+            <div className="max-h-36 overflow-y-auto stable-scrollbar space-y-0.5">
+              {state.todos.filter(t => !t.completed).length === 0 ? (
+                <div className="px-3 py-2 text-[11px] font-mono opacity-50 italic text-center text-muted-foreground">No pending tasks</div>
+              ) : (
+                state.todos.filter(t => !t.completed).map((task) => {
+                  const hasDueDate = Boolean(task.dueDate);
+                  const hasSubtasks = Boolean(task.subtasks && task.subtasks.length > 0);
+                  const hasMetadata = hasDueDate || hasSubtasks;
 
-                return (
-                  <button
-                    key={task.id}
-                    type="button"
-                    onClick={() => {
-                      updateState({ selectedTodoId: task.id, sessionName: task.text });
-                      setShowFloatingTaskDropdown(false);
-                    }}
-                    className={`w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all ${selectedTask?.id === task.id ? "bg-white/10 text-white font-bold" : "hover:bg-neutral-800/80 text-neutral-300"}`}
-                  >
-                    <div className="flex items-start gap-2 min-w-0 flex-1 pr-2">
-                      <ListTodo className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${"text-white"}`} />
-                      <div className="flex flex-col min-w-0 flex-1 gap-0.5">
-                        <span className="truncate">{task.text}</span>
-                        {hasMetadata && (
-                          <div className="flex items-center gap-2.5 text-[10px] font-mono text-neutral-400 flex-wrap">
-                            {hasDueDate && (
-                              <div className="flex items-center gap-1 text-orange-500 font-medium">
-                                <Calendar className="w-3 h-3" />
-                                <span>{formatTaskDueDate(task.dueDate, task.dueTime)}</span>
-                              </div>
-                            )}
-                            {hasSubtasks && (
-                              <div className="flex items-center gap-1 text-neutral-400">
-                                <ListChecks className="w-3 h-3" />
-                                <span>{task.subtasks!.filter(s => s.completed).length}/{task.subtasks!.length}</span>
-                              </div>
-                            )}
-                          </div>
-                        )}
+                  return (
+                    <button
+                      key={task.id}
+                      type="button"
+                      onClick={() => {
+                        updateState({ selectedTodoId: task.id, sessionName: task.text });
+                        setShowFloatingTaskDropdown(false);
+                      }}
+                      className={`w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all ${selectedTask?.id === task.id ? "bg-primary/10 text-foreground font-bold" : "hover:bg-secondary/80 text-muted-foreground"}`}
+                    >
+                      <div className="flex items-start gap-2 min-w-0 flex-1 pr-2">
+                        <ListTodo className="w-3.5 h-3.5 shrink-0 mt-0.5 text-foreground" />
+                        <div className="flex flex-col min-w-0 flex-1 gap-0.5">
+                          <span className="truncate">{task.text}</span>
+                          {hasMetadata && (
+                            <div className="flex items-center gap-2.5 text-[10px] font-mono text-muted-foreground flex-wrap">
+                              {hasDueDate && (
+                                <div className="flex items-center gap-1 text-orange-500 font-medium">
+                                  <Calendar className="w-3 h-3" />
+                                  <span>{formatTaskDueDate(task.dueDate, task.dueTime)}</span>
+                                </div>
+                              )}
+                              {hasSubtasks && (
+                                <div className="flex items-center gap-1 text-muted-foreground">
+                                  <ListChecks className="w-3 h-3" />
+                                  <span>{task.subtasks!.filter(s => s.completed).length}/{task.subtasks!.length}</span>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    {selectedTask?.id === task.id && <Check className="w-3.5 h-3.5 shrink-0" />}
-                  </button>
-                );
-              })
-            )}
+                      {selectedTask?.id === task.id && <Check className="w-3.5 h-3.5 shrink-0" />}
+                    </button>
+                  );
+                })
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
 
 
@@ -1661,17 +1643,17 @@ export function Popup() {
 
               {/* Complete Session Button */}
               <button
-                disabled={!state.isActive}
+                disabled={state.timerState === "BREAK" ? false : !state.isActive}
                 onClick={() => {
-                  if (!state.isActive) return;
+                  if (state.timerState !== "BREAK" && !state.isActive) return;
                   completeSession();
                 }}
                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
-                  !state.isActive
+                  state.timerState !== "BREAK" && !state.isActive
                     ? "bg-card border-border text-muted-foreground cursor-not-allowed opacity-50"
-                    : "bg-card border-border hover:bg-secondary text-foreground"
+                    : "bg-card border-border hover:bg-secondary text-foreground cursor-pointer"
                 }`}
-                title={state.isActive ? "Complete Session" : "Start timer to complete session"}
+                title={state.timerState === "BREAK" ? "Finish Break & Return to Flow" : (state.isActive ? "Complete Session" : "Start timer to complete session")}
               >
                 <CheckCircle className="w-4 h-4" />
               </button>
@@ -2180,9 +2162,68 @@ export function Popup() {
         {/* SETTINGS TAB */}
         {activeTab === "settings" && (
           <div className="flex flex-col gap-3 h-full overflow-y-auto stable-scrollbar">
+            {/* Timer Settings */}
+            <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
+              "bg-background/40 border-border"
+            }`}>
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider">Timer</span>
+
+              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
+                "bg-card/60 border-border"
+              }`}>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-foreground">Auto-start Break</span>
+                  <span className="text-[10px] text-muted-foreground">Start break countdown automatically</span>
+                </div>
+                <div
+                  onClick={() => updateState({
+                    timerSettings: {
+                      autoStartBreak: !(state.timerSettings?.autoStartBreak ?? false),
+                      autoStartTimer: state.timerSettings?.autoStartTimer ?? false,
+                    }
+                  })}
+                  className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
+                    state.timerSettings?.autoStartBreak ? "bg-primary" : "bg-secondary"
+                  }`}
+                >
+                  <div
+                    className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
+                      state.timerSettings?.autoStartBreak ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
+                "bg-card/60 border-border"
+              }`}>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-foreground">Auto-start Flow Timer</span>
+                  <span className="text-[10px] text-muted-foreground">Start next flow session when break ends</span>
+                </div>
+                <div
+                  onClick={() => updateState({
+                    timerSettings: {
+                      autoStartBreak: state.timerSettings?.autoStartBreak ?? false,
+                      autoStartTimer: !(state.timerSettings?.autoStartTimer ?? false),
+                    }
+                  })}
+                  className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
+                    state.timerSettings?.autoStartTimer ? "bg-primary" : "bg-secondary"
+                  }`}
+                >
+                  <div
+                    className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
+                      state.timerSettings?.autoStartTimer ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
+                    }`}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Appearance Section */}
             <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
-              "bg-card border-border"
+              "bg-background/40 border-border"
             }`}>
               <span className="text-xs font-bold text-foreground uppercase tracking-wider">Appearance</span>
               <div className="flex items-center gap-2">
@@ -2195,7 +2236,7 @@ export function Popup() {
                       className={`flex-1 px-3 py-2.5 rounded-xl text-xs font-bold transition-all border ${
                         isActive
                           ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-secondary text-secondary-foreground border-border hover:bg-accent"
+                          : "bg-card/60 text-muted-foreground border-border hover:bg-secondary hover:text-foreground"
                       }`}
                     >
                       {mode === "light" ? "Light" : "Dark"}
@@ -2360,11 +2401,11 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
 
                 <button
                   onClick={() => playTestSoundEffect()}
-                  disabled={!soundEnabled}
+                  disabled={!soundEnabled || !soundEffectEnabled}
                   className={`w-full py-2.5 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-2 ${
-                    soundEnabled
-                      ? "border-border bg-secondary text-white hover:bg-secondary"
-                      : "border-border/50 bg-card/30 text-muted-foreground cursor-not-allowed"
+                    soundEnabled && soundEffectEnabled
+                      ? "border-border bg-secondary text-foreground hover:bg-accent cursor-pointer"
+                      : "border-border/50 bg-card/30 text-muted-foreground cursor-not-allowed opacity-50"
                   }`}
                 >
                   <Volume1 className="w-4 h-4" />
