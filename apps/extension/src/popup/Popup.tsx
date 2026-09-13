@@ -1292,10 +1292,15 @@ export function Popup() {
           <div className="flex flex-col items-center justify-between min-h-full overflow-y-auto stable-scrollbar pb-1 pt-1 gap-2">
             {/* Timer Label */}
             <div className="flex items-center justify-center gap-2 mt-1 mb-0.5">
-              {state.timerState === "BREAK" && (
+              {state.timerState === "BREAK" ? (
                 <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-mono text-neutral-300 shadow-sm">
                   <Coffee className="w-3 h-3" />
                   <span className="text-[10px] font-bold">Break</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-mono text-neutral-300 shadow-sm">
+                  <Clock className="w-3 h-3" />
+                  <span className="text-[10px] font-bold">Flow</span>
                 </div>
               )}
             </div>
