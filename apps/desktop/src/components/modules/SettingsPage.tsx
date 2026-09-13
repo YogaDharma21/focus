@@ -76,7 +76,6 @@ export const SettingsPage: React.FC = () => {
     setAlwaysOnTop,
     todos,
     sessions,
-    moodNotes,
     groups
   } = useDesktopStore();
 
@@ -528,7 +527,7 @@ export const SettingsPage: React.FC = () => {
             </div>
             <div>
               <h2 className="text-sm font-semibold text-zinc-100 tracking-tight">Appearance & Workspace Themes</h2>
-              <p className="text-[11px] text-zinc-400">Select an ambient background mood designed for long study and work sessions.</p>
+              <p className="text-[11px] text-zinc-400">Select an ambient background designed for long study and work sessions.</p>
             </div>
           </div>
 
@@ -795,10 +794,6 @@ export const SettingsPage: React.FC = () => {
               <span className="text-lg font-bold font-mono text-zinc-100">{todos?.length || 0}</span>
             </div>
             <div className="p-3.5 rounded-2xl bg-zinc-900/70 border border-zinc-800/90 text-center">
-              <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">Mood Journals</span>
-              <span className="text-lg font-bold font-mono text-zinc-100">{moodNotes?.length || 0}</span>
-            </div>
-            <div className="p-3.5 rounded-2xl bg-zinc-900/70 border border-zinc-800/90 text-center">
               <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">Task Folders</span>
               <span className="text-lg font-bold font-mono text-zinc-100">{groups?.length || 0}</span>
             </div>
@@ -898,7 +893,7 @@ export const SettingsPage: React.FC = () => {
             </div>
 
             <p className="text-xs text-zinc-300 leading-relaxed bg-zinc-950/60 p-4 rounded-xl border border-zinc-800/80">
-              Focus Desktop is engineered for deep flow state work. Featuring customizable Pomodoro and stopwatch flow timers, intelligent break sequencing, hierarchical task management, daily streak analytics, mood journaling, and embedded Lo-Fi audio stream support.
+              Focus Desktop is engineered for deep flow state work. Featuring customizable Pomodoro and stopwatch flow timers, intelligent break sequencing, hierarchical task management, daily streak analytics, and embedded Lo-Fi audio stream support.
             </p>
 
             {/* Links */}
@@ -943,7 +938,7 @@ export const SettingsPage: React.FC = () => {
             </div>
 
             <p className="text-xs text-zinc-300 leading-relaxed bg-zinc-950/60 p-3.5 rounded-xl border border-zinc-800/80">
-              All tasks, subtasks, focus logs, mood reflections, and custom presets will be permanently cleared from local storage.
+              All tasks, subtasks, focus logs, and custom presets will be permanently cleared from local storage.
             </p>
 
             <div className="space-y-2">

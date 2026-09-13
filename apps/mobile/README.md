@@ -24,9 +24,6 @@
 ### Stats & Analytics
 ![Stats & Analytics](./assets/images/screenshot-stats.jpeg)
 
-### Mood & Notes
-![Mood Notes](./assets/images/screenshot-mood.jpeg)
-
 </details>
 
 ---
