@@ -139,15 +139,7 @@ export const FocusTimer: React.FC = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-full max-w-2xl mx-auto w-full select-none space-y-6">
-      {/* 1. Flow Label */}
-      <div className="bg-[#141414] border border-zinc-800/80 px-4 py-2 rounded-lg flex items-center justify-center shadow-md">
-        <div className="flex items-center gap-1.5 text-xs font-semibold text-zinc-200">
-          <Clock className="w-3.5 h-3.5" />
-          <span>Flow</span>
-        </div>
-      </div>
-
-      {/* 2. Giant Digital Clock Display */}
+      {/* Giant Digital Clock Display */}
       <div className="my-2">
         <h1 className="text-[100px] md:text-[120px] font-extrabold tracking-tighter text-white leading-none font-sans select-none">
           {formatDisplayTime(activeSeconds)}

@@ -81,10 +81,6 @@ export function DynamicIslandTimer() {
         return <Clock className="w-4 h-4 text-zinc-200 shrink-0" />;
     };
 
-    const getCurrentModeLabel = () => {
-        return "Flow";
-    };
-
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
@@ -171,9 +167,6 @@ export function DynamicIslandTimer() {
                     >
                         <div className="flex items-center gap-2">
                             {getModeIcon()}
-                            <span className="text-xs font-bold text-white tracking-tight">
-                                {getCurrentModeLabel()}
-                            </span>
                         </div>
                         <span className="text-xl font-extrabold font-mono text-white tracking-tight tabular-nums">
                             {formatTime(timeLeft)}

@@ -100,8 +100,6 @@ export const FloatingTimerCapsule: React.FC = () => {
   const s = activeSeconds % 60;
   const timeString = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 
-  const timerLabel = 'Flow';
-
   const activeTask = todos.find(t => t.id === selectedTodoId);
 
   return (
@@ -132,7 +130,6 @@ export const FloatingTimerCapsule: React.FC = () => {
         >
           <div className="flex items-center gap-1.5 min-w-0 text-left">
             <span className="text-xs flex items-center"><Clock className="w-3.5 h-3.5" /></span>
-            <span className="text-[11px] font-semibold text-zinc-200 tracking-tight">{timerLabel}</span>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
@@ -163,7 +160,6 @@ export const FloatingTimerCapsule: React.FC = () => {
           >
             <div className="flex items-center gap-2">
               <span className="text-base flex items-center text-zinc-200"><Clock className="w-3.5 h-3.5" /></span>
-              <span className="text-xs font-bold text-white tracking-tight">{timerLabel}</span>
             </div>
             <span className="text-xl font-extrabold font-mono text-white tracking-tight">
               {timeString}
