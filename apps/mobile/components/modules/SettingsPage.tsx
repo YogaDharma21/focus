@@ -222,7 +222,7 @@ export function SettingsPage() {
 
           <View style={[styles.aboutCard, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
             <Text style={[styles.aboutDescription, { color: colors.textMuted }]}>
-              A minimalist productivity suite designed to keep you in flow state. Features a flow timer, task management with subtasks, productivity analytics, mood reflections, and ambient audio.
+              A minimalist productivity suite designed to keep you in flow state. Features a flow timer, task management with subtasks, productivity analytics, and ambient audio.
             </Text>
           </View>
 

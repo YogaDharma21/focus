@@ -160,7 +160,7 @@ export function SettingsPage() {
                     </div>
 
                     <div className="p-3 rounded-[var(--radius)] bg-secondary/20 text-xs text-muted-foreground leading-relaxed">
-                        A minimalist productivity suite designed to keep you in flow state. Features a count-up flow timer, task management with subtasks, productivity analytics, mood reflections, and ambient audio.
+                        A minimalist productivity suite designed to keep you in flow state. Features a count-up flow timer, task management with subtasks, productivity analytics, and ambient audio.
                     </div>
 
                     <a
