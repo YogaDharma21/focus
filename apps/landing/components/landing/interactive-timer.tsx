@@ -1,13 +1,11 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Timer, Coffee, Clock, Play, Pause, RotateCcw, Volume2, VolumeX, CheckCircle, Calculator, Headphones } from "lucide-react"
+import { Play, Pause, RotateCcw, Volume2, VolumeX, CheckCircle, Calculator, Headphones } from "lucide-react"
 
 export function InteractiveTimer() {
-  const [mode, setMode] = useState<"pomodoro" | "break" | "flow">("pomodoro")
   const [isRunning, setIsRunning] = useState<boolean>(false)
-  const [seconds, setSeconds] = useState<number>(25 * 60)
-  const [flowSeconds, setFlowSeconds] = useState<number>(1200)
+  const [flowSeconds, setFlowSeconds] = useState<number>(0)
   const [isMusicPlaying, setIsMusicPlaying] = useState<boolean>(false)
   const [volume, setVolume] = useState<number>(0.5) // Default volume at 50%
   const [selectedTask, setSelectedTask] = useState<string>("Landing Page Design")
@@ -24,17 +22,13 @@ export function InteractiveTimer() {
     let interval: NodeJS.Timeout | null = null
     if (isRunning) {
       interval = setInterval(() => {
-        if (mode === "pomodoro" || mode === "break") {
-          setSeconds((prev) => (prev > 0 ? prev - 1 : 0))
-        } else {
-          setFlowSeconds((prev) => prev + 1)
-        }
+        setFlowSeconds((prev) => prev + 1)
       }, 1000)
     }
     return () => {
       if (interval) clearInterval(interval)
     }
-  }, [isRunning, mode])
+  }, [isRunning])
 
   const formatTime = (totalSec: number) => {
     const mins = Math.floor(totalSec / 60)
@@ -42,28 +36,11 @@ export function InteractiveTimer() {
     return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`
   }
 
-  // Calculate 1/5th Flow break duration
   const calculatedBreakMins = Math.max(1, Math.round(flowSeconds / 5 / 60))
-
-  const handleModeChange = (newMode: "pomodoro" | "break" | "flow") => {
-    setMode(newMode)
-    setIsRunning(false)
-    if (newMode === "pomodoro") {
-      setSeconds(25 * 60)
-    } else if (newMode === "break") {
-      setSeconds(5 * 60)
-    }
-  }
 
   const resetTimer = () => {
     setIsRunning(false)
-    if (mode === "pomodoro") {
-      setSeconds(25 * 60)
-    } else if (mode === "break") {
-      setSeconds(5 * 60)
-    } else {
-      setFlowSeconds(0)
-    }
+    setFlowSeconds(0)
   }
 
   const toggleMusic = () => {
@@ -110,49 +87,12 @@ export function InteractiveTimer() {
             Try the Focus Timer
           </h2>
           <p className="mt-3 text-sm text-muted-foreground">
-            Test Pomodoro, Break, and Flow modes with intelligent break calculation and adjustable Lofi music.
+            Test Flow mode with intelligent break calculation and adjustable Lofi music.
           </p>
         </div>
 
         {/* Demo Card */}
         <div className="max-w-2xl mx-auto bg-card border border-border rounded-2xl p-6 sm:p-8">
-          {/* Mode Switcher Bar */}
-          <div className="flex items-center justify-center gap-1 mb-6 p-1 bg-muted/60 rounded-xl max-w-xs sm:max-w-sm mx-auto border border-border/50">
-            <button
-              onClick={() => handleModeChange("pomodoro")}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${
-                mode === "pomodoro"
-                  ? "bg-background text-foreground border border-border shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Timer className="size-3.5" />
-              <span>Pomodoro</span>
-            </button>
-            <button
-              onClick={() => handleModeChange("break")}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${
-                mode === "break"
-                  ? "bg-background text-foreground border border-border shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Coffee className="size-3.5" />
-              <span>Break</span>
-            </button>
-            <button
-              onClick={() => handleModeChange("flow")}
-              className={`flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${
-                mode === "flow"
-                  ? "bg-background text-foreground border border-border shadow-sm"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              <Clock className="size-3.5" />
-              <span>Flow</span>
-            </button>
-          </div>
-
           {/* User-friendly Task Selection */}
           <div className="mb-6 flex flex-col items-center">
             <span className="text-xs font-medium text-muted-foreground mb-2">
@@ -179,15 +119,13 @@ export function InteractiveTimer() {
           {/* Timer Display (No Circle) */}
           <div className="flex flex-col items-center justify-center my-6">
             <div className="text-[4rem] sm:text-[5.5rem] md:text-[7rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow select-none font-mono">
-              {mode === "flow" ? formatTime(flowSeconds) : formatTime(seconds)}
+              {formatTime(flowSeconds)}
             </div>
 
-            {mode === "flow" && (
-              <div className="mt-3 flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-muted px-3 py-1 rounded-lg border border-border">
-                <Calculator className="size-3.5 text-primary" />
-                <span>Calculated Break: {calculatedBreakMins} min</span>
-              </div>
-            )}
+            <div className="mt-3 flex items-center gap-1.5 text-xs font-medium text-muted-foreground bg-muted px-3 py-1 rounded-lg border border-border">
+              <Calculator className="size-3.5 text-primary" />
+              <span>Calculated Break: {calculatedBreakMins} min</span>
+            </div>
 
             {/* Timer Controls */}
             <div className="flex items-center gap-3 mt-8">

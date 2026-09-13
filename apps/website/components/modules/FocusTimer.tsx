@@ -4,7 +4,7 @@ import { useAppStore, TodoItem } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, RotateCcw, CheckCircle2, Focus, ChevronDown, ListTodo, FileText, Check, Square, CheckSquare2, Timer, Coffee, Clock } from "lucide-react";
+import { Play, Pause, RotateCcw, CheckCircle2, Focus, ChevronDown, ListTodo, FileText, Check, Square, CheckSquare2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 import {
     Popover,
@@ -16,25 +16,14 @@ import { DistractionCounter } from "./DistractionCounter";
 
 export function FocusTimer() {
     const {
-        timerMode,
-        timerState,
-        previousMode,
         timeLeft,
         isActive,
-        setTimerMode,
-        setTimerState,
-        setPreviousMode,
         setTimeLeft,
         setIsActive,
         setSessionStartTime,
         sessionName,
         setSessionName,
         addSession,
-        pomodoroSettings,
-        setPomodoroSettings,
-        pomodoroCount,
-        setPomodoroCount,
-        resetPomodoroCount,
         todos,
         addTodo,
         updateTodo,
@@ -50,25 +39,14 @@ export function FocusTimer() {
         soundEffectEnabled,
     } = useAppStore(
         useShallow((s) => ({
-            timerMode: s.timerMode,
-            timerState: s.timerState,
-            previousMode: s.previousMode,
             timeLeft: s.timeLeft,
             isActive: s.isActive,
-            setTimerMode: s.setTimerMode,
-            setTimerState: s.setTimerState,
-            setPreviousMode: s.setPreviousMode,
             setTimeLeft: s.setTimeLeft,
             setIsActive: s.setIsActive,
             setSessionStartTime: s.setSessionStartTime,
             sessionName: s.sessionName,
             setSessionName: s.setSessionName,
             addSession: s.addSession,
-            pomodoroSettings: s.pomodoroSettings,
-            setPomodoroSettings: s.setPomodoroSettings,
-            pomodoroCount: s.pomodoroCount,
-            setPomodoroCount: s.setPomodoroCount,
-            resetPomodoroCount: s.resetPomodoroCount,
             todos: s.todos,
             addTodo: s.addTodo,
             updateTodo: s.updateTodo,
@@ -167,17 +145,14 @@ export function FocusTimer() {
             );
         }
 
-        const duration =
-            timerMode === "POMODORO"
-                ? Math.min(elapsedSeconds, pomodoroSettings.work * 60)
-                : timeLeft;
+        const duration = timeLeft;
 
         if (duration > 0) {
             addSession({
                 id: crypto.randomUUID(),
                 date: new Date().toISOString(),
                 duration,
-                mode: timerMode,
+                mode: "STOPWATCH",
             });
             fetch("/api/sessions", {
                 method: "POST",
@@ -189,52 +164,14 @@ export function FocusTimer() {
             }).catch(() => {});
         }
 
-        if (timerMode === "POMODORO" && timerState === "WORK") {
-            const nextCount = (pomodoroCount || 0) + 1;
-            setPomodoroCount(nextCount);
-            const isLongBreak = nextCount % 4 === 0;
-            const breakDuration = isLongBreak
-                ? (pomodoroSettings.longBreak || 15) * 60
-                : (pomodoroSettings.break || 5) * 60;
-
-            setPreviousMode("POMODORO");
-            setTimerState("BREAK");
-            setTimeLeft(breakDuration);
-            if (pomodoroSettings.autoStartBreak) {
-                setIsActive(true);
-            }
-            setDeepFocusMode(false);
-        } else if (timerMode === "POMODORO" && timerState === "BREAK") {
-            if (previousMode === "STOPWATCH") {
-                setTimerMode("STOPWATCH");
-                setTimerState("WORK");
-                setTimeLeft(0);
-            } else {
-                setTimerMode("POMODORO");
-                setTimerState("WORK");
-                setTimeLeft(pomodoroSettings.work * 60);
-            }
-            if (pomodoroSettings.autoStartTimer) {
-                setIsActive(true);
-                setDeepFocusMode(true);
-            } else {
-                setDeepFocusMode(false);
-            }
-        } else if (timerMode === "STOPWATCH" && duration > 0) {
-            setPreviousMode("STOPWATCH");
-            const breakSeconds = Math.floor(duration / 5);
-            if (breakSeconds > 0) {
-                setTimerMode("POMODORO");
-                setTimerState("BREAK");
-                setTimeLeft(breakSeconds);
-                if (pomodoroSettings.autoStartBreak) {
-                    setIsActive(true);
-                }
-            } else {
-                setTimeLeft(0);
-            }
-            setDeepFocusMode(false);
+        const breakSeconds = Math.floor(duration / 5);
+        if (breakSeconds > 0) {
+            setTimeLeft(breakSeconds);
+        } else {
+            setTimeLeft(0);
         }
+
+        setDeepFocusMode(false);
 
         const focusedTask = selectedTodoId
             ? todos.find((t) => t.id === selectedTodoId && !t.completed)
@@ -250,34 +187,16 @@ export function FocusTimer() {
                     toggleSubtask(focusedTask.id, selectedSubtaskId);
                 }
             } else {
-                const newCompleted = (focusedTask.completedPomodoros || 0) + 1;
-                updateTodo(focusedTask.id, {
-                    completedPomodoros: newCompleted,
-                });
-                if (
-                    focusedTask.estimatedPomodoros &&
-                    newCompleted >= focusedTask.estimatedPomodoros
-                ) {
-                    toggleTodo(focusedTask.id);
-                }
+                toggleTodo(focusedTask.id);
             }
         }
         setSessionStartTime(null);
     }, [
-        timerMode,
-        timerState,
-        previousMode,
         timeLeft,
         setTimeLeft,
         setIsActive,
-        setTimerState,
-        setTimerMode,
-        setPreviousMode,
         setDeepFocusMode,
         playSound,
-        pomodoroSettings,
-        pomodoroCount,
-        setPomodoroCount,
         sessionName,
         selectedTodoId,
         selectedSubtaskId,
@@ -289,23 +208,6 @@ export function FocusTimer() {
         selectedTodo,
         setSessionStartTime,
     ]);
-
-    const prevSettingsRef = useRef({ work: pomodoroSettings.work, break: pomodoroSettings.break, longBreak: pomodoroSettings.longBreak });
-
-    useEffect(() => {
-        const prev = prevSettingsRef.current;
-        if (pomodoroSettings.work !== prev.work || pomodoroSettings.break !== prev.break || pomodoroSettings.longBreak !== prev.longBreak) {
-            prevSettingsRef.current = { work: pomodoroSettings.work, break: pomodoroSettings.break, longBreak: pomodoroSettings.longBreak };
-            if (timerMode === "POMODORO" && timerState === "WORK") {
-                setTimeLeft(pomodoroSettings.work * 60);
-            } else if (timerMode === "POMODORO" && timerState === "BREAK") {
-                const isLongBreak = (pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0;
-                setTimeLeft(isLongBreak ? (pomodoroSettings.longBreak || 15) * 60 : pomodoroSettings.break * 60);
-            }
-        }
-    }, [pomodoroSettings.work, pomodoroSettings.break, pomodoroSettings.longBreak, pomodoroCount, timerMode, timerState, setTimeLeft]);
-
-
 
     const toggleTimer = () => setIsActive(!isActive);
 
@@ -321,12 +223,7 @@ export function FocusTimer() {
 
     const resetTimer = () => {
         setIsActive(false);
-        if (timerMode === "POMODORO") {
-            setTimerState("WORK");
-            setTimeLeft(pomodoroSettings.work * 60);
-        } else {
-            setTimeLeft(0);
-        }
+        setTimeLeft(0);
     };
 
     const formatTime = (seconds: number) => {
@@ -335,121 +232,11 @@ export function FocusTimer() {
         return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
     };
 
-    const progressValue =
-        timerMode === "POMODORO"
-            ? timerState === "WORK"
-                ? ((pomodoroSettings.work * 60 - timeLeft) /
-                      (pomodoroSettings.work * 60)) *
-                  100
-                : ((pomodoroSettings.break * 60 - timeLeft) /
-                      (pomodoroSettings.break * 60)) *
-                  100
-            : 100;
+    const progressValue = 100;
 
     return (
         <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center min-h-[50vh] relative">
             <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
-
-            <div className="flex gap-2 mb-3 p-1 bg-secondary/40 rounded-[var(--radius)] border border-border/30">
-                <button
-                    onClick={() => {
-                        setPreviousMode("POMODORO");
-                        setTimerMode("POMODORO");
-                        setTimerState("WORK");
-                        setIsActive(false);
-                        setTimeLeft(pomodoroSettings.work * 60);
-                    }}
-                    className={cn(
-                        "px-5 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300 flex items-center justify-center gap-1.5",
-                        timerMode === "POMODORO" && timerState === "WORK"
-                            ? "bg-primary text-primary-foreground shadow-md"
-                            : "text-muted-foreground hover:text-foreground",
-                    )}
-                >
-                    <Timer className="w-3.5 h-3.5" />
-                    <span>Pomodoro</span>
-                </button>
-                <button
-                    onClick={() => {
-                        setPreviousMode(timerMode === "STOPWATCH" ? "STOPWATCH" : "POMODORO");
-                        setTimerMode("POMODORO");
-                        setTimerState("BREAK");
-                        setIsActive(false);
-                        setTimeLeft(pomodoroSettings.break * 60);
-                    }}
-                    className={cn(
-                        "px-5 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300 flex items-center justify-center gap-1.5",
-                        timerMode === "POMODORO" && timerState === "BREAK"
-                            ? "bg-primary text-primary-foreground shadow-md"
-                            : "text-muted-foreground hover:text-foreground",
-                    )}
-                >
-                    <Coffee className="w-3.5 h-3.5" />
-                    <span>Break</span>
-                </button>
-                <button
-                    onClick={() => {
-                        setPreviousMode("STOPWATCH");
-                        setTimerMode("STOPWATCH");
-                        setTimerState("WORK");
-                        setIsActive(false);
-                        setTimeLeft(0);
-                    }}
-                    className={cn(
-                        "px-5 py-2 rounded-[var(--radius)] text-sm font-medium transition-all duration-300 flex items-center justify-center gap-1.5",
-                        timerMode === "STOPWATCH"
-                            ? "bg-primary text-primary-foreground shadow-md"
-                            : "text-muted-foreground hover:text-foreground",
-                    )}
-                >
-                    <Clock className="w-3.5 h-3.5" />
-                    <span>Flow</span>
-                </button>
-            </div>
-
-            {/* Pomodoro Cycle & Progress Indicator */}
-            {timerMode === "POMODORO" && previousMode !== "STOPWATCH" && (
-                <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-secondary/40 border border-border/50 text-xs font-mono text-foreground/80 shadow-sm mb-4 animate-in fade-in duration-150 group">
-                    <div className="flex items-center gap-1.5">
-                        {[0, 1, 2, 3].map((index) => {
-                            const currentCycleStep = (pomodoroCount || 0) % 4;
-                            const isCompleted = index < currentCycleStep;
-                            const isCurrent = index === currentCycleStep && timerState === "WORK";
-                            return (
-                                <div
-                                    key={index}
-                                    className={cn(
-                                        "w-2 h-2 rounded-full transition-all duration-300",
-                                        isCompleted
-                                            ? "bg-primary shadow-[0_0_6px_rgba(255,255,255,0.7)]"
-                                            : isCurrent
-                                            ? "bg-primary/70 ring-2 ring-primary/30 animate-pulse"
-                                            : "bg-muted-foreground/30",
-                                    )}
-                                    title={`Pomodoro ${index + 1} of 4`}
-                                />
-                            );
-                        })}
-                    </div>
-                    <span className="text-[11px] font-medium text-foreground/90">
-                        {timerState === "BREAK"
-                            ? (pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0
-                                ? `Long Break (${pomodoroSettings.longBreak || 15}m)`
-                                : `Short Break (${pomodoroSettings.break || 5}m)`
-                            : `Pomodoro ${((pomodoroCount || 0) % 4) + 1} of 4`}
-                    </span>
-                    {(pomodoroCount || 0) % 4 !== 0 && (
-                        <button
-                            type="button"
-                            onClick={resetPomodoroCount}
-                            className="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors cursor-pointer"
-                            title="Reset pomodoro count to 1 of 4"
-                        >
-                            <RotateCcw className="w-3 h-3" />
-                        </button>
-                    )}
-                </div>
-            )}
 
             <div className="flex flex-col items-center gap-4 mb-12 w-full">
                 <div className="text-[3.5rem] sm:text-[5rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow">
@@ -500,8 +287,6 @@ export function FocusTimer() {
                                                         text: sessionName.trim(),
                                                         completed: false,
                                                         groupId: "current",
-                                                        completedPomodoros: 0,
-                                                        estimatedPomodoros: 1,
                                                     };
                                                     addTodo(item);
                                                     setSelectedTodoId(newId);

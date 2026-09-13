@@ -9,12 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Settings, Clock, Palette, Volume2, Trash2, Info, Github, ExternalLink } from "lucide-react";
 
 export function SettingsPage() {
-    const pomodoroSettings = useAppStore((s) => s.pomodoroSettings);
-    const setPomodoroSettings = useAppStore((s) => s.setPomodoroSettings);
-    const timerMode = useAppStore((s) => s.timerMode);
-    const timerState = useAppStore((s) => s.timerState);
-    const setTimeLeft = useAppStore((s) => s.setTimeLeft);
-    const pomodoroCount = useAppStore((s) => s.pomodoroCount);
     const background = useAppStore((s) => s.background);
     const setBackground = useAppStore((s) => s.setBackground);
     const soundEffectEnabled = useAppStore((s) => s.soundEffectEnabled);
@@ -22,22 +16,6 @@ export function SettingsPage() {
     const soundEffectVolume = useAppStore((s) => s.soundEffectVolume);
     const setSoundEffectVolume = useAppStore((s) => s.setSoundEffectVolume);
     const resetAllData = useAppStore((s) => s.resetAllData);
-    const isActive = useAppStore((s) => s.isActive);
-
-    const handleTimerSettingChange = (updates: Partial<{ work: number; break: number; longBreak: number }>) => {
-        setPomodoroSettings(updates);
-        const nextSettings = { ...pomodoroSettings, ...updates };
-        if (!isActive) {
-            if (timerMode === "POMODORO") {
-                if (timerState === "WORK") {
-                    setTimeLeft(nextSettings.work * 60);
-                } else if (timerState === "BREAK") {
-                    const isLongBreak = (pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0;
-                    setTimeLeft(isLongBreak ? (nextSettings.longBreak || 15) * 60 : nextSettings.break * 60);
-                }
-            }
-        }
-    };
 
     const backgrounds: { label: string; value: BackgroundType }[] = [
         { label: "Dark", value: "dark" },
@@ -72,56 +50,8 @@ export function SettingsPage() {
                     <h2>Timer</h2>
                 </div>
                 
-                <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
-                    <Label className="font-medium">Work Duration (min)</Label>
-                    <Input
-                        type="number"
-                        min={1}
-                        max={120}
-                        value={pomodoroSettings.work}
-                        onChange={(e) => handleTimerSettingChange({ work: parseInt(e.target.value) || 25 })}
-                        className="w-20 bg-background/50 border-none text-center"
-                    />
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
-                    <Label className="font-medium">Short Break (min)</Label>
-                    <Input
-                        type="number"
-                        min={1}
-                        max={60}
-                        value={pomodoroSettings.break}
-                        onChange={(e) => handleTimerSettingChange({ break: parseInt(e.target.value) || 5 })}
-                        className="w-20 bg-background/50 border-none text-center"
-                    />
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
-                    <Label className="font-medium">Long Break (min)</Label>
-                    <Input
-                        type="number"
-                        min={1}
-                        max={60}
-                        value={pomodoroSettings.longBreak || 15}
-                        onChange={(e) => handleTimerSettingChange({ longBreak: parseInt(e.target.value) || 15 })}
-                        className="w-20 bg-background/50 border-none text-center"
-                    />
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
-                    <Label className="font-medium">Auto-start Break</Label>
-                    <Switch
-                        checked={pomodoroSettings.autoStartBreak}
-                        onCheckedChange={(checked) => setPomodoroSettings({ autoStartBreak: checked })}
-                    />
-                </div>
-
-                <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
-                    <Label className="font-medium">Auto-start Timer</Label>
-                    <Switch
-                        checked={pomodoroSettings.autoStartTimer}
-                        onCheckedChange={(checked) => setPomodoroSettings({ autoStartTimer: checked })}
-                    />
+                <div className="p-3 rounded-[var(--radius)] bg-secondary/20">
+                    <p className="text-sm text-muted-foreground">Flow mode (count-up timer). Complete a session to get a suggested break.</p>
                 </div>
             </div>
 
@@ -230,7 +160,7 @@ export function SettingsPage() {
                     </div>
 
                     <div className="p-3 rounded-[var(--radius)] bg-secondary/20 text-xs text-muted-foreground leading-relaxed">
-                        A minimalist productivity suite designed to keep you in flow state. Features Pomodoro and Flow timers, task management with subtasks, productivity analytics, and ambient audio.
+                        A minimalist productivity suite designed to keep you in flow state. Features a count-up flow timer, task management with subtasks, productivity analytics, and ambient audio.
                     </div>
 
                     <a

@@ -6,7 +6,7 @@
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![Status](https://img.shields.io/badge/Status-In_Development-orange?style=for-the-badge)]()
 
-**Focus Extension** is a monochrome-themed Chrome extension that brings the core Focus experience directly into your browser. It provides Pomodoro and Flow timers, task management, site blocking, and session analytics — all from a compact popup UI.
+**Focus Extension** is a monochrome-themed Chrome extension that brings the core Focus experience directly into your browser. It provides Flow timers, task management, site blocking, and session analytics — all from a compact popup UI.
 
 > This extension is part of the [Focus](../../README.md) monorepo and is currently **in active development**.
 
@@ -36,15 +36,14 @@
 ## Features
 
 ### Timer
-- **Pomodoro mode** — configurable work/break durations with auto-start break option.
-- **Flow (Stopwatch) mode** — open-ended sessions that count up, with smart break calculation (1/5 of flow duration).
+- **Flow mode** — open-ended sessions that count up, with smart break calculation (1/5 of flow duration).
 - Session naming and task linking for focused work tracking.
 - Badge countdown — live timer displayed on the extension icon.
 
 ### Task Management
 - Create, complete, and delete tasks with priority levels (low, medium, high, urgent).
 - Organize tasks into custom groups.
-- Subtasks, due dates, and estimated/completed pomodoros.
+- Subtasks and due dates.
 - Task detail view with inline editing.
 
 ### Focus Shield (Site Blocking)

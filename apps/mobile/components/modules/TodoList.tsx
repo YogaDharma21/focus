@@ -25,11 +25,9 @@ import {
   Calendar,
   Sparkles,
   List,
-  Timer,
   FileText,
   ChevronDown,
   Clock,
-  Play,
 } from 'lucide-react-native';
 import DatePickerModal, { formatDeadlineDisplay } from './DatePickerModal';
 
@@ -66,8 +64,6 @@ export function TodoList() {
   const [detailTitle, setDetailTitle] = useState('');
   const [detailNotes, setDetailNotes] = useState('');
   const [detailPriority, setDetailPriority] = useState<'low' | 'medium' | 'high' | 'urgent'>('medium');
-  const [detailPomoEst, setDetailPomoEst] = useState('1');
-  const [detailPomoComp, setDetailPomoComp] = useState('0');
   const [detailDeadline, setDetailDeadline] = useState('');
   const [detailGroupId, setDetailGroupId] = useState('current');
   const [newSubtaskText, setNewSubtaskText] = useState('');
@@ -98,8 +94,6 @@ export function TodoList() {
       text: newTodoText.trim(),
       completed: false,
       priority: 'medium',
-      estimatedPomodoros: 1,
-      completedPomodoros: 0,
       groupId: activeGroupId === 'finished' ? 'current' : activeGroupId,
       subtasks: [],
     };
@@ -112,8 +106,6 @@ export function TodoList() {
     setDetailTitle(todo.text);
     setDetailNotes(todo.notes || '');
     setDetailPriority(todo.priority || 'medium');
-    setDetailPomoEst((todo.estimatedPomodoros || 1).toString());
-    setDetailPomoComp((todo.completedPomodoros || 0).toString());
     setDetailDeadline(todo.deadline || '');
     setDetailGroupId(todo.groupId || 'current');
     setNewSubtaskText('');
@@ -127,8 +119,6 @@ export function TodoList() {
       text: detailTitle.trim() || detailTodo.text,
       notes: detailNotes.trim(),
       priority: detailPriority,
-      estimatedPomodoros: Math.max(1, parseInt(detailPomoEst, 10) || 1),
-      completedPomodoros: Math.max(0, parseInt(detailPomoComp, 10) || 0),
       deadline: detailDeadline.trim(),
       groupId: detailGroupId,
     });
@@ -322,12 +312,6 @@ export function TodoList() {
                     </Text>
 
                     <View style={styles.badgeRow}>
-                      <View style={[styles.badge, { backgroundColor: colors.border, flexDirection: 'row', alignItems: 'center' }]}>
-                        <Timer size={12} color={colors.text} style={{ marginRight: 4 }} />
-                        <Text style={[styles.badgeText, { color: colors.text }]}>
-                          {todo.completedPomodoros || 0}/{todo.estimatedPomodoros || 1} sessions
-                        </Text>
-                      </View>
                       {todo.priority && (
                         <View style={[styles.badge, { backgroundColor: colors.border }]}>
                           <Text style={[styles.badgeText, { color: colors.text }]}>
@@ -525,54 +509,7 @@ export function TodoList() {
                 </View>
               </View>
 
-              {/* Card 2: FOCUS SESSIONS */}
-              <View style={styles.cardBlock}>
-                <View style={styles.cardHeaderRow}>
-                  <Timer size={14} color="#a1a1aa" style={{ marginRight: 6 }} />
-                  <Text style={styles.cardHeaderLabel}>FOCUS SESSIONS</Text>
-                </View>
-                <View style={styles.gridRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputSubLabel}>Estimated</Text>
-                    <TextInput
-                      style={styles.cardInput}
-                      keyboardType="numeric"
-                      value={detailPomoEst}
-                      onChangeText={(val) => setDetailPomoEst(val.replace(/[^0-9]/g, ''))}
-                      placeholder="1"
-                      placeholderTextColor="#71717a"
-                    />
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.inputSubLabel}>Completed</Text>
-                    <TextInput
-                      style={styles.cardInput}
-                      keyboardType="numeric"
-                      value={detailPomoComp}
-                      onChangeText={(val) => setDetailPomoComp(val.replace(/[^0-9]/g, ''))}
-                      placeholder="0"
-                      placeholderTextColor="#71717a"
-                    />
-                  </View>
-                </View>
-
-                {/* Progress Bar */}
-                {(() => {
-                  const est = Math.max(1, parseInt(detailPomoEst, 10) || 1);
-                  const comp = Math.max(0, parseInt(detailPomoComp, 10) || 0);
-                  const pct = Math.min(100, Math.round((comp / est) * 100));
-                  return (
-                    <View style={{ marginTop: 14 }}>
-                      <View style={styles.progressTrack}>
-                        <View style={[styles.progressFill, { width: `${pct}%` }]} />
-                      </View>
-                      <Text style={styles.progressText}>{pct}% Completed</Text>
-                    </View>
-                  );
-                })()}
-              </View>
-
-              {/* Card 3: DEADLINE */}
+              {/* Card 2: DEADLINE */}
               <View style={styles.cardBlock}>
                 <View style={styles.cardHeaderRow}>
                   <Calendar size={14} color="#a1a1aa" style={{ marginRight: 6 }} />

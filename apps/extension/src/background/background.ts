@@ -260,7 +260,7 @@ async function enforceTabBlocking(state?: AppStateData) {
   const isBlockingRequired =
     currentState.shield.enabled &&
     currentState.isActive &&
-    (currentState.timerState === "WORK" || currentState.timerState === "FLOW");
+    currentState.timerState === "FLOW";
 
   if (!isBlockingRequired) return;
 
@@ -326,7 +326,7 @@ async function updateBadge(timeLeft: number, isActive: boolean, timerState: stri
 
   chrome.action.setBadgeText({ text: badgeText });
   chrome.action.setBadgeBackgroundColor({
-    color: timerState === "WORK" ? "#000000" : timerState === "FLOW" ? "#262626" : "#525252",
+    color: timerState === "FLOW" ? "#262626" : "#525252",
   });
 }
 
@@ -388,141 +388,79 @@ async function startBackgroundTimer() {
       }
 
       if (state.timerState === "FLOW") {
-        // Stopwatch mode: count up
         const nextTime = state.timeLeft + 1;
         await saveStoredState({ timeLeft: nextTime });
         updateBadge(nextTime, true, "FLOW");
-      } else {
-        // Countdown mode: WORK or BREAK
+      } else if (state.timerState === "BREAK") {
         if (state.timeLeft > 0) {
           const nextTime = state.timeLeft - 1;
           await saveStoredState({ timeLeft: nextTime });
-          updateBadge(nextTime, true, state.timerState);
+          updateBadge(nextTime, true, "BREAK");
         } else {
-        // Session complete automatically when countdown finishes (00:00)
-        stopBackgroundTimer();
+          stopBackgroundTimer();
 
-        let nextState: "WORK" | "BREAK" | "FLOW" = "BREAK";
-        let nextTime = 0;
-        let prevMode = state.previousMode;
-        let loggedDuration = 0;
-        let nextPomodoroCount = state.pomodoroCount || 0;
+          const loggedDuration = state.timeLeft > 0 ? state.timeLeft : 1;
 
-        if (state.timerState === "WORK") {
-          nextPomodoroCount = (state.pomodoroCount || 0) + 1;
-          const isLongBreak = nextPomodoroCount % 4 === 0;
-          const breakDuration = isLongBreak
-            ? (state.pomodoroSettings.longBreak || 15) * 60
-            : (state.pomodoroSettings.break || 5) * 60;
+          const newSessionList = [
+            ...state.sessions,
+            {
+              id: crypto.randomUUID(),
+              date: new Date().toISOString(),
+              duration: loggedDuration,
+              mode: state.timerMode,
+              sessionName: state.sessionName || "Focus Session",
+            },
+          ];
 
-          prevMode = "POMODORO";
-          nextState = "BREAK";
-          nextTime = breakDuration;
-          loggedDuration = state.pomodoroSettings.work * 60;
-        } else {
-          // Returning from BREAK back to previous mode (FLOW or POMODORO)
-          loggedDuration = state.pomodoroSettings.break * 60;
-          if (state.previousMode === "FLOW") {
-            nextState = "FLOW";
-            nextTime = 0;
-          } else {
-            nextState = "WORK";
-            nextTime = state.pomodoroSettings.work * 60;
+          const updatedWeekly = getWeeklyMinutesFromSessions(newSessionList);
+          const updatedTodayMins = getTodayMinutesFromSessions(newSessionList);
+          const streaks = calculateStreaksFromSessions(newSessionList);
+
+          const soundEnabled = state.soundEnabled ?? true;
+          const musicEnabled = state.musicEnabled ?? true;
+
+          await saveStoredState({
+            isActive: false,
+            isMusicPlaying: false,
+            deepFocusMode: false,
+            timerMode: "FLOW",
+            timerState: "FLOW",
+            previousMode: "FLOW",
+            timeLeft: 0,
+            todos: state.todos,
+            sessions: newSessionList,
+            stats: {
+              ...state.stats,
+              todayMinutes: updatedTodayMins,
+              weeklyMinutes: updatedWeekly,
+              streakDays: streaks.current,
+              longestStreak: streaks.best,
+              completedTasksCount: state.stats.completedTasksCount,
+            },
+          });
+
+          updateBadge(0, false, "FLOW");
+
+          if (state.soundEffectEnabled ?? true) {
+            sendToOffscreen("PLAY_SOUND_EFFECT", { volume: state.soundEffectVolume ?? 0.8 });
+          }
+          restoreBlockedTabs();
+
+          if (typeof chrome !== "undefined" && chrome.notifications) {
+            const iconUrl = typeof chrome.runtime?.getURL === "function"
+              ? chrome.runtime.getURL("icons/icon128.png")
+              : "icons/icon128.png";
+            chrome.notifications.create({
+              type: "basic",
+              iconUrl,
+              title: "Break Finished!",
+              message: "Break is over. Ready to focus again.",
+              priority: 2,
+            });
           }
         }
-
-        const isWork = state.timerState === "WORK";
-        const newSessionList = isWork
-          ? [
-              ...state.sessions,
-              {
-                id: crypto.randomUUID(),
-                date: new Date().toISOString(),
-                duration: loggedDuration,
-                mode: state.timerMode,
-                sessionName: state.sessionName || "Focus Session",
-              },
-            ]
-          : state.sessions;
-
-        const updatedWeekly = getWeeklyMinutesFromSessions(newSessionList);
-        const updatedTodayMins = getTodayMinutesFromSessions(newSessionList);
-        const streaks = calculateStreaksFromSessions(newSessionList);
-
-        const autoStart = isWork ? state.pomodoroSettings.autoStartBreak : state.pomodoroSettings.autoStartTimer;
-        const soundEnabled = state.soundEnabled ?? true;
-        const musicEnabled = state.musicEnabled ?? true;
-        const nextIsMusicPlaying = !isWork && autoStart && soundEnabled && musicEnabled;
-
-        let updatedTodos = state.todos;
-        if (isWork && state.selectedTodoId) {
-          updatedTodos = state.todos.map(t => {
-            if (t.id === state.selectedTodoId) {
-              const newCompleted = (t.completedPomodoros || 0) + 1;
-              const est = t.estimatedPomodoros || 1;
-              const isFinished = newCompleted >= est;
-              return {
-                ...t,
-                completedPomodoros: newCompleted,
-                completed: t.completed || isFinished,
-                completedAt: (t.completed || isFinished) ? (t.completedAt || new Date().toISOString()) : undefined,
-                groupId: (t.completed || isFinished) ? "finished" : t.groupId
-              };
-            }
-            return t;
-          });
-        }
-        const updatedCompletedTasksCount = updatedTodos.filter(t => t.completed).length;
-
-        await saveStoredState({
-          isActive: autoStart,
-          isMusicPlaying: nextIsMusicPlaying,
-          deepFocusMode: !isWork && autoStart,
-          timerMode: nextState === "FLOW" ? "FLOW" : "POMODORO",
-          timerState: nextState,
-          previousMode: prevMode,
-          timeLeft: nextTime,
-          pomodoroCount: nextPomodoroCount,
-          todos: updatedTodos,
-          sessions: newSessionList,
-          stats: {
-            ...state.stats,
-            todayMinutes: updatedTodayMins,
-            weeklyMinutes: updatedWeekly,
-            streakDays: streaks.current,
-            longestStreak: streaks.best,
-            completedTasksCount: updatedCompletedTasksCount,
-          },
-        });
-
-        if (autoStart) {
-          startBackgroundTimer();
-        }
-
-        updateBadge(nextTime, autoStart, nextState);
-
-        if (state.soundEffectEnabled ?? true) {
-          sendToOffscreen("PLAY_SOUND_EFFECT", { volume: state.soundEffectVolume ?? 0.8 });
-        }
-        restoreBlockedTabs();
-
-        if (typeof chrome !== "undefined" && chrome.notifications) {
-          const iconUrl = typeof chrome.runtime?.getURL === "function"
-            ? chrome.runtime.getURL("icons/icon128.png")
-            : "icons/icon128.png";
-          chrome.notifications.create({
-            type: "basic",
-            iconUrl,
-            title: "Session Finished!",
-            message: state.timerState === "WORK"
-              ? "Pomodoro session complete! Starting break."
-              : `Break finished! Returning to ${prevMode} mode.`,
-            priority: 2,
-          });
-        }
       }
-    }
-  }, 1000);
+    }, 1000);
   } catch (err) {
     stopBackgroundTimer();
   }
@@ -641,7 +579,7 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
     const url = changeInfo.url || tab.url;
     if (url) {
       const state = await getStoredState();
-      if (state.shield.enabled && state.isActive && (state.timerState === "WORK" || state.timerState === "FLOW")) {
+      if (state.shield.enabled && state.isActive && state.timerState === "FLOW") {
         if (isUrlBlocked(url, state.shield.blockedSites, state.shield.allowedSites)) {
           const blockedPageUrl = chrome.runtime.getURL(
             `blocked.html?target=${encodeURIComponent(url)}`
@@ -657,7 +595,7 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
 
   chrome.tabs.onActivated.addListener(async (activeInfo) => {
     const state = await getStoredState();
-    if (state.shield.enabled && state.isActive && (state.timerState === "WORK" || state.timerState === "FLOW")) {
+    if (state.shield.enabled && state.isActive && state.timerState === "FLOW") {
       chrome.tabs.get(activeInfo.tabId, (tab) => {
         if (tab?.id && tab.url && isUrlBlocked(tab.url, state.shield.blockedSites, state.shield.allowedSites)) {
           const blockedPageUrl = chrome.runtime.getURL(
@@ -732,7 +670,7 @@ if (typeof chrome !== "undefined" && chrome.storage) {
         }
       } else {
         stopBackgroundTimer();
-        updateBadge(newState.timeLeft || 0, false, newState.timerState || "WORK");
+        updateBadge(newState.timeLeft || 0, false, newState.timerState || "FLOW");
         if (wasActive) {
           restoreBlockedTabs();
         }

@@ -1,5 +1,5 @@
-export type TimerMode = "POMODORO" | "STOPWATCH" | "FLOW";
-export type TimerState = "WORK" | "BREAK" | "FLOW";
+export type TimerMode = "FLOW";
+export type TimerState = "FLOW" | "BREAK";
 export type PriorityType = "low" | "medium" | "high" | "urgent";
 export type ThemeMode = "dark";
 export type BackgroundTheme = "dark" | "default" | "gradient" | "mountain" | "library" | "cafe" | "anime-room";
@@ -26,8 +26,6 @@ export interface TodoItem {
   dueDate?: string;
   dueTime?: string;
   notes?: string;
-  estimatedPomodoros?: number;
-  completedPomodoros?: number;
   groupId?: string;
   subtasks?: SubTask[];
   completedAt?: string;
@@ -61,21 +59,12 @@ export interface AppStateData {
   
   timerMode: TimerMode;
   timerState: TimerState;
-  previousMode: "POMODORO" | "FLOW";
+  previousMode: "FLOW";
   timeLeft: number; // seconds
   isActive: boolean;
   sessionStartTime: string | null;
   sessionName: string;
   selectedTodoId: string | null;
-
-  pomodoroSettings: {
-    work: number; // minutes
-    break: number; // minutes
-    longBreak: number; // minutes
-    autoStartBreak: boolean;
-    autoStartTimer: boolean;
-  };
-  pomodoroCount?: number;
   
   todos: TodoItem[];
   groups: Group[];

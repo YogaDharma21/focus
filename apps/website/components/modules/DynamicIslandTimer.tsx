@@ -3,28 +3,18 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAppStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
-import { Play, Pause, CheckCircle2, Timer, Coffee, Clock } from "lucide-react";
+import { Play, Pause, CheckCircle2, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Progress } from "@/components/ui/progress";
-import { Button } from "@/components/ui/button";
 import { DistractionCounter } from "./DistractionCounter";
 
 export function DynamicIslandTimer() {
     const {
-        timerMode,
-        timerState,
-        previousMode,
         timeLeft,
         isActive,
         sessionName,
         setIsActive,
         setTimeLeft,
-        setTimerState,
-        setTimerMode,
-        setPreviousMode,
-        pomodoroSettings,
-        pomodoroCount,
-        setPomodoroCount,
         addSession,
         setSessionStartTime,
         setDeepFocusMode,
@@ -34,20 +24,11 @@ export function DynamicIslandTimer() {
         soundEffectEnabled,
     } = useAppStore(
         useShallow((s) => ({
-            timerMode: s.timerMode,
-            timerState: s.timerState,
-            previousMode: s.previousMode,
             timeLeft: s.timeLeft,
             isActive: s.isActive,
             sessionName: s.sessionName,
             setIsActive: s.setIsActive,
             setTimeLeft: s.setTimeLeft,
-            setTimerState: s.setTimerState,
-            setTimerMode: s.setTimerMode,
-            setPreviousMode: s.setPreviousMode,
-            pomodoroSettings: s.pomodoroSettings,
-            pomodoroCount: s.pomodoroCount,
-            setPomodoroCount: s.setPomodoroCount,
             addSession: s.addSession,
             setSessionStartTime: s.setSessionStartTime,
             setDeepFocusMode: s.setDeepFocusMode,
@@ -97,23 +78,7 @@ export function DynamicIslandTimer() {
     }, [soundEffectEnabled, soundEffectVolume]);
 
     const getModeIcon = () => {
-        if (timerMode === "POMODORO") {
-            return timerState === "WORK" ? (
-                <Timer className="w-4 h-4 text-zinc-200 shrink-0" />
-            ) : (
-                <Coffee className="w-4 h-4 text-zinc-200 shrink-0" />
-            );
-        }
         return <Clock className="w-4 h-4 text-zinc-200 shrink-0" />;
-    };
-
-    const getCurrentModeLabel = () => {
-        if (timerMode === "POMODORO") {
-            return timerState === "WORK"
-                ? `Pomodoro ${((pomodoroCount || 0) % 4) + 1}/4`
-                : ((pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0 ? "Long Break" : "Break");
-        }
-        return "Flow";
     };
 
     const formatTime = (seconds: number) => {
@@ -122,16 +87,7 @@ export function DynamicIslandTimer() {
         return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
     };
 
-    const progressValue =
-        timerMode === "POMODORO"
-            ? timerState === "WORK"
-                ? ((pomodoroSettings.work * 60 - timeLeft) /
-                      (pomodoroSettings.work * 60)) *
-                  100
-                : ((pomodoroSettings.break * 60 - timeLeft) /
-                      (pomodoroSettings.break * 60)) *
-                  100
-            : 100;
+    const progressValue = 100;
 
     useEffect(() => {
         if (isActive) {
@@ -143,80 +99,28 @@ export function DynamicIslandTimer() {
 
     const toggleTimer = () => setIsActive(!isActive);
 
-    const switchMode = (mode: "POMODORO" | "STOPWATCH", state: "WORK" | "BREAK" = "WORK") => {
-        setIsActive(false);
-        setTimerMode(mode);
-        setTimerState(state);
-        if (mode === "POMODORO") {
-            setTimeLeft(state === "WORK" ? pomodoroSettings.work * 60 : pomodoroSettings.break * 60);
-        } else {
-            setTimeLeft(0);
-        }
-    };
-
     const completeSession = () => {
         setIsActive(false);
         playSound();
 
-        const duration =
-            timerMode === "POMODORO"
-                ? Math.max(0, (timerState === "WORK" ? pomodoroSettings.work * 60 : pomodoroSettings.break * 60) - timeLeft)
-                : timeLeft;
+        const duration = timeLeft;
         if (duration > 0) {
             addSession({
                 id: crypto.randomUUID(),
                 date: new Date().toISOString(),
                 duration,
-                mode: timerMode,
+                mode: "STOPWATCH",
             });
         }
 
-        if (timerMode === "POMODORO" && timerState === "WORK") {
-            const nextCount = (pomodoroCount || 0) + 1;
-            setPomodoroCount(nextCount);
-            const isLongBreak = nextCount % 4 === 0;
-            const breakDuration = isLongBreak
-                ? (pomodoroSettings.longBreak || 15) * 60
-                : (pomodoroSettings.break || 5) * 60;
-
-            setPreviousMode("POMODORO");
-            setTimerState("BREAK");
-            setTimeLeft(breakDuration);
-            if (pomodoroSettings.autoStartBreak) {
-                setIsActive(true);
-            }
-            setDeepFocusMode(false);
-        } else if (timerMode === "POMODORO" && timerState === "BREAK") {
-            if (previousMode === "STOPWATCH") {
-                setTimerMode("STOPWATCH");
-                setTimerState("WORK");
-                setTimeLeft(0);
-            } else {
-                setTimerMode("POMODORO");
-                setTimerState("WORK");
-                setTimeLeft(pomodoroSettings.work * 60);
-            }
-            if (pomodoroSettings.autoStartTimer) {
-                setIsActive(true);
-                setDeepFocusMode(true);
-            } else {
-                setDeepFocusMode(false);
-            }
-        } else if (timerMode === "STOPWATCH" && duration > 0) {
-            setPreviousMode("STOPWATCH");
-            const breakSeconds = Math.floor(duration / 5);
-            if (breakSeconds > 0) {
-                setTimerMode("POMODORO");
-                setTimerState("BREAK");
-                setTimeLeft(breakSeconds);
-                if (pomodoroSettings.autoStartBreak) {
-                    setIsActive(true);
-                }
-            } else {
-                setTimeLeft(0);
-            }
-            setDeepFocusMode(false);
+        const breakSeconds = Math.floor(duration / 5);
+        if (breakSeconds > 0) {
+            setTimeLeft(breakSeconds);
+        } else {
+            setTimeLeft(0);
         }
+
+        setDeepFocusMode(false);
         setSessionStartTime(null);
     };
 
@@ -263,52 +167,10 @@ export function DynamicIslandTimer() {
                     >
                         <div className="flex items-center gap-2">
                             {getModeIcon()}
-                            <span className="text-xs font-bold text-white tracking-tight">
-                                {getCurrentModeLabel()}
-                            </span>
                         </div>
                         <span className="text-xl font-extrabold font-mono text-white tracking-tight tabular-nums">
                             {formatTime(timeLeft)}
                         </span>
-                    </div>
-
-                    {/* Mode Selector Tabs */}
-                    <div className="flex items-center gap-2">
-                        <Button
-                            variant={
-                                timerMode === "POMODORO" && timerState === "WORK"
-                                    ? "default"
-                                    : "outline"
-                            }
-                            size="sm"
-                            onClick={() => switchMode("POMODORO", "WORK")}
-                            className="rounded-xl text-[11px] h-7 px-2.5 flex-1"
-                        >
-                            <Timer className="w-3 h-3 mr-1" />
-                            Pomodoro
-                        </Button>
-                        <Button
-                            variant={
-                                timerMode === "POMODORO" && timerState === "BREAK"
-                                    ? "default"
-                                    : "outline"
-                            }
-                            size="sm"
-                            onClick={() => switchMode("POMODORO", "BREAK")}
-                            className="rounded-xl text-[11px] h-7 px-2.5 flex-1"
-                        >
-                            <Coffee className="w-3 h-3 mr-1" />
-                            Break
-                        </Button>
-                        <Button
-                            variant={timerMode === "STOPWATCH" ? "default" : "outline"}
-                            size="sm"
-                            onClick={() => switchMode("STOPWATCH")}
-                            className="rounded-xl text-[11px] h-7 px-2.5 flex-1"
-                        >
-                            <Clock className="w-3 h-3 mr-1" />
-                            Flow
-                        </Button>
                     </div>
 
                     <Progress value={progressValue} className="h-1.5" />

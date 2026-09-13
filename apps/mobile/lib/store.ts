@@ -17,7 +17,7 @@ export interface Session {
   id: string;
   date: string;
   duration: number;
-  mode: 'POMODORO' | 'STOPWATCH';
+  mode: 'STOPWATCH';
 }
 
 export interface Distraction {
@@ -43,8 +43,6 @@ export interface TodoItem {
   dueDate?: string;
   subtasks?: SubTask[];
   notes?: string;
-  estimatedPomodoros?: number;
-  completedPomodoros?: number;
   reminders?: string[];
   link?: string;
   groupId?: string;
@@ -76,15 +74,11 @@ interface AppState {
   soundEffectEnabled: boolean;
   setSoundEffectEnabled: (enabled: boolean) => void;
 
-  timerMode: 'POMODORO' | 'STOPWATCH';
-  timerState: 'WORK' | 'BREAK';
-  previousMode: 'POMODORO' | 'STOPWATCH';
+  timerMode: 'STOPWATCH';
   timeLeft: number;
   isActive: boolean;
   sessionStartTime: string | null;
-  setTimerMode: (mode: 'POMODORO' | 'STOPWATCH') => void;
-  setTimerState: (state: 'WORK' | 'BREAK') => void;
-  setPreviousMode: (mode: 'POMODORO' | 'STOPWATCH') => void;
+  setTimerMode: (mode: 'STOPWATCH') => void;
   setTimeLeft: (time: number | ((prev: number) => number)) => void;
   setIsActive: (active: boolean) => void;
   setSessionStartTime: (time: string | null) => void;
@@ -100,7 +94,6 @@ interface AppState {
   toggleTodo: (id: string) => void;
   updateTodo: (id: string, updates: Partial<TodoItem>) => void;
   deleteTodo: (id: string) => void;
-  incrementTodoSession: (todoId: string) => void;
   groups: Group[];
   addGroup: (name: string) => void;
   deleteGroup: (id: string) => void;
@@ -116,14 +109,6 @@ interface AppState {
 
   addSession: (session: Session) => void;
   addDistraction: (category: string) => void;
-
-  pomodoroSettings: { work: number; break: number; longBreak: number; autoStartBreak: boolean; autoStartTimer: boolean };
-  setPomodoroSettings: (
-    settings: Partial<{ work: number; break: number; longBreak: number; autoStartBreak: boolean; autoStartTimer: boolean }>
-  ) => void;
-  pomodoroCount: number;
-  setPomodoroCount: (count: number | ((prev: number) => number)) => void;
-  resetPomodoroCount: () => void;
 
   resetAllData: () => void;
 
@@ -187,15 +172,11 @@ export const useAppStore = create<AppState>()(
       soundEffectEnabled: true,
       setSoundEffectEnabled: (enabled) => set({ soundEffectEnabled: enabled }),
 
-      timerMode: 'POMODORO',
-      timerState: 'WORK',
-      previousMode: 'POMODORO',
-      timeLeft: 25 * 60,
+      timerMode: 'STOPWATCH',
+      timeLeft: 0,
       isActive: false,
       sessionStartTime: null,
       setTimerMode: (mode) => set({ timerMode: mode }),
-      setTimerState: (state) => set({ timerState: state }),
-      setPreviousMode: (mode) => set({ previousMode: mode }),
       setTimeLeft: (timeOrFn) =>
         set((state) => ({
           timeLeft: typeof timeOrFn === 'function' ? timeOrFn(state.timeLeft) : timeOrFn,
@@ -232,24 +213,6 @@ export const useAppStore = create<AppState>()(
         set((state) => ({
           todos: state.todos.filter((t) => t.id !== id),
         })),
-      incrementTodoSession: (todoId) =>
-        set((state) => ({
-          todos: state.todos.map((t) => {
-            if (t.id !== todoId) return t;
-            const currentCompleted = t.completedPomodoros || 0;
-            const newCompleted = currentCompleted + 1;
-            const est = t.estimatedPomodoros || 1;
-            const isFinished = newCompleted >= est;
-            return {
-              ...t,
-              completedPomodoros: newCompleted,
-              completed: isFinished ? true : t.completed,
-              completedAt: isFinished ? new Date().toISOString() : t.completedAt,
-              groupId: isFinished ? 'finished' : t.groupId,
-            };
-          }),
-        })),
-
       groups: [
         { id: 'current', name: 'Current Tasks', type: 'system' },
         { id: 'finished', name: 'Finished', type: 'system' },
@@ -350,18 +313,6 @@ export const useAppStore = create<AppState>()(
           ),
         })),
 
-      pomodoroSettings: { work: 25, break: 5, longBreak: 15, autoStartBreak: false, autoStartTimer: false },
-      setPomodoroSettings: (updates) =>
-        set((state) => ({
-          pomodoroSettings: { ...state.pomodoroSettings, ...updates },
-        })),
-      pomodoroCount: 0,
-      setPomodoroCount: (countOrFn) =>
-        set((state) => ({
-          pomodoroCount: typeof countOrFn === 'function' ? countOrFn(state.pomodoroCount || 0) : countOrFn,
-        })),
-      resetPomodoroCount: () => set({ pomodoroCount: 0 }),
-
       resetAllData: () =>
         set({
           todos: [],
@@ -374,13 +325,10 @@ export const useAppStore = create<AppState>()(
           sessionName: '',
           selectedTodoId: null,
           selectedSubtaskId: null,
-          timerMode: 'POMODORO',
-          timerState: 'WORK',
-          timeLeft: 25 * 60,
+          timerMode: 'STOPWATCH',
+          timeLeft: 0,
           isActive: false,
           isMusicPlaying: false,
-          pomodoroSettings: { work: 25, break: 5, longBreak: 15, autoStartBreak: false, autoStartTimer: false },
-          pomodoroCount: 0,
           background: 'dark',
         }),
     }),
