@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export type ViewType = "FOCUS" | "TODO" | "JOURNAL" | "NOTES" | "SETTINGS";
-export type BackgroundType = "dark" | "gradient" | "mountain" | "library" | "cafe" | "anime-room";
 
 interface AppState {
     currentView: ViewType;
@@ -62,9 +61,6 @@ interface AppState {
 
     deepFocusMode: boolean;
     setDeepFocusMode: (mode: boolean) => void;
-
-    background: BackgroundType;
-    setBackground: (bg: BackgroundType) => void;
 
     addSession: (session: Session) => void;
     addDistraction: (category: string) => void;
@@ -352,9 +348,6 @@ export const useAppStore = create<AppState>()(
             deepFocusMode: false,
             setDeepFocusMode: (mode) => set({ deepFocusMode: mode }),
 
-            background: "dark",
-            setBackground: (bg) => set({ background: bg }),
-
             addSession: (session) =>
                 set((state) => ({
                     sessions: [...(state.sessions || []), session],
@@ -476,7 +469,6 @@ export const useAppStore = create<AppState>()(
                     sessions: [],
                     distractions: [],
                     deepFocusMode: false,
-                    background: "dark",
                     pomodoroSettings: { work: 25, break: 5, longBreak: 15, autoStartBreak: false, autoStartTimer: false },
                     pomodoroCount: 0,
                 });
