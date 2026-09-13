@@ -99,12 +99,12 @@ export function DynamicIslandTimer() {
     const getModeIcon = () => {
         if (timerMode === "POMODORO") {
             return timerState === "WORK" ? (
-                <Timer className="w-4 h-4 text-zinc-200 shrink-0" />
+                <Timer className="w-4 h-4 text-foreground shrink-0" />
             ) : (
-                <Coffee className="w-4 h-4 text-zinc-200 shrink-0" />
+                <Coffee className="w-4 h-4 text-foreground shrink-0" />
             );
         }
-        return <Clock className="w-4 h-4 text-zinc-200 shrink-0" />;
+        return <Clock className="w-4 h-4 text-foreground shrink-0" />;
     };
 
     const getCurrentModeLabel = () => {
@@ -232,13 +232,13 @@ export function DynamicIslandTimer() {
                 }}
                 className={cn(
                     "flex items-center gap-2.5 px-3.5 py-1.5 rounded-full",
-                    "bg-[#121214] border border-zinc-800 shadow-md",
-                    "hover:bg-zinc-800 hover:border-zinc-700 transition-all duration-200 active:scale-95 cursor-pointer text-xs select-none",
+                    "bg-card border border-border shadow-md",
+                    "hover:bg-secondary/80 hover:border-border transition-all duration-200 active:scale-95 cursor-pointer text-xs select-none",
                 )}
                 title="Click to toggle timer controls"
             >
                 {getModeIcon()}
-                <span className="font-mono font-bold text-xs sm:text-sm text-white tracking-wider tabular-nums">
+                <span className="font-mono font-bold text-xs sm:text-sm text-foreground tracking-wider tabular-nums">
                     {formatTime(timeLeft)}
                 </span>
                 {isActive && (
@@ -251,7 +251,7 @@ export function DynamicIslandTimer() {
                 <div
                     onClick={(e) => e.stopPropagation()}
                     className={cn(
-                        "absolute z-50 w-[330px] sm:w-[370px] bg-[#121214] border border-zinc-800 rounded-2xl p-4 shadow-2xl space-y-3.5 animate-in zoom-in-95 duration-200",
+                        "absolute z-50 w-[330px] sm:w-[370px] bg-card border border-border rounded-2xl p-4 shadow-2xl space-y-3.5 animate-in zoom-in-95 duration-200",
                         "top-full mt-2.5 left-1/2 -translate-x-1/2",
                     )}
                 >
@@ -263,11 +263,11 @@ export function DynamicIslandTimer() {
                     >
                         <div className="flex items-center gap-2">
                             {getModeIcon()}
-                            <span className="text-xs font-bold text-white tracking-tight">
+                            <span className="text-xs font-bold text-foreground tracking-tight">
                                 {getCurrentModeLabel()}
                             </span>
                         </div>
-                        <span className="text-xl font-extrabold font-mono text-white tracking-tight tabular-nums">
+                        <span className="text-xl font-extrabold font-mono text-foreground tracking-tight tabular-nums">
                             {formatTime(timeLeft)}
                         </span>
                     </div>
@@ -314,7 +314,7 @@ export function DynamicIslandTimer() {
                     <Progress value={progressValue} className="h-1.5" />
 
                     {(activeTask || sessionName) && (
-                        <p className="text-xs text-zinc-400 truncate">
+                        <p className="text-xs text-muted-foreground truncate">
                             {activeTask ? activeTask.text : sessionName}
                         </p>
                     )}
@@ -326,10 +326,10 @@ export function DynamicIslandTimer() {
                         <button
                             onClick={completeSession}
                             disabled={timeLeft === 0}
-                            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-[#18181b] border border-zinc-800 text-xs font-medium text-zinc-200 hover:bg-zinc-800 hover:border-zinc-700 transition-all disabled:opacity-50 cursor-pointer shadow-sm"
+                            className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-card border border-border text-xs font-medium text-foreground hover:bg-secondary/80 hover:border-border transition-all disabled:opacity-50 cursor-pointer shadow-sm"
                             title="Complete Session"
                         >
-                            <CheckCircle2 className="w-4 h-4 text-zinc-300" />
+                            <CheckCircle2 className="w-4 h-4 text-foreground" />
                             <span>Complete</span>
                         </button>
 
@@ -341,7 +341,7 @@ export function DynamicIslandTimer() {
                                 "flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold transition-all shadow-sm cursor-pointer",
                                 isActive
                                     ? "bg-amber-950/40 text-amber-400 border-2 border-amber-500/80 shadow-[0_0_12px_rgba(245,158,11,0.2)] hover:bg-amber-900/50"
-                                    : "bg-zinc-100 text-zinc-950 hover:bg-zinc-200 border border-zinc-200",
+                                    : "bg-primary text-primary-foreground hover:bg-primary/90 border border-primary",
                             )}
                         >
                             {isActive ? (
@@ -351,7 +351,7 @@ export function DynamicIslandTimer() {
                                 </>
                             ) : (
                                 <>
-                                    <Play className="w-3.5 h-3.5 fill-zinc-950 ml-0.5" />
+                                    <Play className="w-3.5 h-3.5 fill-primary-foreground ml-0.5" />
                                     <span>Start</span>
                                 </>
                             )}

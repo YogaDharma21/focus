@@ -1,3 +1,6 @@
-export function useColorScheme(): 'dark' {
-  return 'dark';
+import { useTheme } from '../context/ThemeContext';
+
+export function useColorScheme() {
+  const { themeMode } = useTheme();
+  return themeMode;
 }

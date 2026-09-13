@@ -81,22 +81,22 @@ export function VolumeSlider({
           styles.track,
           {
             height: trackHeight,
-            backgroundColor: colors.inputBg,
+            backgroundColor: colors.muted,
             borderColor: colors.border,
             borderRadius: trackHeight / 2,
           },
         ]}
       >
-        <View
-          style={[
-            styles.fill,
-            {
-              width: percentString,
-              backgroundColor: colors.text,
-              borderRadius: trackHeight / 2,
-            },
-          ]}
-        />
+          <View
+            style={[
+              styles.fill,
+              {
+                width: percentString,
+                backgroundColor: colors.primary,
+                borderRadius: trackHeight / 2,
+              },
+            ]}
+          />
       </View>
       <View
         style={[

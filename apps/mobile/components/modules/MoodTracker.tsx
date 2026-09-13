@@ -92,7 +92,7 @@ interface GridCellProps {
   isSelectedCell: boolean;
   isCellToday: boolean;
   isValidDay: boolean;
-  inputBg: string;
+  mutedBg: string;
   borderColor: string;
   primaryColor: string;
   onPress: (dateKey: string) => void;
@@ -104,7 +104,7 @@ const GridCell = React.memo(function GridCell({
   isSelectedCell,
   isCellToday,
   isValidDay,
-  inputBg,
+  mutedBg,
   borderColor,
   primaryColor,
   onPress,
@@ -121,7 +121,7 @@ const GridCell = React.memo(function GridCell({
         styles.gridCell,
         cfg
           ? { backgroundColor: cfg.bg }
-          : { backgroundColor: inputBg, borderColor, borderWidth: 0.5 },
+          : { backgroundColor:           mutedBg, borderColor, borderWidth: 0.5 },
         isSelectedCell && { borderColor: '#ffffff', borderWidth: 2 },
         isCellToday && !isSelectedCell && { borderColor: primaryColor, borderWidth: 1.5 },
       ]}
@@ -137,7 +137,7 @@ interface YearlyMoodGridProps {
   todayMonth: number;
   todayDate: number;
   moodNotesMap: Record<string, MoodNote>;
-  inputBg: string;
+  mutedBg: string;
   borderColor: string;
   textMutedColor: string;
   primaryColor: string;
@@ -154,7 +154,7 @@ const YearlyMoodGrid = React.memo(function YearlyMoodGrid({
   todayMonth,
   todayDate,
   moodNotesMap,
-  inputBg,
+  mutedBg,
   borderColor,
   textMutedColor,
   primaryColor,
@@ -332,8 +332,8 @@ export function MoodTracker() {
           </View>
 
           <View style={styles.headerRightRow}>
-            <View style={[styles.dateBadge, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
-              <Text style={[styles.dateBadgeText, { color: colors.textMuted }]}>
+            <View style={[styles.dateBadge, { backgroundColor: colors.muted, borderColor: colors.border }]}>
+              <Text style={[styles.dateBadgeText, { color: colors.mutedText }]}>
                 {formatDateShort(selectedDateKey)}
               </Text>
             </View>
@@ -346,7 +346,7 @@ export function MoodTracker() {
                   setSelectedYear(today.getFullYear());
                 }}
               >
-                <Text style={[styles.todayBtnText, { color: colors.primaryForeground }]}>Today</Text>
+                <Text style={[styles.todayBtnText, { color: colors.primaryText }]}>Today</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -365,7 +365,7 @@ export function MoodTracker() {
                   styles.moodBtn,
                   isSelected
                     ? { backgroundColor: cfg.bg, borderColor: cfg.bg }
-                    : { backgroundColor: colors.inputBg, borderColor: colors.border },
+                    : { backgroundColor: colors.muted, borderColor: colors.border },
                 ]}
                 onPress={() => setSelectedMood(key)}
                 activeOpacity={0.8}
@@ -374,7 +374,7 @@ export function MoodTracker() {
                 <Text
                   style={[
                     styles.moodLabel,
-                    { color: isSelected ? cfg.text : colors.textMuted },
+                    { color: isSelected ? cfg.text : colors.mutedText },
                   ]}
                 >
                   {cfg.label}
@@ -388,10 +388,10 @@ export function MoodTracker() {
         <TextInput
           style={[
             styles.noteInput,
-            { color: colors.text, backgroundColor: colors.inputBg, borderColor: isNoteFocused ? colors.text : colors.border },
+            { color: colors.text, backgroundColor: colors.muted, borderColor: isNoteFocused ? colors.text : colors.border },
           ]}
           placeholder="Optional reflection: What made you feel this way?"
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.mutedText}
           multiline
           numberOfLines={2}
           value={descriptionText}
@@ -404,12 +404,12 @@ export function MoodTracker() {
           {selectedDateNote ? (
             <View style={styles.loggedInfo}>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                <Text style={[styles.loggedText, { color: colors.textMuted }]}>
+                <Text style={[styles.loggedText, { color: colors.mutedText }]}>
                   Logged: {MOOD_CONFIGS[currentSelectedMoodKey || 'amazing'].label}
                 </Text>
                 {(() => {
                   const Icon = MOOD_CONFIGS[currentSelectedMoodKey || 'amazing'].icon;
-                  return <Icon size={14} color={colors.textMuted} />;
+                  return <Icon size={14} color={colors.mutedText} />;
                 })()}
               </View>
               <TouchableOpacity onPress={() => {
@@ -421,7 +421,7 @@ export function MoodTracker() {
               </TouchableOpacity>
             </View>
           ) : (
-            <Text style={[styles.loggedText, { color: colors.textMuted }]}>No mood logged for date</Text>
+            <Text style={[styles.loggedText, { color: colors.mutedText }]}>No mood logged for date</Text>
           )}
 
           <TouchableOpacity
@@ -429,8 +429,8 @@ export function MoodTracker() {
             onPress={handleSaveMood}
             activeOpacity={0.8}
           >
-            <Sparkles size={14} color={colors.primaryForeground} />
-            <Text style={[styles.saveBtnText, { color: colors.primaryForeground }]}>Save Mood</Text>
+            <Sparkles size={14} color={colors.primaryText} />
+            <Text style={[styles.saveBtnText, { color: colors.primaryText }]}>Save Mood</Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -449,7 +449,7 @@ export function MoodTracker() {
             <TouchableOpacity onPress={() => setSelectedYear((y) => y - 1)} style={styles.navBtn}>
               <ChevronLeft size={18} color={colors.text} />
             </TouchableOpacity>
-            <Text style={[styles.yearText, { color: colors.text, backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+            <Text style={[styles.yearText, { color: colors.text, backgroundColor: colors.muted, borderColor: colors.border }]}>
               {selectedYear}
             </Text>
             <TouchableOpacity onPress={() => setSelectedYear((y) => y + 1)} style={styles.navBtn}>
@@ -458,7 +458,7 @@ export function MoodTracker() {
           </View>
         </View>
 
-        <Text style={[styles.gridHint, { color: colors.textMuted }]}>
+        <Text style={[styles.gridHint, { color: colors.mutedText }]}>
           1 tap: select date | 2 taps: cycle mood
         </Text>
 
@@ -470,15 +470,15 @@ export function MoodTracker() {
           todayMonth={today.getMonth()}
           todayDate={today.getDate()}
           moodNotesMap={moodNotesMap}
-          inputBg={colors.inputBg}
+          mutedBg={colors.muted}
           borderColor={colors.border}
-          textMutedColor={colors.textMuted}
+          textMutedColor={colors.mutedText}
           primaryColor={colors.primary}
           onCellPress={handleCellPress}
         />
 
         {/* Selected Date Info Banner */}
-        <View style={[styles.infoBanner, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+        <View style={[styles.infoBanner, { backgroundColor: colors.muted, borderColor: colors.border }]}>
           <Text style={[styles.infoBannerTitle, { color: colors.text }]}>
             {activeFormattedDate}:
           </Text>
@@ -499,10 +499,10 @@ export function MoodTracker() {
               })()}
             </View>
           ) : (
-            <Text style={[styles.infoBannerEmpty, { color: colors.textMuted }]}>No mood logged</Text>
+            <Text style={[styles.infoBannerEmpty, { color: colors.mutedText }]}>No mood logged</Text>
           )}
           {activeNoteObj?.text && (
-            <Text style={[styles.infoBannerText, { color: colors.textMuted }]} numberOfLines={1}>
+            <Text style={[styles.infoBannerText, { color: colors.mutedText }]} numberOfLines={1}>
               {`"${activeNoteObj.text}"`}
             </Text>
           )}
@@ -515,7 +515,7 @@ export function MoodTracker() {
             return (
               <View key={key} style={styles.legendItem}>
                 <View style={[styles.legendBox, { backgroundColor: cfg.bg }]} />
-                <Text style={[styles.legendText, { color: colors.textMuted }]}>
+                <Text style={[styles.legendText, { color: colors.mutedText }]}>
                   {cfg.label} ({stats[key]})
                 </Text>
               </View>
@@ -523,7 +523,7 @@ export function MoodTracker() {
           })}
         </View>
 
-        <Text style={[styles.totalText, { color: colors.textMuted }]}>
+        <Text style={[styles.totalText, { color: colors.mutedText }]}>
           Total tracked days: <Text style={{ color: colors.text, fontWeight: '700' }}>{totalTrackedDays}</Text>
         </Text>
       </View>

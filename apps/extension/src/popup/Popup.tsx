@@ -53,10 +53,9 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import { MoodTracker } from "./components/MoodTracker";
-import { BackgroundDisplay } from "./components/BackgroundDisplay";
 import { DeepFocusOverlay } from "./components/DeepFocusOverlay";
 import { Progress } from "../components/ui/progress";
-import { AppStateData, TodoItem, PriorityType, BackgroundTheme } from "../types";
+import { AppStateData, TodoItem, PriorityType, ThemeMode } from "../types";
 import { getStoredState, saveStoredState, subscribeToStateChanges, getCachedState, DEFAULT_STATE, getWeeklyMinutesFromSessions, getTodayMinutesFromSessions, calculateStreaksFromSessions, DAYS_OF_WEEK } from "../lib/storage";
 import "../index.css";
 
@@ -99,15 +98,6 @@ const DISTRACTION_CATEGORIES = [
   "Bathroom",
   "Meeting",
   "Other"
-];
-
-const BACKGROUND_THEMES: { id: BackgroundTheme; name: string }[] = [
-  { id: "dark", name: "Dark" },
-  { id: "gradient", name: "Gradient" },
-  { id: "mountain", name: "Mountain" },
-  { id: "library", name: "Library" },
-  { id: "cafe", name: "Cafe" },
-  { id: "anime-room", name: "Anime Room" }
 ];
 
 export function Popup() {
@@ -244,12 +234,20 @@ export function Popup() {
   useEffect(() => {
     getStoredState().then((initial) => {
       setState(initial);
-      document.body.className = "dark";
+      const mode = initial.themeMode || "dark";
+      document.documentElement.classList.toggle("dark", mode === "dark");
+      document.documentElement.classList.toggle("light", mode === "light");
+      document.body.classList.toggle("dark", mode === "dark");
+      document.body.classList.toggle("light", mode === "light");
     });
 
     const unsubscribe = subscribeToStateChanges((updated) => {
       setState(updated);
-      document.body.className = "dark";
+      const mode = updated.themeMode || "dark";
+      document.documentElement.classList.toggle("dark", mode === "dark");
+      document.documentElement.classList.toggle("light", mode === "light");
+      document.body.classList.toggle("dark", mode === "dark");
+      document.body.classList.toggle("light", mode === "light");
     });
 
     return () => unsubscribe();
@@ -272,12 +270,21 @@ export function Popup() {
     prevIsActiveRef.current = state.isActive;
   }, [state?.isActive]);
 
+  useEffect(() => {
+    if (!state) return;
+    const mode = state.themeMode || "dark";
+    document.documentElement.classList.toggle("dark", mode === "dark");
+    document.documentElement.classList.toggle("light", mode === "light");
+    document.body.classList.toggle("dark", mode === "dark");
+    document.body.classList.toggle("light", mode === "light");
+  }, [state?.themeMode]);
+
   // No local timer tick — the background service worker is the single source
   // of truth. Timer state updates arrive via subscribeToStateChanges above.
 
   if (!state) {
     return (
-      <div className="w-[420px] h-[580px] bg-black text-white flex items-center justify-center font-mono text-xs">
+      <div className="w-[420px] h-[580px] bg-background text-foreground flex items-center justify-center font-mono text-xs">
         LOADING FOCUS...
       </div>
     );
@@ -754,7 +761,7 @@ export function Popup() {
   // Instant Deep Focus View when in Deep Focus Mode
   if (state.deepFocusMode) {
     return (
-      <div className="w-[420px] h-[580px] bg-black text-white relative flex flex-col overflow-hidden select-none font-sans">
+      <div className="w-[420px] h-[580px] bg-background text-foreground relative flex flex-col overflow-hidden select-none font-sans">
         <DeepFocusOverlay
           state={state}
           onToggleTimer={toggleTimer}
@@ -777,16 +784,15 @@ export function Popup() {
 
   return (
     <div className={`w-[420px] h-[580px] flex flex-col overflow-hidden select-none font-sans relative ${
-      "text-white"
+      "text-foreground"
     }`}>
-      <BackgroundDisplay theme={state.background} />
       {/* Top Header */}
       <header className={`px-4 py-3 flex items-center z-10 ${
-        "bg-neutral-950/95 border-b border-neutral-800/50"
+        "bg-background/95 border-b border-border"
       }`}>
         {/* Left: Logo */}
         <div className="flex-1 flex items-center gap-2.5">
-          <img src="/icons/icon32.png" className="w-7 h-7 rounded-lg object-contain border border-neutral-700 shadow-sm" alt="Focus Logo" />
+          <img src="/icons/icon32.png" className="w-7 h-7 rounded-lg object-contain border border-border shadow-sm" alt="Focus Logo" />
           <div>
             <h1 className="text-sm font-extrabold tracking-wider uppercase font-heading">
               FOCUS
@@ -801,9 +807,9 @@ export function Popup() {
               onClick={() => setShowFloatingTimerCard(!showFloatingTimerCard)}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold transition-all shadow-sm ${
                 showFloatingTimerCard
-                  ? "bg-white text-black border-white"
-                  : "bg-neutral-900/90 border-neutral-800 text-white hover:bg-neutral-800"
-              } ${state.isActive ? ("border-white/60 ring-1 ring-white/30") : ""}`}
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-card border-border text-foreground hover:bg-secondary"
+              } ${state.isActive ? ("border-foreground/60 ring-1 ring-foreground/30") : ""}`}
               title="Toggle Floating Timer Controls"
             >
               <span className="flex items-center">
@@ -813,7 +819,7 @@ export function Popup() {
                 {timeFormatted}
               </span>
               {state.isActive && (
-                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-foreground animate-pulse" />
               )}
             </button>
           </div>
@@ -825,8 +831,8 @@ export function Popup() {
             onClick={() => setActiveTab("settings")}
             className={`p-1.5 rounded-lg transition-all ${
               activeTab === "settings"
-                ? "bg-white text-black"
-                : "text-neutral-400 hover:text-white hover:bg-neutral-800"
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-secondary"
             }`}
             title="Settings"
           >
@@ -838,7 +844,7 @@ export function Popup() {
       {/* Floating Timer Card Overlay (Matching Provided Mockups) */}
       {activeTab !== "timer" && showFloatingTimerCard && (
         <div className={`absolute top-14 left-3 right-3 z-50 p-3.5 rounded-2xl border shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${
-          "bg-neutral-900 border-neutral-800 text-white shadow-black/80"
+          "bg-card border-border text-foreground shadow-background/80"
         }`}>
           {/* Header Row: Emoji + Mode Name & Live Timer */}
           <div className="flex items-center justify-between mb-3">
@@ -857,14 +863,14 @@ export function Popup() {
 
           {/* Mode Switcher Buttons Row */}
           <div className={`grid grid-cols-3 gap-1.5 p-1 rounded-xl border mb-3 ${
-            "bg-neutral-950/80 border-neutral-800"
+            "bg-background/80 border-border"
           }`}>
             <button
               onClick={() => switchTimerModeAndState("POMODORO", "WORK")}
               className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
                 state.timerState === "WORK"
-                  ? "bg-white text-black shadow"
-                  : "text-neutral-400 hover:text-white"
+                  ? "bg-primary text-primary-foreground shadow"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <TimerIcon className="w-3 h-3" />
@@ -874,8 +880,8 @@ export function Popup() {
               onClick={() => switchTimerModeAndState("POMODORO", "BREAK")}
               className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
                 state.timerState === "BREAK"
-                  ? "bg-white text-black shadow"
-                  : "text-neutral-400 hover:text-white"
+                  ? "bg-primary text-primary-foreground shadow"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Coffee className="w-3 h-3" />
@@ -885,8 +891,8 @@ export function Popup() {
               onClick={() => switchTimerModeAndState("FLOW", "FLOW")}
               className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
                 state.timerState === "FLOW"
-                  ? "bg-white text-black shadow"
-                  : "text-neutral-400 hover:text-white"
+                  ? "bg-primary text-primary-foreground shadow"
+                  : "text-muted-foreground hover:text-foreground"
               }`}
             >
               <Clock className="w-3 h-3" />
@@ -898,7 +904,7 @@ export function Popup() {
           {/* Tag & Group Badge Row */}
           <div className="flex items-center justify-between mb-3 px-0.5">
             <span className={`px-2.5 py-1 rounded-lg text-xs font-bold font-sans border ${
-              "bg-neutral-800/80 border-neutral-700 text-neutral-200"
+              "bg-secondary border-border text-secondary-foreground"
             }`}>
               {selectedTask ? selectedTask.text : (state.sessionName || "Work")}
             </span>
@@ -927,8 +933,8 @@ export function Popup() {
               }}
               className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                 !state.isActive
-                  ? "bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed opacity-50"
-                  : "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-white"
+                  ? "bg-card border-border text-muted-foreground cursor-not-allowed opacity-50"
+                  : "bg-secondary border-border hover:bg-accent text-foreground"
               }`}
               title={state.isActive ? "Complete Session" : "Start timer to complete session"}
             >
@@ -946,8 +952,8 @@ export function Popup() {
               }}
               className={`p-2 rounded-xl border transition-all ${
                 !state.isActive
-                  ? "bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed opacity-50"
-                  : "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-neutral-300"
+                  ? "bg-card border-border text-muted-foreground cursor-not-allowed opacity-50"
+                  : "bg-secondary border-border hover:bg-accent text-muted-foreground"
               }`}
               title={state.isActive ? "Log Distraction" : "Start timer to log distraction"}
             >
@@ -958,7 +964,7 @@ export function Popup() {
             <button
               onClick={toggleTimer}
               className={`flex-1 py-2 px-3 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all shadow ${
-                "bg-white text-black border-white hover:bg-neutral-200"
+                "bg-primary text-primary-foreground border-primary hover:bg-accent"
               }`}
             >
               {state.isActive ? (
@@ -982,7 +988,7 @@ export function Popup() {
       {/* Distraction Picker Modal */}
       {showDistractionPicker && (
         <div className={`absolute inset-0 z-50 p-5 flex flex-col justify-between animate-in fade-in duration-200 ${
-          "bg-black/95 text-white"
+          "bg-background/95 text-foreground"
         }`}>
           <div className="flex items-center justify-between pb-3">
             <div className="flex items-center gap-2">
@@ -992,7 +998,7 @@ export function Popup() {
             <button
               onClick={() => setShowDistractionPicker(false)}
               className={`p-1 rounded-lg border ${
-                "bg-neutral-900 border-neutral-700 text-white hover:bg-neutral-800"
+                "bg-card border-border text-foreground hover:bg-secondary"
               }`}
             >
               <X className="w-4 h-4" />
@@ -1006,7 +1012,7 @@ export function Popup() {
                 key={cat}
                 onClick={() => selectDistractionCategory(cat)}
                 className={`w-full py-2.5 px-4 rounded-xl text-xs font-bold font-mono border transition-all text-left flex items-center justify-between ${
-                  "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-white"
+                  "bg-card border-border hover:bg-secondary text-foreground"
                 }`}
               >
                 <span>{cat}</span>
@@ -1020,15 +1026,15 @@ export function Popup() {
       {/* Task Detail View Modal */}
       {selectedTaskDetail && (
         <div className={`absolute inset-0 z-50 p-4 flex flex-col justify-between overflow-y-auto stable-scrollbar animate-in fade-in duration-200 ${
-          "bg-[#0b0b0b] text-white"
+          "bg-background text-foreground"
         }`}>
           {/* Header */}
           <div className="flex items-center justify-between pb-2">
-            <h2 className="text-[11px] font-bold font-mono uppercase tracking-wider text-neutral-400">TASK DETAILS</h2>
+            <h2 className="text-[11px] font-bold font-mono uppercase tracking-wider text-muted-foreground">TASK DETAILS</h2>
             <button
               onClick={() => setSelectedTaskDetail(null)}
               className={`p-1 rounded-lg transition-colors ${
-                "text-neutral-400 hover:text-white hover:bg-neutral-800"
+                "text-muted-foreground hover:text-foreground hover:bg-secondary"
               }`}
             >
               <X className="w-4 h-4" />
@@ -1048,7 +1054,7 @@ export function Popup() {
                   setSelectedTaskDetail({ ...selectedTaskDetail, text: val });
                 }}
                 className={`w-full bg-transparent text-xl font-extrabold focus:outline-none focus:border-b pb-0.5 ${
-                  "text-white focus:border-neutral-700"
+                  "text-foreground focus:border-border"
                 }`}
               />
             </div>
@@ -1057,11 +1063,11 @@ export function Popup() {
             <div className="grid grid-cols-2 gap-3">
               {/* Priority */}
               <div className={`p-3 rounded-2xl border ${
-                "bg-neutral-900/60 border-neutral-800/80"
+                "bg-card/60 border-border"
               }`}>
                 <div className="flex items-center gap-1.5 mb-2">
-                  <Sparkles className="w-3.5 h-3.5 text-neutral-400" />
-                  <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">PRIORITY</span>
+                  <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-muted-foreground">PRIORITY</span>
                 </div>
                 <select
                   value={selectedTaskDetail.priority || "medium"}
@@ -1072,7 +1078,7 @@ export function Popup() {
                     setSelectedTaskDetail({ ...selectedTaskDetail, priority: val });
                   }}
                   className={`w-full p-2.5 rounded-xl border text-xs font-semibold focus:outline-none cursor-pointer ${
-                    "bg-neutral-800/80 border-neutral-700/50 text-white"
+                    "bg-secondary border-border text-foreground"
                   }`}
                 >
                   <option value="low">Low</option>
@@ -1084,11 +1090,11 @@ export function Popup() {
 
               {/* Group */}
               <div className={`p-3 rounded-2xl border ${
-                "bg-neutral-900/60 border-neutral-800/80"
+                "bg-card/60 border-border"
               }`}>
                 <div className="flex items-center gap-1.5 mb-2">
-                  <ListFilter className="w-3.5 h-3.5 text-neutral-400" />
-                  <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">GROUP</span>
+                  <ListFilter className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-muted-foreground">GROUP</span>
                 </div>
                 <select
                   value={selectedTaskDetail.groupId || "current"}
@@ -1099,7 +1105,7 @@ export function Popup() {
                     setSelectedTaskDetail({ ...selectedTaskDetail, groupId: val });
                   }}
                   className={`w-full p-2.5 rounded-xl border text-xs font-semibold focus:outline-none cursor-pointer ${
-                    "bg-neutral-800/80 border-neutral-700/50 text-white"
+                    "bg-secondary border-border text-foreground"
                   }`}
                 >
                   {state.groups.map(g => (
@@ -1111,15 +1117,15 @@ export function Popup() {
 
             {/* Focus Sessions Card */}
             <div className={`p-3.5 rounded-2xl border ${
-              "bg-neutral-900/60 border-neutral-800/80"
+              "bg-card/60 border-border"
             }`}>
               <div className="flex items-center gap-1.5 mb-2.5">
-                <Clock className="w-3.5 h-3.5 text-neutral-400" />
-                <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">FOCUS SESSIONS</span>
+                <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-muted-foreground">FOCUS SESSIONS</span>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-[10px] text-neutral-400 font-medium block mb-1">Estimated</label>
+                  <label className="text-[10px] text-muted-foreground font-medium block mb-1">Estimated</label>
                   <input
                     type="number"
                     min="1"
@@ -1146,13 +1152,13 @@ export function Popup() {
                       if (nextSelected) setSelectedTaskDetail(nextSelected);
                     }}
                     className={`w-full p-2.5 rounded-xl border text-sm font-bold focus:outline-none ${
-                      "bg-neutral-800/80 border-neutral-700/50 text-white [color-scheme:dark]"
+                      "bg-secondary border-border text-foreground [color-scheme:dark]"
                     }`}
                   />
                 </div>
 
                 <div>
-                  <label className="text-[10px] text-neutral-400 font-medium block mb-1">Completed</label>
+                  <label className="text-[10px] text-muted-foreground font-medium block mb-1">Completed</label>
                   <input
                     type="number"
                     min="0"
@@ -1179,7 +1185,7 @@ export function Popup() {
                       if (nextSelected) setSelectedTaskDetail(nextSelected);
                     }}
                     className={`w-full p-2.5 rounded-xl border text-sm font-bold focus:outline-none ${
-                      "bg-neutral-800/80 border-neutral-700/50 text-white [color-scheme:dark]"
+                      "bg-secondary border-border text-foreground [color-scheme:dark]"
                     }`}
                   />
                 </div>
@@ -1192,13 +1198,13 @@ export function Popup() {
                 const pct = Math.min(100, Math.round((comp / Math.max(1, est)) * 100));
                 return (
                   <div className="mt-3">
-                    <div className={`w-full h-2 rounded-full overflow-hidden ${"bg-neutral-800"}`}>
+                    <div className={`w-full h-2 rounded-full overflow-hidden ${"bg-secondary"}`}>
                       <div
-                        className={`h-full rounded-full transition-all duration-300 ${"bg-white"}`}
+                        className={`h-full rounded-full transition-all duration-300 ${"bg-foreground"}`}
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <div className="text-[10px] font-mono font-medium text-neutral-400 text-right mt-1">
+                    <div className="text-[10px] font-mono font-medium text-muted-foreground text-right mt-1">
                       {pct}% Completed
                     </div>
                   </div>
@@ -1208,12 +1214,12 @@ export function Popup() {
 
             {/* Deadline Card */}
             <div className={`p-3.5 rounded-2xl border ${
-              "bg-neutral-900/60 border-neutral-800/80"
+              "bg-card/60 border-border"
             }`}>
               <div className="flex items-center justify-between mb-2.5">
                 <div className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-neutral-400" />
-                  <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">DEADLINE</span>
+                  <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-muted-foreground">DEADLINE</span>
                 </div>
                 {(selectedTaskDetail.dueDate || selectedTaskDetail.dueTime) && (
                   <button
@@ -1241,7 +1247,7 @@ export function Popup() {
                     setSelectedTaskDetail({ ...selectedTaskDetail, dueDate: val });
                   }}
                   className={`w-full p-2.5 rounded-xl border text-xs font-mono focus:outline-none ${
-                    "bg-neutral-800/80 border-neutral-700/50 text-white [color-scheme:dark]"
+                    "bg-secondary border-border text-foreground [color-scheme:dark]"
                   }`}
                 />
                 <input
@@ -1254,7 +1260,7 @@ export function Popup() {
                     setSelectedTaskDetail({ ...selectedTaskDetail, dueTime: val });
                   }}
                   className={`w-full p-2.5 rounded-xl border text-xs font-mono focus:outline-none ${
-                    "bg-neutral-800/80 border-neutral-700/50 text-white [color-scheme:dark]"
+                    "bg-secondary border-border text-foreground [color-scheme:dark]"
                   }`}
                 />
               </div>
@@ -1262,11 +1268,11 @@ export function Popup() {
 
             {/* Notes Card */}
             <div className={`p-3.5 rounded-2xl border ${
-              "bg-neutral-900/60 border-neutral-800/80"
+              "bg-card/60 border-border"
             }`}>
               <div className="flex items-center gap-1.5 mb-2.5">
-                <FileText className="w-3.5 h-3.5 text-neutral-400" />
-                <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">NOTES</span>
+                <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+                <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-muted-foreground">NOTES</span>
               </div>
               <textarea
                 rows={3}
@@ -1279,22 +1285,22 @@ export function Popup() {
                 }}
                 placeholder="Add notes or details for this task..."
                 className={`w-full p-3 rounded-xl border text-xs focus:outline-none resize-none min-h-[75px] ${
-                  "bg-neutral-800/80 border-neutral-700/50 text-white placeholder-neutral-500"
+                  "bg-secondary border-border text-foreground placeholder-muted-foreground"
                 }`}
               />
             </div>
 
             {/* Subtasks Card */}
             <div className={`p-3.5 rounded-2xl border ${
-              "bg-neutral-900/60 border-neutral-800/80"
+              "bg-card/60 border-border"
             }`}>
               <div className="flex items-center justify-between mb-2.5">
                 <div className="flex items-center gap-1.5">
-                  <CheckSquare className="w-3.5 h-3.5 text-neutral-400" />
-                  <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">SUBTASKS</span>
+                  <CheckSquare className="w-3.5 h-3.5 text-muted-foreground" />
+                  <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-muted-foreground">SUBTASKS</span>
                 </div>
                 <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
-                  "bg-neutral-800/80 border-neutral-700/50 text-neutral-400"
+                  "bg-secondary border-border text-muted-foreground"
                 }`}>
                   {(selectedTaskDetail.subtasks || []).filter(s => s.completed).length}/{(selectedTaskDetail.subtasks || []).length}
                 </span>
@@ -1307,7 +1313,7 @@ export function Popup() {
                   onChange={(e) => setNewSubtaskText(e.target.value)}
                   placeholder="Add a subtask..."
                   className={`w-full p-2.5 rounded-xl border text-xs focus:outline-none ${
-                    "bg-neutral-800/80 border-neutral-700/50 text-white placeholder-neutral-500"
+                    "bg-secondary border-border text-foreground placeholder-muted-foreground"
                   }`}
                 />
               </form>
@@ -1315,13 +1321,13 @@ export function Popup() {
               <div className="space-y-1.5 max-h-36 overflow-y-auto stable-scrollbar">
                 {(selectedTaskDetail.subtasks || []).map(sub => (
                   <div key={sub.id} className={`p-2 rounded-xl border flex items-center justify-between text-xs ${
-                    "bg-neutral-800/40 border-neutral-700/40"
+                    "bg-secondary/40 border-border/40"
                   }`}>
                     <div className="flex items-center gap-2 flex-1">
                       <button type="button" onClick={() => toggleSubtask(selectedTaskDetail.id, sub.id)}>
-                        {sub.completed ? <CheckSquare2 className="w-3.5 h-3.5 text-white" /> : <Square className="w-3.5 h-3.5 text-neutral-500" />}
+                        {sub.completed ? <CheckSquare2 className="w-3.5 h-3.5 text-foreground" /> : <Square className="w-3.5 h-3.5 text-muted-foreground" />}
                       </button>
-                      <span className={sub.completed ? "line-through text-neutral-500" : ("text-white")}>{sub.text}</span>
+                      <span className={sub.completed ? "line-through text-muted-foreground" : ("text-foreground")}>{sub.text}</span>
                     </div>
                   </div>
                 ))}
@@ -1330,11 +1336,11 @@ export function Popup() {
           </div>
 
           {/* Bottom Action Bar: Focus on this task button & Delete Task */}
-          <div className="flex items-center justify-between gap-3 pt-3 mt-1 border-t border-neutral-800/60">
+          <div className="flex items-center justify-between gap-3 pt-3 mt-1 border-t border-border/60">
             <button
               onClick={() => focusOnTask(selectedTaskDetail)}
               className={`py-2 px-3 rounded-xl font-extrabold text-xs border flex items-center justify-center gap-2 transition-all ${
-                "bg-white text-black border-white hover:bg-neutral-200"
+                "bg-primary text-primary-foreground border-primary hover:bg-accent"
               }`}
             >
               <Play className="w-3.5 h-3.5 fill-current" />
@@ -1354,7 +1360,7 @@ export function Popup() {
 
       {/* Main Navigation Bar */}
       <nav className={`flex items-center gap-1 px-3 py-2 z-10 ${
-        "bg-neutral-900/60"
+        "bg-card/60"
       }`}>
         {[
           { id: "timer", label: "Timer", icon: TimerIcon },
@@ -1371,8 +1377,8 @@ export function Popup() {
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
               className={`flex items-center gap-1.5 rounded-xl transition-colors relative text-[11px] font-bold px-3 py-1.5 min-h-[30px] ${
                 isActive
-                  ? "bg-white text-black shadow-sm"
-                  : "text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800/60"
+                  ? "bg-primary text-primary-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
               }`}
             >
               <div className="relative">
@@ -1380,15 +1386,15 @@ export function Popup() {
                 {tab.badge !== undefined && tab.badge > 0 && (
                   <span className={`absolute -top-1.5 -right-2 text-[8px] font-mono font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center ${
                     isActive
-                      ? "bg-black text-white"
-                      : "bg-neutral-700 text-white border border-neutral-600"
+                      ? "bg-background text-foreground"
+                      : "bg-secondary text-foreground border border-border"
                   }`}>
                     {tab.badge}
                   </span>
                 )}
                 {tab.activeIndicator && (
                   <span className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full animate-ping ${
-                    "bg-white"
+                    "bg-foreground"
                   }`} />
                 )}
               </div>
@@ -1402,8 +1408,8 @@ export function Popup() {
       <div className="px-3 pt-2 z-20">
         <div className={`flex items-center justify-between p-2 px-3 rounded-2xl border shadow-md transition-all ${
           soundEnabled && musicEnabled
-            ? "bg-neutral-900/90 border-neutral-800 text-white"
-            : "bg-neutral-900/50 border-neutral-800/50 text-neutral-500"
+            ? "bg-card border-border text-foreground"
+            : "bg-card/50 border-border/50 text-muted-foreground"
         }`}>
           <div
             onClick={() => setIsMusicExpanded(!isMusicExpanded)}
@@ -1412,8 +1418,8 @@ export function Popup() {
             <Music className="w-4 h-4 text-current shrink-0" />
             <div className="flex-1 min-w-0">
               <div className="text-xs font-semibold truncate">Lofi-Beats</div>
-              {!soundEnabled && <div className="text-[9px] text-neutral-600">Sound disabled</div>}
-              {soundEnabled && !musicEnabled && <div className="text-[9px] text-neutral-600">Music disabled</div>}
+              {!soundEnabled && <div className="text-[9px] text-muted-foreground">Sound disabled</div>}
+              {soundEnabled && !musicEnabled && <div className="text-[9px] text-muted-foreground">Music disabled</div>}
             </div>
           </div>
 
@@ -1423,8 +1429,8 @@ export function Popup() {
               disabled={!soundEnabled || !musicEnabled}
               className={`w-7 h-7 rounded-lg flex items-center justify-center shadow transition-all ${
                 soundEnabled && musicEnabled
-                  ? "bg-white text-black hover:scale-105 active:scale-95"
-                  : "bg-neutral-800 text-neutral-600 cursor-not-allowed"
+                  ? "bg-primary text-primary-foreground hover:scale-105 active:scale-95"
+                  : "bg-secondary text-muted-foreground cursor-not-allowed"
               }`}
               title={!soundEnabled ? "Sound is disabled" : !musicEnabled ? "Music is disabled" : isMusicPlaying ? "Pause" : "Play"}
             >
@@ -1452,8 +1458,8 @@ export function Popup() {
         {isMusicExpanded && (
           <div className={`mt-1.5 p-3 rounded-xl border shadow-xl transition-all ${
             soundEnabled && musicEnabled
-              ? "bg-neutral-900 border-neutral-800 text-white"
-              : "bg-neutral-900/50 border-neutral-800/50 text-neutral-500"
+              ? "bg-card border-border text-foreground"
+              : "bg-card/50 border-border/50 text-muted-foreground"
           }`}>
             <div className="flex items-center justify-between mb-2 pb-1.5">
               <div className="flex items-center gap-2 text-xs font-bold">
@@ -1469,14 +1475,14 @@ export function Popup() {
             </div>
 
             {!soundEnabled && (
-              <div className="mb-2 p-2 rounded-lg bg-neutral-800/50 border border-neutral-700/50 text-center">
-                <span className="text-[10px] text-neutral-500 font-medium">Sound is disabled. Enable it in Settings.</span>
+              <div className="mb-2 p-2 rounded-lg bg-secondary/50 border border-border/50 text-center">
+                <span className="text-[10px] text-muted-foreground font-medium">Sound is disabled. Enable it in Settings.</span>
               </div>
             )}
 
             {soundEnabled && !musicEnabled && (
-              <div className="mb-2 p-2 rounded-lg bg-neutral-800/50 border border-neutral-700/50 text-center">
-                <span className="text-[10px] text-neutral-500 font-medium">Music is disabled. Enable it in Settings.</span>
+              <div className="mb-2 p-2 rounded-lg bg-secondary/50 border border-border/50 text-center">
+                <span className="text-[10px] text-muted-foreground font-medium">Music is disabled. Enable it in Settings.</span>
               </div>
             )}
 
@@ -1484,10 +1490,10 @@ export function Popup() {
               onClick={soundEnabled && musicEnabled ? toggleMusicPlay : undefined}
               className={`flex items-center justify-between p-2 rounded-lg border transition-all ${
                 !soundEnabled || !musicEnabled
-                  ? "bg-neutral-950/30 border-neutral-800/30 opacity-50 cursor-not-allowed"
+                  ? "bg-background/30 border-border/30 opacity-50 cursor-not-allowed"
                   : isMusicPlaying
-                    ? "bg-neutral-800 border-neutral-700 cursor-pointer"
-                    : "bg-neutral-950/50 border-neutral-800/50 cursor-pointer"
+                    ? "bg-secondary border-border cursor-pointer"
+                    : "bg-background/50 border-border/50 cursor-pointer"
               }`}
             >
               <div className="flex items-center gap-2.5">
@@ -1499,15 +1505,15 @@ export function Popup() {
 
               {isMusicPlaying && (
                 <div className="flex items-end gap-0.5 h-3">
-                  <span className={`w-0.5 h-3 rounded-full animate-pulse ${"bg-white"}`} />
-                  <span className={`w-0.5 h-2 rounded-full animate-pulse delay-75 ${"bg-white"}`} />
-                  <span className={`w-0.5 h-3.5 rounded-full animate-pulse delay-150 ${"bg-white"}`} />
+                  <span className={`w-0.5 h-3 rounded-full animate-pulse ${"bg-foreground"}`} />
+                  <span className={`w-0.5 h-2 rounded-full animate-pulse delay-75 ${"bg-foreground"}`} />
+                  <span className={`w-0.5 h-3.5 rounded-full animate-pulse delay-150 ${"bg-foreground"}`} />
                 </div>
               )}
             </div>
 
             {/* Music Volume Slider */}
-            <div className={`mt-2 pt-2 border-t border-neutral-800 space-y-1 ${!soundEnabled || !musicEnabled ? "opacity-40" : ""}`}>
+            <div className={`mt-2 pt-2 border-t border-border space-y-1 ${!soundEnabled || !musicEnabled ? "opacity-40" : ""}`}>
               <div className="flex items-center justify-between text-[10px] opacity-60">
                 <span>Music Volume</span>
                 <span className="font-mono">{Math.round(musicVolume * 100)}%</span>
@@ -1522,7 +1528,7 @@ export function Popup() {
                   value={musicVolume}
                   onChange={(e) => handleMusicVolumeChange(parseFloat(e.target.value))}
                   disabled={!soundEnabled}
-                  className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer disabled:cursor-not-allowed"
+                  className="w-full h-1 rounded bg-secondary accent-current cursor-pointer disabled:cursor-not-allowed"
                 />
               </div>
             </div>
@@ -1538,14 +1544,14 @@ export function Popup() {
           <div className="flex flex-col items-center justify-between min-h-full overflow-y-auto stable-scrollbar pb-1 pt-1 gap-2">
             {/* 3-Way Mode Switcher (Pomodoro, Break, Flow - No Minutes in Toggle Labels!) */}
             <div className={`flex items-center p-1 rounded-lg border w-full max-w-[320px] ${
-              "bg-neutral-900 border-neutral-800"
+              "bg-card border-border"
             }`}>
               <button
                 onClick={() => switchTimerModeAndState("POMODORO", "WORK")}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                   state.timerState === "WORK"
-                    ? "bg-white text-black shadow-md"
-                    : "text-neutral-400 hover:text-white"
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <TimerIcon className="w-3.5 h-3.5" />
@@ -1555,8 +1561,8 @@ export function Popup() {
                 onClick={() => switchTimerModeAndState("POMODORO", "BREAK")}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                   state.timerState === "BREAK"
-                    ? "bg-white text-black shadow-md"
-                    : "text-neutral-400 hover:text-white"
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Coffee className="w-3.5 h-3.5" />
@@ -1566,8 +1572,8 @@ export function Popup() {
                 onClick={() => switchTimerModeAndState("FLOW", "FLOW")}
                 className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
                   state.timerState === "FLOW"
-                    ? "bg-white text-black shadow-md"
-                    : "text-neutral-400 hover:text-white"
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "text-muted-foreground hover:text-foreground"
                 }`}
               >
                 <Clock className="w-3.5 h-3.5" />
@@ -1577,7 +1583,7 @@ export function Popup() {
 
             {/* Pomodoro Cycle & Progress Indicator */}
             {state.timerMode === "POMODORO" && state.previousMode !== "FLOW" && (
-              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-mono text-neutral-300 shadow-sm mt-1 mb-0.5 group">
+              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-card border border-border text-xs font-mono text-foreground shadow-sm mt-1 mb-0.5 group">
                 <div className="flex items-center gap-1.5">
                   {[0, 1, 2, 3].map((index) => {
                     const currentCycleStep = (state.pomodoroCount || 0) % 4;
@@ -1588,17 +1594,17 @@ export function Popup() {
                         key={index}
                         className={`w-2 h-2 rounded-full transition-all ${
                           isCompleted
-                            ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.7)]"
+                            ? "bg-foreground shadow-[0_0_6px_rgba(255,255,255,0.7)]"
                             : isCurrent
-                            ? "bg-white/80 ring-2 ring-white/30 animate-pulse"
-                            : "bg-neutral-700"
+                            ? "bg-foreground/80 ring-2 ring-foreground/30 animate-pulse"
+                            : "bg-secondary"
                         }`}
                         title={`Pomodoro ${index + 1} of 4`}
                       />
                     );
                   })}
                 </div>
-                <span className="text-[10px] font-bold text-neutral-300">
+                <span className="text-[10px] font-bold text-foreground">
                   {state.timerState === "BREAK"
                     ? ((state.pomodoroCount || 0) % 4 === 0 && (state.pomodoroCount || 0) > 0
                         ? `Long Break (${state.pomodoroSettings.longBreak || 15}m)`
@@ -1609,7 +1615,7 @@ export function Popup() {
                   <button
                     type="button"
                     onClick={() => updateState({ pomodoroCount: 0 })}
-                    className="p-0.5 rounded text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer"
+                    className="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
                     title="Reset pomodoro count to 1 of 4"
                   >
                     <RotateCcw className="w-2.5 h-2.5" />
@@ -1630,7 +1636,7 @@ export function Popup() {
               {/* Task Selector Dropdown Menu (Pops UPWARDS so Timer Controls below remain visible!) */}
               {showTaskDropdown && (
                 <div className={`absolute bottom-full left-0 right-0 mb-1.5 z-50 p-2 rounded-lg border shadow-2xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-1 ${
-                  "bg-neutral-900 border-neutral-800 text-white"
+                  "bg-card border-border text-foreground"
                 }`}>
                   <div className="flex items-center justify-between px-2 py-1">
                     <span className="text-[10px] font-mono font-bold uppercase opacity-60">FOCUS TOPIC</span>
@@ -1652,15 +1658,15 @@ export function Popup() {
                     }}
                     className={`w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all ${
                       !selectedTask
-                        ? "bg-white/10 text-white font-bold"
-                        : "hover:bg-neutral-800/80 text-neutral-300"
+                        ? "bg-primary/10 text-foreground font-bold"
+                        : "hover:bg-secondary/80 text-muted-foreground"
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <Edit3 className={`w-3.5 h-3.5 shrink-0 ${"text-white"}`} />
+                      <Edit3 className={`w-3.5 h-3.5 shrink-0 ${"text-foreground"}`} />
                       <div className="flex flex-col">
                         <span className="leading-tight">Custom Focus</span>
-                        <span className={`text-[10px] font-mono ${"text-neutral-400"}`}>
+                        <span className={`text-[10px] font-mono ${"text-muted-foreground"}`}>
                           Type custom goal
                         </span>
                       </div>
@@ -1697,16 +1703,16 @@ export function Popup() {
                             }}
                             className={`w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all ${
                               selectedTask?.id === task.id
-                                ? "bg-white/10 text-white font-bold"
-                                : "hover:bg-neutral-800/80 text-neutral-300"
+                                ? "bg-primary/10 text-foreground font-bold"
+                                : "hover:bg-secondary/80 text-muted-foreground"
                             }`}
                           >
                             <div className="flex items-start gap-2 min-w-0 flex-1 pr-2">
-                              <ListTodo className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${"text-white"}`} />
+                              <ListTodo className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${"text-foreground"}`} />
                               <div className="flex flex-col min-w-0 flex-1 gap-0.5">
                                 <span className="truncate">{task.text}</span>
                                 {hasMetadata && (
-                                  <div className="flex items-center gap-2.5 text-[10px] font-mono text-neutral-400 flex-wrap">
+                                  <div className="flex items-center gap-2.5 text-[10px] font-mono text-muted-foreground flex-wrap">
                                     {hasDueDate && (
                                       <div className="flex items-center gap-1 text-orange-500 font-medium">
                                         <Calendar className="w-3 h-3" />
@@ -1714,13 +1720,13 @@ export function Popup() {
                                       </div>
                                     )}
                                     {hasPomodoros && (
-                                      <div className="flex items-center gap-1 text-neutral-400">
+                                      <div className="flex items-center gap-1 text-muted-foreground">
                                         <Clock className="w-3 h-3" />
                                         <span>{task.completedPomodoros || 0}/{task.estimatedPomodoros || 1}</span>
                                       </div>
                                     )}
                                     {hasSubtasks && (
-                                      <div className="flex items-center gap-1 text-neutral-400">
+                                      <div className="flex items-center gap-1 text-muted-foreground">
                                         <ListChecks className="w-3 h-3" />
                                         <span>{task.subtasks!.filter(s => s.completed).length}/{task.subtasks!.length}</span>
                                       </div>
@@ -1746,36 +1752,36 @@ export function Popup() {
                   type="button"
                   onClick={() => setShowTaskDropdown(!showTaskDropdown)}
                   className={`w-full px-4 py-3 rounded-lg border transition-all flex flex-col items-center justify-center gap-1 shadow-sm ${
-                    "bg-neutral-900/90 border-neutral-800 hover:border-neutral-700 text-white"
+                    "bg-card border-border hover:border-border text-foreground"
                   }`}
                   title="Click to select another task or custom focus"
                 >
                   <div className="flex items-center justify-center gap-2 max-w-full">
-                    <ListTodo className={`w-4 h-4 shrink-0 ${"text-white"}`} />
+                    <ListTodo className={`w-4 h-4 shrink-0 ${"text-foreground"}`} />
                     <span className="font-semibold text-sm tracking-tight truncate max-w-[200px]">
                       {selectedTask.text}
                     </span>
                   </div>
-                  <ChevronDown className={`w-3.5 h-3.5 opacity-60 transition-transform duration-200 ${"text-white"}`} />
+                  <ChevronDown className={`w-3.5 h-3.5 opacity-60 transition-transform duration-200 ${"text-foreground"}`} />
                 </button>
               ) : (
                 /* Custom Focus Mode (Editable Input Mode) */
-                <div className="w-full flex items-center rounded-lg border bg-neutral-900 border-neutral-800 focus-within:border-white px-2 py-1 transition-colors">
+                <div className="w-full flex items-center rounded-lg border bg-card border-border focus-within:border-foreground px-2 py-1 transition-colors">
                   <input
                     type="text"
                     value={state.sessionName}
                     onChange={(e) => updateState({ sessionName: e.target.value })}
                     onKeyDown={handleGoalKeyDown}
                     placeholder="Session Goal (Press Enter)..."
-                    className="flex-1 min-w-0 bg-transparent text-xs text-center font-medium text-white placeholder-neutral-500 focus:outline-none pl-6 pr-1 py-1"
+                    className="flex-1 min-w-0 bg-transparent text-xs text-center font-medium text-foreground placeholder-muted-foreground focus:outline-none pl-6 pr-1 py-1"
                   />
                   <button
                     type="button"
                     onClick={() => setShowTaskDropdown(!showTaskDropdown)}
-                    className="shrink-0 p-1 rounded-lg hover:bg-neutral-800 text-neutral-400 hover:text-white transition-colors"
+                    className="shrink-0 p-1 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
                     title="Select from your tasks"
                   >
-                    <ListTodo className="w-4 h-4 text-white" />
+                    <ListTodo className="w-4 h-4 text-foreground" />
                   </button>
                 </div>
               )}
@@ -1784,7 +1790,7 @@ export function Popup() {
             {/* Subtasks Section for Selected Task */}
             {selectedTask && (selectedTask.subtasks || []).length > 0 && (
               <div className={`w-full max-w-[280px] p-2.5 mb-2 rounded-lg border flex flex-col gap-1.5 ${
-                "bg-neutral-900/90 border-neutral-800"
+                "bg-card/90 border-border"
               }`}>
                 <div className="flex items-center justify-between text-[11px] font-mono font-bold opacity-70">
                   <span>SUBTASKS</span>
@@ -1796,7 +1802,7 @@ export function Popup() {
                   {selectedTask.subtasks!.map(s => (
                     <div key={s.id} className="flex items-center gap-1.5">
                       <button onClick={() => toggleSubtask(selectedTask.id, s.id)}>
-                        {s.completed ? <CheckSquare2 className="w-3 h-3 text-white" /> : <Square className="w-3 h-3 opacity-60" />}
+                        {s.completed ? <CheckSquare2 className="w-3 h-3 text-foreground" /> : <Square className="w-3 h-3 opacity-60" />}
                       </button>
                       <span className={s.completed ? "line-through opacity-50" : ""}>{s.text}</span>
                     </div>
@@ -1808,13 +1814,13 @@ export function Popup() {
             {/* Task Notes Section for Selected Task */}
             {selectedTask && selectedTask.notes && selectedTask.notes.trim().length > 0 && (
               <div className={`w-full max-w-[280px] p-2.5 mb-2 rounded-lg border flex flex-col gap-1 ${
-                "bg-neutral-900/90 border-neutral-800"
+                "bg-card/90 border-border"
               }`}>
                 <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-70">
-                  <FileText className="w-3.5 h-3.5 text-neutral-400" />
+                  <FileText className="w-3.5 h-3.5 text-muted-foreground" />
                   <span>TASK NOTES</span>
                 </div>
-                <p className="text-xs text-neutral-200 whitespace-pre-wrap leading-relaxed">
+                <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed">
                   {selectedTask.notes}
                 </p>
               </div>
@@ -1826,7 +1832,7 @@ export function Popup() {
               <button
                 onClick={resetTimer}
                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
-                  "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
+                  "bg-card border-border hover:bg-secondary text-foreground"
                 }`}
                 title="Reset Timer"
               >
@@ -1842,8 +1848,8 @@ export function Popup() {
                 }}
                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
                   !state.isActive
-                    ? "bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed opacity-50"
-                    : "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
+                    ? "bg-card border-border text-muted-foreground cursor-not-allowed opacity-50"
+                    : "bg-card border-border hover:bg-secondary text-foreground"
                 }`}
                 title={state.isActive ? "Log Distraction" : "Start timer to log distraction"}
               >
@@ -1854,7 +1860,7 @@ export function Popup() {
               <button
                 onClick={toggleTimer}
                 className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold transition-all shadow-lg active:scale-95 ${
-                  "bg-white text-black hover:bg-neutral-200"
+                  "bg-primary text-primary-foreground hover:bg-accent"
                 }`}
               >
                 {state.isActive ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
@@ -1869,8 +1875,8 @@ export function Popup() {
                 }}
                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
                   !state.isActive
-                    ? "bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed opacity-50"
-                    : "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
+                    ? "bg-card border-border text-muted-foreground cursor-not-allowed opacity-50"
+                    : "bg-card border-border hover:bg-secondary text-foreground"
                 }`}
                 title={state.isActive ? "Complete Session" : "Start timer to complete session"}
               >
@@ -1882,8 +1888,8 @@ export function Popup() {
                 onClick={() => updateState({ deepFocusMode: !state.deepFocusMode })}
                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
                   state.deepFocusMode
-                    ? "bg-white text-black border-white"
-                    : "bg-neutral-900 border-neutral-800 hover:bg-neutral-800 text-neutral-300"
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-card border-border hover:bg-secondary text-foreground"
                 }`}
                 title="Deep Focus Mode"
               >
@@ -1905,8 +1911,8 @@ export function Popup() {
                     onClick={() => setActiveGroupId(group.id)}
                     className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold transition-all whitespace-nowrap ${
                       activeGroupId === group.id
-                        ? "bg-white text-black"
-                        : "bg-neutral-900 text-neutral-400 border border-neutral-800"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-card text-muted-foreground border border-border"
                     }`}
                   >
                     {group.name}
@@ -1917,7 +1923,7 @@ export function Popup() {
               <button
                 onClick={() => setShowAddGroupInput(!showAddGroupInput)}
                 className={`p-1 rounded-lg border text-xs font-mono font-bold flex-shrink-0 ${
-                  "bg-neutral-900 border-neutral-800 text-white"
+                  "bg-card border-border text-foreground"
                 }`}
                 title="Add Custom Group"
               >
@@ -1933,11 +1939,11 @@ export function Popup() {
                   onChange={(e) => setNewGroupName(e.target.value)}
                   placeholder="New group name..."
                   className={`flex-1 px-3 py-1.5 rounded-xl text-xs font-mono border focus:outline-none ${
-                    "bg-neutral-900 border-neutral-800 text-white"
+                    "bg-card border-border text-foreground"
                   }`}
                 />
                 <button type="submit" className={`px-3 py-1.5 rounded-xl font-bold text-xs border ${
-                  "bg-white text-black border-white"
+                  "bg-primary text-primary-foreground border-primary"
                 }`}>
                   Create
                 </button>
@@ -1952,13 +1958,13 @@ export function Popup() {
                 onChange={(e) => setNewTaskText(e.target.value)}
                 placeholder="Add new task..."
                 className={`flex-1 px-3 py-2 rounded-xl text-xs border focus:outline-none ${
-                  "bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-white"
+                  "bg-card border-border text-foreground placeholder-muted-foreground focus:border-foreground"
                 }`}
               />
               <button
                 type="submit"
                 className={`px-4 py-2 rounded-xl font-bold transition-all text-xs ${
-                  "bg-white text-black hover:bg-neutral-200"
+                  "bg-primary text-primary-foreground hover:bg-accent"
                 }`}
               >
                 Add
@@ -1967,7 +1973,7 @@ export function Popup() {
 
             <div className="flex-1 overflow-y-auto stable-scrollbar space-y-2 pr-1">
               {state.todos.filter(t => (t.groupId || "current") === activeGroupId).length === 0 ? (
-                <div className={`text-center py-12 text-xs font-mono ${"text-neutral-600"}`}>
+                <div className={`text-center py-12 text-xs font-mono ${"text-muted-foreground"}`}>
                   NO TASKS IN THIS GROUP. ADD ONE ABOVE.
                 </div>
               ) : (
@@ -1986,18 +1992,18 @@ export function Popup() {
                         onClick={() => updateState({ selectedTodoId: todo.id, sessionName: todo.text })}
                         className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 transition-all cursor-pointer ${
                           isSelected
-                            ? "bg-neutral-800 border-neutral-700 text-white font-medium"
+                            ? "bg-secondary border-border text-foreground font-medium"
                             : todo.completed
-                            ? "bg-neutral-950/40 border-neutral-900 opacity-50 text-neutral-500"
-                            : "bg-neutral-900/60 border-neutral-800 hover:border-neutral-700 text-neutral-200"
+                            ? "bg-background/40 border-border opacity-50 text-muted-foreground"
+                            : "bg-card/60 border-border hover:border-border text-foreground"
                         }`}
                       >
                         <div className="flex items-start gap-2.5 flex-1 min-w-0">
                           <button onClick={(e) => { e.stopPropagation(); toggleTodo(todo.id); }} className="flex-shrink-0 mt-0.5">
                             {todo.completed ? (
-                              <CheckSquare2 className="w-4 h-4 text-white shrink-0" />
+                              <CheckSquare2 className="w-4 h-4 text-foreground shrink-0" />
                             ) : (
-                              <Square className="w-4 h-4 text-neutral-500 hover:text-neutral-400 shrink-0" />
+                              <Square className="w-4 h-4 text-muted-foreground hover:text-muted-foreground shrink-0" />
                             )}
                           </button>
                           
@@ -2005,28 +2011,28 @@ export function Popup() {
                             <span
                               onClick={() => setSelectedTaskDetail(todo)}
                               className={`text-xs font-bold truncate cursor-pointer hover:underline ${
-                                todo.completed ? "line-through opacity-70" : "text-white"
+                                todo.completed ? "line-through opacity-70" : "text-foreground"
                               }`}
                             >
                               {todo.text}
                             </span>
 
                             {hasMetadata && (
-                              <div className="flex items-center gap-3 text-[10px] font-mono text-neutral-400 flex-wrap">
+                              <div className="flex items-center gap-3 text-[10px] font-mono text-muted-foreground flex-wrap">
                                 {hasDueDate && (
                                   <div className="flex items-center gap-1 text-orange-500 font-medium">
                                     <Calendar className="w-3 h-3" />
                                     <span>{formatTaskDueDate(todo.dueDate, todo.dueTime)}</span>
                                   </div>
                                 )}
-                                {hasPomodoros && (
-                                  <div className="flex items-center gap-1 text-neutral-400">
-                                    <Clock className="w-3 h-3" />
-                                    <span>{todo.completedPomodoros || 0}/{todo.estimatedPomodoros || 1}</span>
-                                  </div>
-                                )}
-                                {hasSubtasks && (
-                                  <div className="flex items-center gap-1 text-neutral-400">
+                                    {hasPomodoros && (
+                                      <div className="flex items-center gap-1 text-muted-foreground">
+                                        <Clock className="w-3 h-3" />
+                                        <span>{todo.completedPomodoros || 0}/{todo.estimatedPomodoros || 1}</span>
+                                      </div>
+                                    )}
+                                    {hasSubtasks && (
+                                      <div className="flex items-center gap-1 text-muted-foreground">
                                     <ListChecks className="w-3 h-3" />
                                     <span>{todo.subtasks!.filter(s => s.completed).length}/{todo.subtasks!.length}</span>
                                   </div>
@@ -2042,13 +2048,13 @@ export function Popup() {
                               e.stopPropagation();
                               focusOnTask(todo);
                             }}
-                            className="p-1 text-neutral-400 hover:text-white transition-colors rounded-md hover:bg-neutral-800"
+                            className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-secondary"
                             title="Focus on this task"
                           >
                             <Target className="w-3.5 h-3.5" />
                           </button>
 
-                          <button onClick={() => setSelectedTaskDetail(todo)} className={`p-1 ${"text-neutral-500 hover:text-white"}`}>
+                          <button onClick={() => setSelectedTaskDetail(todo)} className={`p-1 ${"text-muted-foreground hover:text-foreground"}`}>
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
                         </div>
@@ -2065,8 +2071,8 @@ export function Popup() {
           <div className="flex flex-col gap-3 h-full overflow-y-auto stable-scrollbar">
             <div className={`p-3 rounded-xl border flex items-center justify-between ${
               state.shield.enabled
-                ? "bg-neutral-900 border-neutral-800 text-white"
-                : "bg-neutral-950 border-neutral-800 text-neutral-500"
+                ? "bg-card border-border text-foreground"
+                : "bg-background border-border text-muted-foreground"
             }`}>
               <div className="flex items-center gap-2.5">
                 {state.shield.enabled ? <ShieldCheck className="w-5 h-5" /> : <ShieldAlert className="w-5 h-5" />}
@@ -2086,8 +2092,8 @@ export function Popup() {
                 onClick={() => updateState({ shield: { ...state.shield, enabled: !state.shield.enabled } })}
                 className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
                   state.shield.enabled
-                    ? "bg-white text-black border-white"
-                    : "bg-neutral-800 text-neutral-300 border-neutral-700"
+                    ? "bg-primary text-primary-foreground border-primary"
+                    : "bg-secondary text-secondary-foreground border-border"
                 }`}
               >
                 {state.shield.enabled ? "ENABLED" : "ENABLE"}
@@ -2101,13 +2107,13 @@ export function Popup() {
                 onChange={(e) => setNewSiteUrl(e.target.value)}
                 placeholder={shieldListTab === "blocked" ? "Block domain (e.g. twitter.com)..." : "Allow domain (e.g. music.youtube.com)..."}
                 className={`flex-1 px-3 py-2 rounded-xl text-xs font-mono border focus:outline-none ${
-                  "bg-neutral-900 border-neutral-800 text-white placeholder-neutral-500 focus:border-white"
+                  "bg-card border-border text-foreground placeholder-muted-foreground focus:border-foreground"
                 }`}
               />
               <button
                 type="submit"
                 className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
-                  "bg-neutral-800 border-neutral-700 text-white hover:bg-neutral-700"
+                  "bg-secondary border-border text-foreground hover:bg-accent"
                 }`}
               >
                 {shieldListTab === "blocked" ? "Block" : "Allow"}
@@ -2115,13 +2121,13 @@ export function Popup() {
             </form>
 
             <div className="flex-1 flex flex-col overflow-hidden">
-              <div className="flex gap-1 p-1 rounded-xl bg-neutral-900 border border-neutral-800 mb-2">
+              <div className="flex gap-1 p-1 rounded-xl bg-card border border-border mb-2">
                 <button
                   onClick={() => setShieldListTab("blocked")}
                   className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono uppercase transition-all ${
                     shieldListTab === "blocked"
-                      ? "bg-white text-black"
-                      : "text-neutral-500 hover:text-neutral-300"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   Blocked ({state.shield.blockedSites.length})
@@ -2130,8 +2136,8 @@ export function Popup() {
                   onClick={() => setShieldListTab("unblocked")}
                   className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono uppercase transition-all ${
                     shieldListTab === "unblocked"
-                      ? "bg-white text-black"
-                      : "text-neutral-500 hover:text-neutral-300"
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   Unblocked ({state.shield.allowedSites.length})
@@ -2144,11 +2150,11 @@ export function Popup() {
                     <div
                       key={site}
                       className={`px-3 py-2 rounded-xl border flex items-center justify-between text-xs font-mono ${
-                        "bg-neutral-900/60 border-neutral-800 text-neutral-300"
+                        "bg-card/60 border-border text-foreground"
                       }`}
                     >
                       <span className="text-[11px]">{site}</span>
-                      <button onClick={() => removeBlockedSite(site)} className={`p-1 ${"text-neutral-500 hover:text-white"}`}>
+                      <button onClick={() => removeBlockedSite(site)} className={`p-1 ${"text-muted-foreground hover:text-foreground"}`}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -2159,7 +2165,7 @@ export function Popup() {
               {shieldListTab === "unblocked" && (
                 <div className="flex-1 overflow-y-auto stable-scrollbar space-y-1.5 pr-1">
                   {state.shield.allowedSites.length === 0 && (
-                    <p className="text-[10px] text-neutral-600 mb-1">
+                    <p className="text-[10px] text-muted-foreground mb-1">
                       No unblocked domains yet.
                     </p>
                   )}
@@ -2167,11 +2173,11 @@ export function Popup() {
                     <div
                       key={site}
                       className={`px-3 py-2 rounded-xl border flex items-center justify-between text-xs font-mono ${
-                        "bg-neutral-900/60 border-neutral-800 text-neutral-300"
+                        "bg-card/60 border-border text-foreground"
                       }`}
                     >
                       <span className="text-[11px]">{site}</span>
-                      <button onClick={() => removeAllowedSite(site)} className={`p-1 ${"text-neutral-500 hover:text-white"}`}>
+                      <button onClick={() => removeAllowedSite(site)} className={`p-1 ${"text-muted-foreground hover:text-foreground"}`}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -2206,12 +2212,12 @@ export function Popup() {
 
               return (
                 <div className={`p-3 rounded-xl border flex flex-col gap-2.5 ${
-                  "bg-neutral-900 border-neutral-800"
+                  "bg-card border-border"
                 }`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <div className={`p-1.5 rounded-lg border flex items-center justify-center ${
-                        "bg-neutral-800 border-neutral-700 text-white"
+                        "bg-secondary border-border text-foreground"
                       }`}>
                         <Clock className="w-3.5 h-3.5" />
                       </div>
@@ -2232,10 +2238,10 @@ export function Popup() {
             {/* Top 3 Metric Cards */}
             <div className="grid grid-cols-3 gap-2">
               <div className={`p-3 rounded-xl border flex flex-col items-center text-center ${
-                "bg-neutral-900 border-neutral-800"
+                "bg-card border-border"
               }`}>
                 <div className={`w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 ${
-                  "bg-neutral-800 border-neutral-700 text-white"
+                  "bg-secondary border-border text-foreground"
                 }`}>
                   <Activity className="w-4 h-4" />
                 </div>
@@ -2244,9 +2250,9 @@ export function Popup() {
               </div>
 
               <div className={`p-3 rounded-xl border flex flex-col items-center text-center ${
-                "bg-neutral-900 border-neutral-800"
+                "bg-card border-border"
               }`}>
-                <div className="w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 bg-neutral-800 border-neutral-700 text-white">
+                <div className="w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 bg-secondary border-border text-foreground">
                   <CheckCircle className="w-4 h-4" />
                 </div>
                 <span className="text-lg font-extrabold font-mono">{finishedTasksTodayCount}</span>
@@ -2254,9 +2260,9 @@ export function Popup() {
               </div>
 
               <div className={`p-3 rounded-xl border flex flex-col items-center text-center ${
-                "bg-neutral-900 border-neutral-800"
+                "bg-card border-border"
               }`}>
-                <div className="w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 bg-neutral-800 border-neutral-700 text-white">
+                <div className="w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 bg-secondary border-border text-foreground">
                   <ListTodo className="w-4 h-4" />
                 </div>
                 <span className="text-lg font-extrabold font-mono">{pendingTasksCount}</span>
@@ -2267,36 +2273,36 @@ export function Popup() {
             {/* Longest Streak & Completion Rate */}
             <div className="grid grid-cols-2 gap-2">
               <div className={`p-3 rounded-xl border flex items-start gap-3 ${
-                "bg-neutral-900 border-neutral-800"
+                "bg-card border-border"
               }`}>
-                <div className="w-8 h-8 rounded-lg bg-neutral-800 border border-neutral-700 text-white flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Flame className="w-4 h-4 text-white" />
+                <div className="w-8 h-8 rounded-lg bg-secondary border border-border text-foreground flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Flame className="w-4 h-4 text-foreground" />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-xs font-bold font-sans mb-1">Longest Streak</span>
                   <div className="text-[11px] font-mono">
-                    <span className={"text-neutral-400"}>Current</span>
+                    <span className={"text-muted-foreground"}>Current</span>
                     <span className="font-bold ml-2">{dynamicStreaks.current} Days</span>
                   </div>
                   <div className="text-[11px] font-mono">
-                    <span className={"text-neutral-400"}>Best</span>
+                    <span className={"text-muted-foreground"}>Best</span>
                     <span className="font-bold ml-2">{dynamicStreaks.best} Days</span>
                   </div>
                 </div>
               </div>
 
               <div className={`p-3 rounded-xl border flex items-start gap-3 ${
-                "bg-neutral-900 border-neutral-800"
+                "bg-card border-border"
               }`}>
-                <div className="w-8 h-8 rounded-lg bg-neutral-800 border border-neutral-700 text-white flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Target className="w-4 h-4 text-white" />
+                <div className="w-8 h-8 rounded-lg bg-secondary border border-border text-foreground flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <Target className="w-4 h-4 text-foreground" />
                 </div>
                 <div className="flex flex-col">
                   <span className="text-xs font-bold font-sans mb-1">Completion Rate</span>
                   <span className="text-lg font-extrabold font-mono">{taskDoneRatePercent}%</span>
                   <div className="flex items-center gap-1 text-[10px] font-mono">
-                    <TaskDone className="w-3 h-3 text-neutral-400" />
-                    <span className={"text-neutral-400"}>Tasks Finished</span>
+                    <TaskDone className="w-3 h-3 text-muted-foreground" />
+                    <span className={"text-muted-foreground"}>Tasks Finished</span>
                   </div>
                 </div>
               </div>
@@ -2304,11 +2310,11 @@ export function Popup() {
 
             {/* Weekly Focus Trend Chart */}
             <div className={`p-3 rounded-xl border ${
-              "bg-neutral-900 border-neutral-800"
+              "bg-card border-border"
             }`}>
               <div className="flex items-center gap-2 mb-3">
-                <div className="w-7 h-7 rounded-lg bg-neutral-800 border border-neutral-700 text-white flex items-center justify-center">
-                  <TrendingUp className="w-3.5 h-3.5 text-white" />
+                <div className="w-7 h-7 rounded-lg bg-secondary border border-border text-foreground flex items-center justify-center">
+                  <TrendingUp className="w-3.5 h-3.5 text-foreground" />
                 </div>
                 <span className="text-[10px] font-mono uppercase tracking-wider font-bold">Focus Trend</span>
               </div>
@@ -2322,7 +2328,7 @@ export function Popup() {
                       className="flex-1 flex flex-col items-center gap-1 h-full justify-end group relative cursor-pointer"
                     >
                       <div className={`absolute -top-7 px-2 py-1 rounded text-[9px] font-mono font-bold border pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap shadow-lg ${
-                        "bg-white text-black border-white"
+                        "bg-primary text-primary-foreground border-primary"
                       }`}>
                         {day}: {minsLogged} mins
                       </div>
@@ -2331,8 +2337,8 @@ export function Popup() {
                       <div
                         className={`w-full rounded-t transition-all duration-300 ${
                           minsLogged > 0
-                            ? "bg-white group-hover:bg-neutral-300"
-                            : "bg-neutral-800"
+                            ? "bg-foreground group-hover:bg-foreground/70"
+                            : "bg-secondary"
                         }`}
                         style={{ height: `${heightPercent}%` }}
                       />
@@ -2345,11 +2351,11 @@ export function Popup() {
 
             {/* Distraction Analysis Section */}
             <div className={`p-3 rounded-xl border ${
-              "bg-neutral-900 border-neutral-800"
+              "bg-card border-border"
             }`}>
               <div className="flex items-center gap-2 mb-2">
-                <div className="w-7 h-7 rounded-lg bg-neutral-800 border border-neutral-700 text-white flex items-center justify-center">
-                  <BarChart3 className="w-3.5 h-3.5 text-white" />
+                <div className="w-7 h-7 rounded-lg bg-secondary border border-border text-foreground flex items-center justify-center">
+                  <BarChart3 className="w-3.5 h-3.5 text-foreground" />
                 </div>
                 <span className="text-[10px] font-mono uppercase tracking-wider font-bold">Distraction Analysis</span>
               </div>
@@ -2362,8 +2368,8 @@ export function Popup() {
                     const mostCommon = Object.entries(distractionCounts).sort((a, b) => b[1] - a[1])[0];
                     const mostCommonPercent = mostCommon ? Math.round((mostCommon[1] / totalDistractions) * 100) : 0;
                     return (
-                      <div className={`text-[11px] font-mono ${"text-neutral-400"}`}>
-                        Most common: <span className="font-bold text-white">{mostCommon?.[0]}</span> ({mostCommonPercent}%)
+                      <div className={`text-[11px] font-mono ${"text-muted-foreground"}`}>
+                        Most common: <span className="font-bold text-foreground">{mostCommon?.[0]}</span> ({mostCommonPercent}%)
                       </div>
                     );
                   })()}
@@ -2379,7 +2385,7 @@ export function Popup() {
                             <span className="opacity-70">{count} ({percent}%)</span>
                           </div>
                           <div className={`w-full h-1.5 rounded-full overflow-hidden ${
-                            "bg-neutral-800"
+                            "bg-secondary"
                           }`}>
                             <div
                               className="h-full rounded-full bg-rose-500 transition-all duration-500"
@@ -2400,14 +2406,14 @@ export function Popup() {
           <div className="flex flex-col gap-3 h-full overflow-y-auto stable-scrollbar">
             {/* Timer Settings */}
             <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
-              "bg-black/40 border-neutral-800"
+              "bg-background/40 border-border"
             }`}>
-              <span className="text-xs font-bold text-white uppercase tracking-wider">Timer Settings</span>
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider">Timer Settings</span>
               
               <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
-                "bg-neutral-900/60 border-neutral-800"
+                "bg-card/60 border-border"
               }`}>
-                <span className="text-xs font-bold text-white">Work Duration</span>
+                <span className="text-xs font-bold text-foreground">Work Duration</span>
                 <div className="flex items-center gap-1.5">
                   <input
                     type="number"
@@ -2416,17 +2422,17 @@ export function Popup() {
                     value={state.pomodoroSettings.work}
                     onChange={(e) => updateState({ pomodoroSettings: { ...state.pomodoroSettings, work: parseInt(e.target.value) || 25 } })}
                     className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none mono-input ${
-                      "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]"
+                      "bg-secondary border-border text-foreground [color-scheme:dark]"
                     }`}
                   />
-                  <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>min</span>
+                  <span className={`text-[10px] font-mono ${"text-muted-foreground"}`}>min</span>
                 </div>
               </div>
 
               <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
-                "bg-neutral-900/60 border-neutral-800"
+                "bg-card/60 border-border"
               }`}>
-                <span className="text-xs font-bold text-white">Short Break Duration</span>
+                <span className="text-xs font-bold text-foreground">Short Break Duration</span>
                 <div className="flex items-center gap-1.5">
                   <input
                     type="number"
@@ -2435,17 +2441,17 @@ export function Popup() {
                     value={state.pomodoroSettings.break}
                     onChange={(e) => updateState({ pomodoroSettings: { ...state.pomodoroSettings, break: parseInt(e.target.value) || 5 } })}
                     className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none mono-input ${
-                      "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]"
+                      "bg-secondary border-border text-foreground [color-scheme:dark]"
                     }`}
                   />
-                  <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>min</span>
+                  <span className={`text-[10px] font-mono ${"text-muted-foreground"}`}>min</span>
                 </div>
               </div>
 
               <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
-                "bg-neutral-900/60 border-neutral-800"
+                "bg-card/60 border-border"
               }`}>
-                <span className="text-xs font-bold text-white">Long Break Duration</span>
+                <span className="text-xs font-bold text-foreground">Long Break Duration</span>
                 <div className="flex items-center gap-1.5">
                   <input
                     type="number"
@@ -2454,48 +2460,48 @@ export function Popup() {
                     value={state.pomodoroSettings.longBreak || 15}
                     onChange={(e) => updateState({ pomodoroSettings: { ...state.pomodoroSettings, longBreak: parseInt(e.target.value) || 15 } })}
                     className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none mono-input ${
-                      "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]"
+                      "bg-secondary border-border text-foreground [color-scheme:dark]"
                     }`}
                   />
-                  <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>min</span>
+                  <span className={`text-[10px] font-mono ${"text-muted-foreground"}`}>min</span>
                 </div>
               </div>
 
               <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
-                "bg-neutral-900/60 border-neutral-800"
+                "bg-card/60 border-border"
               }`}>
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-white">Auto-start Break</span>
+                  <span className="text-xs font-bold text-foreground">Auto-start Break</span>
                 </div>
                 <div
                   onClick={() => updateState({ pomodoroSettings: { ...state.pomodoroSettings, autoStartBreak: !state.pomodoroSettings.autoStartBreak } })}
                   className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
-                    state.pomodoroSettings.autoStartBreak ? "bg-white" : "bg-neutral-700"
+                    state.pomodoroSettings.autoStartBreak ? "bg-primary" : "bg-secondary"
                   }`}
                 >
                   <div
                     className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                      state.pomodoroSettings.autoStartBreak ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
+                      state.pomodoroSettings.autoStartBreak ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
                     }`}
                   />
                 </div>
               </div>
 
               <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
-                "bg-neutral-900/60 border-neutral-800"
+                "bg-card/60 border-border"
               }`}>
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-white">Auto-start Timer</span>
+                  <span className="text-xs font-bold text-foreground">Auto-start Timer</span>
                 </div>
                 <div
                   onClick={() => updateState({ pomodoroSettings: { ...state.pomodoroSettings, autoStartTimer: !state.pomodoroSettings.autoStartTimer } })}
                   className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
-                    state.pomodoroSettings.autoStartTimer ? "bg-white" : "bg-neutral-700"
+                    state.pomodoroSettings.autoStartTimer ? "bg-primary" : "bg-secondary"
                   }`}
                 >
                   <div
                     className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                      state.pomodoroSettings.autoStartTimer ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
+                      state.pomodoroSettings.autoStartTimer ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
                     }`}
                   />
                 </div>
@@ -2504,23 +2510,23 @@ export function Popup() {
 
             {/* Appearance Section */}
             <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
-              "bg-black/40 border-neutral-800"
+              "bg-card border-border"
             }`}>
-              <span className="text-xs font-bold text-white uppercase tracking-wider">Appearance</span>
-              <div className="grid grid-cols-2 gap-2">
-                {BACKGROUND_THEMES.map((theme) => {
-                  const isActive = state.background === theme.id || (theme.id === "dark" && state.background === "default");
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider">Appearance</span>
+              <div className="flex items-center gap-2">
+                {(["light", "dark"] as ThemeMode[]).map((mode) => {
+                  const isActive = (state.themeMode || "dark") === mode;
                   return (
                     <button
-                      key={theme.id}
-                      onClick={() => updateState({ background: theme.id })}
-                      className={`px-3 py-2.5 rounded-xl text-xs font-bold transition-all border ${
+                      key={mode}
+                      onClick={() => updateState({ themeMode: mode })}
+                      className={`flex-1 px-3 py-2.5 rounded-xl text-xs font-bold transition-all border ${
                         isActive
-                          ? "bg-neutral-800 text-white border-white/20"
-                          : "bg-neutral-900 text-neutral-400 border-neutral-800 hover:bg-neutral-800 hover:text-white"
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-secondary text-secondary-foreground border-border hover:bg-accent"
                       }`}
                     >
-                      {theme.name}
+                      {mode === "light" ? "Light" : "Dark"}
                     </button>
                   );
                 })}
@@ -2529,52 +2535,52 @@ export function Popup() {
 
             {/* Sound Section */}
             <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
-              "bg-black/40 border-neutral-800"
+              "bg-background/40 border-border"
             }`}>
-              <span className="text-xs font-bold text-white uppercase tracking-wider">Sound</span>
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider">Sound</span>
 
               <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
-                "bg-neutral-900/60 border-neutral-800"
+                "bg-card/60 border-border"
               }`}>
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-white">Sound</span>
-                  <span className="text-[10px] text-neutral-500">Enable or disable all sound</span>
+                  <span className="text-xs font-bold text-foreground">Sound</span>
+                  <span className="text-[10px] text-muted-foreground">Enable or disable all sound</span>
                 </div>
                 <div
                   onClick={toggleSoundEnabled}
                   className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
-                    soundEnabled ? "bg-white" : "bg-neutral-700"
+                    soundEnabled ? "bg-primary" : "bg-secondary"
                   }`}
                 >
                   <div
                     className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                      soundEnabled ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
+soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
                     }`}
                   />
                 </div>
               </div>
 
               <div className="flex flex-col gap-2">
-                <span className="px-1 text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Music</span>
+                <span className="px-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Music</span>
 
                 <div className={`flex items-center justify-between rounded-xl px-4 py-3 border transition-all ${
                   soundEnabled
-                    ? "bg-neutral-900/60 border-neutral-800"
-                    : "bg-neutral-900/30 border-neutral-800/50 opacity-50"
+                    ? "bg-card/60 border-border"
+                    : "bg-card/30 border-border/50 opacity-50"
                 }`}>
                   <div className="flex flex-col">
-                    <span className="text-xs font-bold text-white">Music</span>
-                    <span className="text-[10px] text-neutral-500">Enable or disable background music</span>
+                    <span className="text-xs font-bold text-foreground">Music</span>
+                    <span className="text-[10px] text-muted-foreground">Enable or disable background music</span>
                   </div>
                   <div
                     onClick={soundEnabled ? toggleMusicEnabled : undefined}
                     className={`relative w-11 h-6 rounded-full transition-colors flex items-center ${
-                      musicEnabled && soundEnabled ? "bg-white cursor-pointer" : "bg-neutral-700"
+                      musicEnabled && soundEnabled ? "bg-primary cursor-pointer" : "bg-secondary"
                     } ${!soundEnabled ? "cursor-not-allowed" : "cursor-pointer"}`}
                   >
                     <div
                       className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                        musicEnabled && soundEnabled ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
+                        musicEnabled && soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
                       }`}
                     />
                   </div>
@@ -2582,32 +2588,32 @@ export function Popup() {
 
                 {soundEnabled && musicEnabled && (
                   <>
-                    <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-neutral-900/60 border-neutral-800">
+                    <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-card/60 border-border">
                       <div className="flex flex-col">
-                        <span className="text-xs font-bold text-white">Auto-Pause on Audio</span>
-                        <span className="text-[10px] text-neutral-500">Pause music when other tabs play audio</span>
+                        <span className="text-xs font-bold text-foreground">Auto-Pause on Audio</span>
+                        <span className="text-[10px] text-muted-foreground">Pause music when other tabs play audio</span>
                       </div>
                       <div
                         onClick={toggleAutoPauseOnExternalAudio}
                         className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center shrink-0 ${
-                          autoPauseOnExternalAudio ? "bg-white" : "bg-neutral-700"
+                          autoPauseOnExternalAudio ? "bg-primary" : "bg-secondary"
                         }`}
                       >
                         <div
                           className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                            autoPauseOnExternalAudio ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
+                            autoPauseOnExternalAudio ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
                           }`}
                         />
                       </div>
                     </div>
 
                     {autoPauseOnExternalAudio && (
-                      <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-neutral-900/60 border-neutral-800">
+                      <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-card/60 border-border">
                         <div className="flex flex-col w-full gap-2">
                           <div className="flex items-center justify-between">
                             <div className="flex flex-col">
-                              <span className="text-xs font-bold text-white">Resume Fade Speed</span>
-                              <span className="text-[10px] text-neutral-500">Fade transition duration</span>
+                              <span className="text-xs font-bold text-foreground">Resume Fade Speed</span>
+                              <span className="text-[10px] text-muted-foreground">Fade transition duration</span>
                             </div>
                             <span className="font-mono text-xs text-white">
                               {autoPauseFadeDuration === 0 ? "Instant (0s)" : `${autoPauseFadeDuration}s`}
@@ -2620,9 +2626,9 @@ export function Popup() {
                             step="0.5"
                             value={autoPauseFadeDuration}
                             onChange={(e) => handleAutoPauseFadeDurationChange(parseFloat(e.target.value))}
-                            className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer"
+                            className="w-full h-1 rounded bg-secondary accent-current cursor-pointer"
                           />
-                          <div className="flex justify-between text-[9px] text-neutral-500 font-mono">
+                          <div className="flex justify-between text-[9px] text-muted-foreground font-mono">
                             <span>0s (Instant)</span>
                             <span>2.5s</span>
                             <span>5s</span>
@@ -2634,37 +2640,37 @@ export function Popup() {
                 )}
               </div>
 
-              <div className="flex flex-col gap-2 pt-1 border-t border-neutral-800/80">
-                <span className="px-1 text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Sound Effects</span>
+              <div className="flex flex-col gap-2 pt-1 border-t border-border/80">
+                <span className="px-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Sound Effects</span>
 
                 <div className={`flex items-center justify-between rounded-xl px-4 py-3 border transition-all ${
                   soundEnabled
-                    ? "bg-neutral-900/60 border-neutral-800"
-                    : "bg-neutral-900/30 border-neutral-800/50 opacity-50"
+                    ? "bg-card/60 border-border"
+                    : "bg-card/30 border-border/50 opacity-50"
                 }`}>
                   <div className="flex flex-col">
-                    <span className="text-xs font-bold text-white">Sound Effects</span>
-                    <span className="text-[10px] text-neutral-500">Enable or disable timer sound effects</span>
+                    <span className="text-xs font-bold text-foreground">Sound Effects</span>
+                    <span className="text-[10px] text-muted-foreground">Enable or disable timer sound effects</span>
                   </div>
                   <div
                     onClick={soundEnabled ? toggleSoundEffectEnabled : undefined}
                     className={`relative w-11 h-6 rounded-full transition-colors flex items-center ${
-                      soundEffectEnabled && soundEnabled ? "bg-white cursor-pointer" : "bg-neutral-700"
+                      soundEffectEnabled && soundEnabled ? "bg-primary cursor-pointer" : "bg-secondary"
                     } ${!soundEnabled ? "cursor-not-allowed" : "cursor-pointer"}`}
                   >
                     <div
                       className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                        soundEffectEnabled && soundEnabled ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
+                        soundEffectEnabled && soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
                       }`}
                     />
                   </div>
                 </div>
 
                 {soundEnabled && soundEffectEnabled && (
-                  <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-neutral-900/60 border-neutral-800">
+                  <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-card/60 border-border">
                     <div className="flex flex-col w-full gap-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-white">Sound Effects Volume</span>
+                        <span className="text-xs font-bold text-foreground">Sound Effects Volume</span>
                         <span className="font-mono text-xs">{Math.round(soundEffectVolume * 100)}%</span>
                       </div>
                       <input
@@ -2674,7 +2680,7 @@ export function Popup() {
                         step="0.01"
                         value={soundEffectVolume}
                         onChange={(e) => handleSoundEffectVolumeChange(parseFloat(e.target.value))}
-                        className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer"
+                        className="w-full h-1 rounded bg-secondary accent-current cursor-pointer"
                       />
                     </div>
                   </div>
@@ -2685,8 +2691,8 @@ export function Popup() {
                   disabled={!soundEnabled}
                   className={`w-full py-2.5 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-2 ${
                     soundEnabled
-                      ? "border-neutral-700 bg-neutral-800 text-white hover:bg-neutral-700"
-                      : "border-neutral-800/50 bg-neutral-900/30 text-neutral-600 cursor-not-allowed"
+                      ? "border-border bg-secondary text-white hover:bg-secondary"
+                      : "border-border/50 bg-card/30 text-muted-foreground cursor-not-allowed"
                   }`}
                 >
                   <Volume1 className="w-4 h-4" />
@@ -2697,9 +2703,9 @@ export function Popup() {
 
             {/* Data Section */}
             <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
-              "bg-black/40 border-neutral-800"
+              "bg-background/40 border-border"
             }`}>
-              <span className="text-xs font-bold text-white uppercase tracking-wider">Data</span>
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider">Data</span>
               <button
                 onClick={() => {
                   if (window.confirm("Are you sure you want to reset all extension data to defaults? This will clear all tasks, sessions, mood notes, and stats.")) {
@@ -2714,28 +2720,28 @@ export function Popup() {
 
             {/* About Section */}
             <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
-              "bg-black/40 border-neutral-800"
+              "bg-background/40 border-border"
             }`}>
-              <span className="text-xs font-bold text-white uppercase tracking-wider">About</span>
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider">About</span>
               <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between bg-neutral-900/60 border border-neutral-800 rounded-xl px-4 py-3">
+                <div className="flex items-center justify-between bg-card/60 border border-border rounded-xl px-4 py-3">
                   <span className="font-medium text-white">Version</span>
-                  <span className="font-mono text-neutral-400">v0.0.1</span>
+                  <span className="font-mono text-muted-foreground">v0.0.1</span>
                 </div>
 
-                <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-3.5 text-neutral-400 leading-relaxed">
+                <div className="bg-card/60 border border-border rounded-xl p-3.5 text-muted-foreground leading-relaxed">
                   Focus is a minimalist, monochrome productivity extension designed for distraction-free deep work, pomodoro tracking, and site blocking.
                 </div>
 
                 <button
                   onClick={openGithubLink}
-                  className="w-full py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-between border border-neutral-800 bg-neutral-900/60 hover:bg-neutral-800 text-white transition-all cursor-pointer"
+                  className="w-full py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-between border border-border bg-card/60 hover:bg-secondary text-white transition-all cursor-pointer"
                 >
                   <div className="flex items-center gap-2">
                     <Github className="w-4 h-4" />
                     <span>GitHub Repository</span>
                   </div>
-                  <ExternalLink className="w-3.5 h-3.5 text-neutral-400" />
+                  <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
               </div>
             </div>

@@ -297,19 +297,19 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
                 styles.modeBtn,
                 isWorkActive
                   ? { backgroundColor: colors.text }
-                  : { backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.border },
+                  : { backgroundColor: colors.muted, borderWidth: 1, borderColor: colors.border },
               ]}
               onPress={selectPomodoroWork}
               activeOpacity={0.8}
             >
               <Timer
                 size={14}
-                color={isWorkActive ? colors.background : colors.textMuted}
+                color={isWorkActive ? colors.background : colors.mutedText}
               />
               <Text
                 style={[
                   styles.modeBtnText,
-                  { color: isWorkActive ? colors.background : colors.textMuted },
+                  { color: isWorkActive ? colors.background : colors.mutedText },
                 ]}
               >
                 Pomodoro
@@ -321,19 +321,19 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
                 styles.modeBtn,
                 isBreakActive
                   ? { backgroundColor: colors.text }
-                  : { backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.border },
+                  : { backgroundColor: colors.muted, borderWidth: 1, borderColor: colors.border },
               ]}
               onPress={selectPomodoroBreak}
               activeOpacity={0.8}
             >
               <Coffee
                 size={14}
-                color={isBreakActive ? colors.background : colors.textMuted}
+                color={isBreakActive ? colors.background : colors.mutedText}
               />
               <Text
                 style={[
                   styles.modeBtnText,
-                  { color: isBreakActive ? colors.background : colors.textMuted },
+                  { color: isBreakActive ? colors.background : colors.mutedText },
                 ]}
               >
                 Break
@@ -345,19 +345,19 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
                 styles.modeBtn,
                 isFlowActive
                   ? { backgroundColor: colors.text }
-                  : { backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.border },
+                  : { backgroundColor: colors.muted, borderWidth: 1, borderColor: colors.border },
               ]}
               onPress={selectFlow}
               activeOpacity={0.8}
             >
               <Clock
                 size={14}
-                color={isFlowActive ? colors.background : colors.textMuted}
+                color={isFlowActive ? colors.background : colors.mutedText}
               />
               <Text
                 style={[
                   styles.modeBtnText,
-                  { color: isFlowActive ? colors.background : colors.textMuted },
+                  { color: isFlowActive ? colors.background : colors.mutedText },
                 ]}
               >
                 Flow
@@ -384,7 +384,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
             <TouchableOpacity
               style={[
                 styles.actionPillBtn,
-                { backgroundColor: colors.inputBg, borderColor: colors.border },
+                { backgroundColor: colors.muted, borderColor: colors.border },
               ]}
               onPress={handleCompleteSession}
               activeOpacity={0.8}
@@ -399,12 +399,12 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
             <TouchableOpacity
               style={[
                 styles.distractionBtn,
-                { backgroundColor: colors.inputBg, borderColor: colors.border },
+                { backgroundColor: colors.muted, borderColor: colors.border },
               ]}
               onPress={() => setDistractionModalOpen(true)}
               activeOpacity={0.8}
             >
-              <AlertTriangle size={16} color={colors.textMuted} />
+              <AlertTriangle size={16} color={colors.mutedText} />
             </TouchableOpacity>
 
             {/* Start / Pause Main Action Button (RIGHT - flex: 1) */}
@@ -456,7 +456,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
             <Text style={[styles.modalTitle, { color: colors.text }]}>
               Log Distraction
             </Text>
-            <Text style={[styles.modalSub, { color: colors.textMuted }]}>
+            <Text style={[styles.modalSub, { color: colors.mutedText }]}>
               What got you off track? Stay conscious of interruption patterns.
             </Text>
             <View style={{ gap: 8, marginVertical: 12 }}>
@@ -465,7 +465,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
                   key={cat}
                   style={[
                     styles.distractionItem,
-                    { backgroundColor: colors.inputBg, borderColor: colors.border },
+                    { backgroundColor: colors.muted, borderColor: colors.border },
                   ]}
                   onPress={() => {
                     addDistraction(cat);
@@ -475,7 +475,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
                   <Text style={{ color: colors.text, fontWeight: '500' }}>
                     {cat}
                   </Text>
-                  <Plus size={16} color={colors.textMuted} />
+                  <Plus size={16} color={colors.mutedText} />
                 </TouchableOpacity>
               ))}
             </View>

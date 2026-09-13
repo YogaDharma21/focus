@@ -4,49 +4,9 @@ import {
   Info, Github, ExternalLink, Check, RotateCcw, Download,
   Upload, ShieldAlert, Monitor, Pin, Database, Plus, Minus, Music
 } from 'lucide-react';
-import { useDesktopStore, BackgroundType } from '../../lib/store';
+import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
 import iconUrl from '../../../public/icon.png';
-
-interface ThemeOption {
-  id: BackgroundType;
-  name: string;
-  description: string;
-  swatches: string[];
-}
-
-const THEMES: ThemeOption[] = [
-  {
-    id: 'dark',
-    name: 'Dark Modern',
-    description: 'Deep zinc obsidian tone for maximum focus and clean minimalism',
-    swatches: ['#09090b', '#18181b', '#27272a', '#e4e4e7']
-  },
-  {
-    id: 'mountain',
-    name: 'Mountain Mist',
-    description: 'Cool atmospheric slate with deep midnight indigo vibes',
-    swatches: ['#0a0e17', '#1e293b', '#38bdf8', '#e0f2fe']
-  },
-  {
-    id: 'library',
-    name: 'Cozy Library',
-    description: 'Warm dark mahogany and amber evening glow for reading sessions',
-    swatches: ['#120e0b', '#451a03', '#f59e0b', '#fef3c7']
-  },
-  {
-    id: 'cafe',
-    name: 'Lo-Fi Cafe',
-    description: 'Espresso undertones and warm lounge ambience for steady work',
-    swatches: ['#140f12', '#4a044e', '#ec4899', '#fdf2f8']
-  },
-  {
-    id: 'anime-room',
-    name: 'Anime Room',
-    description: 'Midnight lavender vaporwave glow inspired by late-night study streams',
-    swatches: ['#0d0a14', '#3b0764', '#a855f7', '#f3e8ff']
-  },
-];
 
 const TIMER_PRESETS = {
   work: [15, 25, 30, 45, 50, 60, 90],
@@ -63,8 +23,8 @@ export const SettingsPage: React.FC = () => {
     isActive,
     timerState,
     setTimeLeft,
-    background,
-    setBackground,
+    theme,
+    setTheme,
     soundEffectEnabled,
     setSoundEffectEnabled,
     soundEffectVolume,
@@ -86,7 +46,6 @@ export const SettingsPage: React.FC = () => {
   const [feedbackMessage, setFeedbackMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Show temporary toast/feedback notification
   const showFeedback = (text: string, type: 'success' | 'error' = 'success') => {
     setFeedbackMessage({ text, type });
     setTimeout(() => {
@@ -97,7 +56,6 @@ export const SettingsPage: React.FC = () => {
   const handleTimerSettingChange = (updates: Partial<typeof pomodoroSettings>) => {
     setPomodoroSettings(updates);
 
-    // Update timeLeft if timer is not active and mode matches the setting changed
     if (!isActive) {
       if (updates.work !== undefined && timerState === 'WORK') {
         setTimeLeft(updates.work * 60);
@@ -149,7 +107,6 @@ export const SettingsPage: React.FC = () => {
     showFeedback(next ? 'Window pinned Always on Top.' : 'Window unpinned.');
   };
 
-  // Export full JSON workspace backup
   const handleExportData = () => {
     try {
       const fullState = localStorage.getItem('focus-desktop-storage-v1');
@@ -175,7 +132,6 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
-  // Import JSON workspace backup
   const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -185,8 +141,6 @@ export const SettingsPage: React.FC = () => {
       try {
         const content = event.target?.result as string;
         const parsed = JSON.parse(content);
-
-        // Basic validation: state wrapper from zustand persist or raw state object
         const stateToSave = parsed.state ? parsed : { state: parsed, version: 1 };
         localStorage.setItem('focus-desktop-storage-v1', JSON.stringify(stateToSave));
         showFeedback('Data restored successfully. Reloading workspace...');
@@ -211,7 +165,6 @@ export const SettingsPage: React.FC = () => {
 
   return (
     <div className="max-w-4xl mx-auto w-full pb-24 animate-in fade-in duration-200 select-none">
-      {/* Hidden file input for backup restore */}
       <input
         ref={fileInputRef}
         type="file"
@@ -220,18 +173,17 @@ export const SettingsPage: React.FC = () => {
         className="hidden"
       />
 
-      {/* Floating Feedback Notification (Positioned at top-right to avoid MediaPlayer overlap) */}
       {feedbackMessage && (
         <div className="fixed top-12 right-6 z-50 animate-in slide-in-from-top-3 duration-200 pointer-events-none">
           <div
             className={`px-4 py-2.5 rounded-xl text-xs font-medium border shadow-2xl flex items-center gap-2 backdrop-blur-md pointer-events-auto ${
               feedbackMessage.type === 'success'
-                ? 'bg-zinc-900/95 text-zinc-100 border-zinc-700 shadow-black/50'
-                : 'bg-zinc-900/95 text-rose-300 border-rose-500/40 shadow-rose-950/30'
+                ? 'bg-secondary/95 text-foreground border-border shadow-black/50'
+                : 'bg-secondary/95 text-rose-300 border-rose-500/40 shadow-rose-950/30'
             }`}
           >
             {feedbackMessage.type === 'success' ? (
-              <Check className="w-4 h-4 text-zinc-300" />
+              <Check className="w-4 h-4 text-muted-foreground" />
             ) : (
               <ShieldAlert className="w-4 h-4 text-rose-400" />
             )}
@@ -240,53 +192,46 @@ export const SettingsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Header Banner */}
-      <div className="flex items-center gap-3.5 mb-8 pb-6 border-b border-zinc-800/80">
-        <div className="w-11 h-11 rounded-2xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-100 shadow-inner">
-          <Settings className="w-5 h-5 text-zinc-300" />
+      <div className="flex items-center gap-3.5 mb-8 pb-6 border-b border-border">
+        <div className="w-11 h-11 rounded-2xl bg-secondary border border-border flex items-center justify-center text-foreground shadow-inner">
+          <Settings className="w-5 h-5 text-muted-foreground" />
         </div>
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-zinc-100 tracking-tight">Settings</h1>
-          <p className="text-xs text-zinc-400">Configure timer intervals, themes, sound effects, and workspace preferences.</p>
+          <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">Settings</h1>
+          <p className="text-xs text-muted-foreground">Configure timer intervals, themes, sound effects, and workspace preferences.</p>
         </div>
       </div>
 
-      {/* Settings Sections Container */}
       <div className="space-y-10">
-        {/* ========================================================================= */}
-        {/* 1. TIMER & FOCUS SECTION                                                 */}
-        {/* ========================================================================= */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
-                <Clock className="w-4 h-4 text-zinc-300" />
+              <div className="p-1.5 rounded-lg bg-secondary border border-border text-muted-foreground">
+                <Clock className="w-4 h-4 text-muted-foreground" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-zinc-100 tracking-tight">Timer & Focus Durations</h2>
-                <p className="text-[11px] text-zinc-400">Configure Pomodoro work cycles, break durations, and sequencing.</p>
+                <h2 className="text-sm font-semibold text-foreground tracking-tight">Timer & Focus Durations</h2>
+                <p className="text-[11px] text-muted-foreground">Configure Pomodoro work cycles, break durations, and sequencing.</p>
               </div>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Work Duration Card */}
-            <div className="bg-zinc-900/70 border border-zinc-800/90 rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-zinc-700/80 transition-colors shadow-sm">
+            <div className="bg-secondary/70 border border-border rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-border transition-colors shadow-sm">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-zinc-200">Work Duration</span>
-                  <span className="text-xs font-mono font-semibold text-zinc-100 bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-md">
+                  <span className="text-xs font-semibold text-foreground">Work Duration</span>
+                  <span className="text-xs font-mono font-semibold text-foreground bg-secondary border border-border px-2 py-0.5 rounded-md">
                     {pomodoroSettings.work} min
                   </span>
                 </div>
-                <p className="text-[10px] text-zinc-500 leading-tight">Focus interval length before trigger break.</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">Focus interval length before trigger break.</p>
               </div>
 
-              {/* Stepper + Input */}
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleWorkDurationStep(-5)}
-                  className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+                  className="p-2 rounded-lg bg-background border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                   title="Decrease by 5 mins"
                 >
                   <Minus className="w-3.5 h-3.5" />
@@ -297,28 +242,27 @@ export const SettingsPage: React.FC = () => {
                   max={180}
                   value={pomodoroSettings.work}
                   onChange={(e) => handleTimerSettingChange({ work: Number(e.target.value) || 25 })}
-                  className="w-full text-center py-1.5 text-xs font-mono font-bold bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:outline-none focus:border-zinc-500"
+                  className="w-full text-center py-1.5 text-xs font-mono font-bold bg-background border border-border rounded-lg text-foreground focus:outline-none focus:border-ring"
                 />
                 <button
                   onClick={() => handleWorkDurationStep(5)}
-                  className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+                  className="p-2 rounded-lg bg-background border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                   title="Increase by 5 mins"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              {/* Quick Presets */}
-              <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-zinc-800/60">
-                <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider mr-1">Presets:</span>
+              <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-border/60">
+                <span className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider mr-1">Presets:</span>
                 {TIMER_PRESETS.work.map((p) => (
                   <button
                     key={p}
                     onClick={() => handleTimerSettingChange({ work: p })}
                     className={`text-[10px] px-2 py-1 rounded-md font-mono transition-all ${
                       pomodoroSettings.work === p
-                        ? 'bg-zinc-100 text-zinc-950 font-bold shadow-sm'
-                        : 'bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+                        ? 'bg-primary text-primary-foreground font-bold shadow-sm'
+                        : 'bg-background border border-border text-muted-foreground hover:text-foreground hover:bg-secondary'
                     }`}
                   >
                     {p}m
@@ -327,23 +271,21 @@ export const SettingsPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Short Break Card */}
-            <div className="bg-zinc-900/70 border border-zinc-800/90 rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-zinc-700/80 transition-colors shadow-sm">
+            <div className="bg-secondary/70 border border-border rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-border transition-colors shadow-sm">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-zinc-200">Short Break</span>
-                  <span className="text-xs font-mono font-semibold text-zinc-100 bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-md">
+                  <span className="text-xs font-semibold text-foreground">Short Break</span>
+                  <span className="text-xs font-mono font-semibold text-foreground bg-secondary border border-border px-2 py-0.5 rounded-md">
                     {pomodoroSettings.break} min
                   </span>
                 </div>
-                <p className="text-[10px] text-zinc-500 leading-tight">Quick rest duration after single focus session.</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">Quick rest duration after single focus session.</p>
               </div>
 
-              {/* Stepper + Input */}
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleBreakDurationStep(-1)}
-                  className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+                  className="p-2 rounded-lg bg-background border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                   title="Decrease by 1 min"
                 >
                   <Minus className="w-3.5 h-3.5" />
@@ -354,28 +296,27 @@ export const SettingsPage: React.FC = () => {
                   max={60}
                   value={pomodoroSettings.break}
                   onChange={(e) => handleTimerSettingChange({ break: Number(e.target.value) || 5 })}
-                  className="w-full text-center py-1.5 text-xs font-mono font-bold bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:outline-none focus:border-zinc-500"
+                  className="w-full text-center py-1.5 text-xs font-mono font-bold bg-background border border-border rounded-lg text-foreground focus:outline-none focus:border-ring"
                 />
                 <button
                   onClick={() => handleBreakDurationStep(1)}
-                  className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+                  className="p-2 rounded-lg bg-background border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                   title="Increase by 1 min"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              {/* Quick Presets */}
-              <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-zinc-800/60">
-                <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider mr-1">Presets:</span>
+              <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-border/60">
+                <span className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider mr-1">Presets:</span>
                 {TIMER_PRESETS.break.map((p) => (
                   <button
                     key={p}
                     onClick={() => handleTimerSettingChange({ break: p })}
                     className={`text-[10px] px-2 py-1 rounded-md font-mono transition-all ${
                       pomodoroSettings.break === p
-                        ? 'bg-zinc-100 text-zinc-950 font-bold shadow-sm'
-                        : 'bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+                        ? 'bg-primary text-primary-foreground font-bold shadow-sm'
+                        : 'bg-background border border-border text-muted-foreground hover:text-foreground hover:bg-secondary'
                     }`}
                   >
                     {p}m
@@ -384,23 +325,21 @@ export const SettingsPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Long Break Card */}
-            <div className="bg-zinc-900/70 border border-zinc-800/90 rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-zinc-700/80 transition-colors shadow-sm">
+            <div className="bg-secondary/70 border border-border rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-border transition-colors shadow-sm">
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-zinc-200">Long Break</span>
-                  <span className="text-xs font-mono font-semibold text-zinc-100 bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-md">
+                  <span className="text-xs font-semibold text-foreground">Long Break</span>
+                  <span className="text-xs font-mono font-semibold text-foreground bg-secondary border border-border px-2 py-0.5 rounded-md">
                     {pomodoroSettings.longBreak || 15} min
                   </span>
                 </div>
-                <p className="text-[10px] text-zinc-500 leading-tight">Extended recovery after 4 completed focus rounds.</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">Extended recovery after 4 completed focus rounds.</p>
               </div>
 
-              {/* Stepper + Input */}
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleLongBreakDurationStep(-5)}
-                  className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+                  className="p-2 rounded-lg bg-background border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                   title="Decrease by 5 mins"
                 >
                   <Minus className="w-3.5 h-3.5" />
@@ -411,28 +350,27 @@ export const SettingsPage: React.FC = () => {
                   max={90}
                   value={pomodoroSettings.longBreak || 15}
                   onChange={(e) => handleTimerSettingChange({ longBreak: Number(e.target.value) || 15 })}
-                  className="w-full text-center py-1.5 text-xs font-mono font-bold bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:outline-none focus:border-zinc-500"
+                  className="w-full text-center py-1.5 text-xs font-mono font-bold bg-background border border-border rounded-lg text-foreground focus:outline-none focus:border-ring"
                 />
                 <button
                   onClick={() => handleLongBreakDurationStep(5)}
-                  className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+                  className="p-2 rounded-lg bg-background border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
                   title="Increase by 5 mins"
                 >
                   <Plus className="w-3.5 h-3.5" />
                 </button>
               </div>
 
-              {/* Quick Presets */}
-              <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-zinc-800/60">
-                <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider mr-1">Presets:</span>
+              <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-border/60">
+                <span className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider mr-1">Presets:</span>
                 {TIMER_PRESETS.longBreak.map((p) => (
                   <button
                     key={p}
                     onClick={() => handleTimerSettingChange({ longBreak: p })}
                     className={`text-[10px] px-2 py-1 rounded-md font-mono transition-all ${
                       (pomodoroSettings.longBreak || 15) === p
-                        ? 'bg-zinc-100 text-zinc-950 font-bold shadow-sm'
-                        : 'bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+                        ? 'bg-primary text-primary-foreground font-bold shadow-sm'
+                        : 'bg-background border border-border text-muted-foreground hover:text-foreground hover:bg-secondary'
                     }`}
                   >
                     {p}m
@@ -442,66 +380,62 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Automation & Sequence Controls */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            {/* Auto-start Break Switch */}
             <div
               role="switch"
               aria-checked={pomodoroSettings.autoStartBreak}
               onClick={() => handleTimerSettingChange({ autoStartBreak: !pomodoroSettings.autoStartBreak })}
-              className="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/70 border border-zinc-800/90 hover:border-zinc-700/80 cursor-pointer transition-all shadow-sm group"
+              className="flex items-center justify-between p-4 rounded-2xl bg-secondary/70 border border-border hover:border-border cursor-pointer transition-all shadow-sm group"
             >
               <div className="space-y-1 pr-4">
-                <span className="text-xs font-semibold text-zinc-200 block group-hover:text-white transition-colors">
+                <span className="text-xs font-semibold text-foreground block group-hover:text-foreground transition-colors">
                   Auto-start Breaks
                 </span>
-                <span className="text-[11px] text-zinc-400 block leading-tight">
+                <span className="text-[11px] text-muted-foreground block leading-tight">
                   Immediately launch break countdown when focus interval concludes.
                 </span>
               </div>
               <div className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${
-                pomodoroSettings.autoStartBreak ? 'bg-zinc-200' : 'bg-zinc-700'
+                pomodoroSettings.autoStartBreak ? 'bg-primary' : 'bg-muted'
               }`}>
                 <div className={`w-5 h-5 rounded-full transition-transform duration-200 ${
-                  pomodoroSettings.autoStartBreak ? 'translate-x-5 bg-zinc-900 shadow-sm' : 'translate-x-0 bg-zinc-400'
+                  pomodoroSettings.autoStartBreak ? 'translate-x-5 bg-primary-foreground shadow-sm' : 'translate-x-0 bg-muted-foreground'
                 }`} />
               </div>
             </div>
 
-            {/* Auto-start Focus Timer Switch */}
             <div
               role="switch"
               aria-checked={pomodoroSettings.autoStartTimer}
               onClick={() => handleTimerSettingChange({ autoStartTimer: !pomodoroSettings.autoStartTimer })}
-              className="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/70 border border-zinc-800/90 hover:border-zinc-700/80 cursor-pointer transition-all shadow-sm group"
+              className="flex items-center justify-between p-4 rounded-2xl bg-secondary/70 border border-border hover:border-border cursor-pointer transition-all shadow-sm group"
             >
               <div className="space-y-1 pr-4">
-                <span className="text-xs font-semibold text-zinc-200 block group-hover:text-white transition-colors">
+                <span className="text-xs font-semibold text-foreground block group-hover:text-foreground transition-colors">
                   Auto-start Focus Rounds
                 </span>
-                <span className="text-[11px] text-zinc-400 block leading-tight">
+                <span className="text-[11px] text-muted-foreground block leading-tight">
                   Automatically commence the next focus block when break time is up.
                 </span>
               </div>
               <div className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${
-                pomodoroSettings.autoStartTimer ? 'bg-zinc-200' : 'bg-zinc-700'
+                pomodoroSettings.autoStartTimer ? 'bg-primary' : 'bg-muted'
               }`}>
                 <div className={`w-5 h-5 rounded-full transition-transform duration-200 ${
-                  pomodoroSettings.autoStartTimer ? 'translate-x-5 bg-zinc-900 shadow-sm' : 'translate-x-0 bg-zinc-400'
+                  pomodoroSettings.autoStartTimer ? 'translate-x-5 bg-primary-foreground shadow-sm' : 'translate-x-0 bg-muted-foreground'
                 }`} />
               </div>
             </div>
           </div>
 
-          {/* Pomodoro Session Counter Status Card */}
-          <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 text-xs">
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-secondary/50 border border-border text-xs">
             <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-300">
-                <RotateCcw className="w-4 h-4 text-zinc-400" />
+              <div className="p-2 rounded-xl bg-background border border-border text-muted-foreground">
+                <RotateCcw className="w-4 h-4 text-muted-foreground" />
               </div>
               <div>
-                <span className="font-semibold text-zinc-200 block">Current Pomodoro Cycle Count</span>
-                <span className="text-[11px] text-zinc-500 font-mono">
+                <span className="font-semibold text-foreground block">Current Pomodoro Cycle Count</span>
+                <span className="text-[11px] text-muted-foreground font-mono">
                   {pomodoroCount || 0} completed session{(pomodoroCount || 0) === 1 ? '' : 's'} recorded today
                 </span>
               </div>
@@ -511,98 +445,67 @@ export const SettingsPage: React.FC = () => {
                 resetPomodoroCount();
                 showFeedback('Session counter reset to 0.');
               }}
-              className="px-3 py-1.5 rounded-lg bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white text-xs font-medium transition-all shadow-sm"
+              className="px-3 py-1.5 rounded-lg bg-background hover:bg-secondary border border-border hover:border-border text-muted-foreground hover:text-foreground text-xs font-medium transition-all shadow-sm"
             >
               Reset Counter
             </button>
           </div>
         </section>
 
-        {/* ========================================================================= */}
-        {/* 2. APPEARANCE & THEMES SECTION (COLORS PERMITTED HERE)                     */}
-        {/* ========================================================================= */}
         <section className="space-y-4">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
-              <Palette className="w-4 h-4 text-zinc-300" />
+            <div className="p-1.5 rounded-lg bg-secondary border border-border text-muted-foreground">
+              <Palette className="w-4 h-4 text-muted-foreground" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-zinc-100 tracking-tight">Appearance & Workspace Themes</h2>
-              <p className="text-[11px] text-zinc-400">Select an ambient background mood designed for long study and work sessions.</p>
+              <h2 className="text-sm font-semibold text-foreground tracking-tight">Appearance</h2>
+              <p className="text-[11px] text-muted-foreground">Switch between light and dark mode.</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3.5">
-            {THEMES.map((theme) => {
-              const isSelected = background === theme.id;
-              return (
-                <button
-                  key={theme.id}
-                  onClick={() => {
-                    setBackground(theme.id);
-                    showFeedback(`Theme changed to ${theme.name}`);
-                  }}
-                  className={`relative p-4 rounded-2xl border text-left flex flex-col justify-between transition-all duration-200 cursor-pointer ${
-                    isSelected
-                      ? 'bg-zinc-900 border-zinc-400 shadow-md ring-1 ring-zinc-400/40'
-                      : 'bg-zinc-900/60 border-zinc-800/80 hover:bg-zinc-900/90 hover:border-zinc-700'
-                  }`}
-                >
-                  {/* Active Selected Check Badge */}
-                  {isSelected && (
-                    <div className="absolute top-3 right-3 w-5 h-5 rounded-full bg-zinc-100 text-zinc-950 flex items-center justify-center shadow-md">
-                      <Check className="w-3 h-3 stroke-[3]" />
-                    </div>
-                  )}
-
-                  <div>
-                    {/* Theme Visual Palette Swatch Preview */}
-                    <div className="flex items-center gap-1.5 mb-3 p-1.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 w-fit">
-                      {theme.swatches.map((color, idx) => (
-                        <div
-                          key={idx}
-                          className="w-4 h-4 rounded-md shadow-sm border border-black/30"
-                          style={{ backgroundColor: color }}
-                        />
-                      ))}
-                    </div>
-
-                    <h3 className="text-xs font-bold text-zinc-100 tracking-tight mb-1">{theme.name}</h3>
-                    <p className="text-[11px] text-zinc-400 leading-relaxed">{theme.description}</p>
-                  </div>
-
-                  <div className="mt-4 pt-2 border-t border-zinc-800/60 flex items-center justify-between">
-                    <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
-                      {isSelected ? 'Active Theme' : 'Click to Apply'}
-                    </span>
-                    <div
-                      className="w-2.5 h-2.5 rounded-full"
-                      style={{ backgroundColor: theme.swatches[2] || '#71717a' }}
-                    />
-                  </div>
-                </button>
-              );
-            })}
+          <div className="flex items-center justify-between p-4 rounded-2xl bg-secondary border border-border">
+            <div className="space-y-1">
+              <span className="text-xs font-semibold text-foreground block">Theme</span>
+              <span className="text-[11px] text-muted-foreground block leading-tight">Choose your preferred color scheme.</span>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => { setTheme("light"); showFeedback("Switched to light mode"); }}
+                className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                  theme === "light"
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                }`}
+              >
+                Light
+              </button>
+              <button
+                onClick={() => { setTheme("dark"); showFeedback("Switched to dark mode"); }}
+                className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                  theme === "dark"
+                    ? "bg-primary text-primary-foreground shadow-md"
+                    : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                }`}
+              >
+                Dark
+              </button>
+            </div>
           </div>
         </section>
 
-        {/* ========================================================================= */}
-        {/* 3. SOUND & AUDIO SECTION                                                 */}
-        {/* ========================================================================= */}
         <section className="space-y-4">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
-              <Volume2 className="w-4 h-4 text-zinc-300" />
+            <div className="p-1.5 rounded-lg bg-secondary border border-border text-muted-foreground">
+              <Volume2 className="w-4 h-4 text-muted-foreground" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-zinc-100 tracking-tight">Sound & Notifications</h2>
-              <p className="text-[11px] text-zinc-400">Configure session chime alerts, test audio feedback, and ambient levels.</p>
+              <h2 className="text-sm font-semibold text-foreground tracking-tight">Sound & Notifications</h2>
+              <p className="text-[11px] text-muted-foreground">Configure session chime alerts, test audio feedback, and ambient levels.</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Sound Effects Card */}
-            <div className="bg-zinc-900/70 border border-zinc-800/90 rounded-2xl p-5 space-y-4 shadow-sm">
+            <div className="bg-secondary/70 border border-border rounded-2xl p-5 space-y-4 shadow-sm">
               <div
                 role="switch"
                 aria-checked={soundEffectEnabled}
@@ -610,37 +513,36 @@ export const SettingsPage: React.FC = () => {
                 className="flex items-center justify-between cursor-pointer group"
               >
                 <div className="space-y-1 pr-4">
-                  <span className="text-xs font-semibold text-zinc-200 flex items-center gap-2 group-hover:text-white">
-                    <BellRing className="w-3.5 h-3.5 text-zinc-400" />
+                  <span className="text-xs font-semibold text-foreground flex items-center gap-2 group-hover:text-foreground">
+                    <BellRing className="w-3.5 h-3.5 text-muted-foreground" />
                     Session Chimes (SFX)
                   </span>
-                  <span className="text-[11px] text-zinc-400 block leading-tight">
+                  <span className="text-[11px] text-muted-foreground block leading-tight">
                     Play pleasant audio tone when work or break interval finishes.
                   </span>
                 </div>
                 <div className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${
-                  soundEffectEnabled ? 'bg-zinc-200' : 'bg-zinc-700'
+                  soundEffectEnabled ? 'bg-primary' : 'bg-muted'
                 }`}>
                   <div className={`w-5 h-5 rounded-full transition-transform duration-200 ${
-                    soundEffectEnabled ? 'translate-x-5 bg-zinc-900 shadow-sm' : 'translate-x-0 bg-zinc-400'
+                    soundEffectEnabled ? 'translate-x-5 bg-primary-foreground shadow-sm' : 'translate-x-0 bg-muted-foreground'
                   }`} />
                 </div>
               </div>
 
-              {/* SFX Volume Slider */}
-              <div className="space-y-2 pt-2 border-t border-zinc-800/60">
+              <div className="space-y-2 pt-2 border-t border-border/60">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-zinc-400 font-medium flex items-center gap-1.5">
+                  <span className="text-muted-foreground font-medium flex items-center gap-1.5">
                     {soundEffectVolume === 0 ? (
-                      <VolumeX className="w-3.5 h-3.5 text-zinc-500" />
+                      <VolumeX className="w-3.5 h-3.5 text-muted-foreground" />
                     ) : soundEffectVolume < 0.5 ? (
-                      <Volume1 className="w-3.5 h-3.5 text-zinc-400" />
+                      <Volume1 className="w-3.5 h-3.5 text-muted-foreground" />
                     ) : (
-                      <Volume2 className="w-3.5 h-3.5 text-zinc-300" />
+                      <Volume2 className="w-3.5 h-3.5 text-muted-foreground" />
                     )}
                     Chime Volume
                   </span>
-                  <span className="font-mono font-semibold text-zinc-200">
+                  <span className="font-mono font-semibold text-foreground">
                     {Math.round((soundEffectVolume ?? 0.8) * 100)}%
                   </span>
                 </div>
@@ -652,39 +554,37 @@ export const SettingsPage: React.FC = () => {
                   disabled={!soundEffectEnabled}
                   value={soundEffectVolume ?? 0.8}
                   onChange={(e) => setSoundEffectVolume(Number(e.target.value))}
-                  className="w-full h-2 bg-zinc-950 rounded-lg accent-zinc-200 cursor-pointer disabled:opacity-40"
+                  className="w-full h-2 bg-background rounded-lg accent-primary cursor-pointer disabled:opacity-40"
                 />
               </div>
 
-              {/* Test SFX Button */}
               <div className="pt-2">
                 <button
                   onClick={playTestSound}
                   disabled={!soundEffectEnabled}
-                  className="w-full sm:w-auto px-4 py-2 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-200 hover:text-white rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm disabled:opacity-40"
+                  className="w-full sm:w-auto px-4 py-2 bg-background hover:bg-secondary border border-border hover:border-border text-foreground hover:text-foreground rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm disabled:opacity-40"
                 >
-                  <Volume1 className="w-3.5 h-3.5 text-zinc-400" />
+                  <Volume1 className="w-3.5 h-3.5 text-muted-foreground" />
                   Play Test Chime
                 </button>
               </div>
             </div>
 
-            {/* Master Music & Media Audio Card */}
-            <div className="bg-zinc-900/70 border border-zinc-800/90 rounded-2xl p-5 space-y-4 shadow-sm flex flex-col justify-between">
+            <div className="bg-secondary/70 border border-border rounded-2xl p-5 space-y-4 shadow-sm flex flex-col justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-2">
-                  <Music className="w-4 h-4 text-zinc-300" />
-                  <span className="text-xs font-semibold text-zinc-200">Ambient Music Volume</span>
+                  <Music className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs font-semibold text-foreground">Ambient Music Volume</span>
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-relaxed">
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
                   Master audio level for built-in Lo-Fi tracks and external stream playback.
                 </p>
               </div>
 
-              <div className="space-y-2 pt-2 border-t border-zinc-800/60">
+              <div className="space-y-2 pt-2 border-t border-border/60">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-zinc-400 font-medium">Player Volume</span>
-                  <span className="font-mono font-semibold text-zinc-200">
+                  <span className="text-muted-foreground font-medium">Player Volume</span>
+                  <span className="font-mono font-semibold text-foreground">
                     {Math.round((volume ?? 0.8) * 100)}%
                   </span>
                 </div>
@@ -695,13 +595,13 @@ export const SettingsPage: React.FC = () => {
                   step={0.01}
                   value={volume ?? 0.8}
                   onChange={(e) => setVolume(Number(e.target.value))}
-                  className="w-full h-2 bg-zinc-950 rounded-lg accent-zinc-200 cursor-pointer"
+                  className="w-full h-2 bg-background rounded-lg accent-primary cursor-pointer"
                 />
               </div>
 
-              <div className="flex items-center justify-between p-2.5 rounded-xl bg-zinc-950/60 border border-zinc-800/80 text-[11px]">
-                <span className="text-zinc-400">Default Audio Source</span>
-                <span className="font-mono font-semibold text-zinc-300 uppercase bg-zinc-800 px-2 py-0.5 rounded border border-zinc-700">
+              <div className="flex items-center justify-between p-2.5 rounded-xl bg-secondary/60 border border-border text-[11px]">
+                <span className="text-muted-foreground">Default Audio Source</span>
+                <span className="font-mono font-semibold text-muted-foreground uppercase bg-secondary px-2 py-0.5 rounded border border-border">
                   {mediaType}
                 </span>
               </div>
@@ -709,60 +609,55 @@ export const SettingsPage: React.FC = () => {
           </div>
         </section>
 
-        {/* ========================================================================= */}
-        {/* 4. SYSTEM & WINDOW SECTION                                               */}
-        {/* ========================================================================= */}
         <section className="space-y-4">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
-              <Monitor className="w-4 h-4 text-zinc-300" />
+            <div className="p-1.5 rounded-lg bg-secondary border border-border text-muted-foreground">
+              <Monitor className="w-4 h-4 text-muted-foreground" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-zinc-100 tracking-tight">System & Window Preferences</h2>
-              <p className="text-[11px] text-zinc-400">Window management and desktop notification triggers.</p>
+              <h2 className="text-sm font-semibold text-foreground tracking-tight">System & Window Preferences</h2>
+              <p className="text-[11px] text-muted-foreground">Window management and desktop notification triggers.</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Window Pinning Switch */}
             <div
               role="switch"
               aria-checked={isAlwaysOnTop}
               onClick={toggleAlwaysOnTop}
-              className="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/70 border border-zinc-800/90 hover:border-zinc-700/80 cursor-pointer transition-all shadow-sm group"
+              className="flex items-center justify-between p-4 rounded-2xl bg-secondary/70 border border-border hover:border-border cursor-pointer transition-all shadow-sm group"
             >
               <div className="space-y-1 pr-4">
-                <span className="text-xs font-semibold text-zinc-200 flex items-center gap-2 group-hover:text-white">
-                  <Pin className="w-3.5 h-3.5 text-zinc-400" />
+                <span className="text-xs font-semibold text-foreground flex items-center gap-2 group-hover:text-foreground">
+                  <Pin className="w-3.5 h-3.5 text-muted-foreground" />
                   Always On Top (Float Mode)
                 </span>
-                <span className="text-[11px] text-zinc-400 block leading-tight">
+                <span className="text-[11px] text-muted-foreground block leading-tight">
                   Keep Focus window positioned on top of other desktop windows while working.
                 </span>
               </div>
               <div className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${
-                isAlwaysOnTop ? 'bg-zinc-200' : 'bg-zinc-700'
+                isAlwaysOnTop ? 'bg-primary' : 'bg-muted'
               }`}>
                 <div className={`w-5 h-5 rounded-full transition-transform duration-200 ${
-                  isAlwaysOnTop ? 'translate-x-5 bg-zinc-900 shadow-sm' : 'translate-x-0 bg-zinc-400'
+                  isAlwaysOnTop ? 'translate-x-5 bg-primary-foreground shadow-sm' : 'translate-x-0 bg-muted-foreground'
                 }`} />
               </div>
             </div>
 
-            {/* Desktop System Notification Test */}
-            <div className="p-4 rounded-2xl bg-zinc-900/70 border border-zinc-800/90 flex items-center justify-between gap-4 shadow-sm">
+            <div className="p-4 rounded-2xl bg-secondary/70 border border-border flex items-center justify-between gap-4 shadow-sm">
               <div className="space-y-1">
-                <span className="text-xs font-semibold text-zinc-200 block">Desktop Notifications</span>
-                <span className="text-[11px] text-zinc-400 block leading-tight">
+                <span className="text-xs font-semibold text-foreground block">Desktop Notifications</span>
+                <span className="text-[11px] text-muted-foreground block leading-tight">
                   Trigger system native notification toasts when sessions conclude.
                 </span>
                 {notificationStatus && (
-                  <span className="text-[10px] text-zinc-400 font-mono block mt-1">{notificationStatus}</span>
+                  <span className="text-[10px] text-muted-foreground font-mono block mt-1">{notificationStatus}</span>
                 )}
               </div>
               <button
                 onClick={testDesktopNotification}
-                className="px-3 py-1.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-200 hover:text-white rounded-xl text-xs font-medium whitespace-nowrap transition-all shadow-sm"
+                className="px-3 py-1.5 bg-background hover:bg-secondary border border-border hover:border-border text-foreground hover:text-foreground rounded-xl text-xs font-medium whitespace-nowrap transition-all shadow-sm"
               >
                 Test Notification
               </button>
@@ -770,88 +665,82 @@ export const SettingsPage: React.FC = () => {
           </div>
         </section>
 
-        {/* ========================================================================= */}
-        {/* 5. DATA & STORAGE SECTION (DANGER ZONE COLORS PERMITTED HERE)             */}
-        {/* ========================================================================= */}
         <section className="space-y-4">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
-              <Database className="w-4 h-4 text-zinc-300" />
+            <div className="p-1.5 rounded-lg bg-secondary border border-border text-muted-foreground">
+              <Database className="w-4 h-4 text-muted-foreground" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-zinc-100 tracking-tight">Data, Storage & Backup</h2>
-              <p className="text-[11px] text-zinc-400">View real-time storage stats, export JSON backups, or safely restore data.</p>
+              <h2 className="text-sm font-semibold text-foreground tracking-tight">Data, Storage & Backup</h2>
+              <p className="text-[11px] text-muted-foreground">View real-time storage stats, export JSON backups, or safely restore data.</p>
             </div>
           </div>
 
-          {/* Real-time Storage Summary Metrics */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-            <div className="p-3.5 rounded-2xl bg-zinc-900/70 border border-zinc-800/90 text-center">
-              <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">Focus Sessions</span>
-              <span className="text-lg font-bold font-mono text-zinc-100">{sessions?.length || 0}</span>
+            <div className="p-3.5 rounded-2xl bg-secondary/70 border border-border text-center">
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Focus Sessions</span>
+              <span className="text-lg font-bold font-mono text-foreground">{sessions?.length || 0}</span>
             </div>
-            <div className="p-3.5 rounded-2xl bg-zinc-900/70 border border-zinc-800/90 text-center">
-              <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">Active Tasks</span>
-              <span className="text-lg font-bold font-mono text-zinc-100">{todos?.length || 0}</span>
+            <div className="p-3.5 rounded-2xl bg-secondary/70 border border-border text-center">
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Active Tasks</span>
+              <span className="text-lg font-bold font-mono text-foreground">{todos?.length || 0}</span>
             </div>
-            <div className="p-3.5 rounded-2xl bg-zinc-900/70 border border-zinc-800/90 text-center">
-              <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">Mood Journals</span>
-              <span className="text-lg font-bold font-mono text-zinc-100">{moodNotes?.length || 0}</span>
+            <div className="p-3.5 rounded-2xl bg-secondary/70 border border-border text-center">
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Mood Journals</span>
+              <span className="text-lg font-bold font-mono text-foreground">{moodNotes?.length || 0}</span>
             </div>
-            <div className="p-3.5 rounded-2xl bg-zinc-900/70 border border-zinc-800/90 text-center">
-              <span className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider block mb-1">Task Folders</span>
-              <span className="text-lg font-bold font-mono text-zinc-100">{groups?.length || 0}</span>
+            <div className="p-3.5 rounded-2xl bg-secondary/70 border border-border text-center">
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Task Folders</span>
+              <span className="text-lg font-bold font-mono text-foreground">{groups?.length || 0}</span>
             </div>
           </div>
 
-          {/* Backup Export / Restore Card */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-5 rounded-2xl bg-zinc-900/70 border border-zinc-800/90 space-y-3 flex flex-col justify-between shadow-sm">
+            <div className="p-5 rounded-2xl bg-secondary/70 border border-border space-y-3 flex flex-col justify-between shadow-sm">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <Download className="w-4 h-4 text-zinc-300" />
-                  <h3 className="text-xs font-bold text-zinc-200">Export Backup</h3>
+                  <Download className="w-4 h-4 text-muted-foreground" />
+                  <h3 className="text-xs font-bold text-foreground">Export Backup</h3>
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-relaxed">
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
                   Download a full JSON archive containing all tasks, completed sessions, notes, and custom preferences.
                 </p>
               </div>
               <button
                 onClick={handleExportData}
-                className="w-full px-4 py-2.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-100 rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm"
+                className="w-full px-4 py-2.5 bg-background hover:bg-secondary border border-border hover:border-border text-foreground rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm"
               >
-                <Download className="w-3.5 h-3.5 text-zinc-400" />
+                <Download className="w-3.5 h-3.5 text-muted-foreground" />
                 Download JSON Backup
               </button>
             </div>
 
-            <div className="p-5 rounded-2xl bg-zinc-900/70 border border-zinc-800/90 space-y-3 flex flex-col justify-between shadow-sm">
+            <div className="p-5 rounded-2xl bg-secondary/70 border border-border space-y-3 flex flex-col justify-between shadow-sm">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <Upload className="w-4 h-4 text-zinc-300" />
-                  <h3 className="text-xs font-bold text-zinc-200">Restore Backup</h3>
+                  <Upload className="w-4 h-4 text-muted-foreground" />
+                  <h3 className="text-xs font-bold text-foreground">Restore Backup</h3>
                 </div>
-                <p className="text-[11px] text-zinc-400 leading-relaxed">
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
                   Restore workspace data from a previously downloaded JSON backup file.
                 </p>
               </div>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full px-4 py-2.5 bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-100 rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm"
+                className="w-full px-4 py-2.5 bg-background hover:bg-secondary border border-border hover:border-border text-foreground rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm"
               >
-                <Upload className="w-3.5 h-3.5 text-zinc-400" />
+                <Upload className="w-3.5 h-3.5 text-muted-foreground" />
                 Select File to Restore
               </button>
             </div>
           </div>
 
-          {/* Danger Zone: Reset All Data (Color Permitted Here) */}
           <div className="p-5 rounded-2xl bg-rose-950/20 border border-rose-900/40 space-y-3 shadow-sm">
             <div className="flex items-center gap-2">
               <ShieldAlert className="w-4 h-4 text-rose-400" />
               <h3 className="text-xs font-bold text-rose-300 uppercase tracking-wider">Danger Zone</h3>
             </div>
-            <p className="text-[11px] text-zinc-400 leading-relaxed">
+            <p className="text-[11px] text-muted-foreground leading-relaxed">
               Permanently purge all tasks, distraction logs, focus history, and custom settings. This operation is irreversible.
             </p>
             <div className="pt-2">
@@ -869,60 +758,53 @@ export const SettingsPage: React.FC = () => {
           </div>
         </section>
 
-        {/* ========================================================================= */}
-        {/* 6. ABOUT & INFORMATION SECTION                                           */}
-        {/* ========================================================================= */}
         <section className="space-y-4">
           <div className="flex items-center gap-2.5">
-            <div className="p-1.5 rounded-lg bg-zinc-900 border border-zinc-800 text-zinc-300">
-              <Info className="w-4 h-4 text-zinc-300" />
+            <div className="p-1.5 rounded-lg bg-secondary border border-border text-muted-foreground">
+              <Info className="w-4 h-4 text-muted-foreground" />
             </div>
             <div>
-              <h2 className="text-sm font-semibold text-zinc-100 tracking-tight">About Focus Desktop</h2>
-              <p className="text-[11px] text-zinc-400">Application architecture, release information, and open source repository.</p>
+              <h2 className="text-sm font-semibold text-foreground tracking-tight">About Focus Desktop</h2>
+              <p className="text-[11px] text-muted-foreground">Application architecture, release information, and open source repository.</p>
             </div>
           </div>
 
-          <div className="bg-zinc-900/70 border border-zinc-800/90 rounded-2xl p-6 space-y-5 shadow-sm">
+          <div className="bg-secondary/70 border border-border rounded-2xl p-6 space-y-5 shadow-sm">
             <div className="flex items-center gap-3.5">
               <img src={iconUrl} className="w-10 h-10 rounded-xl object-contain shadow-md" alt="Focus" />
               <div>
-                <h3 className="text-sm font-bold text-zinc-100 flex items-center gap-2">
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                   Focus Desktop
-                  <span className="px-2 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 text-[10px] font-mono text-zinc-300">
+                  <span className="px-2 py-0.5 rounded-full bg-secondary border border-border text-[10px] font-mono text-muted-foreground">
                     v0.0.1
                   </span>
                 </h3>
-                <p className="text-xs text-zinc-400">Minimalist, High-Performance Productivity Suite</p>
+                <p className="text-xs text-muted-foreground">Minimalist, High-Performance Productivity Suite</p>
               </div>
             </div>
 
-            <p className="text-xs text-zinc-300 leading-relaxed bg-zinc-950/60 p-4 rounded-xl border border-zinc-800/80">
+            <p className="text-xs text-foreground leading-relaxed bg-secondary/60 p-4 rounded-xl border border-border">
               Focus Desktop is engineered for deep flow state work. Featuring customizable Pomodoro and stopwatch flow timers, intelligent break sequencing, hierarchical task management, daily streak analytics, mood journaling, and embedded Lo-Fi audio stream support.
             </p>
 
-            {/* Links */}
-            <div className="pt-3 border-t border-zinc-800/80 flex flex-col sm:flex-row gap-3">
+            <div className="pt-3 border-t border-border flex flex-col sm:flex-row gap-3">
               <a
                 href="https://github.com/YogaDharma21/focus"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 flex items-center justify-between p-3 rounded-xl bg-zinc-950 border border-zinc-800 hover:bg-zinc-800 text-xs text-zinc-200 hover:text-white transition-colors"
+                className="flex-1 flex items-center justify-between p-3 rounded-xl bg-background border border-border hover:bg-secondary text-xs text-foreground hover:text-foreground transition-colors"
               >
                 <div className="flex items-center gap-2.5">
-                  <Github className="w-4 h-4 text-zinc-300" />
+                  <Github className="w-4 h-4 text-muted-foreground" />
                   <span className="font-medium">GitHub Repository</span>
                 </div>
-                <ExternalLink className="w-3.5 h-3.5 text-zinc-500" />
+                <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
               </a>
             </div>
           </div>
         </section>
       </div>
 
-      {/* ========================================================================= */}
-      {/* RESET CONFIRMATION MODAL (DANGER ZONE - COLOR PERMITTED)                  */}
-      {/* ========================================================================= */}
       {showResetModal && (
         <div
           onClick={() => setShowResetModal(false)}
@@ -930,24 +812,24 @@ export const SettingsPage: React.FC = () => {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md bg-zinc-900 border border-zinc-800 rounded-2xl shadow-2xl p-6 space-y-4 text-zinc-100 select-none animate-in zoom-in-95 duration-150"
+            className="w-full max-w-md bg-secondary border border-border rounded-2xl shadow-2xl p-6 space-y-4 text-foreground select-none animate-in zoom-in-95 duration-150"
           >
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center">
                 <ShieldAlert className="w-5 h-5" />
               </div>
               <div>
-                <h3 className="text-sm font-bold text-zinc-100">Confirm Data Reset</h3>
-                <p className="text-xs text-zinc-400">This action cannot be undone.</p>
+                <h3 className="text-sm font-bold text-foreground">Confirm Data Reset</h3>
+                <p className="text-xs text-muted-foreground">This action cannot be undone.</p>
               </div>
             </div>
 
-            <p className="text-xs text-zinc-300 leading-relaxed bg-zinc-950/60 p-3.5 rounded-xl border border-zinc-800/80">
+            <p className="text-xs text-foreground leading-relaxed bg-secondary/60 p-3.5 rounded-xl border border-border">
               All tasks, subtasks, focus logs, mood reflections, and custom presets will be permanently cleared from local storage.
             </p>
 
             <div className="space-y-2">
-              <label className="text-[11px] text-zinc-400 block">
+              <label className="text-[11px] text-muted-foreground block">
                 Type <span className="font-mono text-rose-400 font-bold">RESET</span> below to confirm:
               </label>
               <input
@@ -955,14 +837,14 @@ export const SettingsPage: React.FC = () => {
                 placeholder="RESET"
                 value={resetConfirmText}
                 onChange={(e) => setResetConfirmText(e.target.value)}
-                className="w-full px-3 py-2 text-xs font-mono bg-zinc-950 border border-zinc-800 rounded-xl text-zinc-100 focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
+                className="w-full px-3 py-2 text-xs font-mono bg-background border border-border rounded-xl text-foreground focus:outline-none focus:border-rose-500 focus:ring-1 focus:ring-rose-500"
               />
             </div>
 
-            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-zinc-800">
+            <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-border">
               <button
                 onClick={() => setShowResetModal(false)}
-                className="px-4 py-2 rounded-xl text-xs font-medium text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800 transition-colors"
+                className="px-4 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
               >
                 Cancel
               </button>
@@ -980,6 +862,3 @@ export const SettingsPage: React.FC = () => {
     </div>
   );
 };
-
-
-

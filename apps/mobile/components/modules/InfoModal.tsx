@@ -37,11 +37,11 @@ export function InfoModal({ visible, onClose }: InfoModalProps) {
           </View>
 
           <View style={styles.content}>
-            <Text style={[styles.versionText, { color: colors.textMuted }]}>
+            <Text style={[styles.versionText, { color: colors.mutedText }]}>
               Version 0.0.1
             </Text>
 
-            <Text style={[styles.desc, { color: colors.textMuted }]}>
+            <Text style={[styles.desc, { color: colors.mutedText }]}>
               Focus is a clean, distraction-free productivity app designed to keep you in the flow with focus timers, task management, analytics, and mood reflections.
             </Text>
 
@@ -50,11 +50,11 @@ export function InfoModal({ visible, onClose }: InfoModalProps) {
               onPress={handleOpenGithub}
               activeOpacity={0.8}
             >
-              <Code2 size={18} color={colors.primaryForeground} />
-              <Text style={[styles.githubBtnText, { color: colors.primaryForeground }]}>
+              <Code2 size={18} color={colors.primaryText} />
+              <Text style={[styles.githubBtnText, { color: colors.primaryText }]}>
                 View Project on GitHub
               </Text>
-              <ExternalLink size={14} color={colors.primaryForeground} />
+              <ExternalLink size={14} color={colors.primaryText} />
             </TouchableOpacity>
           </View>
         </TouchableOpacity>

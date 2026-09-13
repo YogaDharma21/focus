@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export type ViewType = "FOCUS" | "TODO" | "JOURNAL" | "NOTES" | "SETTINGS";
-export type BackgroundType = "dark" | "gradient" | "mountain" | "library" | "cafe" | "anime-room";
 
 export interface Group {
   id: string;
@@ -147,8 +146,8 @@ export interface DesktopState {
   // Visuals & Themes
   deepFocusMode: boolean;
   setDeepFocusMode: (mode: boolean) => void;
-  background: BackgroundType;
-  setBackground: (bg: BackgroundType) => void;
+  theme: "light" | "dark";
+  setTheme: (theme: "light" | "dark") => void;
 }
 
 export const useDesktopStore = create<DesktopState>()(
@@ -498,8 +497,8 @@ export const useDesktopStore = create<DesktopState>()(
       // Visuals
       deepFocusMode: false,
       setDeepFocusMode: (mode) => set({ deepFocusMode: mode }),
-      background: "dark",
-      setBackground: (bg) => set({ background: bg }),
+      theme: "dark" as "light" | "dark",
+      setTheme: (t) => set({ theme: t }),
     }),
     {
       name: "focus-desktop-storage-v1",

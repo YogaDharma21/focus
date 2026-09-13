@@ -44,7 +44,7 @@ export function DistractionCounter({ className }: DistractionCounterProps) {
                     variant="outline"
                     size="icon"
                     className={cn(
-                        "w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 hover:text-rose-400 transition-all shrink-0 cursor-pointer",
+                        "w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-secondary/50 hover:border-border hover:text-rose-400 transition-all shrink-0 cursor-pointer",
                         !isActive && "opacity-50 cursor-not-allowed",
                         className
                     )}
@@ -56,14 +56,14 @@ export function DistractionCounter({ className }: DistractionCounterProps) {
                 </Button>
             </PopoverTrigger>
             <PopoverContent
-                className="w-44 p-1.5 bg-[#18181b] border border-zinc-800 rounded-xl shadow-2xl z-[200]"
+                className="w-44 p-1.5 bg-popover border border-border rounded-xl shadow-2xl z-[200]"
                 align="center"
             >
                 <div className="flex flex-col gap-1">
                     {DISTRACTION_CATEGORIES.map((cat) => (
                         <button
                             key={cat}
-                            className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium text-zinc-200 hover:bg-zinc-800 transition-colors cursor-pointer"
+                            className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium text-foreground hover:bg-secondary/80 transition-colors cursor-pointer"
                             onClick={() => handleDistraction(cat)}
                         >
                             {cat}
