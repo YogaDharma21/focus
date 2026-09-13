@@ -1273,7 +1273,7 @@ export function Popup() {
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`flex items-center gap-1.5 rounded-xl transition-colors relative text-[11px] font-bold px-3 py-1.5 min-h-[30px] ${
+              className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl transition-colors relative text-[11px] font-bold px-3 py-1.5 min-h-[30px] ${
                 isActive
                   ? "bg-white text-black shadow-sm"
                   : "text-neutral-500 hover:text-neutral-300 hover:bg-neutral-800/60"
