@@ -2554,139 +2554,145 @@ export function Popup() {
                 </div>
               </div>
 
-              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border transition-all ${
-                soundEnabled
-                  ? "bg-neutral-900/60 border-neutral-800"
-                  : "bg-neutral-900/30 border-neutral-800/50 opacity-50"
-              }`}>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-white">Music</span>
-                  <span className="text-[10px] text-neutral-500">Enable or disable music only</span>
-                </div>
-                <div
-                  onClick={soundEnabled ? toggleMusicEnabled : undefined}
-                  className={`relative w-11 h-6 rounded-full transition-colors flex items-center ${
-                    musicEnabled && soundEnabled ? "bg-white cursor-pointer" : "bg-neutral-700"
-                  } ${!soundEnabled ? "cursor-not-allowed" : "cursor-pointer"}`}
-                >
-                  <div
-                    className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                      musicEnabled && soundEnabled ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
-                    }`}
-                  />
-                </div>
-              </div>
+              <div className="flex flex-col gap-2">
+                <span className="px-1 text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Music</span>
 
-              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border transition-all ${
-                soundEnabled
-                  ? "bg-neutral-900/60 border-neutral-800"
-                  : "bg-neutral-900/30 border-neutral-800/50 opacity-50"
-              }`}>
-                <span className="text-xs font-bold text-white">SFX Enabled</span>
-                <div
-                  onClick={soundEnabled ? toggleSoundEffectEnabled : undefined}
-                  className={`relative w-11 h-6 rounded-full transition-colors flex items-center ${
-                    soundEffectEnabled && soundEnabled ? "bg-white cursor-pointer" : "bg-neutral-700"
-                  } ${!soundEnabled ? "cursor-not-allowed" : "cursor-pointer"}`}
-                >
-                  <div
-                    className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                      soundEffectEnabled && soundEnabled ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
-                    }`}
-                  />
-                </div>
-              </div>
-
-              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border transition-all ${
-                soundEnabled
-                  ? "bg-neutral-900/60 border-neutral-800"
-                  : "bg-neutral-900/30 border-neutral-800/50 opacity-50"
-              }`}>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-white">Auto-Pause on Audio</span>
-                  <span className="text-[10px] text-neutral-500">Pause music when other tabs play audio</span>
-                </div>
-                <div
-                  onClick={soundEnabled ? toggleAutoPauseOnExternalAudio : undefined}
-                  className={`relative w-11 h-6 rounded-full transition-colors flex items-center shrink-0 ${
-                    autoPauseOnExternalAudio && soundEnabled ? "bg-white cursor-pointer" : "bg-neutral-700"
-                  } ${!soundEnabled ? "cursor-not-allowed" : "cursor-pointer"}`}
-                >
-                  <div
-                    className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                      autoPauseOnExternalAudio && soundEnabled ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
-                    }`}
-                  />
-                </div>
-              </div>
-
-              {autoPauseOnExternalAudio && soundEnabled && (
                 <div className={`flex items-center justify-between rounded-xl px-4 py-3 border transition-all ${
-                  "bg-neutral-900/60 border-neutral-800"
+                  soundEnabled
+                    ? "bg-neutral-900/60 border-neutral-800"
+                    : "bg-neutral-900/30 border-neutral-800/50 opacity-50"
                 }`}>
-                  <div className="flex flex-col w-full gap-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-white">Resume Fade Speed</span>
-                        <span className="text-[10px] text-neutral-500">Fade transition duration</span>
-                      </div>
-                      <span className="font-mono text-xs text-white">
-                        {autoPauseFadeDuration === 0 ? "Instant (0s)" : `${autoPauseFadeDuration}s`}
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="5"
-                      step="0.5"
-                      value={autoPauseFadeDuration}
-                      onChange={(e) => handleAutoPauseFadeDurationChange(parseFloat(e.target.value))}
-                      className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer"
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-white">Music</span>
+                    <span className="text-[10px] text-neutral-500">Enable or disable background music</span>
+                  </div>
+                  <div
+                    onClick={soundEnabled ? toggleMusicEnabled : undefined}
+                    className={`relative w-11 h-6 rounded-full transition-colors flex items-center ${
+                      musicEnabled && soundEnabled ? "bg-white cursor-pointer" : "bg-neutral-700"
+                    } ${!soundEnabled ? "cursor-not-allowed" : "cursor-pointer"}`}
+                  >
+                    <div
+                      className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
+                        musicEnabled && soundEnabled ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
+                      }`}
                     />
-                    <div className="flex justify-between text-[9px] text-neutral-500 font-mono">
-                      <span>0s (Instant)</span>
-                      <span>2.5s</span>
-                      <span>5s</span>
-                    </div>
                   </div>
                 </div>
-              )}
 
-              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border transition-all ${
-                soundEnabled
-                  ? "bg-neutral-900/60 border-neutral-800"
-                  : "bg-neutral-900/30 border-neutral-800/50 opacity-50"
-              }`}>
-                <div className="flex flex-col w-full gap-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-white">SFX Volume</span>
-                    <span className="font-mono text-xs">{Math.round(soundEffectVolume * 100)}%</span>
-                  </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="1"
-                    step="0.01"
-                    value={soundEffectVolume}
-                    onChange={(e) => handleSoundEffectVolumeChange(parseFloat(e.target.value))}
-                    disabled={!soundEnabled}
-                    className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer disabled:cursor-not-allowed"
-                  />
-                </div>
+                {soundEnabled && musicEnabled && (
+                  <>
+                    <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-neutral-900/60 border-neutral-800">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-white">Auto-Pause on Audio</span>
+                        <span className="text-[10px] text-neutral-500">Pause music when other tabs play audio</span>
+                      </div>
+                      <div
+                        onClick={toggleAutoPauseOnExternalAudio}
+                        className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center shrink-0 ${
+                          autoPauseOnExternalAudio ? "bg-white" : "bg-neutral-700"
+                        }`}
+                      >
+                        <div
+                          className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
+                            autoPauseOnExternalAudio ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    {autoPauseOnExternalAudio && (
+                      <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-neutral-900/60 border-neutral-800">
+                        <div className="flex flex-col w-full gap-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex flex-col">
+                              <span className="text-xs font-bold text-white">Resume Fade Speed</span>
+                              <span className="text-[10px] text-neutral-500">Fade transition duration</span>
+                            </div>
+                            <span className="font-mono text-xs text-white">
+                              {autoPauseFadeDuration === 0 ? "Instant (0s)" : `${autoPauseFadeDuration}s`}
+                            </span>
+                          </div>
+                          <input
+                            type="range"
+                            min="0"
+                            max="5"
+                            step="0.5"
+                            value={autoPauseFadeDuration}
+                            onChange={(e) => handleAutoPauseFadeDurationChange(parseFloat(e.target.value))}
+                            className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer"
+                          />
+                          <div className="flex justify-between text-[9px] text-neutral-500 font-mono">
+                            <span>0s (Instant)</span>
+                            <span>2.5s</span>
+                            <span>5s</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
 
-              <button
-                onClick={() => playTestSoundEffect()}
-                disabled={!soundEnabled}
-                className={`w-full py-2.5 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-2 ${
+              <div className="flex flex-col gap-2 pt-1 border-t border-neutral-800/80">
+                <span className="px-1 text-[10px] font-bold text-neutral-400 uppercase tracking-wider">Sound Effects</span>
+
+                <div className={`flex items-center justify-between rounded-xl px-4 py-3 border transition-all ${
                   soundEnabled
-                    ? "border-neutral-700 bg-neutral-800 text-white hover:bg-neutral-700"
-                    : "border-neutral-800/50 bg-neutral-900/30 text-neutral-600 cursor-not-allowed"
-                }`}
-              >
-                <Volume1 className="w-4 h-4" />
-                Test Sound Effect
-              </button>
+                    ? "bg-neutral-900/60 border-neutral-800"
+                    : "bg-neutral-900/30 border-neutral-800/50 opacity-50"
+                }`}>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-white">Sound Effects</span>
+                    <span className="text-[10px] text-neutral-500">Enable or disable timer sound effects</span>
+                  </div>
+                  <div
+                    onClick={soundEnabled ? toggleSoundEffectEnabled : undefined}
+                    className={`relative w-11 h-6 rounded-full transition-colors flex items-center ${
+                      soundEffectEnabled && soundEnabled ? "bg-white cursor-pointer" : "bg-neutral-700"
+                    } ${!soundEnabled ? "cursor-not-allowed" : "cursor-pointer"}`}
+                  >
+                    <div
+                      className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
+                        soundEffectEnabled && soundEnabled ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
+                      }`}
+                    />
+                  </div>
+                </div>
+
+                {soundEnabled && soundEffectEnabled && (
+                  <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-neutral-900/60 border-neutral-800">
+                    <div className="flex flex-col w-full gap-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-bold text-white">Sound Effects Volume</span>
+                        <span className="font-mono text-xs">{Math.round(soundEffectVolume * 100)}%</span>
+                      </div>
+                      <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={soundEffectVolume}
+                        onChange={(e) => handleSoundEffectVolumeChange(parseFloat(e.target.value))}
+                        className="w-full h-1 rounded bg-neutral-700 accent-current cursor-pointer"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  onClick={() => playTestSoundEffect()}
+                  disabled={!soundEnabled}
+                  className={`w-full py-2.5 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-2 ${
+                    soundEnabled
+                      ? "border-neutral-700 bg-neutral-800 text-white hover:bg-neutral-700"
+                      : "border-neutral-800/50 bg-neutral-900/30 text-neutral-600 cursor-not-allowed"
+                  }`}
+                >
+                  <Volume1 className="w-4 h-4" />
+                  Test Sound Effect
+                </button>
+              </div>
             </div>
 
             {/* Data Section */}
