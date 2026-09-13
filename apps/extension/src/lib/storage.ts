@@ -49,8 +49,6 @@ export const DEFAULT_STATE: AppStateData = {
   },
   deepFocusMode: false,
   timerSettings: {
-    breakDuration: 5,
-    useSmartBreak: false,
     autoStartBreak: false,
     autoStartTimer: false
   },
@@ -197,15 +195,11 @@ function migrateState(fresh: AppStateData): AppStateData {
   }
   if (!fresh.timerSettings) {
     fresh.timerSettings = {
-      breakDuration: 5,
-      useSmartBreak: false,
       autoStartBreak: false,
       autoStartTimer: false
     };
   } else {
     fresh.timerSettings = {
-      breakDuration: fresh.timerSettings.breakDuration ?? 5,
-      useSmartBreak: fresh.timerSettings.useSmartBreak ?? false,
       autoStartBreak: fresh.timerSettings.autoStartBreak ?? false,
       autoStartTimer: fresh.timerSettings.autoStartTimer ?? false
     };
