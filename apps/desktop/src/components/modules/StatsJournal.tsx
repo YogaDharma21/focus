@@ -12,7 +12,6 @@ export const StatsJournal: React.FC = () => {
   const m = Math.floor(activeSeconds / 60);
   const s = activeSeconds % 60;
   const timeString = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  const timerLabel = 'Flow';
 
   // 2. Day Progress Calculation
   const now = new Date();

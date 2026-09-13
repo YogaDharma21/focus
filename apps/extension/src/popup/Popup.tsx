@@ -652,14 +652,11 @@ export function Popup() {
         <div className={`absolute top-14 left-3 right-3 z-50 p-3.5 rounded-2xl border shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${
           "bg-neutral-900 border-neutral-800 text-white shadow-black/80"
         }`}>
-          {/* Header Row: Emoji + Mode Name & Live Timer */}
+          {/* Header Row: Mode Name & Live Timer */}
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="flex items-center">
                 {state.timerState === "BREAK" ? <Coffee className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
-              </span>
-              <span className="text-sm font-bold font-sans">
-                {state.timerState === "BREAK" ? "Break" : "Flow"}
               </span>
             </div>
             <div className="text-xl font-black font-mono tracking-tight">
@@ -667,24 +664,13 @@ export function Popup() {
             </div>
           </div>
 
-          {/* Tag & Group Badge Row */}
+          {/* Tag Badge Row */}
           <div className="flex items-center justify-between mb-3 px-0.5">
             <span className={`px-2.5 py-1 rounded-lg text-xs font-bold font-sans border ${
               "bg-neutral-800/80 border-neutral-700 text-neutral-200"
             }`}>
-              {selectedTask ? selectedTask.text : (state.sessionName || "Work")}
+              {selectedTask ? selectedTask.text : (state.sessionName || "")}
             </span>
-
-            <button
-              onClick={() => {
-                setActiveTab("timer");
-                setShowFloatingTimerCard(false);
-              }}
-              className="text-[10px] font-bold font-mono opacity-70 hover:opacity-100 flex items-center gap-1"
-            >
-              <span>Open Timer</span>
-              <ArrowRight className="w-3 h-3" />
-            </button>
           </div>
 
           {/* Control Action Buttons Row */}

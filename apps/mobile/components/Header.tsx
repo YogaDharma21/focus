@@ -153,9 +153,6 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
           <View style={styles.cardHeader}>
             <View style={styles.cardHeaderTitleRow}>
               {renderModeIcon(18, colors.text)}
-              <Text style={[styles.cardTitle, { color: colors.text }]}>
-                {getModeTitle()}
-              </Text>
             </View>
             <Text style={[styles.cardTime, { color: colors.text }]}>
               {formatTime(timeLeft)}
