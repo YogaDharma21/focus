@@ -7,7 +7,6 @@ import { TodoList } from "@/components/modules/TodoList";
 import { StatsJournal } from "@/components/modules/StatsJournal";
 import { DynamicIslandTimer } from "@/components/modules/DynamicIslandTimer";
 import { DeepFocusOverlay } from "@/components/modules/DeepFocusOverlay";
-import { BackgroundDisplay } from "@/components/modules/BackgroundDisplay";
 import { SettingsPage } from "@/components/modules/SettingsPage";
 import { MoodTracker } from "@/components/modules/MoodTracker";
 import { useAppStore } from "@/lib/store";
@@ -53,8 +52,6 @@ export default function Page() {
 
     return (
         <main className="relative min-h-screen overflow-x-clip bg-background text-foreground transition-colors duration-500">
-            <BackgroundDisplay />
-
             <div className="fixed inset-0 pointer-events-none z-0">
                 <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-[var(--radius)] blur-[120px] opacity-20" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-[var(--radius)] blur-[120px] opacity-20" />
