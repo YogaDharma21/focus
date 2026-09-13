@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, StyleSheet, Animated, Linking } from 'react-native';
 import { useAppStore, BackgroundType } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
-import { Settings, Clock, Palette, Volume2, Trash2, Info, ExternalLink } from 'lucide-react-native';
+import { Settings, Palette, Volume2, Trash2, Info, ExternalLink } from 'lucide-react-native';
 import { VolumeSlider } from '@/components/ui/VolumeSlider';
 import { playCompletionSound } from '@/lib/sound';
 
@@ -71,8 +71,6 @@ export function SettingsPage() {
   const { colors } = useTheme();
   
   const {
-    pomodoroSettings,
-    setPomodoroSettings,
     background,
     setBackground,
     soundEffectEnabled,
@@ -81,21 +79,6 @@ export function SettingsPage() {
     setSoundEffectVolume,
     resetAllData,
   } = useAppStore();
-
-  const [workInput, setWorkInput] = useState(pomodoroSettings.work.toString());
-  const [breakInput, setBreakInput] = useState(pomodoroSettings.break.toString());
-  const [longBreakInput, setLongBreakInput] = useState((pomodoroSettings.longBreak || 15).toString());
-  
-  const [isWorkFocused, setIsWorkFocused] = useState(false);
-  const [isBreakFocused, setIsBreakFocused] = useState(false);
-  const [isLongBreakFocused, setIsLongBreakFocused] = useState(false);
-
-  const handleSavePomodoroSettings = () => {
-    const w = parseInt(workInput, 10) || 25;
-    const b = parseInt(breakInput, 10) || 5;
-    const lb = parseInt(longBreakInput, 10) || 15;
-    setPomodoroSettings({ work: w, break: b, longBreak: lb });
-  };
 
   const handleConfirmResetData = () => {
     Alert.alert(
@@ -126,108 +109,6 @@ export function SettingsPage() {
       <View style={styles.header}>
         <Settings size={24} color={colors.text} />
         <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
-      </View>
-
-      {/* Timer Section */}
-      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={styles.sectionHeader}>
-          <Clock size={18} color={colors.text} />
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Timer</Text>
-        </View>
-
-        <View style={styles.settingGroup}>
-          <Text style={[styles.settingLabel, { color: colors.text }]}>Pomodoro Work Time (mins)</Text>
-          <TextInput
-            style={[
-              styles.settingInput,
-              { color: colors.text, borderColor: isWorkFocused ? colors.text : colors.border, backgroundColor: colors.inputBg },
-            ]}
-            keyboardType="number-pad"
-            value={workInput}
-            onChangeText={setWorkInput}
-            onFocus={() => setIsWorkFocused(true)}
-            onBlur={() => {
-              setIsWorkFocused(false);
-              handleSavePomodoroSettings();
-            }}
-          />
-        </View>
-
-        <View style={styles.settingGroup}>
-          <Text style={[styles.settingLabel, { color: colors.text }]}>Short Break Time (mins)</Text>
-          <TextInput
-            style={[
-              styles.settingInput,
-              { color: colors.text, borderColor: isBreakFocused ? colors.text : colors.border, backgroundColor: colors.inputBg },
-            ]}
-            keyboardType="number-pad"
-            value={breakInput}
-            onChangeText={setBreakInput}
-            onFocus={() => setIsBreakFocused(true)}
-            onBlur={() => {
-              setIsBreakFocused(false);
-              handleSavePomodoroSettings();
-            }}
-          />
-        </View>
-
-        <View style={styles.settingGroup}>
-          <Text style={[styles.settingLabel, { color: colors.text }]}>Long Break Time (mins)</Text>
-          <TextInput
-            style={[
-              styles.settingInput,
-              { color: colors.text, borderColor: isLongBreakFocused ? colors.text : colors.border, backgroundColor: colors.inputBg },
-            ]}
-            keyboardType="number-pad"
-            value={longBreakInput}
-            onChangeText={setLongBreakInput}
-            onFocus={() => setIsLongBreakFocused(true)}
-            onBlur={() => {
-              setIsLongBreakFocused(false);
-              handleSavePomodoroSettings();
-            }}
-          />
-        </View>
-
-        <TouchableOpacity
-          style={[
-            styles.autoStartCard,
-            {
-              backgroundColor: colors.inputBg,
-              borderColor: colors.border,
-            },
-          ]}
-          onPress={() => setPomodoroSettings({ autoStartBreak: !pomodoroSettings.autoStartBreak })}
-          activeOpacity={0.7}
-        >
-          <View style={styles.autoStartTextContainer}>
-            <Text style={[styles.autoStartTitle, { color: colors.text }]}>Auto-start Break</Text>
-            <Text style={[styles.autoStartSubtitle, { color: colors.textMuted }]}>
-              Launch break timer immediately after work
-            </Text>
-          </View>
-          <CustomToggleSwitch value={pomodoroSettings.autoStartBreak} onToggle={() => setPomodoroSettings({ autoStartBreak: !pomodoroSettings.autoStartBreak })} />
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[
-            styles.autoStartCard,
-            {
-              backgroundColor: colors.inputBg,
-              borderColor: colors.border,
-            },
-          ]}
-          onPress={() => setPomodoroSettings({ autoStartTimer: !pomodoroSettings.autoStartTimer })}
-          activeOpacity={0.7}
-        >
-          <View style={styles.autoStartTextContainer}>
-            <Text style={[styles.autoStartTitle, { color: colors.text }]}>Auto-start Timer</Text>
-            <Text style={[styles.autoStartSubtitle, { color: colors.textMuted }]}>
-              Launch focus timer immediately after break
-            </Text>
-          </View>
-          <CustomToggleSwitch value={pomodoroSettings.autoStartTimer} onToggle={() => setPomodoroSettings({ autoStartTimer: !pomodoroSettings.autoStartTimer })} />
-        </TouchableOpacity>
       </View>
 
       {/* Appearance Section */}
@@ -341,7 +222,7 @@ export function SettingsPage() {
 
           <View style={[styles.aboutCard, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
             <Text style={[styles.aboutDescription, { color: colors.textMuted }]}>
-              A minimalist productivity suite designed to keep you in flow state. Features Pomodoro and Flow timers, task management with subtasks, productivity analytics, and ambient audio.
+              A minimalist productivity suite designed to keep you in flow state. Features a flow timer, task management with subtasks, productivity analytics, and ambient audio.
             </Text>
           </View>
 

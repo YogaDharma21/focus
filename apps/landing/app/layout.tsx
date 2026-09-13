@@ -19,13 +19,12 @@ export const metadata: Metadata = {
     template: "%s | FocusTrackers",
   },
   description:
-    "The minimalist, all-in-one productivity suite with Pomodoro & Flow timers, 1/5th break calculation, Focus Shield website blocker, ambient soundscapes, and cross-platform sync across Web, Desktop, Mobile, and Browser Extension.",
+        "The minimalist, all-in-one productivity suite with a smart Flow timer, 1/5th break calculation, Focus Shield website blocker, ambient soundscapes, and cross-platform sync across Web, Desktop, Mobile, and Browser Extension.",
   applicationName: "FocusTrackers",
   keywords: [
     "FocusTrackers",
     "Focus Tracker",
-    "Pomodoro Timer",
-    "Flow Stopwatch",
+    "Flow Timer",
     "Productivity Suite",
     "Focus Shield",
     "Website Blocker",
@@ -59,7 +58,7 @@ export const metadata: Metadata = {
     siteName: "FocusTrackers",
     title: "FocusTrackers - Master Your Attention & Stay in Flow",
     description:
-      "The minimalist, all-in-one productivity suite with Pomodoro & Flow timers, 1/5th break calculation, Focus Shield website blocker, ambient soundscapes, and cross-platform sync across Web, Desktop, Mobile, and Browser Extension.",
+      "The minimalist, all-in-one productivity suite with a smart Flow timer, 1/5th break calculation, Focus Shield website blocker, ambient soundscapes, and cross-platform sync across Web, Desktop, Mobile, and Browser Extension.",
     images: [
       {
         url: "/screenshots/website/screenshot-main.png",
@@ -73,7 +72,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "FocusTrackers - Master Your Attention & Stay in Flow",
     description:
-      "The minimalist, all-in-one productivity suite with Pomodoro & Flow timers, 1/5th break calculation, Focus Shield website blocker, ambient soundscapes, and cross-platform sync across Web, Desktop, Mobile, and Browser Extension.",
+      "The minimalist, all-in-one productivity suite with a smart Flow timer, 1/5th break calculation, Focus Shield website blocker, ambient soundscapes, and cross-platform sync across Web, Desktop, Mobile, and Browser Extension.",
     images: ["/screenshots/website/screenshot-main.png"],
   },
   icons: {
@@ -96,7 +95,7 @@ const jsonLd = {
       "url": "https://www.focustrackers.my.id",
       "name": "FocusTrackers",
       "description":
-        "Minimalist productivity suite with Pomodoro and Flow timers, smart break calculations, website blocker, and ambient audio.",
+        "Minimalist productivity suite with a smart Flow timer, smart break calculations, website blocker, and ambient audio.",
       "publisher": {
         "@id": "https://www.focustrackers.my.id/#organization",
       },
@@ -124,10 +123,10 @@ const jsonLd = {
       "url": "https://www.focustrackers.my.id",
       "image": "https://www.focustrackers.my.id/screenshots/website/screenshot-main.png",
       "description":
-        "The minimalist, all-in-one productivity suite with Pomodoro & Flow timers, 1/5th break calculation, Focus Shield website blocker, ambient soundscapes, and cross-platform sync across Web, Desktop, Mobile, and Browser Extension.",
+    "The minimalist, all-in-one productivity suite with a smart Flow timer, 1/5th break calculation, Focus Shield website blocker, ambient soundscapes, and cross-platform sync across Web, Desktop, Mobile, and Browser Extension.",
       "softwareVersion": "0.0.1",
       "featureList": [
-        "Pomodoro & Flow timer modes",
+        "Smart Flow timer with auto break calculation",
         "Smart Flow break calculator (1/5th session length)",
         "Focus Shield website distraction blocker",
         "Curated ambient lofi music player",

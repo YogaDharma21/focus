@@ -5,16 +5,13 @@ import {
 import { useDesktopStore } from '../../lib/store';
 
 export const StatsJournal: React.FC = () => {
-  const { sessions, todos, distractions, timeLeft, timerMode, timerState, flowTimeElapsed } = useDesktopStore();
+  const { sessions, todos, distractions, flowTimeElapsed } = useDesktopStore();
 
   // 1. Current Timer status string for top floating capsule
-  const activeSeconds = timerMode === 'POMODORO' ? timeLeft : flowTimeElapsed;
+  const activeSeconds = flowTimeElapsed;
   const m = Math.floor(activeSeconds / 60);
   const s = activeSeconds % 60;
   const timeString = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  const timerLabel = timerMode === 'POMODORO' 
-    ? (timerState === 'WORK' ? 'Pomodoro' : 'Break')
-    : 'Flow';
 
   // 2. Day Progress Calculation
   const now = new Date();

@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback } from "react";
-import { Pause, Play, X, CheckCircle2, AlertTriangle, Music, Volume2, VolumeX, RotateCcw } from "lucide-react";
+import { Pause, Play, X, CheckCircle2, AlertTriangle, Music, Volume2, VolumeX } from "lucide-react";
 import { AppStateData } from "../../types";
 
 interface DeepFocusOverlayProps {
@@ -9,7 +9,6 @@ interface DeepFocusOverlayProps {
   onSelectDistraction: (category: string) => void;
   onToggleMusic: () => void;
   onSetMusicVolume: (volume: number) => void;
-  onResetPomodoroCount?: () => void;
   onExit: () => void;
 }
 
@@ -28,7 +27,6 @@ export function DeepFocusOverlay({
   onSelectDistraction,
   onToggleMusic,
   onSetMusicVolume,
-  onResetPomodoroCount,
   onExit,
 }: DeepFocusOverlayProps) {
   const [showDistractions, setShowDistractions] = React.useState(false);
@@ -160,49 +158,6 @@ export function DeepFocusOverlay({
       </button>
 
       <div className="flex flex-col items-center gap-4">
-        {/* Pomodoro Cycle & Progress Indicator */}
-        {state.timerMode === "POMODORO" && state.previousMode !== "FLOW" && (
-          <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-mono text-neutral-300 shadow-sm animate-in fade-in duration-150 group">
-            <div className="flex items-center gap-1.5">
-              {[0, 1, 2, 3].map((index) => {
-                const currentCycleStep = (state.pomodoroCount || 0) % 4;
-                const isCompleted = index < currentCycleStep;
-                const isCurrent = index === currentCycleStep && state.timerState === "WORK";
-                return (
-                  <div
-                    key={index}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      isCompleted
-                        ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.7)]"
-                        : isCurrent
-                        ? "bg-white/80 ring-2 ring-white/30 animate-pulse"
-                        : "bg-neutral-700"
-                    }`}
-                    title={`Pomodoro ${index + 1} of 4`}
-                  />
-                );
-              })}
-            </div>
-            <span className="text-[10px] font-bold text-neutral-300">
-              {state.timerState === "BREAK"
-                ? ((state.pomodoroCount || 0) % 4 === 0 && (state.pomodoroCount || 0) > 0
-                    ? `Long Break (${state.pomodoroSettings.longBreak || 15}m)`
-                    : `Short Break (${state.pomodoroSettings.break || 5}m)`)
-                : `Pomodoro ${((state.pomodoroCount || 0) % 4) + 1} of 4`}
-            </span>
-            {(state.pomodoroCount || 0) % 4 !== 0 && onResetPomodoroCount && (
-              <button
-                type="button"
-                onClick={onResetPomodoroCount}
-                className="p-0.5 rounded text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer"
-                title="Reset pomodoro count to 1 of 4"
-              >
-                <RotateCcw className="w-2.5 h-2.5" />
-              </button>
-            )}
-          </div>
-        )}
-
         {/* Large Timer Display */}
         <div
           className={`text-6xl font-black font-mono tracking-tighter leading-none text-white select-none ${

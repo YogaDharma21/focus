@@ -8,24 +8,8 @@ export const TitleBar: React.FC = () => {
   const { 
     isAlwaysOnTop, 
     setAlwaysOnTop, 
-    timeLeft, 
-    flowTimeElapsed,
-    isActive, 
-    timerMode,
-    timerState 
   } = useDesktopStore();
   const [isMaximized, setIsMaximized] = React.useState(false);
-
-  const formatTime = (seconds: number) => {
-    const m = Math.floor(seconds / 60);
-    const s = seconds % 60;
-    return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-  };
-
-  const activeSeconds = timerMode === 'POMODORO' ? timeLeft : flowTimeElapsed;
-  const modeLabel = timerMode === 'STOPWATCH' 
-    ? 'FLOW' 
-    : (timerState === 'WORK' ? 'FOCUS' : 'BREAK');
 
   const handleTogglePin = async () => {
     const nextState = !isAlwaysOnTop;
@@ -44,15 +28,6 @@ export const TitleBar: React.FC = () => {
       <div className="flex items-center gap-2.5 no-drag">
         <img src={iconUrl} className="w-5 h-5 rounded-md object-contain shadow-sm" alt="Focus Desktop" />
         <span className="font-bold text-zinc-100 tracking-tight text-xs">Focus Desktop</span>
-        
-        {isActive && (
-          <div className="flex items-center gap-1.5 ml-2 px-2.5 py-0.5 rounded-full bg-zinc-800 border border-zinc-700 text-zinc-200 font-mono text-[10px]">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="font-semibold">{modeLabel}</span>
-            <span className="text-zinc-500">•</span>
-            <span className="font-bold text-white">{formatTime(activeSeconds)}</span>
-          </div>
-        )}
       </div>
 
       {/* Right: Window Controls */}
