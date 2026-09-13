@@ -18,7 +18,6 @@ export const DEFAULT_STATE: AppStateData = {
     { id: "current", name: "Current Tasks", type: "system" },
     { id: "finished", name: "Finished", type: "system" }
   ],
-  moodNotes: [],
   sessions: [],
   distractions: [],
   shield: {

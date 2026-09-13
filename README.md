@@ -15,7 +15,6 @@
 - **Focus Session Tasks** — Link sessions directly to tasks, with automatic task session completion and auto-finish logic.
 - **Task Management** — Organize tasks into custom groups, subtasks, estimated sessions, priority levels, and recurring schedules.
 - **Stats & Analytics** — Track daily focus minutes, task completion rates, streak metrics, distraction logs, and progress trends.
-- **Mood & Notes** — Record daily mood logs and focus reflections.
 - **Ambient Sound Player** — Background sound player supporting focus tracks and custom playlists.
 - **Custom Backgrounds** — Dynamic themes including dark gradients, mountain scenes, cozy cafes, and anime rooms.
 
@@ -35,9 +34,6 @@
 ### Stats & Analytics
 ![Stats & Journal](./apps/website/public/screenshots/screenshot-stats.png)
 
-### Mood & Notes
-![Mood Notes](./apps/website/public/screenshots/screenshot-mood.png)
-
 </details>
 
 <details>
@@ -52,9 +48,6 @@
 ### Stats & Analytics
 ![Mobile Stats](./apps/mobile/assets/images/screenshot-stats.jpeg)
 
-### Mood & Notes
-![Mobile Mood](./apps/mobile/assets/images/screenshot-mood.jpeg)
-
 </details>
 
 <details>
@@ -68,9 +61,6 @@
 
 ### Stats & Analytics
 ![Stats](./apps/desktop/public/Screenshot-stats.png)
-
-### Mood & Notes
-![Notes](./apps/desktop/public/Screenshot-notes.png)
 
 </details>
 
@@ -88,9 +78,6 @@
 
 ### Stats & Analytics
 ![Stats](./apps/extension/public/Screenshot-stats.png)
-
-### Mood & Notes
-![Notes](./apps/extension/public/Screenshot-notes.png)
 
 </details>
 

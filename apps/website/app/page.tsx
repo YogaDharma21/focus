@@ -9,7 +9,6 @@ import { DynamicIslandTimer } from "@/components/modules/DynamicIslandTimer";
 import { DeepFocusOverlay } from "@/components/modules/DeepFocusOverlay";
 import { BackgroundDisplay } from "@/components/modules/BackgroundDisplay";
 import { SettingsPage } from "@/components/modules/SettingsPage";
-import { MoodTracker } from "@/components/modules/MoodTracker";
 import { useAppStore } from "@/lib/store";
 import { useTimerEngine } from "@/lib/hooks";
 import { useEffect, useRef, useSyncExternalStore } from "react";
@@ -102,12 +101,6 @@ export default function Page() {
                                 ) : (
                                     <StatsJournal />
                                 )}
-                            </div>
-                        )}
-
-                        {currentView === "NOTES" && (
-                            <div className="max-w-2xl mx-auto w-full pb-8 pt-12">
-                                <MoodTracker />
                             </div>
                         )}
 

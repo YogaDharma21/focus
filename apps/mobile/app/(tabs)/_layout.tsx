@@ -8,7 +8,7 @@ import { BackgroundDisplay } from '@/components/modules/BackgroundDisplay';
 import { MediaPlayer } from '@/components/modules/MediaPlayer';
 import { DeepFocusOverlay } from '@/components/modules/DeepFocusOverlay';
 import { DynamicIslandTimer } from '@/components/modules/DynamicIslandTimer';
-import { Clock, ListCheck, BarChart2, Smile, Settings } from 'lucide-react-native';
+import { Clock, ListCheck, BarChart2, Settings } from 'lucide-react-native';
 
 import { useAppStore } from '@/lib/store';
 
@@ -104,13 +104,6 @@ export default function TabLayout() {
             options={{
               title: 'Stats',
               tabBarIcon: ({ color }) => <BarChart2 size={22} color={color} />,
-            }}
-          />
-          <Tabs.Screen
-            name="notes"
-            options={{
-              title: 'Mood',
-              tabBarIcon: ({ color }) => <Smile size={22} color={color} />,
             }}
           />
           <Tabs.Screen
