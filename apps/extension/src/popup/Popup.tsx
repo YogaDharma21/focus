@@ -2207,9 +2207,9 @@ export function Popup() {
           <div className="flex flex-col gap-3 h-full overflow-y-auto stable-scrollbar">
             {/* Timer Settings */}
             <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
-              "bg-card border-border"
+              "bg-background/40 border-border"
             }`}>
-              <span className="text-xs font-bold text-foreground uppercase tracking-wider">Timer Settings</span>
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider">Timer</span>
 
               <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
                 "bg-card/60 border-border"
@@ -2328,7 +2328,7 @@ export function Popup() {
 
             {/* Appearance Section */}
             <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
-              "bg-card border-border"
+              "bg-background/40 border-border"
             }`}>
               <span className="text-xs font-bold text-foreground uppercase tracking-wider">Appearance</span>
               <div className="flex items-center gap-2">
@@ -2341,7 +2341,7 @@ export function Popup() {
                       className={`flex-1 px-3 py-2.5 rounded-xl text-xs font-bold transition-all border ${
                         isActive
                           ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-secondary text-secondary-foreground border-border hover:bg-accent"
+                          : "bg-card/60 text-muted-foreground border-border hover:bg-secondary hover:text-foreground"
                       }`}
                     >
                       {mode === "light" ? "Light" : "Dark"}
