@@ -93,18 +93,18 @@ export function MoodNotes() {
                 style={[
                   styles.moodBtn,
                   {
-                    backgroundColor: active ? colors.primary : colors.inputBg,
+                    backgroundColor: active ? colors.primary : colors.muted,
                     borderColor: colors.border,
                   },
                 ]}
                 onPress={() => setSelectedMood(m.key)}
                 activeOpacity={0.8}
               >
-                <Icon size={20} color={active ? colors.primaryForeground : colors.text} style={{ marginBottom: 4 }} />
+                <Icon size={20} color={active ? colors.primaryText : colors.text} style={{ marginBottom: 4 }} />
                 <Text
                   style={[
                     styles.moodLabel,
-                    { color: active ? colors.primaryForeground : colors.textMuted },
+                    { color: active ? colors.primaryText : colors.mutedText },
                   ]}
                 >
                   {m.label}
@@ -118,10 +118,10 @@ export function MoodNotes() {
         <TextInput
           style={[
             styles.noteInput,
-            { color: colors.text, backgroundColor: colors.inputBg, borderColor: isNoteFocused ? colors.text : colors.border },
+            { color: colors.text, backgroundColor: colors.muted, borderColor: isNoteFocused ? colors.text : colors.border },
           ]}
           placeholder="Write down any thoughts, mindset updates, or session notes..."
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.mutedText}
           multiline
           numberOfLines={3}
           value={noteText}
@@ -141,11 +141,11 @@ export function MoodNotes() {
           disabled={!noteText.trim()}
           activeOpacity={0.8}
         >
-          <Send size={16} color={noteText.trim() ? colors.primaryForeground : colors.textMuted} />
+          <Send size={16} color={noteText.trim() ? colors.primaryText : colors.mutedText} />
           <Text
             style={[
               styles.saveBtnText,
-              { color: noteText.trim() ? colors.primaryForeground : colors.textMuted },
+              { color: noteText.trim() ? colors.primaryText : colors.mutedText },
             ]}
           >
             Log Mood Note
@@ -161,7 +161,7 @@ export function MoodNotes() {
         </View>
 
         {moodNotes.length === 0 ? (
-          <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+          <Text style={[styles.emptyText, { color: colors.mutedText }]}>
             No mood notes logged yet. Take a moment to log your state!
           </Text>
         ) : (
@@ -173,19 +173,19 @@ export function MoodNotes() {
                   key={item.id}
                   style={[
                     styles.noteItem,
-                    { backgroundColor: colors.inputBg, borderColor: colors.border },
+                    { backgroundColor: colors.muted, borderColor: colors.border },
                   ]}
                 >
                   <View style={styles.noteTopRow}>
                     <View style={styles.noteMoodBadge}>
                       <MoodIcon size={16} color={colors.text} />
-                      <Text style={[styles.noteDate, { color: colors.textMuted, marginLeft: 6 }]}>
+                      <Text style={[styles.noteDate, { color: colors.mutedText, marginLeft: 6 }]}>
                         {formatDate(item.date)}
                       </Text>
                     </View>
 
                     <TouchableOpacity onPress={() => deleteMoodNote(item.id)}>
-                      <Trash2 size={16} color={colors.textMuted} />
+                      <Trash2 size={16} color={colors.mutedText} />
                     </TouchableOpacity>
                   </View>
 

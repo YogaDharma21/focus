@@ -16,7 +16,7 @@ function Progress({
     <div
       data-slot="progress"
       className={cn(
-        "bg-neutral-200 dark:bg-neutral-800 h-1.5 rounded-full relative w-full overflow-hidden",
+        "bg-secondary h-1.5 rounded-full relative w-full overflow-hidden",
         className
       )}
       {...props}
@@ -24,7 +24,7 @@ function Progress({
       <div
         data-slot="progress-indicator"
         className={cn(
-          "bg-neutral-900 dark:bg-white h-full rounded-full transition-all duration-300",
+          "bg-foreground h-full rounded-full transition-all duration-300",
           indicatorClassName
         )}
         style={{ width: `${progressValue}%` }}

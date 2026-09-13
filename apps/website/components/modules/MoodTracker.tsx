@@ -29,56 +29,56 @@ export const MOOD_CONFIGS: Record<MoodType, MoodConfig> = {
         key: "amazing",
         label: "Amazing",
         icon: <Smile className="w-5 h-5" />,
-        color: "#ffffff",
-        bgClass: "bg-white hover:bg-slate-100",
-        borderClass: "border-white",
-        textClass: "text-white font-semibold",
-        ringClass: "ring-white",
-        pillSelectedClass: "bg-white text-slate-950 shadow-lg scale-105 border-white font-bold",
+        color: "hsl(var(--primary))",
+        bgClass: "bg-primary",
+        borderClass: "border-primary",
+        textClass: "text-primary font-semibold",
+        ringClass: "ring-primary",
+        pillSelectedClass: "bg-primary text-primary-foreground shadow-lg scale-105 border-primary font-bold",
     },
     ok: {
         key: "ok",
         label: "OK",
         icon: <Meh className="w-5 h-5" />,
-        color: "#cbd5e1",
-        bgClass: "bg-slate-300 hover:bg-slate-200",
-        borderClass: "border-slate-300",
-        textClass: "text-slate-300 font-semibold",
-        ringClass: "ring-slate-300",
-        pillSelectedClass: "bg-slate-300 text-slate-950 shadow-lg scale-105 border-slate-300 font-bold",
+        color: "hsl(var(--secondary))",
+        bgClass: "bg-secondary",
+        borderClass: "border-secondary",
+        textClass: "text-secondary-foreground font-semibold",
+        ringClass: "ring-secondary",
+        pillSelectedClass: "bg-primary text-primary-foreground shadow-lg scale-105 border-primary font-bold",
     },
     tired: {
         key: "tired",
         label: "Tired",
         icon: <Moon className="w-5 h-5" />,
-        color: "#64748b",
-        bgClass: "bg-slate-500 hover:bg-slate-400",
-        borderClass: "border-slate-500",
-        textClass: "text-slate-400 font-semibold",
-        ringClass: "ring-slate-400",
-        pillSelectedClass: "bg-slate-500 text-white shadow-lg scale-105 border-slate-500 font-bold",
+        color: "hsl(var(--muted-foreground))",
+        bgClass: "bg-muted-foreground/30",
+        borderClass: "border-muted-foreground/30",
+        textClass: "text-muted-foreground font-semibold",
+        ringClass: "ring-muted-foreground/40",
+        pillSelectedClass: "bg-primary text-primary-foreground shadow-lg scale-105 border-primary font-bold",
     },
     sad: {
         key: "sad",
         label: "Sad",
         icon: <Frown className="w-5 h-5" />,
-        color: "#334155",
-        bgClass: "bg-slate-700 hover:bg-slate-600",
-        borderClass: "border-slate-700",
-        textClass: "text-slate-300 font-semibold",
-        ringClass: "ring-slate-600",
-        pillSelectedClass: "bg-slate-700 text-white shadow-lg scale-105 border-slate-700 font-bold",
+        color: "hsl(var(--accent))",
+        bgClass: "bg-accent",
+        borderClass: "border-accent",
+        textClass: "text-accent-foreground font-semibold",
+        ringClass: "ring-accent",
+        pillSelectedClass: "bg-primary text-primary-foreground shadow-lg scale-105 border-primary font-bold",
     },
     stressed: {
         key: "stressed",
         label: "Stressed",
         icon: <Zap className="w-5 h-5" />,
-        color: "#1e293b",
-        bgClass: "bg-slate-800 hover:bg-slate-700",
-        borderClass: "border-slate-800",
-        textClass: "text-slate-300 font-semibold",
-        ringClass: "ring-slate-700",
-        pillSelectedClass: "bg-slate-800 text-white shadow-lg scale-105 border-slate-800 font-bold",
+        color: "hsl(var(--destructive))",
+        bgClass: "bg-destructive/20",
+        borderClass: "border-destructive/20",
+        textClass: "text-destructive font-semibold",
+        ringClass: "ring-destructive/30",
+        pillSelectedClass: "bg-primary text-primary-foreground shadow-lg scale-105 border-primary font-bold",
     },
 };
 
@@ -215,7 +215,7 @@ export function MoodTracker() {
             <Card className="p-6 bg-card border border-border/50 shadow-sm rounded-[var(--radius)] space-y-4">
                 <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 shrink-0">
+                        <div className="w-9 h-9 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground shrink-0">
                             <Smile className="w-4 h-4" />
                         </div>
                         <h2 className="font-semibold text-lg text-foreground">
@@ -256,7 +256,7 @@ export function MoodTracker() {
                                     "flex flex-col items-center justify-center p-3 sm:p-4 rounded-xl transition-transform duration-100 border group cursor-pointer",
                                     isSelected
                                         ? cfg.pillSelectedClass
-                                        : "bg-neutral-800/40 hover:bg-neutral-800 border-neutral-700/60 text-white"
+                                        : "bg-secondary/50 hover:bg-secondary border-border text-muted-foreground"
                                 )}
                             >
                                 <span className="transition-transform duration-100 group-hover:scale-110">
@@ -264,7 +264,7 @@ export function MoodTracker() {
                                 </span>
                                 <span className={cn(
                                     "text-xs font-medium mt-1.5",
-                                    isSelected ? "font-bold" : "text-neutral-400 group-hover:text-white"
+                                    isSelected ? "font-bold" : "text-muted-foreground group-hover:text-foreground"
                                 )}>
                                     {cfg.label}
                                 </span>
@@ -317,7 +317,7 @@ export function MoodTracker() {
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/40 pb-4">
                     <div>
                         <h3 className="font-semibold text-lg flex items-center gap-2.5">
-                            <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 shrink-0">
+                            <div className="w-9 h-9 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground shrink-0">
                                 <CalendarIcon className="w-4 h-4" />
                             </div>
                             Yearly Mood Tracker

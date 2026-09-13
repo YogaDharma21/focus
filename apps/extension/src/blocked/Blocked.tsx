@@ -11,11 +11,20 @@ export function Blocked() {
   useEffect(() => {
     getStoredState().then((s) => {
       setState(s);
-      document.body.className = "dark";
+      const mode = s.themeMode || "dark";
+      document.documentElement.classList.toggle("dark", mode === "dark");
+      document.documentElement.classList.toggle("light", mode === "light");
+      document.body.classList.toggle("dark", mode === "dark");
+      document.body.classList.toggle("light", mode === "light");
     });
 
     const unsubscribe = subscribeToStateChanges((newState) => {
       setState(newState);
+      const mode = newState.themeMode || "dark";
+      document.documentElement.classList.toggle("dark", mode === "dark");
+      document.documentElement.classList.toggle("light", mode === "light");
+      document.body.classList.toggle("dark", mode === "dark");
+      document.body.classList.toggle("light", mode === "light");
     });
 
     const params = new URLSearchParams(window.location.search);
@@ -95,9 +104,9 @@ export function Blocked() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 select-none font-sans bg-black text-white">
-      <div className="max-w-md w-full p-8 rounded-2xl border flex flex-col items-center text-center shadow-2xl bg-neutral-950 border-neutral-800">
-        <div className="w-14 h-14 rounded-2xl border flex items-center justify-center mb-5 bg-white text-black border-white">
+    <div className="min-h-screen flex items-center justify-center p-6 select-none font-sans bg-background text-foreground">
+      <div className="max-w-md w-full p-8 rounded-2xl border flex flex-col items-center text-center shadow-2xl bg-card border-border">
+        <div className="w-14 h-14 rounded-2xl border flex items-center justify-center mb-5 bg-primary text-primary-foreground border-primary">
           <ShieldAlert className="w-7 h-7" />
         </div>
 
@@ -109,13 +118,13 @@ export function Blocked() {
           {displayDomain}
         </h1>
 
-        <p className="text-xs max-w-sm mb-6 leading-relaxed text-neutral-400">
+        <p className="text-xs max-w-sm mb-6 leading-relaxed text-muted-foreground">
           This domain is blocked during your active <b>Pomodoro Work Session</b>.
         </p>
 
         {/* Live Timer Card */}
         {state && (
-          <div className="w-full p-4 rounded-xl border flex items-center gap-3 mb-6 bg-neutral-900 border-neutral-800">
+          <div className="w-full p-4 rounded-xl border flex items-center gap-3 mb-6 bg-card border-border">
             <Timer className="w-5 h-5 shrink-0" />
             <div className="text-left">
               <div className="text-[10px] font-mono opacity-60 uppercase">Session Time Remaining</div>
@@ -128,14 +137,14 @@ export function Blocked() {
         <div className="w-full flex flex-col gap-2">
           <button
             onClick={pauseTimer}
-            className="w-full py-3 px-4 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 border transition-all bg-white text-black border-white hover:bg-neutral-200"
+            className="w-full py-3 px-4 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 border transition-all bg-primary text-primary-foreground border-primary hover:bg-accent"
           >
             <Pause className="w-3.5 h-3.5" />
             Pause Timer
           </button>
           <button
             onClick={pauseShieldTemporarily}
-            className="w-full py-3 px-4 rounded-xl font-semibold text-xs border transition-all bg-neutral-900 border-neutral-800 text-neutral-300 hover:bg-neutral-800"
+            className="w-full py-3 px-4 rounded-xl font-semibold text-xs border transition-all bg-card border-border text-secondary-foreground hover:bg-accent"
           >
             Disable Shield
           </button>

@@ -1,8 +1,7 @@
 export type TimerMode = "POMODORO" | "STOPWATCH" | "FLOW";
 export type TimerState = "WORK" | "BREAK" | "FLOW";
 export type PriorityType = "low" | "medium" | "high" | "urgent";
-export type ThemeMode = "dark";
-export type BackgroundTheme = "dark" | "default" | "gradient" | "mountain" | "library" | "cafe" | "anime-room";
+export type ThemeMode = "light" | "dark";
 
 export interface SubTask {
   id: string;
@@ -64,7 +63,6 @@ export interface ShieldConfig {
 
 export interface AppStateData {
   themeMode: ThemeMode;
-  background: BackgroundTheme; // "default" | "gradient" | "mountain" | "library" | "cafe" | "anime-room"
   
   timerMode: TimerMode;
   timerState: TimerState;

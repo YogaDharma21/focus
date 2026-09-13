@@ -164,7 +164,6 @@ export const FloatingTimerCapsule: React.FC = () => {
   const [showDistractionMenu, setShowDistractionMenu] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Close popover on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -176,7 +175,6 @@ export const FloatingTimerCapsule: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Only show when user is NOT on the main FOCUS view
   if (currentView === 'FOCUS') return null;
 
   const activeSeconds = timerMode === 'POMODORO' ? timeLeft : flowTimeElapsed;
@@ -227,15 +225,13 @@ export const FloatingTimerCapsule: React.FC = () => {
 
   return (
     <div ref={containerRef} className="fixed top-1 left-1/2 -translate-x-1/2 z-50 select-none no-drag flex flex-col items-center">
-      {/* 1. Compact Pill inside TitleBar (Always rendered at top) */}
       {isActive ? (
-        /* Active Playing State (Image 2 style: green border, timer icon, time, green dot) */
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="bg-zinc-900 border border-emerald-500/80 rounded-full px-3.5 py-1 flex items-center gap-2.5 shadow-md hover:bg-zinc-850 hover:border-emerald-400 transition-all active:scale-98 text-xs group"
+          className="bg-card border border-emerald-500/80 rounded-full px-3.5 py-1 flex items-center gap-2.5 shadow-md hover:bg-secondary hover:border-emerald-400 transition-all active:scale-98 text-xs group"
         >
-          <span className="text-xs flex items-center text-zinc-200">{renderModeIcon()}</span>
-          <span className="text-[11px] font-mono font-bold text-white tracking-wider">
+          <span className="text-xs flex items-center text-foreground">{renderModeIcon()}</span>
+          <span className="text-[11px] font-mono font-bold text-foreground tracking-wider">
             {timeString}
           </span>
           <div
@@ -248,18 +244,17 @@ export const FloatingTimerCapsule: React.FC = () => {
           />
         </button>
       ) : (
-        /* Inactive / Paused State (Clean look: mode icon, timer label, time, play button) */
         <button
           onClick={() => setIsExpanded(!isExpanded)}
-          className="bg-zinc-900 border border-zinc-800 rounded-full px-3 py-1 flex items-center justify-between gap-3 shadow-md hover:bg-zinc-800 hover:border-zinc-700 transition-all active:scale-98 text-xs"
+          className="bg-card border border-border rounded-full px-3 py-1 flex items-center justify-between gap-3 shadow-md hover:bg-secondary hover:border-muted-foreground transition-all active:scale-98 text-xs"
         >
           <div className="flex items-center gap-1.5 min-w-0 text-left">
             <span className="text-xs flex items-center">{renderModeIcon()}</span>
-            <span className="text-[11px] font-semibold text-zinc-200 tracking-tight">{timerLabel}</span>
+            <span className="text-[11px] font-semibold text-foreground tracking-tight">{timerLabel}</span>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[11px] font-mono font-bold text-white tracking-wider">
+            <span className="text-[11px] font-mono font-bold text-foreground tracking-wider">
               {timeString}
             </span>
             <div
@@ -267,41 +262,38 @@ export const FloatingTimerCapsule: React.FC = () => {
                 e.stopPropagation();
                 handleToggleTimer();
               }}
-              className="w-5 h-5 rounded-full bg-zinc-100 text-zinc-950 hover:bg-zinc-200 transition-all flex items-center justify-center shrink-0 shadow-sm"
+              className="w-5 h-5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all flex items-center justify-center shrink-0 shadow-sm"
               title="Start Timer"
             >
-              <Play className="w-3 h-3 fill-zinc-950 ml-0.5" />
+              <Play className="w-3 h-3 fill-primary-foreground ml-0.5" />
             </div>
           </div>
         </button>
       )}
 
-      {/* 2. Expanded Card Popup dropdown rendered UNDER the compact pill when active */}
       {isExpanded && (
-        <div className="w-[360px] bg-[#121214] border border-zinc-800 rounded-2xl p-4 shadow-2xl space-y-3 animate-in fade-in slide-in-from-top-2 zoom-in-95 duration-200 relative mt-1.5">
-          {/* Header Row (Clicking collapses back to default compact pill) */}
+        <div className="w-[360px] bg-card border border-border rounded-2xl p-4 shadow-2xl space-y-3 animate-in fade-in slide-in-from-top-2 zoom-in-95 duration-200 relative mt-1.5">
           <div 
             onClick={() => setIsExpanded(false)}
             className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity pb-0.5"
             title="Click to collapse widget"
           >
             <div className="flex items-center gap-2">
-              <span className="text-base flex items-center text-zinc-200">{renderModeIcon()}</span>
-              <span className="text-xs font-bold text-white tracking-tight">{timerLabel}</span>
+              <span className="text-base flex items-center text-foreground">{renderModeIcon()}</span>
+              <span className="text-xs font-bold text-foreground tracking-tight">{timerLabel}</span>
             </div>
-            <span className="text-xl font-extrabold font-mono text-white tracking-tight">
+            <span className="text-xl font-extrabold font-mono text-foreground tracking-tight">
               {timeString}
             </span>
           </div>
 
-          {/* Mode Selector Capsule Tabs - Fill full width with grid */}
           <div className="grid grid-cols-3 gap-2 w-full">
             <button
               onClick={() => handleSelectTab('POMODORO')}
               className={`py-1.5 px-2 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all ${
                 activeTab === 'POMODORO'
-                  ? 'bg-zinc-100 text-zinc-950 shadow-sm'
-                  : 'bg-[#1a1a1c] text-zinc-400 border border-zinc-800/80 hover:text-zinc-200'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-secondary text-muted-foreground border border-border hover:text-foreground'
               }`}
             >
               <TimerIcon className="w-3 h-3" />
@@ -312,8 +304,8 @@ export const FloatingTimerCapsule: React.FC = () => {
               onClick={() => handleSelectTab('BREAK')}
               className={`py-1.5 px-2 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all ${
                 activeTab === 'BREAK'
-                  ? 'bg-zinc-100 text-zinc-950 shadow-sm'
-                  : 'bg-[#1a1a1c] text-zinc-400 border border-zinc-800/80 hover:text-zinc-200'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-secondary text-muted-foreground border border-border hover:text-foreground'
               }`}
             >
               <Coffee className="w-3 h-3" />
@@ -324,8 +316,8 @@ export const FloatingTimerCapsule: React.FC = () => {
               onClick={() => handleSelectTab('FLOW')}
               className={`py-1.5 px-2 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all ${
                 activeTab === 'FLOW'
-                  ? 'bg-zinc-100 text-zinc-950 shadow-sm'
-                  : 'bg-[#1a1a1c] text-zinc-400 border border-zinc-800/80 hover:text-zinc-200'
+                  ? 'bg-primary text-primary-foreground shadow-sm'
+                  : 'bg-secondary text-muted-foreground border border-border hover:text-foreground'
               }`}
             >
               <Clock className="w-3 h-3" />
@@ -333,24 +325,20 @@ export const FloatingTimerCapsule: React.FC = () => {
             </button>
           </div>
 
-          {/* Horizontal Line Divider */}
-          <div className="border-t border-zinc-800/80 pt-0.5" />
+          <div className="border-t border-border pt-0.5" />
 
-          {/* Focus Item Text */}
           <div>
-            <p className="text-xs font-semibold text-zinc-200 truncate">
+            <p className="text-xs font-semibold text-foreground truncate">
               {activeTask ? activeTask.text : (sessionName || "General Focus")}
             </p>
           </div>
 
-          {/* Bottom Controls Bar - Fill full width */}
           <div className="flex items-center justify-between gap-2 pt-1 relative">
-            {/* Complete Button */}
             <button
               onClick={handleCompleteSession}
               disabled={!isActive}
               className={cn(
-                "flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#181818] border border-zinc-800 text-[11px] font-medium text-zinc-200 hover:bg-zinc-800 transition-colors",
+                "flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-secondary border border-border text-[11px] font-medium text-foreground hover:bg-muted transition-colors",
                 !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
               )}
               title={isActive ? "Complete Session" : "Start timer to complete session"}
@@ -359,13 +347,12 @@ export const FloatingTimerCapsule: React.FC = () => {
               <span>Complete</span>
             </button>
 
-            {/* Distraction Alert Button & Popover */}
             <div className="relative">
               <button
                 onClick={() => setShowDistractionMenu(!showDistractionMenu)}
                 disabled={!isActive}
                 className={cn(
-                  "w-8 h-8 rounded-xl bg-[#181818] border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-rose-400 transition-colors",
+                  "w-8 h-8 rounded-xl bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-rose-400 transition-colors",
                   !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
                 )}
                 title={isActive ? "Log Distraction" : "Start timer to log distraction"}
@@ -374,7 +361,7 @@ export const FloatingTimerCapsule: React.FC = () => {
               </button>
 
               {isActive && showDistractionMenu && (
-                <div className="absolute bottom-11 left-1/2 -translate-x-1/2 w-40 bg-[#181818] border border-zinc-800/90 rounded-2xl shadow-2xl z-50 p-2 space-y-1 animate-in zoom-in-95 duration-150">
+                <div className="absolute bottom-11 left-1/2 -translate-x-1/2 w-40 bg-card border border-border rounded-2xl shadow-2xl z-50 p-2 space-y-1 animate-in zoom-in-95 duration-150">
                   {DISTRACTION_OPTIONS.map((opt) => (
                     <button
                       key={opt}
@@ -382,7 +369,7 @@ export const FloatingTimerCapsule: React.FC = () => {
                         addDistraction(opt);
                         setShowDistractionMenu(false);
                       }}
-                      className="w-full text-left px-3 py-1.5 rounded-xl text-[11px] font-semibold text-zinc-100 hover:bg-zinc-800 transition-colors"
+                      className="w-full text-left px-3 py-1.5 rounded-xl text-[11px] font-semibold text-foreground hover:bg-secondary transition-colors"
                     >
                       {opt}
                     </button>
@@ -391,19 +378,18 @@ export const FloatingTimerCapsule: React.FC = () => {
               )}
             </div>
 
-            {/* Play/Pause Button */}
             <button
               onClick={handleToggleTimer}
-              className="flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-xl bg-zinc-100 text-zinc-950 font-semibold text-[11px] hover:bg-zinc-200 transition-colors shadow-sm"
+              className="flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-xl bg-primary text-primary-foreground font-semibold text-[11px] hover:bg-primary/90 transition-colors shadow-sm"
             >
               {isActive ? (
                 <>
-                  <Pause className="w-3 h-3 fill-zinc-950" />
+                  <Pause className="w-3 h-3 fill-primary-foreground" />
                   <span>Pause</span>
                 </>
               ) : (
                 <>
-                  <Play className="w-3 h-3 fill-zinc-950 ml-0.5" />
+                  <Play className="w-3 h-3 fill-primary-foreground ml-0.5" />
                   <span>Start</span>
                 </>
               )}

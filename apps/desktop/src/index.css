@@ -3,14 +3,36 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
+  --radius: 0.625rem;
+}
+
+.dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.18 0 0);
+  --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.18 0 0);
+  --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.985 0 0);
-  --primary-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
@@ -18,11 +40,9 @@
   --accent: oklch(0.269 0 0);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.985 0 0);
   --border: oklch(1 0 0 / 12%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
-  --radius: 0.625rem;
 }
 
 @theme {
@@ -61,20 +81,21 @@
     -webkit-app-region: no-drag;
   }
   .shadcn-card {
-    background: oklch(0.18 0 0);
-    border: 1px solid oklch(1 0 0 / 10%);
+    background: var(--card);
+    border: 1px solid var(--border);
     border-radius: var(--radius);
+    color: var(--card-foreground);
   }
   .shadcn-input {
-    background: oklch(0.145 0 0);
-    border: 1px solid oklch(1 0 0 / 12%);
+    background: var(--background);
+    border: 1px solid var(--border);
     border-radius: var(--radius-sm);
-    color: oklch(0.985 0 0);
+    color: var(--foreground);
   }
   .shadcn-input:focus {
     outline: none;
-    border-color: oklch(0.708 0 0);
-    box-shadow: 0 0 0 1px oklch(0.708 0 0);
+    border-color: var(--ring);
+    box-shadow: 0 0 0 1px var(--ring);
   }
 }
 

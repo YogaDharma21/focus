@@ -253,27 +253,27 @@ export function DeepFocusOverlay() {
                     className={cn(
                         "h-10 px-3.5 rounded-full border transition-all flex items-center gap-2 shadow-sm",
                         isMusicPlaying
-                            ? "bg-white/15 border-white/25 text-white ring-1 ring-white/20 shadow-md"
-                            : "bg-white/5 border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/10"
+                            ? "bg-secondary/50 border-border text-foreground ring-1 ring-border shadow-md"
+                            : "bg-secondary/50 border-border text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                     )}
                     title={isMusicPlaying ? "Lofi-Beats: Playing" : "Lofi-Beats: Paused"}
                 >
-                    <Music className={cn("w-4 h-4", isMusicPlaying && "text-white")} />
+                    <Music className={cn("w-4 h-4", isMusicPlaying && "text-foreground")} />
                     <span className="text-xs font-semibold tracking-wide">Lofi-Beats</span>
                     {isMusicPlaying && (
                         <span className="flex items-center gap-0.5 h-3 ml-0.5">
-                            <span className="w-0.5 h-2.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
-                            <span className="w-0.5 h-3 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
-                            <span className="w-0.5 h-2 bg-white rounded-full animate-bounce" />
+                            <span className="w-0.5 h-2.5 bg-foreground rounded-full animate-bounce [animation-delay:-0.3s]" />
+                            <span className="w-0.5 h-3 bg-foreground rounded-full animate-bounce [animation-delay:-0.15s]" />
+                            <span className="w-0.5 h-2 bg-foreground rounded-full animate-bounce" />
                         </span>
                     )}
                 </button>
 
                 {showMusicMenu && (
-                    <div className="absolute top-full left-0 mt-2.5 w-64 bg-[#121214] border border-white/10 rounded-2xl p-3.5 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-150 space-y-3">
+                    <div className="absolute top-full left-0 mt-2.5 w-64 bg-card border border-border rounded-2xl p-3.5 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-150 space-y-3">
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-white">
-                                <Music className="w-4 h-4 text-white/90" />
+                            <div className="flex items-center gap-2 text-foreground">
+                                <Music className="w-4 h-4 text-foreground" />
                                 <span className="text-xs font-semibold tracking-wide">
                                     Lofi-Beats
                                 </span>
@@ -283,8 +283,8 @@ export function DeepFocusOverlay() {
                                 className={cn(
                                     "px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5",
                                     isMusicPlaying
-                                        ? "bg-white text-black hover:bg-white/90 shadow"
-                                        : "bg-white/10 text-white hover:bg-white/20"
+                                        ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow"
+                                        : "bg-secondary/50 text-foreground hover:bg-secondary"
                                 )}
                             >
                                 {isMusicPlaying ? (
@@ -299,10 +299,10 @@ export function DeepFocusOverlay() {
                             </button>
                         </div>
 
-                        <div className="flex items-center gap-2.5 pt-1 border-t border-white/5">
+                        <div className="flex items-center gap-2.5 pt-1 border-t border-border">
                             <button
                                 onClick={() => setIsMusicMuted(!isMusicMuted)}
-                                className="text-white/70 hover:text-white transition-colors p-1"
+                                className="text-muted-foreground hover:text-foreground transition-colors p-1"
                                 aria-label={isMusicMuted ? "Unmute" : "Mute"}
                             >
                                 {isMusicMuted || musicVolume === 0 ? (
@@ -324,7 +324,7 @@ export function DeepFocusOverlay() {
                                         setIsMusicMuted(false);
                                     }
                                 }}
-                                className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
+                                className="w-full h-1.5 bg-secondary/50 rounded-full appearance-none cursor-pointer accent-foreground [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
                             />
                         </div>
                     </div>
@@ -415,7 +415,7 @@ export function DeepFocusOverlay() {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="w-14 h-14 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 transition-all"
+                        className="w-14 h-14 rounded-[var(--radius)] border-2 hover:bg-secondary/50 hover:border-border transition-all"
                         onClick={toggleTimer}
                     >
                         {isActive ? (

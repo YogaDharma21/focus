@@ -7,7 +7,6 @@ import { StatsJournal } from './components/modules/StatsJournal';
 import { MoodTracker } from './components/modules/MoodTracker';
 import { MediaPlayer } from './components/modules/MediaPlayer';
 import { SettingsPage } from './components/modules/SettingsPage';
-import { BackgroundDisplay } from './components/modules/BackgroundDisplay';
 import { DeepFocusOverlay } from './components/modules/DeepFocusOverlay';
 import { FloatingTimerCapsule } from './components/layout/FloatingTimerCapsule';
 import { GlobalTimerEngine } from './components/layout/GlobalTimerEngine';
@@ -20,7 +19,8 @@ export const App: React.FC = () => {
     deepFocusMode, 
     setDeepFocusMode, 
     isActive, 
-    setIsActive 
+    setIsActive,
+    theme
   } = useDesktopStore();
 
   useEffect(() => {
@@ -45,12 +45,19 @@ export const App: React.FC = () => {
     };
   }, [deepFocusMode, isActive]);
 
+  useEffect(() => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+  }, [theme]);
+
   return (
-    <div className="w-screen h-screen bg-zinc-950 font-sans overflow-hidden flex flex-col relative select-none">
+    <div className="w-screen h-screen bg-background font-sans overflow-hidden flex flex-col relative select-none">
       {/* Global Background Timer Ticker Engine */}
       <GlobalTimerEngine />
-
-      <BackgroundDisplay />
       
       {/* Frameless Custom Window Titlebar */}
       <TitleBar />
