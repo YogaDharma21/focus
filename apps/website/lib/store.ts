@@ -230,6 +230,8 @@ export const useAppStore = create<AppState>()(
 
             deepFocusMode: false,
             setDeepFocusMode: (mode) => set({ deepFocusMode: mode }),
+            theme: "dark" as "light" | "dark",
+            setTheme: (theme) => set({ theme }),
 
             addSession: (session) =>
                 set((state) => ({
@@ -351,6 +353,7 @@ export const useAppStore = create<AppState>()(
                     sessions: [],
                     distractions: [],
                     deepFocusMode: false,
+                    theme: "dark" as "light" | "dark",
                     pomodoroSettings: { work: 25, break: 5, longBreak: 15, autoStartBreak: false, autoStartTimer: false },
                     pomodoroCount: 0,
                 });
