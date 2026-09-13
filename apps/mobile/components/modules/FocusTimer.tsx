@@ -205,7 +205,6 @@ export function FocusTimer() {
 
   return (
     <View style={styles.container}>
-
       {/* Timer Content Container (No Card Box) */}
       <View style={styles.timerContent}>
         <Text style={[styles.timeDisplay, { color: colors.text }]}>
@@ -219,7 +218,7 @@ export function FocusTimer() {
             style={[
               styles.selectedTaskCardContainer,
               {
-                backgroundColor: colors.inputBg,
+                backgroundColor: colors.muted,
                 borderColor: colors.border,
               },
             ]}
@@ -233,7 +232,7 @@ export function FocusTimer() {
                 {selectedTodo.text}
               </Text>
             </View>
-            <ChevronDown size={14} color={colors.textMuted} style={{ opacity: 0.7 }} />
+            <ChevronDown size={14} color={colors.mutedText} style={{ opacity: 0.7 }} />
           </TouchableOpacity>
         ) : (
           /* Custom Focus Mode (Editable Input Bar) */
@@ -241,7 +240,7 @@ export function FocusTimer() {
             style={[
               styles.sessionGoalContainer,
               {
-                backgroundColor: colors.inputBg,
+                backgroundColor: colors.muted,
                 borderColor: isSessionFocused ? colors.text : colors.border,
               },
             ]}
@@ -252,7 +251,7 @@ export function FocusTimer() {
                 { color: colors.text },
               ]}
               placeholder="Session Goal (Press Enter)..."
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={colors.mutedText}
               value={sessionName}
               onChangeText={setSessionName}
               onFocus={() => setIsSessionFocused(true)}
@@ -266,7 +265,7 @@ export function FocusTimer() {
               activeOpacity={0.7}
               accessibilityLabel="Select from your tasks"
             >
-              <ListTodo size={18} color={colors.textMuted} />
+              <ListTodo size={18} color={colors.mutedText} />
             </TouchableOpacity>
           </View>
         )}
@@ -277,12 +276,12 @@ export function FocusTimer() {
           <View style={[styles.subtaskFocusCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.subtaskFocusHeader}>
               <View style={styles.subtaskFocusHeaderLeft}>
-                <ListCheck size={14} color={colors.textMuted} />
-                <Text style={[styles.subtaskFocusTitle, { color: colors.textMuted }]}>
+                <ListCheck size={14} color={colors.mutedText} />
+                <Text style={[styles.subtaskFocusTitle, { color: colors.mutedText }]}>
                   SUBTASKS
                 </Text>
               </View>
-              <Text style={[styles.subtaskFocusCounter, { color: colors.textMuted }]}>
+              <Text style={[styles.subtaskFocusCounter, { color: colors.mutedText }]}>
                 {selectedTodo.subtasks.filter((s) => s.completed).length} / {selectedTodo.subtasks.length}
               </Text>
             </View>
@@ -298,7 +297,7 @@ export function FocusTimer() {
                   {subtask.completed ? (
                     <CheckSquare size={16} color={colors.text} />
                   ) : (
-                    <Square size={16} color={colors.textMuted} />
+                    <Square size={16} color={colors.mutedText} />
                   )}
                   <Text
                     style={[
@@ -319,8 +318,8 @@ export function FocusTimer() {
         {selectedTodo && selectedTodo.notes && selectedTodo.notes.trim().length > 0 && (
           <View style={[styles.subtaskFocusCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.subtaskFocusHeaderLeft}>
-              <FileText size={14} color={colors.textMuted} />
-              <Text style={[styles.subtaskFocusTitle, { color: colors.textMuted }]}>
+              <FileText size={14} color={colors.mutedText} />
+              <Text style={[styles.subtaskFocusTitle, { color: colors.mutedText }]}>
                 TASK NOTES
               </Text>
             </View>
@@ -377,9 +376,9 @@ export function FocusTimer() {
             activeOpacity={0.8}
           >
             {isActive ? (
-              <Pause size={24} color={colors.primaryForeground} />
+              <Pause size={24} color={colors.primaryText} />
             ) : (
-              <Play size={24} color={colors.primaryForeground} fill={colors.primaryForeground} style={{ marginLeft: 2 }} />
+              <Play size={24} color={colors.primaryText} fill={colors.primaryText} style={{ marginLeft: 2 }} />
             )}
           </TouchableOpacity>
 
@@ -421,9 +420,9 @@ export function FocusTimer() {
           >
             {/* Top Header */}
             <View style={styles.taskPickerHeader}>
-              <Text style={[styles.taskPickerSectionTitle, { color: colors.textMuted }]}>FOCUS TOPIC</Text>
+              <Text style={[styles.taskPickerSectionTitle, { color: colors.mutedText }]}>FOCUS TOPIC</Text>
               <TouchableOpacity onPress={() => setTodoPickerOpen(false)} style={styles.closeBtn} accessibilityLabel="Close">
-                <X size={16} color={colors.textMuted} />
+                <X size={16} color={colors.mutedText} />
               </TouchableOpacity>
             </View>
 
@@ -432,7 +431,7 @@ export function FocusTimer() {
               style={[
                 styles.customFocusOption,
                 {
-                  backgroundColor: !selectedTodoId ? (colors.border || '#27272a') : colors.inputBg,
+                  backgroundColor: !selectedTodoId ? (colors.border || '#27272a') : colors.muted,
                   borderColor: colors.border,
                 },
               ]}
@@ -447,21 +446,21 @@ export function FocusTimer() {
                 <Pencil size={18} color={colors.text} style={{ marginTop: 2 }} />
                 <View style={styles.customFocusTextCol}>
                   <Text style={[styles.customFocusTitle, { color: colors.text }]}>Custom Focus</Text>
-                  <Text style={[styles.customFocusSub, { color: colors.textMuted }]}>Type custom goal</Text>
+                  <Text style={[styles.customFocusSub, { color: colors.mutedText }]}>Type custom goal</Text>
                 </View>
               </View>
               {!selectedTodoId && <Check size={18} color={colors.text} />}
             </TouchableOpacity>
 
             {/* My Tasks Section Header */}
-            <Text style={[styles.taskPickerSectionTitle, { color: colors.textMuted, marginTop: 14, marginBottom: 8 }]}>
+            <Text style={[styles.taskPickerSectionTitle, { color: colors.mutedText, marginTop: 14, marginBottom: 8 }]}>
               MY TASKS
             </Text>
 
             {/* Tasks List */}
             <ScrollView style={{ maxHeight: 220 }} contentContainerStyle={{ gap: 6 }}>
               {todos.filter((t) => !t.completed).length === 0 ? (
-                <Text style={[styles.emptyTasksText, { color: colors.textMuted }]}>No pending tasks</Text>
+                <Text style={[styles.emptyTasksText, { color: colors.mutedText }]}>No pending tasks</Text>
               ) : (
                 todos
                   .filter((t) => !t.completed)
@@ -473,7 +472,7 @@ export function FocusTimer() {
                         style={[
                           styles.taskPickerOption,
                           {
-                            backgroundColor: isSelected ? (colors.border || '#27272a') : colors.inputBg,
+                            backgroundColor: isSelected ? (colors.border || '#27272a') : colors.muted,
                             borderColor: colors.border,
                           },
                         ]}
@@ -511,21 +510,21 @@ export function FocusTimer() {
         <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setDistractionModalOpen(false)}>
           <TouchableOpacity activeOpacity={1} style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => {}}>
             <Text style={[styles.modalTitle, { color: colors.text }]}>Log Distraction</Text>
-            <Text style={[styles.modalSub, { color: colors.textMuted }]}>
+            <Text style={[styles.modalSub, { color: colors.mutedText }]}>
               What got you off track? Stay conscious of interruption patterns.
             </Text>
             <View style={{ gap: 8, marginVertical: 12 }}>
               {DISTRACTION_CATEGORIES.map((cat) => (
                 <TouchableOpacity
                   key={cat}
-                  style={[styles.distractionItem, { backgroundColor: colors.inputBg, borderColor: colors.border }]}
+                  style={[styles.distractionItem, { backgroundColor: colors.muted, borderColor: colors.border }]}
                   onPress={() => {
                     addDistraction(cat);
                     setDistractionModalOpen(false);
                   }}
                 >
                   <Text style={{ color: colors.text, fontWeight: '500' }}>{cat}</Text>
-                  <Plus size={16} color={colors.textMuted} />
+                  <Plus size={16} color={colors.mutedText} />
                 </TouchableOpacity>
               ))}
             </View>

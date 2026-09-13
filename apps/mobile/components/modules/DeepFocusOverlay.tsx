@@ -83,15 +83,15 @@ export function DeepFocusOverlay() {
             styles.musicPillBtn,
             {
               backgroundColor: isMusicPlaying ? colors.card : 'rgba(255, 255, 255, 0.05)',
-              borderColor: isMusicPlaying ? colors.textMuted : colors.border,
+              borderColor: isMusicPlaying ? colors.mutedText : colors.border,
               top: Math.max(insets.top + 12, 40),
             },
           ]}
           onPress={() => setMusicModalOpen(true)}
           activeOpacity={0.7}
         >
-          <Music size={16} color={isMusicPlaying ? colors.text : colors.textMuted} />
-          <Text style={[styles.musicPillText, { color: isMusicPlaying ? colors.text : colors.textMuted }]}>
+          <Music size={16} color={isMusicPlaying ? colors.text : colors.mutedText} />
+          <Text style={[styles.musicPillText, { color: isMusicPlaying ? colors.text : colors.mutedText }]}>
             Lofi-Beats
           </Text>
           {isMusicPlaying ? (
@@ -120,7 +120,7 @@ export function DeepFocusOverlay() {
             const selectedTodo = todos.find((t) => t.id === selectedTodoId);
             const displayTitle = selectedTodo ? selectedTodo.text : sessionName;
             return displayTitle ? (
-              <Text style={[styles.sessionText, { color: colors.textMuted }]}>{displayTitle}</Text>
+              <Text style={[styles.sessionText, { color: colors.mutedText }]}>{displayTitle}</Text>
             ) : null;
           })()}
 
@@ -148,9 +148,9 @@ export function DeepFocusOverlay() {
               activeOpacity={0.8}
             >
               {isActive ? (
-                <Pause size={32} color={colors.primaryForeground} />
+                <Pause size={32} color={colors.primaryText} />
               ) : (
-                <Play size={32} color={colors.primaryForeground} fill={colors.primaryForeground} style={{ marginLeft: 3 }} />
+                <Play size={32} color={colors.primaryText} fill={colors.primaryText} style={{ marginLeft: 3 }} />
               )}
             </TouchableOpacity>
 
@@ -175,7 +175,7 @@ export function DeepFocusOverlay() {
           <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setMusicModalOpen(false)}>
             <TouchableOpacity activeOpacity={1} style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => {}}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>Lofi-Beats</Text>
-              <Text style={[styles.modalSub, { color: colors.textMuted }]}>
+              <Text style={[styles.modalSub, { color: colors.mutedText }]}>
                 Control Lofi-Beats audio while in Deep Focus mode.
               </Text>
               
@@ -183,7 +183,7 @@ export function DeepFocusOverlay() {
                 <TouchableOpacity
                   style={[
                     styles.distractionItem,
-                    { backgroundColor: isMusicPlaying ? colors.card : colors.inputBg, borderColor: isMusicPlaying ? colors.textMuted : colors.border },
+                    { backgroundColor: isMusicPlaying ? colors.card : colors.muted, borderColor: isMusicPlaying ? colors.mutedText : colors.border },
                   ]}
                   onPress={() => setIsMusicPlaying(!isMusicPlaying)}
                 >
@@ -193,11 +193,11 @@ export function DeepFocusOverlay() {
                   {isMusicPlaying ? (
                     <Pause size={18} color={colors.text} />
                   ) : (
-                    <Play size={18} color={colors.textMuted} />
+                    <Play size={18} color={colors.mutedText} />
                   )}
                 </TouchableOpacity>
 
-                <Text style={{ color: colors.textMuted, fontSize: 13, marginTop: 4 }}>
+                <Text style={{ color: colors.mutedText, fontSize: 13, marginTop: 4 }}>
                   Volume: {Math.round(musicVolume * 100)}%
                 </Text>
                 <VolumeSlider
@@ -221,21 +221,21 @@ export function DeepFocusOverlay() {
           <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setDistractionModalOpen(false)}>
             <TouchableOpacity activeOpacity={1} style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => {}}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>Log Distraction</Text>
-              <Text style={[styles.modalSub, { color: colors.textMuted }]}>
+              <Text style={[styles.modalSub, { color: colors.mutedText }]}>
                 What got you off track? Stay conscious of interruption patterns.
               </Text>
               <View style={{ gap: 8, marginVertical: 12 }}>
                 {DISTRACTION_CATEGORIES.map((cat) => (
                   <TouchableOpacity
                     key={cat}
-                    style={[styles.distractionItem, { backgroundColor: colors.inputBg, borderColor: colors.border }]}
+                    style={[styles.distractionItem, { backgroundColor: colors.muted, borderColor: colors.border }]}
                     onPress={() => {
                       addDistraction(cat);
                       setDistractionModalOpen(false);
                     }}
                   >
                     <Text style={{ color: colors.text, fontWeight: '500' }}>{cat}</Text>
-                    <Plus size={16} color={colors.textMuted} />
+                    <Plus size={16} color={colors.mutedText} />
                   </TouchableOpacity>
                 ))}
               </View>

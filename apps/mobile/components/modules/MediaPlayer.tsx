@@ -135,7 +135,7 @@ export function MediaPlayer() {
               {currentTrack?.title || 'Sound Player'}
             </Text>
             {!!currentTrack?.artist && (
-              <Text style={[styles.miniSub, { color: colors.textMuted }]}>
+              <Text style={[styles.miniSub, { color: colors.mutedText }]}>
                 {currentTrack.artist}
               </Text>
             )}
@@ -148,9 +148,9 @@ export function MediaPlayer() {
           activeOpacity={0.8}
         >
           {isMusicPlaying ? (
-            <Pause size={16} color={colors.primaryForeground} />
+            <Pause size={16} color={colors.primaryText} />
           ) : (
-            <Play size={16} color={colors.primaryForeground} fill={colors.primaryForeground} style={{ marginLeft: 2 }} />
+            <Play size={16} color={colors.primaryText} fill={colors.primaryText} style={{ marginLeft: 2 }} />
           )}
         </TouchableOpacity>
 
@@ -159,9 +159,9 @@ export function MediaPlayer() {
           onPress={() => setMediaPlayerOpen(!mediaPlayerOpen)}
         >
           {mediaPlayerOpen ? (
-            <ChevronDown size={20} color={colors.textMuted} />
+            <ChevronDown size={20} color={colors.mutedText} />
           ) : (
-            <ChevronUp size={20} color={colors.textMuted} />
+            <ChevronUp size={20} color={colors.mutedText} />
           )}
         </TouchableOpacity>
       </View>
@@ -198,20 +198,20 @@ export function MediaPlayer() {
                       style={[
                         styles.trackRow,
                         {
-                          backgroundColor: active ? colors.border : colors.inputBg,
+                          backgroundColor: active ? colors.border : colors.muted,
                           borderColor: colors.border,
                         },
                       ]}
                       onPress={() => selectTrack(i)}
                       activeOpacity={0.7}
                     >
-                      <Music size={18} color={active ? colors.text : colors.textMuted} />
+                      <Music size={18} color={active ? colors.text : colors.mutedText} />
                       <View style={{ flex: 1 }}>
                         <Text style={[styles.trackName, { color: colors.text }]}>
                           {track.title}
                         </Text>
                         {!!track.artist && (
-                          <Text style={[styles.trackArtist, { color: colors.textMuted }]}>
+                          <Text style={[styles.trackArtist, { color: colors.mutedText }]}>
                             {track.artist}
                           </Text>
                         )}
@@ -225,8 +225,8 @@ export function MediaPlayer() {
               {/* Music Volume Section */}
               <View style={[styles.volumeSection, { borderColor: colors.border }]}>
                 <View style={styles.volumeHeader}>
-                  <Volume2 size={16} color={colors.textMuted} />
-                  <Text style={[styles.volumeText, { color: colors.textMuted }]}>
+                  <Volume2 size={16} color={colors.mutedText} />
+                  <Text style={[styles.volumeText, { color: colors.mutedText }]}>
                     Music Volume ({Math.round(musicVolume * 100)}%)
                   </Text>
                 </View>

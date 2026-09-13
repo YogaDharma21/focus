@@ -3,7 +3,6 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeStorage } from './storage';
 
 export type ViewType = 'FOCUS' | 'TODO' | 'JOURNAL' | 'SETTINGS';
-export type BackgroundType = 'dark' | 'gradient' | 'mountain' | 'library' | 'cafe' | 'anime-room';
 
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
 
@@ -103,9 +102,6 @@ interface AppState {
 
   deepFocusMode: boolean;
   setDeepFocusMode: (mode: boolean) => void;
-
-  background: BackgroundType;
-  setBackground: (bg: BackgroundType) => void;
 
   addSession: (session: Session) => void;
   addDistraction: (category: string) => void;
@@ -239,9 +235,6 @@ export const useAppStore = create<AppState>()(
       deepFocusMode: false,
       setDeepFocusMode: (mode) => set({ deepFocusMode: mode }),
 
-      background: 'dark',
-      setBackground: (bg) => set({ background: bg }),
-
       addSession: (session) =>
         set((state) => ({
           sessions: [...(state.sessions || []), session],
@@ -329,7 +322,6 @@ export const useAppStore = create<AppState>()(
           timeLeft: 0,
           isActive: false,
           isMusicPlaying: false,
-          background: 'dark',
         }),
     }),
     {

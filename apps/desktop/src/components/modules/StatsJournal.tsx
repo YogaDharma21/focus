@@ -13,7 +13,6 @@ export const StatsJournal: React.FC = () => {
   const s = activeSeconds % 60;
   const timeString = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 
-  // 2. Day Progress Calculation
   const now = new Date();
   const currentMinutesPassed = now.getHours() * 60 + now.getMinutes();
   const dayProgressPercent = Math.min(100, Math.max(0, Math.round((currentMinutesPassed / 1440) * 100)));
@@ -21,7 +20,6 @@ export const StatsJournal: React.FC = () => {
   const hoursRemaining = Math.floor(minutesRemaining / 60);
   const minsRemainingPart = minutesRemaining % 60;
 
-  // 3. Stats Calculations
   const todaySessions = sessions.filter(s => {
     if (!s.date) return false;
     const sDate = new Date(s.date);
@@ -40,7 +38,6 @@ export const StatsJournal: React.FC = () => {
     ? Math.round((tasksTodayCount / totalTasksCount) * 100) 
     : 0;
 
-  // 4. Streak Calculation
   const calculateStreak = () => {
     if (!sessions || sessions.length === 0) return { current: 0, best: 0 };
     const dates = Array.from(
@@ -100,9 +97,6 @@ export const StatsJournal: React.FC = () => {
   const currentStreak = streakData.current;
   const bestStreak = streakData.best;
 
-
-
-  // 5. Weekly Focus Trend Calculation (Sunday to Saturday)
   const daysOfWeek = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const getWeeklyMinutes = () => {
     const weeklyMinutes: Record<string, number> = {
@@ -142,7 +136,6 @@ export const StatsJournal: React.FC = () => {
   const weeklyMinutes = getWeeklyMinutes();
   const maxWeeklyMins = Math.max(120, ...Object.values(weeklyMinutes));
 
-  // 6. Distraction Analysis Calculation
   const distractionCounts: Record<string, number> = {};
   if (distractions.length > 0) {
     distractions.forEach(item => {
@@ -150,7 +143,6 @@ export const StatsJournal: React.FC = () => {
       distractionCounts[catName] = (distractionCounts[catName] || 0) + 1;
     });
   } else {
-    // Default demonstration category if no distractions logged yet
     distractionCounts["Social Media"] = 1;
   }
 
@@ -168,115 +160,104 @@ export const StatsJournal: React.FC = () => {
 
   return (
     <div className="w-full max-w-4xl mx-auto flex flex-col select-none space-y-6 pb-12">
-      {/* Title Header */}
       <div>
-        <h2 className="text-xl font-bold text-white tracking-tight">Journal & Stats</h2>
+        <h2 className="text-xl font-bold text-foreground tracking-tight">Journal & Stats</h2>
       </div>
 
-      {/* 1. Day Progress Card */}
-      <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-3">
+      <div className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300 shrink-0">
+            <div className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground shrink-0">
               <Clock className="w-4 h-4" />
             </div>
-            <span className="text-sm font-bold text-white tracking-tight">Day Progress</span>
+            <span className="text-sm font-bold text-foreground tracking-tight">Day Progress</span>
           </div>
-          <span className="text-xs font-mono font-bold text-white">{dayProgressPercent}%</span>
+          <span className="text-xs font-mono font-bold text-foreground">{dayProgressPercent}%</span>
         </div>
 
-        {/* Progress Bar Line */}
-        <div className="w-full h-2.5 bg-zinc-800/80 rounded-full overflow-hidden">
+        <div className="w-full h-2.5 bg-muted/80 rounded-full overflow-hidden">
           <div 
-            className="bg-white h-full rounded-full transition-all duration-500"
+            className="bg-foreground h-full rounded-full transition-all duration-500"
             style={{ width: `${dayProgressPercent}%` }}
           />
         </div>
 
-        <p className="text-[11px] text-zinc-400 font-medium">
+        <p className="text-[11px] text-muted-foreground font-medium">
           {hoursRemaining}h {minsRemainingPart}m remaining today
         </p>
       </div>
 
-      {/* 2. Top 3 Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Minutes Today */}
-        <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm text-center flex flex-col items-center justify-center space-y-2">
-          <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
+        <div className="bg-card border border-border rounded-2xl p-5 shadow-sm text-center flex flex-col items-center justify-center space-y-2">
+          <div className="w-10 h-10 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground">
             <Activity className="w-5 h-5" />
           </div>
-          <span className="text-3xl font-extrabold text-white font-sans">{minutesToday}</span>
-          <span className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase">Minutes Today</span>
+          <span className="text-3xl font-extrabold text-foreground font-sans">{minutesToday}</span>
+          <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Minutes Today</span>
         </div>
 
-        {/* Tasks Today */}
-        <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm text-center flex flex-col items-center justify-center space-y-2">
-          <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
+        <div className="bg-card border border-border rounded-2xl p-5 shadow-sm text-center flex flex-col items-center justify-center space-y-2">
+          <div className="w-10 h-10 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground">
             <CheckCircle2 className="w-5 h-5" />
           </div>
-          <span className="text-3xl font-extrabold text-white font-sans">{tasksTodayCount}</span>
-          <span className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase">Tasks Today</span>
+          <span className="text-3xl font-extrabold text-foreground font-sans">{tasksTodayCount}</span>
+          <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Tasks Today</span>
         </div>
 
-        {/* Pending Tasks */}
-        <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm text-center flex flex-col items-center justify-center space-y-2">
-          <div className="w-10 h-10 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
+        <div className="bg-card border border-border rounded-2xl p-5 shadow-sm text-center flex flex-col items-center justify-center space-y-2">
+          <div className="w-10 h-10 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground">
             <ListTodo className="w-5 h-5" />
           </div>
-          <span className="text-3xl font-extrabold text-white font-sans">{pendingTasksCount}</span>
-          <span className="text-[10px] font-bold tracking-widest text-zinc-500 uppercase">Pending Tasks</span>
+          <span className="text-3xl font-extrabold text-foreground font-sans">{pendingTasksCount}</span>
+          <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Pending Tasks</span>
         </div>
       </div>
 
-      {/* 3. Middle 2 Stat Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Longest Streak Card */}
-        <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
+            <div className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground">
               <Flame className="w-4 h-4" />
             </div>
-            <span className="text-sm font-bold text-white tracking-tight">Longest Streak</span>
+            <span className="text-sm font-bold text-foreground tracking-tight">Longest Streak</span>
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-400 font-medium">Current</span>
-              <span className="text-sm font-bold text-white font-mono">{currentStreak} Days</span>
+              <span className="text-muted-foreground font-medium">Current</span>
+              <span className="text-sm font-bold text-foreground font-mono">{currentStreak} Days</span>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-zinc-400 font-medium">Best</span>
-              <span className="text-sm font-bold text-white font-mono">{bestStreak} Days</span>
+              <span className="text-muted-foreground font-medium">Best</span>
+              <span className="text-sm font-bold text-foreground font-mono">{bestStreak} Days</span>
             </div>
           </div>
         </div>
 
-        {/* Completion Rate Card */}
-        <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-4">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
+            <div className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground">
               <Target className="w-4 h-4" />
             </div>
-            <span className="text-sm font-bold text-white tracking-tight">Completion Rate</span>
+            <span className="text-sm font-bold text-foreground tracking-tight">Completion Rate</span>
           </div>
 
           <div className="space-y-1">
-            <h3 className="text-3xl font-extrabold text-white font-sans">{completionRatePercent}%</h3>
-            <div className="flex items-center gap-1.5 text-xs text-zinc-400 font-medium pt-1">
-              <CheckCircle2 className="w-3.5 h-3.5 text-zinc-400" />
+            <h3 className="text-3xl font-extrabold text-foreground font-sans">{completionRatePercent}%</h3>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium pt-1">
+              <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground" />
               <span>Tasks Finished</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* 4. Focus Trend Card */}
-      <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-3">
+      <div className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-3">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
+          <div className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground">
             <TrendingUp className="w-4 h-4" />
           </div>
-          <h3 className="text-sm font-bold text-white tracking-tight">Focus Trend</h3>
+          <h3 className="text-sm font-bold text-foreground tracking-tight">Focus Trend</h3>
         </div>
 
         <div className="space-y-2">
@@ -292,23 +273,22 @@ export const StatsJournal: React.FC = () => {
                   key={day}
                   className="flex-1 flex flex-col items-center gap-1 h-full justify-end group relative cursor-pointer"
                 >
-                  {/* Tooltip on hover */}
-                  <div className="absolute -top-8 px-2 py-1 rounded text-[10px] font-mono font-bold bg-zinc-900 text-white border border-zinc-700 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap shadow-md">
+                  <div className="absolute -top-8 px-2 py-1 rounded text-[10px] font-mono font-bold bg-secondary text-foreground border border-border pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap shadow-md">
                     {day}: {minsLogged} mins
                   </div>
 
-                  <span className="text-[10px] font-mono text-zinc-400 font-medium">
+                  <span className="text-[10px] font-mono text-muted-foreground font-medium">
                     {minsLogged}m
                   </span>
                   <div
                     className={`w-full rounded-t-md transition-all duration-300 ${
                       minsLogged > 0
-                        ? "bg-white group-hover:bg-zinc-200"
-                        : "bg-zinc-800/80"
+                        ? "bg-foreground group-hover:bg-foreground/80"
+                        : "bg-muted/80"
                     }`}
                     style={{ height: `${heightPercent}%` }}
                   />
-                  <span className="text-xs font-mono font-bold text-white">
+                  <span className="text-xs font-mono font-bold text-foreground">
                     {day}
                   </span>
                 </div>
@@ -318,27 +298,26 @@ export const StatsJournal: React.FC = () => {
         </div>
       </div>
 
-      {/* 5. Distraction Analysis Card (Placed under Focus Trend) */}
-      <div className="bg-[#121214] border border-zinc-800/80 rounded-2xl p-5 shadow-sm space-y-4">
+      <div className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-4">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-lg bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-300">
+          <div className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground">
             <BarChart2 className="w-4 h-4" />
           </div>
-          <h3 className="text-sm font-bold text-white tracking-tight">Distraction Analysis</h3>
+          <h3 className="text-sm font-bold text-foreground tracking-tight">Distraction Analysis</h3>
         </div>
 
-        <p className="text-xs text-zinc-400 font-medium">
-          Most common: <strong className="text-white font-semibold">{mostCommonCategory}</strong> ({mostCommonPercent}%)
+        <p className="text-xs text-muted-foreground font-medium">
+          Most common: <strong className="text-foreground font-semibold">{mostCommonCategory}</strong> ({mostCommonPercent}%)
         </p>
 
         <div className="space-y-3 pt-1">
           {distractionCategories.map((cat) => (
             <div key={cat.name} className="space-y-1">
               <div className="flex items-center justify-between text-xs font-semibold">
-                <span className="text-white">{cat.name}</span>
-                <span className="text-zinc-400 font-mono font-normal">{cat.count} ({cat.percent}%)</span>
+                <span className="text-foreground">{cat.name}</span>
+                <span className="text-muted-foreground font-mono font-normal">{cat.count} ({cat.percent}%)</span>
               </div>
-              <div className="w-full h-1.5 bg-zinc-800/80 rounded-full overflow-hidden">
+              <div className="w-full h-1.5 bg-muted/80 rounded-full overflow-hidden">
                 <div 
                   className="bg-rose-500 h-full rounded-full transition-all duration-500"
                   style={{ width: `${cat.percent}%` }}

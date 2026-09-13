@@ -1,30 +1,21 @@
 "use client";
 
-import { useAppStore, BackgroundType } from "@/lib/store";
+import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Settings, Clock, Palette, Volume2, Trash2, Info, Github, ExternalLink } from "lucide-react";
+import { useTheme } from "next-themes";
 
 export function SettingsPage() {
-    const background = useAppStore((s) => s.background);
-    const setBackground = useAppStore((s) => s.setBackground);
     const soundEffectEnabled = useAppStore((s) => s.soundEffectEnabled);
     const setSoundEffectEnabled = useAppStore((s) => s.setSoundEffectEnabled);
     const soundEffectVolume = useAppStore((s) => s.soundEffectVolume);
     const setSoundEffectVolume = useAppStore((s) => s.setSoundEffectVolume);
     const resetAllData = useAppStore((s) => s.resetAllData);
-
-    const backgrounds: { label: string; value: BackgroundType }[] = [
-        { label: "Dark", value: "dark" },
-        { label: "Gradient", value: "gradient" },
-        { label: "Mountain", value: "mountain" },
-        { label: "Library", value: "library" },
-        { label: "Cafe", value: "cafe" },
-        { label: "Anime Room", value: "anime-room" },
-    ];
+    const { theme, setTheme } = useTheme();
 
     const playTestSoundEffect = () => {
         try {
@@ -62,21 +53,32 @@ export function SettingsPage() {
                     <h2>Appearance</h2>
                 </div>
                 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    {backgrounds.map((bg) => (
+                <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
+                    <Label className="font-medium">Theme</Label>
+                    <div className="flex gap-2">
                         <button
-                            key={bg.value}
-                            onClick={() => setBackground(bg.value)}
+                            onClick={() => setTheme("light")}
                             className={cn(
-                                "p-3 rounded-[var(--radius)] text-sm font-medium transition-all",
-                                background === bg.value
+                                "px-4 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-all",
+                                theme === "light"
                                     ? "bg-primary text-primary-foreground shadow-md"
                                     : "bg-secondary/30 hover:bg-secondary/50 text-foreground"
                             )}
                         >
-                            {bg.label}
+                            Light
                         </button>
-                    ))}
+                        <button
+                            onClick={() => setTheme("dark")}
+                            className={cn(
+                                "px-4 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-all",
+                                theme === "dark"
+                                    ? "bg-primary text-primary-foreground shadow-md"
+                                    : "bg-secondary/30 hover:bg-secondary/50 text-foreground"
+                            )}
+                        >
+                            Dark
+                        </button>
+                    </div>
                 </div>
             </div>
 

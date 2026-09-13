@@ -139,8 +139,8 @@ export function MediaPlayer() {
                 className={cn(
                     "flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl transition-all duration-300 shadow-md border group",
                     mediaPlayerOpen
-                        ? "bg-[#18181b] border-white/20 text-white shadow-xl ring-1 ring-white/10"
-                        : "bg-[#141416]/90 hover:bg-[#1c1c1f] border-white/10 text-white/90 hover:text-white"
+                        ? "bg-card border-border text-foreground shadow-xl ring-1 ring-border"
+                        : "bg-card/90 hover:bg-accent border-border text-muted-foreground hover:text-foreground"
                 )}
                 aria-label="Toggle ambient music player"
             >
@@ -159,18 +159,18 @@ export function MediaPlayer() {
 
             {/* Expanded Floating Card Popup */}
             {mediaPlayerOpen && (
-                <div className="fixed right-4 sm:absolute sm:right-0 top-16 sm:top-full mt-2 w-[calc(100vw-2rem)] max-w-[320px] sm:w-80 bg-[#121214] border border-white/10 shadow-2xl rounded-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200 space-y-3.5">
+                <div className="fixed right-4 sm:absolute sm:right-0 top-16 sm:top-full mt-2 w-[calc(100vw-2rem)] max-w-[320px] sm:w-80 bg-popover border border-border shadow-2xl rounded-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200 space-y-3.5">
                     {/* Header */}
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-white">
-                            <Music className="w-4 h-4 text-white/90" />
+                        <div className="flex items-center gap-2 text-foreground">
+                            <Music className="w-4 h-4 text-muted-foreground" />
                             <span className="text-sm font-semibold tracking-wide">
                                 Lofi-Beats
                             </span>
                         </div>
                         <button
                             onClick={() => setMediaPlayerOpen(false)}
-                            className="p-1 rounded-lg text-white/70 hover:text-white hover:bg-white/10 transition-colors"
+                            className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
                             title="Collapse"
                         >
                             <ChevronDown className="w-4 h-4" />
@@ -178,19 +178,19 @@ export function MediaPlayer() {
                     </div>
 
                     {/* Main Inner Player Card */}
-                    <div className="bg-[#09090b] border border-white/5 rounded-2xl p-3 flex items-center justify-between gap-3 shadow-inner">
+                    <div className="bg-secondary border border-border rounded-2xl p-3 flex items-center justify-between gap-3 shadow-inner">
                         <div className="flex items-center gap-3 min-w-0">
                             <div className={cn(
-                                "w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center shrink-0 transition-transform duration-500",
+                                "w-10 h-10 rounded-xl bg-muted border border-border flex items-center justify-center shrink-0 transition-transform duration-500",
                                 isMusicPlaying && "rotate-45"
                             )}>
-                                <Disc className={cn("w-5 h-5 text-white/80", isMusicPlaying && "text-primary animate-spin [animation-duration:6s]")} />
+                                <Disc className={cn("w-5 h-5 text-muted-foreground", isMusicPlaying && "text-primary animate-spin [animation-duration:6s]")} />
                             </div>
                             <div className="min-w-0">
-                                <h4 className="text-sm font-bold text-white truncate">
+                                <h4 className="text-sm font-bold text-foreground truncate">
                                     Lofi-Beats
                                 </h4>
-                                <p className="text-xs text-white/50 truncate">
+                                <p className="text-xs text-muted-foreground truncate">
                                     Lofi-Beats
                                 </p>
                             </div>
@@ -199,27 +199,27 @@ export function MediaPlayer() {
                         {/* Large Circular Play/Pause Button */}
                         <button
                             onClick={togglePlay}
-                            className="w-10 h-10 rounded-full bg-white hover:bg-white/90 text-black active:scale-95 transition-all duration-200 flex items-center justify-center shrink-0 shadow-lg"
+                            className="w-10 h-10 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground active:scale-95 transition-all duration-200 flex items-center justify-center shrink-0 shadow-lg"
                             aria-label={isMusicPlaying ? "Pause music" : "Play music"}
                         >
                             {isMusicPlaying ? (
-                                <Pause className="w-5 h-5 fill-current text-black" />
+                                <Pause className="w-5 h-5 fill-current text-primary-foreground" />
                             ) : (
-                                <Play className="w-5 h-5 fill-current text-black ml-0.5" />
+                                <Play className="w-5 h-5 fill-current text-primary-foreground ml-0.5" />
                             )}
                         </button>
                     </div>
 
                     {/* Music Volume Control */}
                     <div className="space-y-1 pt-1">
-                        <div className="flex items-center justify-between text-[11px] text-white/60 font-medium px-0.5">
+                        <div className="flex items-center justify-between text-[11px] text-muted-foreground font-medium px-0.5">
                             <span>Music Volume</span>
                             <span>{isMusicMuted ? "Muted" : `${musicVolume}%`}</span>
                         </div>
                         <div className="flex items-center gap-3">
                             <button
                                 onClick={toggleMute}
-                                className="text-white/70 hover:text-white transition-colors p-1"
+                                className="text-muted-foreground hover:text-foreground transition-colors p-1"
                                 aria-label={isMusicMuted ? "Unmute" : "Mute"}
                             >
                                 {isMusicMuted || musicVolume === 0 ? (
@@ -237,7 +237,7 @@ export function MediaPlayer() {
                                     step="1"
                                     value={isMusicMuted ? 0 : musicVolume}
                                     onChange={handleVolumeChange}
-                                    className="w-full h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
+                                    className="w-full h-1.5 bg-muted rounded-full appearance-none cursor-pointer accent-primary [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
                                 />
                             </div>
                         </div>

@@ -252,16 +252,16 @@ export function FocusTimer() {
                                         type="button"
                                         className={cn(
                                             "w-full px-4 py-2.5 rounded-[var(--radius)] border transition-all flex items-center justify-between gap-2 shadow-sm",
-                                            "bg-neutral-900/90 border-neutral-800 hover:border-neutral-700 text-white cursor-pointer group relative",
+                                            "bg-card border-border hover:border-border/80 text-foreground cursor-pointer group relative",
                                         )}
                                         title="Click to select another task or custom focus"
                                     >
                                         <div className="flex items-center justify-center gap-2 min-w-0 flex-1 mx-auto">
-                                            <ListTodo className="w-4 h-4 text-white shrink-0" />
-                                            <span className="font-semibold text-sm tracking-tight truncate max-w-[220px] text-white">
+                                            <ListTodo className="w-4 h-4 text-foreground shrink-0" />
+                                            <span className="font-semibold text-sm tracking-tight truncate max-w-[220px] text-foreground">
                                                 {selectedTodo.text}
                                             </span>
-                                            <ChevronDown className="w-3.5 h-3.5 opacity-60 transition-transform duration-200 text-white shrink-0 group-hover:opacity-100" />
+                                            <ChevronDown className="w-3.5 h-3.5 opacity-60 transition-transform duration-200 text-foreground shrink-0 group-hover:opacity-100" />
                                         </div>
                                     </button>
                                 </PopoverTrigger>
@@ -297,23 +297,23 @@ export function FocusTimer() {
                                         placeholder="Session Goal (Press Enter)..."
                                         className={cn(
                                             "w-full pl-9 pr-9 py-2.5 rounded-[var(--radius)] text-sm text-center font-medium border transition-colors focus:outline-none shadow-sm",
-                                            "bg-neutral-900 border-neutral-800 text-white placeholder:text-neutral-500 focus:border-neutral-700",
+                                            "bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-border/80",
                                         )}
                                     />
                                     <PopoverTrigger asChild>
                                         <button
                                             type="button"
-                                            className="absolute right-2.5 p-1 rounded-lg transition-colors hover:bg-neutral-800 text-neutral-400 hover:text-white"
+                                            className="absolute right-2.5 p-1 rounded-lg transition-colors hover:bg-secondary text-muted-foreground hover:text-foreground"
                                             title="Select from your tasks"
                                         >
-                                            <ListTodo className="w-4 h-4 text-white" />
+                                            <ListTodo className="w-4 h-4 text-foreground" />
                                         </button>
                                     </PopoverTrigger>
                                 </div>
                             )}
                         </div>
 
-                        <PopoverContent className="w-[--radix-popover-trigger-width] min-w-[280px] max-h-80 overflow-y-auto p-1.5 bg-neutral-900 border-neutral-800 text-white shadow-xl rounded-[var(--radius)]">
+                        <PopoverContent className="w-[--radix-popover-trigger-width] min-w-[280px] max-h-80 overflow-y-auto p-1.5 bg-popover border-border text-popover-foreground shadow-xl rounded-[var(--radius)]">
                             <div className="flex flex-col gap-0.5">
                                 <button
                                     onClick={() => {
@@ -325,15 +325,15 @@ export function FocusTimer() {
                                     className={cn(
                                         "w-full px-3 py-2 text-xs font-medium rounded-xl text-left transition-all flex items-center justify-between",
                                         !selectedTodo && !sessionName
-                                            ? "bg-white/10 text-white font-bold"
-                                            : "text-neutral-300 hover:bg-neutral-800/80 hover:text-white",
+                                            ? "bg-secondary text-foreground font-bold"
+                                            : "text-muted-foreground hover:bg-secondary/80 hover:text-foreground",
                                     )}
                                 >
                                     <span>Custom focus...</span>
-                                    {!selectedTodo && !sessionName && <Check className="w-3.5 h-3.5 shrink-0 text-white" />}
+                                    {!selectedTodo && !sessionName && <Check className="w-3.5 h-3.5 shrink-0 text-foreground" />}
                                 </button>
                                 {uncompletedTodos.length > 0 && (
-                                    <div className="h-px bg-neutral-800/80 my-1" />
+                                    <div className="h-px bg-border my-1" />
                                 )}
                                 {uncompletedTodos.map((todo) => {
                                     const isSelected = selectedTodoId === todo.id;
@@ -346,25 +346,25 @@ export function FocusTimer() {
                                             className={cn(
                                                 "w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all",
                                                 isSelected
-                                                    ? "bg-white/10 text-white font-bold"
-                                                    : "hover:bg-neutral-800/80 text-neutral-300 hover:text-white",
+                                                    ? "bg-secondary text-foreground font-bold"
+                                                    : "hover:bg-secondary/80 text-muted-foreground hover:text-foreground",
                                             )}
                                         >
                                             <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
-                                                <ListTodo className="w-3.5 h-3.5 shrink-0 text-white" />
+                                                <ListTodo className="w-3.5 h-3.5 shrink-0 text-foreground" />
                                                 <span className="truncate">{todo.text}</span>
                                                 {totalSubs > 0 && (
-                                                    <span className="ml-auto text-[10px] font-mono text-neutral-400 shrink-0">
+                                                    <span className="ml-auto text-[10px] font-mono text-muted-foreground shrink-0">
                                                         {completedSubs}/{totalSubs}
                                                     </span>
                                                 )}
                                             </div>
-                                            {isSelected && <Check className="w-3.5 h-3.5 shrink-0 text-white" />}
+                                            {isSelected && <Check className="w-3.5 h-3.5 shrink-0 text-foreground" />}
                                         </button>
                                     );
                                 })}
                                 {uncompletedTodos.length === 0 && (
-                                    <p className="text-xs text-neutral-500 text-center py-3">No pending tasks</p>
+                                    <p className="text-xs text-muted-foreground text-center py-3">No pending tasks</p>
                                 )}
                             </div>
                         </PopoverContent>
@@ -394,7 +394,7 @@ export function FocusTimer() {
                                     )}
                                 >
                                     {subtask.completed ? (
-                                        <CheckSquare2 className="w-4 h-4 text-white shrink-0" />
+                                        <CheckSquare2 className="w-4 h-4 text-foreground shrink-0" />
                                     ) : (
                                         <Square className="w-4 h-4 text-muted-foreground/60 shrink-0" />
                                     )}
@@ -428,7 +428,7 @@ export function FocusTimer() {
                     <Button
                         variant="outline"
                         size="icon"
-                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 transition-all cursor-pointer"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-secondary hover:border-border/80 transition-all cursor-pointer"
                         onClick={resetTimer}
                         title="Reset Timer"
                     >
@@ -444,7 +444,7 @@ export function FocusTimer() {
                         className={cn(
                             "w-14 h-14 sm:w-16 sm:h-16 rounded-[var(--radius)] shadow-md hover:shadow active:scale-95 transition-all duration-300 cursor-pointer",
                             isActive
-                                ? "bg-white text-black hover:bg-gray-200"
+                                ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
                                 : "bg-primary text-primary-foreground",
                         )}
                         onClick={toggleTimer}
@@ -477,7 +477,7 @@ export function FocusTimer() {
                     <Button
                         variant="outline"
                         size="icon"
-                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-white/5 hover:border-white/20 transition-all cursor-pointer"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-secondary hover:border-border/80 transition-all cursor-pointer"
                         onClick={() => setDeepFocusMode(true)}
                         title="Deep Focus Mode"
                     >

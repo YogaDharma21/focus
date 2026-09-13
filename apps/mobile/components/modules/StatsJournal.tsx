@@ -170,7 +170,7 @@ export function StatsJournal() {
 
   const maxWeeklyMins = Math.max(60, ...Object.values(weeklyMinutes));
 
-  const monoFont = Fonts?.mono || Platform.select({ ios: 'ui-monospace', default: 'monospace' });
+  const monoFont = Fonts?.mono?.web || Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' });
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
@@ -190,7 +190,7 @@ export function StatsJournal() {
           <View style={[styles.progressBarFill, { backgroundColor: colors.text, width: `${dayProgressPercent}%` }]} />
         </View>
 
-        <Text style={[styles.subtext, { color: colors.textMuted }]}>{remainingTimeStr}</Text>
+        <Text style={[styles.subtext, { color: colors.mutedText }]}>{remainingTimeStr}</Text>
       </View>
 
       {/* 2. 3-Grid Cards Row */}
@@ -201,7 +201,7 @@ export function StatsJournal() {
             <Activity size={15} color={colors.text} />
           </View>
           <Text style={[styles.largeNumValue, { color: colors.text }]}>{minutesToday}</Text>
-          <Text style={[styles.grid3Label, { color: colors.textMuted }]}>MINUTES TODAY</Text>
+          <Text style={[styles.grid3Label, { color: colors.mutedText }]}>MINUTES TODAY</Text>
         </View>
 
         {/* Tasks Today */}
@@ -210,7 +210,7 @@ export function StatsJournal() {
             <CheckCircle2 size={15} color={colors.text} />
           </View>
           <Text style={[styles.largeNumValue, { color: colors.text }]}>{tasksTodayFinished}</Text>
-          <Text style={[styles.grid3Label, { color: colors.textMuted }]}>TASKS TODAY</Text>
+          <Text style={[styles.grid3Label, { color: colors.mutedText }]}>TASKS TODAY</Text>
         </View>
 
         {/* Pending Tasks */}
@@ -219,7 +219,7 @@ export function StatsJournal() {
             <ListFilter size={15} color={colors.text} />
           </View>
           <Text style={[styles.largeNumValue, { color: colors.text }]}>{pendingTasksCount}</Text>
-          <Text style={[styles.grid3Label, { color: colors.textMuted }]}>PENDING TASKS</Text>
+          <Text style={[styles.grid3Label, { color: colors.mutedText }]}>PENDING TASKS</Text>
         </View>
       </View>
 
@@ -236,11 +236,11 @@ export function StatsJournal() {
 
           <View style={styles.streakRowsContainer}>
             <View style={styles.streakRow}>
-              <Text style={[styles.streakLabel, { color: colors.textMuted }]}>Current</Text>
+              <Text style={[styles.streakLabel, { color: colors.mutedText }]}>Current</Text>
               <Text style={[styles.streakValue, { color: colors.text }]}>{streak.current} Days</Text>
             </View>
             <View style={styles.streakRow}>
-              <Text style={[styles.streakLabel, { color: colors.textMuted }]}>Best</Text>
+              <Text style={[styles.streakLabel, { color: colors.mutedText }]}>Best</Text>
               <Text style={[styles.streakValue, { color: colors.text }]}>{streak.best} Days</Text>
             </View>
           </View>
@@ -258,8 +258,8 @@ export function StatsJournal() {
           <Text style={[styles.bigPercentText, { color: colors.text }]}>{completionRate}%</Text>
 
           <View style={styles.iconSubtextRow}>
-            <CheckCircle2 size={13} color={colors.textMuted} />
-            <Text style={[styles.subtext, { color: colors.textMuted }]}>Tasks Finished</Text>
+            <CheckCircle2 size={13} color={colors.mutedText} />
+            <Text style={[styles.subtext, { color: colors.mutedText }]}>Tasks Finished</Text>
           </View>
         </View>
       </View>
@@ -288,7 +288,7 @@ export function StatsJournal() {
                   style={[
                     styles.chartValueText,
                     {
-                      color: minsLogged > 0 ? colors.text : colors.textMuted,
+                      color: minsLogged > 0 ? colors.text : colors.mutedText,
                       fontFamily: monoFont,
                     },
                   ]}
@@ -323,7 +323,7 @@ export function StatsJournal() {
         </View>
 
         {totalDistractions === 0 ? (
-          <Text style={[styles.monoEmptyText, { color: colors.textMuted, fontFamily: monoFont }]}>
+          <Text style={[styles.monoEmptyText, { color: colors.mutedText, fontFamily: monoFont }]}>
             No distractions logged yet.
           </Text>
         ) : (
@@ -336,7 +336,7 @@ export function StatsJournal() {
                     <Text style={[styles.categoryName, { color: colors.text, fontFamily: monoFont }]}>
                       {cat}
                     </Text>
-                    <Text style={[styles.categoryCountText, { color: colors.textMuted, fontFamily: monoFont }]}>
+                    <Text style={[styles.categoryCountText, { color: colors.mutedText, fontFamily: monoFont }]}>
                       {count} ({percent}%)
                     </Text>
                   </View>
