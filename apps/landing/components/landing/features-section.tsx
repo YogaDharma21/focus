@@ -10,7 +10,6 @@ import {
   ShieldOff,
   Music,
   BarChart3,
-  Heart,
   CheckSquare,
   ChevronDown,
   Zap,
@@ -91,19 +90,6 @@ const features = [
       { icon: TrendingUp, label: "Peak focus hour insights" },
     ],
   },
-  {
-    id: "mood",
-    label: "Mood",
-    title: "Mood & Reflections",
-    description:
-      "Log energy level and mood after every focus session to discover your peak productivity windows and build self-awareness.",
-    badge: "Reflections",
-    highlights: [
-      { icon: Heart, label: "Post-session mood logging" },
-      { icon: SmileIcon, label: "Energy level tracking" },
-      { icon: TrendingUp, label: "Productivity pattern insights" },
-    ],
-  },
 ] as const
 
 type FeatureId = (typeof features)[number]["id"]
@@ -125,28 +111,6 @@ function VolumeIcon(props: React.SVGProps<SVGSVGElement>) {
       <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
       <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
       <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
-    </svg>
-  )
-}
-
-function SmileIcon(props: React.SVGProps<SVGSVGElement>) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      {...props}
-    >
-      <circle cx="12" cy="12" r="10" />
-      <path d="M8 14s1.5 2 4 2 4-2 4-2" />
-      <line x1="9" x2="9.01" y1="9" y2="9" />
-      <line x1="15" x2="15.01" y1="9" y2="9" />
     </svg>
   )
 }
@@ -380,47 +344,12 @@ function AnalyticsIllustration() {
   )
 }
 
-function MoodIllustration() {
-  const moods = [
-    { emoji: "🔥", label: "Fired Up", count: 12 },
-    { emoji: "😊", label: "Good", count: 8 },
-    { emoji: "😐", label: "Neutral", count: 4 },
-    { emoji: "😴", label: "Tired", count: 2 },
-  ]
-  return (
-    <div className="bg-card border-border/50 relative flex aspect-square rounded-3xl border p-6 md:col-span-3">
-      <div className="m-auto w-full max-w-[280px] space-y-3">
-        <div className="text-xs font-bold text-foreground mb-1">How are you feeling?</div>
-        <div className="grid grid-cols-2 gap-2">
-          {moods.map((mood) => (
-            <div
-              key={mood.label}
-              className="flex items-center gap-2 p-2.5 rounded-xl bg-neutral-900 border border-neutral-800"
-            >
-              <span className="text-lg">{mood.emoji}</span>
-              <div>
-                <div className="text-[10px] font-bold text-foreground">{mood.label}</div>
-                <div className="text-[9px] text-muted-foreground">{mood.count} sessions</div>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className="p-3 rounded-xl bg-neutral-900 border border-neutral-800">
-          <div className="text-[10px] text-muted-foreground mb-1">Session Notes</div>
-          <div className="text-xs text-foreground">Felt productive today. Deep work session went well.</div>
-        </div>
-      </div>
-    </div>
-  )
-}
-
 const illustrations: Record<FeatureId, React.ComponentType> = {
   "smart-timer": TimerIllustration,
   "focus-shield": ShieldIllustration,
   "lofi-player": LofiIllustration,
   "session-tasks": TasksIllustration,
   analytics: AnalyticsIllustration,
-  mood: MoodIllustration,
 }
 
 export function FeaturesSection() {

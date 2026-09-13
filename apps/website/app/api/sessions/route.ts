@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { duration, mood, focus, note, tasks } = body;
+        const { duration, focus, note, tasks } = body;
 
         await new Promise((resolve) => setTimeout(resolve, 300));
 
@@ -12,7 +12,6 @@ export async function POST(request: Request) {
             id: crypto.randomUUID(),
             timestamp: new Date().toISOString(),
             duration,
-            mood,
             focus,
             note,
             tasks,

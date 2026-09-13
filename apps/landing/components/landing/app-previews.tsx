@@ -11,7 +11,6 @@ import {
   ListTodo,
   CheckSquare,
   BarChart2,
-  Smile,
   Settings,
   Shield,
   Music,
@@ -215,7 +214,6 @@ export function WebTimerPreview() {
           { icon: Timer, label: "Timer", active: true },
           { icon: CheckSquare, label: "Tasks" },
           { icon: Shield, label: "Shield" },
-          { icon: Smile, label: "Mood" },
           { icon: BarChart2, label: "Stats" },
         ].map(({ icon: Icon, label, active }) => (
           <div
@@ -260,7 +258,6 @@ export function DesktopTimerPreview() {
             { icon: Timer, active: true },
             { icon: CheckSquare },
             { icon: BarChart2 },
-            { icon: Smile },
             { icon: Settings },
           ].map(({ icon: Icon, active }, i) => (
             <div
@@ -367,7 +364,6 @@ export function MobileTimerPreview() {
           { icon: Timer, label: "Timer", active: true },
           { icon: CheckSquare, label: "Tasks" },
           { icon: Shield, label: "Shield" },
-          { icon: Smile, label: "Mood" },
           { icon: BarChart2, label: "Stats" },
         ].map(({ icon: Icon, label, active }) => (
           <div
@@ -461,7 +457,6 @@ export function MobileTimerPreview() {
           { icon: Timer, active: true },
           { icon: CheckSquare },
           { icon: Shield },
-          { icon: Smile },
           { icon: BarChart2 },
         ].map(({ icon: Icon, active }, i) => (
           <div
@@ -503,7 +498,6 @@ export function ExtensionTimerPreview() {
           { icon: Timer, label: "Timer", active: true },
           { icon: CheckSquare, label: "Tasks", badge: "3" },
           { icon: Shield, label: "Shield" },
-          { icon: Smile, label: "Mood" },
           { icon: BarChart2, label: "Stats" },
         ].map(({ icon: Icon, label, active, badge }) => (
           <div
