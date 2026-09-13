@@ -337,10 +337,10 @@ export function TodoList() {
                             className={cn(
                                 "group flex items-start gap-3 p-3 rounded-lg transition-all border",
                                 selectedTodoId === todo.id || editingTaskId === todo.id
-                                    ? "bg-zinc-800 border-zinc-700 text-zinc-100 font-medium"
+                                    ? "bg-primary/10 border-primary/30 text-foreground font-medium"
                                     : todo.completed
-                                      ? "bg-zinc-950/40 border-zinc-800/80 text-muted-foreground opacity-60"
-                                      : "bg-zinc-900/60 border-zinc-800/80 hover:border-zinc-700 text-foreground",
+                                      ? "bg-muted/40 border-border/60 text-muted-foreground opacity-60"
+                                      : "bg-secondary/30 border-border/60 hover:border-border text-foreground",
                             )}
                         >
                             <button
@@ -348,7 +348,7 @@ export function TodoList() {
                                 className="mt-0.5 shrink-0 transition-colors"
                             >
                                 {todo.completed ? (
-                                    <CheckSquare2 className="w-5 h-5 text-white shrink-0" />
+                                    <CheckSquare2 className="w-5 h-5 text-primary shrink-0" />
                                 ) : (
                                     <Square className="w-5 h-5 text-muted-foreground/60 hover:text-foreground shrink-0" />
                                 )}
@@ -588,7 +588,7 @@ export function TodoList() {
 
                                     <Input
                                         type="time"
-                                        className="w-full sm:w-32 h-9 bg-background/50 border-border/50 text-xs [color-scheme:dark]"
+                                        className="w-full sm:w-32 h-9 bg-background/50 border-border/50 text-xs"
                                         value={
                                             editingTask.deadline
                                                 ? format(new Date(editingTask.deadline), "HH:mm")
@@ -670,7 +670,7 @@ export function TodoList() {
                                                 className="shrink-0 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
                                             >
                                                 {subtask.completed ? (
-                                                    <CheckSquare2 className="w-4 h-4 text-white shrink-0" />
+                                                    <CheckSquare2 className="w-4 h-4 text-primary shrink-0" />
                                                 ) : (
                                                     <Square className="w-4 h-4 text-muted-foreground/60 shrink-0" />
                                                 )}

@@ -2,7 +2,6 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 export type ViewType = "FOCUS" | "TODO" | "JOURNAL" | "SETTINGS";
-export type BackgroundType = "dark" | "gradient" | "mountain" | "library" | "cafe" | "anime-room";
 
 interface AppState {
     currentView: ViewType;
@@ -53,9 +52,8 @@ interface AppState {
 
     deepFocusMode: boolean;
     setDeepFocusMode: (mode: boolean) => void;
-
-    background: BackgroundType;
-    setBackground: (bg: BackgroundType) => void;
+    theme: "light" | "dark";
+    setTheme: (theme: "light" | "dark") => void;
 
     addSession: (session: Session) => void;
     addDistraction: (category: string) => void;
@@ -204,9 +202,8 @@ export const useAppStore = create<AppState>()(
 
             deepFocusMode: false,
             setDeepFocusMode: (mode) => set({ deepFocusMode: mode }),
-
-            background: "dark",
-            setBackground: (bg) => set({ background: bg }),
+            theme: "dark" as "light" | "dark",
+            setTheme: (theme) => set({ theme }),
 
             addSession: (session) =>
                 set((state) => ({
@@ -314,8 +311,7 @@ export const useAppStore = create<AppState>()(
                     sessions: [],
                     distractions: [],
                     deepFocusMode: false,
-                    background: "dark",
-
+                    theme: "dark" as "light" | "dark",
                 });
             },
         }),

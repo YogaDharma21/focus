@@ -201,7 +201,7 @@ export function TodoList() {
                   <Text
                     style={[
                       styles.groupChipText,
-                      { color: active ? colors.primaryForeground : colors.text },
+                      { color: active ? colors.primaryText : colors.text },
                     ]}
                   >
                     {group.name}
@@ -213,7 +213,7 @@ export function TodoList() {
                     onPress={() => handleDeleteGroup(group.id, group.name)}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                   >
-                    <X size={12} color={active ? colors.primaryForeground : colors.textMuted} />
+                    <X size={12} color={active ? colors.primaryText : colors.mutedText} />
                   </TouchableOpacity>
                 )}
               </View>
@@ -237,12 +237,12 @@ export function TodoList() {
                 styles.addInput,
                 {
                   color: colors.text,
-                  backgroundColor: colors.inputBg,
+                  backgroundColor: colors.muted,
                   borderColor: isAddFocused ? colors.text : colors.border,
                 },
               ]}
               placeholder="Add a new task..."
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={colors.mutedText}
               value={newTodoText}
               onChangeText={setNewTodoText}
               onSubmitEditing={handleAddTodo}
@@ -254,7 +254,7 @@ export function TodoList() {
               onPress={handleAddTodo}
               activeOpacity={0.8}
             >
-              <Plus size={20} color={colors.primaryForeground} />
+              <Plus size={20} color={colors.primaryText} />
             </TouchableOpacity>
           </View>
         </View>
@@ -264,8 +264,8 @@ export function TodoList() {
       <ScrollView contentContainerStyle={styles.todosList}>
         {filteredTodos.length === 0 ? (
           <View style={styles.emptyBox}>
-            <ListCheck size={36} color={colors.textMuted} />
-            <Text style={[styles.emptyText, { color: colors.textMuted }]}>
+            <ListCheck size={36} color={colors.mutedText} />
+            <Text style={[styles.emptyText, { color: colors.mutedText }]}>
               {activeGroupId === 'finished' ? 'No finished tasks yet' : 'No tasks in this group'}
             </Text>
           </View>
@@ -296,7 +296,7 @@ export function TodoList() {
                     {todo.completed ? (
                       <CheckSquare size={20} color={colors.text} />
                     ) : (
-                      <Square size={20} color={colors.textMuted} />
+                      <Square size={20} color={colors.mutedText} />
                     )}
                   </TouchableOpacity>
 
@@ -328,8 +328,8 @@ export function TodoList() {
                       )}
                       {todo.deadline ? (
                         <View style={[styles.badge, { backgroundColor: colors.border, flexDirection: 'row', alignItems: 'center' }]}>
-                          <Calendar size={12} color={colors.textMuted} style={{ marginRight: 4 }} />
-                          <Text style={[styles.badgeText, { color: colors.textMuted }]}>
+                          <Calendar size={12} color={colors.mutedText} style={{ marginRight: 4 }} />
+                          <Text style={[styles.badgeText, { color: colors.mutedText }]}>
                             {(() => {
                               const d = formatDeadlineDisplay(todo.deadline);
                               return `${d.dateStr}${d.timeStr !== 'No time set' ? ' • ' + d.timeStr : ''}`;
@@ -347,7 +347,7 @@ export function TodoList() {
                       style={{ padding: 6 }}
                       accessibilityLabel="Focus on this task"
                     >
-                      <Target size={18} color={colors.textMuted} />
+                      <Target size={18} color={colors.mutedText} />
                     </TouchableOpacity>
 
                     <TouchableOpacity
@@ -355,7 +355,7 @@ export function TodoList() {
                       style={{ padding: 6 }}
                       accessibilityLabel="Delete task"
                     >
-                      <Trash2 size={18} color={colors.textMuted} />
+                      <Trash2 size={18} color={colors.mutedText} />
                     </TouchableOpacity>
                   </View>
                 </View>
@@ -666,12 +666,12 @@ export function TodoList() {
                 styles.groupModalInput,
                 {
                   color: colors.text,
-                  backgroundColor: colors.inputBg,
+                  backgroundColor: colors.muted,
                   borderColor: isGroupInputFocused ? colors.text : colors.border,
                 },
               ]}
               placeholder="Group name (e.g., Work, Personal)"
-              placeholderTextColor={colors.textMuted}
+              placeholderTextColor={colors.mutedText}
               value={newGroupName}
               onChangeText={setNewGroupName}
               onSubmitEditing={handleCreateGroup}
@@ -690,7 +690,7 @@ export function TodoList() {
                 style={[styles.modalBtn, { backgroundColor: colors.primary }]}
                 onPress={handleCreateGroup}
               >
-                <Text style={{ color: colors.primaryForeground, fontWeight: '600' }}>Save</Text>
+                <Text style={{ color: colors.primaryText, fontWeight: '600' }}>Save</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>

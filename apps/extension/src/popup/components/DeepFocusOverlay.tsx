@@ -62,17 +62,17 @@ export function DeepFocusOverlay({
   };
 
   return (
-    <div className="absolute inset-0 z-[100] bg-black flex flex-col items-center justify-center">
+    <div className="absolute inset-0 z-[100] bg-background flex flex-col items-center justify-center">
       {/* Top Left Lofi-Beats Music Control */}
       <div className="absolute top-4 left-4 z-50">
         <button
           onClick={() => setShowMusicMenu(!showMusicMenu)}
           className={`h-8 px-2.5 rounded-full border transition-all flex items-center gap-1.5 text-xs font-semibold ${
             !(state.soundEnabled ?? true) || !(state.musicEnabled ?? true)
-              ? "bg-neutral-900/30 border-neutral-800/50 text-neutral-600 cursor-not-allowed"
+              ? "bg-card/30 border-border/50 text-muted-foreground cursor-not-allowed"
               : state.isMusicPlaying
-                ? "bg-neutral-800 border-neutral-700 text-white ring-1 ring-neutral-600 shadow"
-                : "bg-neutral-900/60 border-neutral-800 text-neutral-400 hover:text-white hover:bg-neutral-800/60"
+                ? "bg-secondary border-border text-foreground ring-1 ring-muted shadow"
+                : "bg-card/60 border-border text-muted-foreground hover:text-foreground hover:bg-secondary/60"
           }`}
           title={!(state.soundEnabled ?? true) ? "Sound is disabled" : !(state.musicEnabled ?? true) ? "Music is disabled" : state.isMusicPlaying ? "Lofi-Beats: Playing" : "Lofi-Beats: Paused"}
         >
@@ -88,20 +88,20 @@ export function DeepFocusOverlay({
         </button>
 
         {showMusicMenu && (
-          <div className="absolute top-full left-0 mt-2 w-56 p-3 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl z-[200] space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-150">
+          <div className="absolute top-full left-0 mt-2 w-56 p-3 bg-card border border-border rounded-xl shadow-2xl z-[200] space-y-2.5 animate-in fade-in slide-in-from-top-2 duration-150">
             {!(state.soundEnabled ?? true) && (
-              <div className="p-2 rounded-lg bg-neutral-800/50 border border-neutral-700/50 text-center">
-                <span className="text-[10px] text-neutral-500 font-medium">Sound is disabled. Enable it in Settings.</span>
+              <div className="p-2 rounded-lg bg-secondary/50 border border-border/50 text-center">
+                <span className="text-[10px] text-muted-foreground font-medium">Sound is disabled. Enable it in Settings.</span>
               </div>
             )}
             {!(state.musicEnabled ?? true) && (state.soundEnabled ?? true) && (
-              <div className="p-2 rounded-lg bg-neutral-800/50 border border-neutral-700/50 text-center">
-                <span className="text-[10px] text-neutral-500 font-medium">Music is disabled. Enable it in Settings.</span>
+              <div className="p-2 rounded-lg bg-secondary/50 border border-border/50 text-center">
+                <span className="text-[10px] text-muted-foreground font-medium">Music is disabled. Enable it in Settings.</span>
               </div>
             )}
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-1.5 text-neutral-200">
-                <Music className="w-3.5 h-3.5 text-neutral-400" />
+              <div className="flex items-center gap-1.5 text-foreground">
+                <Music className="w-3.5 h-3.5 text-muted-foreground" />
                 <span className="text-xs font-semibold">Lofi-Beats</span>
               </div>
               <button
@@ -109,10 +109,10 @@ export function DeepFocusOverlay({
                 disabled={!(state.soundEnabled ?? true) || !(state.musicEnabled ?? true)}
                 className={`px-2 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${
                   !(state.soundEnabled ?? true) || !(state.musicEnabled ?? true)
-                    ? "bg-neutral-800 text-neutral-600 cursor-not-allowed"
+                    ? "bg-secondary text-muted-foreground cursor-not-allowed"
                     : state.isMusicPlaying
-                      ? "bg-white text-black hover:bg-white/90 shadow"
-                      : "bg-neutral-800 text-neutral-200 hover:bg-neutral-700"
+                      ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow"
+                      : "bg-secondary text-foreground hover:bg-accent"
                 }`}
               >
                 {state.isMusicPlaying ? (
@@ -127,11 +127,11 @@ export function DeepFocusOverlay({
               </button>
             </div>
 
-            <div className={`flex items-center gap-2 pt-1 border-t border-neutral-800 ${!(state.soundEnabled ?? true) || !(state.musicEnabled ?? true) ? "opacity-40" : ""}`}>
+            <div className={`flex items-center gap-2 pt-1 border-t border-border ${!(state.soundEnabled ?? true) || !(state.musicEnabled ?? true) ? "opacity-40" : ""}`}>
               {state.musicVolume === 0 ? (
-                <VolumeX className="w-3.5 h-3.5 text-neutral-500 shrink-0" />
+                <VolumeX className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
               ) : (
-                <Volume2 className="w-3.5 h-3.5 text-neutral-400 shrink-0" />
+                <Volume2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
               )}
               <input
                 type="range"
@@ -141,7 +141,7 @@ export function DeepFocusOverlay({
                 value={state.musicVolume ?? 0.8}
                 onChange={(e) => onSetMusicVolume(parseFloat(e.target.value))}
                 disabled={!(state.soundEnabled ?? true) || !(state.musicEnabled ?? true)}
-                className="w-full h-1 bg-neutral-800 rounded-lg accent-neutral-100 cursor-pointer disabled:cursor-not-allowed"
+                className="w-full h-1 bg-secondary rounded-lg accent-neutral-100 cursor-pointer disabled:cursor-not-allowed"
               />
             </div>
           </div>
@@ -151,7 +151,7 @@ export function DeepFocusOverlay({
       {/* Close button */}
       <button
         onClick={onExit}
-        className="absolute top-4 right-4 text-neutral-500 hover:text-white transition-colors p-1 rounded-lg hover:bg-neutral-800"
+        className="absolute top-4 right-4 text-muted-foreground hover:text-foreground transition-colors p-1 rounded-lg hover:bg-secondary"
         aria-label="Exit focus mode"
       >
         <X className="w-5 h-5" />
@@ -160,7 +160,7 @@ export function DeepFocusOverlay({
       <div className="flex flex-col items-center gap-4">
         {/* Large Timer Display */}
         <div
-          className={`text-6xl font-black font-mono tracking-tighter leading-none text-white select-none ${
+          className={`text-6xl font-black font-mono tracking-tighter leading-none text-foreground select-none ${
             state.isActive ? "animate-pulse" : ""
           }`}
         >
@@ -173,7 +173,7 @@ export function DeepFocusOverlay({
           const displayTitle = selectedTask ? selectedTask.text : state.sessionName;
           if (!displayTitle) return null;
           return (
-            <div className="text-sm font-semibold text-neutral-400 text-center max-w-[280px] px-4 truncate">
+            <div className="text-sm font-semibold text-muted-foreground text-center max-w-[280px] px-4 truncate">
               {displayTitle}
             </div>
           );
@@ -190,8 +190,8 @@ export function DeepFocusOverlay({
               }}
               className={`w-11 h-11 rounded-xl border-2 flex items-center justify-center transition-all ${
                 !state.isActive
-                  ? "border-neutral-800 text-neutral-700 cursor-not-allowed opacity-50"
-                  : "border-neutral-700 text-neutral-400 hover:text-rose-400 hover:border-rose-500/50 hover:bg-rose-500/10"
+                  ? "border-border text-muted-foreground cursor-not-allowed opacity-50"
+                  : "border-border text-muted-foreground hover:text-rose-400 hover:border-rose-500/50 hover:bg-rose-500/10"
               }`}
               title={state.isActive ? "Log Distraction" : "Start timer first"}
             >
@@ -200,12 +200,12 @@ export function DeepFocusOverlay({
 
             {/* Distraction Picker Dropdown */}
             {showDistractions && (
-              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 p-1.5 bg-neutral-900 border border-neutral-800 rounded-xl shadow-2xl z-[200]">
+              <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 p-1.5 bg-card border border-border rounded-xl shadow-2xl z-[200]">
                 <div className="flex flex-col gap-0.5">
                   {DISTRACTION_CATEGORIES.map((cat) => (
                     <button
                       key={cat}
-                      className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium text-neutral-200 hover:bg-neutral-800 transition-colors cursor-pointer"
+                      className="w-full text-left px-3 py-1.5 rounded-lg text-xs font-medium text-foreground hover:bg-secondary transition-colors cursor-pointer"
                       onClick={() => handleDistraction(cat)}
                     >
                       {cat}
@@ -219,12 +219,12 @@ export function DeepFocusOverlay({
           {/* Play / Pause */}
           <button
             onClick={onToggleTimer}
-            className="w-14 h-14 rounded-2xl border-2 border-neutral-700 hover:border-white/20 hover:bg-white/5 flex items-center justify-center transition-all"
+            className="w-14 h-14 rounded-2xl border-2 border-border hover:border-foreground/20 hover:bg-foreground/5 flex items-center justify-center transition-all"
           >
             {state.isActive ? (
-              <Pause className="w-6 h-6 text-white" />
+              <Pause className="w-6 h-6 text-foreground" />
             ) : (
-              <Play className="w-6 h-6 text-white ml-0.5" />
+              <Play className="w-6 h-6 text-foreground ml-0.5" />
             )}
           </button>
 
@@ -234,8 +234,8 @@ export function DeepFocusOverlay({
             onClick={handleComplete}
             className={`w-11 h-11 rounded-xl border-2 flex items-center justify-center transition-all ${
               state.isActive
-                ? "border-neutral-700 text-neutral-400 hover:text-emerald-400 hover:border-emerald-500/50 hover:bg-emerald-500/10"
-                : "border-neutral-800 text-neutral-700 opacity-50 cursor-not-allowed"
+                ? "border-border text-muted-foreground hover:text-emerald-400 hover:border-emerald-500/50 hover:bg-emerald-500/10"
+                : "border-border text-muted-foreground opacity-50 cursor-not-allowed"
             }`}
             title={state.isActive ? "Complete Session" : "Start timer first"}
           >

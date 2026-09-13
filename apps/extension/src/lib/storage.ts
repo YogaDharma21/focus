@@ -4,7 +4,6 @@ const STORAGE_KEY = "focus_extension_state_v6";
 
 export const DEFAULT_STATE: AppStateData = {
   themeMode: "dark",
-  background: "default",
   timerMode: "FLOW",
   timerState: "FLOW",
   previousMode: "FLOW",

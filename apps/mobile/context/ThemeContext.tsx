@@ -1,51 +1,56 @@
-import React, { createContext, useContext } from 'react';
-import { Colors } from '@/constants/theme';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { useColorScheme } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { Colors } from '../constants/theme';
 
-export type ThemeMode = 'dark';
+type ThemeMode = 'light' | 'dark';
 
 interface ThemeContextType {
   themeMode: ThemeMode;
-  setThemeMode: (mode: ThemeMode) => void;
-  activeScheme: 'dark';
   colors: typeof Colors.dark;
+  setThemeMode: (mode: ThemeMode) => void;
   toggleTheme: () => void;
 }
 
-const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+const ThemeContext = createContext<ThemeContextType>({
+  themeMode: 'dark',
+  colors: Colors.dark,
+  setThemeMode: () => {},
+  toggleTheme: () => {},
+});
+
+const THEME_STORAGE_KEY = 'focus-mobile-theme-mode';
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const themeMode: ThemeMode = 'dark';
-  const activeScheme: 'dark' = 'dark';
-  const colors = Colors.dark;
+  const systemColorScheme = useColorScheme();
+  const [themeMode, setThemeModeState] = useState<ThemeMode>('dark');
 
-  const setThemeMode = () => {};
-  const toggleTheme = () => {};
+  useEffect(() => {
+    AsyncStorage.getItem(THEME_STORAGE_KEY).then((stored) => {
+      if (stored === 'light' || stored === 'dark') {
+        setThemeModeState(stored);
+      }
+    });
+  }, []);
+
+  const setThemeMode = (mode: ThemeMode) => {
+    setThemeModeState(mode);
+    AsyncStorage.setItem(THEME_STORAGE_KEY, mode);
+  };
+
+  const toggleTheme = () => {
+    setThemeMode(themeMode === 'dark' ? 'light' : 'dark');
+  };
+
+  const colors = themeMode === 'dark' ? Colors.dark : Colors.light;
 
   return (
-    <ThemeContext.Provider
-      value={{
-        themeMode,
-        setThemeMode,
-        activeScheme,
-        colors,
-        toggleTheme,
-      }}
-    >
+    <ThemeContext.Provider value={{ themeMode, colors, setThemeMode, toggleTheme }}>
       {children}
     </ThemeContext.Provider>
   );
 }
 
 export function useTheme() {
-  const context = useContext(ThemeContext);
-  if (!context) {
-    return {
-      themeMode: 'dark' as ThemeMode,
-      setThemeMode: () => {},
-      activeScheme: 'dark' as const,
-      colors: Colors.dark,
-      toggleTheme: () => {},
-    };
-  }
-  return context;
+  return useContext(ThemeContext);
 }

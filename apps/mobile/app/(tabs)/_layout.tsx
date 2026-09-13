@@ -1,10 +1,10 @@
 import { Tabs } from 'expo-router';
 import React, { useState } from 'react';
 import { View, StyleSheet } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/context/ThemeContext';
 import { Header } from '@/components/Header';
-import { BackgroundDisplay } from '@/components/modules/BackgroundDisplay';
 import { MediaPlayer } from '@/components/modules/MediaPlayer';
 import { DeepFocusOverlay } from '@/components/modules/DeepFocusOverlay';
 import { DynamicIslandTimer } from '@/components/modules/DynamicIslandTimer';
@@ -14,7 +14,7 @@ import { useAppStore } from '@/lib/store';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
-  const { colors } = useTheme();
+  const { colors, themeMode } = useTheme();
 
   const {
     isActive,
@@ -61,7 +61,7 @@ export default function TabLayout() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <BackgroundDisplay />
+      <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
       <Header />
       <DynamicIslandTimer />
 

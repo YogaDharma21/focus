@@ -98,35 +98,34 @@ export const DeepFocusOverlay: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-[#09090b] z-50 flex flex-col items-center justify-between p-8 select-none animate-in fade-in duration-200">
-      {/* Top Left Lofi-Beats Music Control */}
+    <div className="fixed inset-0 bg-background z-50 flex flex-col items-center justify-between p-8 select-none animate-in fade-in duration-200">
       <div className="absolute top-6 left-6 z-50">
         <button
           onClick={() => setShowMusicMenu(!showMusicMenu)}
           className={cn(
             "h-10 px-3.5 rounded-full border transition-all flex items-center gap-2 backdrop-blur-md shadow-sm",
             isMusicPlaying
-              ? "bg-zinc-800/95 border-zinc-700 text-white ring-1 ring-zinc-600 shadow-md"
-              : "bg-zinc-900/60 border-zinc-800/80 text-zinc-400 hover:text-white hover:bg-zinc-800/60"
+              ? "bg-secondary/95 border-border text-foreground ring-1 ring-muted-foreground shadow-md"
+              : "bg-secondary/60 border-border text-muted-foreground hover:text-foreground hover:bg-secondary/60"
           )}
           title={isMusicPlaying ? "Lofi-Beats: Playing" : "Lofi-Beats: Paused"}
         >
-          <Music className={cn("w-4 h-4", isMusicPlaying && "text-white animate-pulse")} />
+          <Music className={cn("w-4 h-4", isMusicPlaying && "text-foreground animate-pulse")} />
           <span className="text-xs font-semibold tracking-wide">Lofi-Beats</span>
           {isMusicPlaying && (
             <span className="flex items-center gap-0.5 h-3 ml-0.5">
-              <span className="w-0.5 h-2.5 bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
-              <span className="w-0.5 h-3 bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
-              <span className="w-0.5 h-2 bg-white rounded-full animate-bounce" />
+              <span className="w-0.5 h-2.5 bg-foreground rounded-full animate-bounce [animation-delay:-0.3s]" />
+              <span className="w-0.5 h-3 bg-foreground rounded-full animate-bounce [animation-delay:-0.15s]" />
+              <span className="w-0.5 h-2 bg-foreground rounded-full animate-bounce" />
             </span>
           )}
         </button>
 
         {showMusicMenu && (
-          <div className="absolute top-full left-0 mt-2.5 w-60 bg-[#181818] border border-zinc-800/90 rounded-2xl shadow-2xl z-50 p-3.5 space-y-3 animate-in zoom-in-95 duration-150">
+          <div className="absolute top-full left-0 mt-2.5 w-60 bg-card border border-border rounded-2xl shadow-2xl z-50 p-3.5 space-y-3 animate-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 text-zinc-200">
-                <Music className="w-4 h-4 text-zinc-300" />
+              <div className="flex items-center gap-2 text-foreground">
+                <Music className="w-4 h-4 text-muted-foreground" />
                 <span className="text-xs font-semibold">Lofi-Beats</span>
               </div>
               <button
@@ -134,8 +133,8 @@ export const DeepFocusOverlay: React.FC = () => {
                 className={cn(
                   "px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5",
                   isMusicPlaying
-                    ? "bg-white text-black hover:bg-white/90 shadow"
-                    : "bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                    ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow"
+                    : "bg-secondary text-foreground hover:bg-muted"
                 )}
               >
                 {isMusicPlaying ? (
@@ -150,11 +149,11 @@ export const DeepFocusOverlay: React.FC = () => {
               </button>
             </div>
 
-            <div className="flex items-center gap-2.5 pt-1 border-t border-zinc-800">
+            <div className="flex items-center gap-2.5 pt-1 border-t border-border">
               {volume === 0 ? (
-                <VolumeX className="w-3.5 h-3.5 text-zinc-500 shrink-0" />
+                <VolumeX className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
               ) : (
-                <Volume2 className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
+                <Volume2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
               )}
               <input
                 type="range"
@@ -163,47 +162,41 @@ export const DeepFocusOverlay: React.FC = () => {
                 step={0.01}
                 value={volume}
                 onChange={(e) => setVolume(Number(e.target.value))}
-                className="w-full h-1 bg-zinc-800 rounded-lg accent-zinc-100 cursor-pointer"
+                className="w-full h-1 bg-muted rounded-lg accent-primary cursor-pointer"
               />
             </div>
           </div>
         )}
       </div>
 
-      {/* Top Right Close X Button */}
       <button
         onClick={() => setDeepFocusMode(false)}
-        className="absolute top-6 right-6 p-2 text-zinc-400 hover:text-white transition-colors"
+        className="absolute top-6 right-6 p-2 text-muted-foreground hover:text-foreground transition-colors"
         title="Close Focus Mode (Esc)"
       >
         <X className="w-5 h-5" />
       </button>
 
-      {/* Spacer to push content to center */}
       <div />
 
-      {/* Center Giant Clock & Subtle Controls */}
       <div className="flex flex-col items-center justify-center space-y-6 my-auto">
-        <h1 className="text-[120px] md:text-[150px] font-extrabold tracking-tight text-white leading-none font-sans select-none">
+        <h1 className="text-[120px] md:text-[150px] font-extrabold tracking-tight text-foreground leading-none font-sans select-none">
           {timeString}
         </h1>
 
-        {/* Selected Task Name / Session Goal */}
         {(activeTask?.text || sessionName) && (
-          <div className="text-sm md:text-base font-semibold text-zinc-400 text-center max-w-md px-4 truncate">
+          <div className="text-sm md:text-base font-semibold text-muted-foreground text-center max-w-md px-4 truncate">
             {activeTask?.text || sessionName}
           </div>
         )}
 
-        {/* Minimal Control Row */}
         <div className="flex items-center gap-6 relative">
-          {/* Distraction Alert Popover Button */}
           <div className="relative">
             <button
               onClick={() => setShowDistractionMenu(!showDistractionMenu)}
               disabled={!isActive}
               className={cn(
-                "w-11 h-11 rounded-xl bg-[#141414] border border-zinc-800/80 flex items-center justify-center text-zinc-400 hover:text-rose-400 transition-colors shadow-sm",
+                "w-11 h-11 rounded-xl bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-rose-400 transition-colors shadow-sm",
                 !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
               )}
               title={isActive ? "Log Distraction" : "Start timer to log distraction"}
@@ -212,7 +205,7 @@ export const DeepFocusOverlay: React.FC = () => {
             </button>
 
             {isActive && showDistractionMenu && (
-              <div className="absolute bottom-14 left-1/2 -translate-x-1/2 w-48 bg-[#181818] border border-zinc-800/90 rounded-2xl shadow-2xl z-50 p-2 space-y-1 animate-in zoom-in-95 duration-150">
+              <div className="absolute bottom-14 left-1/2 -translate-x-1/2 w-48 bg-card border border-border rounded-2xl shadow-2xl z-50 p-2 space-y-1 animate-in zoom-in-95 duration-150">
                 {DISTRACTION_OPTIONS.map((opt) => (
                   <button
                     key={opt}
@@ -220,7 +213,7 @@ export const DeepFocusOverlay: React.FC = () => {
                       addDistraction(opt);
                       setShowDistractionMenu(false);
                     }}
-                    className="w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-zinc-100 hover:bg-zinc-800 transition-colors"
+                    className="w-full text-left px-3.5 py-2 rounded-xl text-xs font-semibold text-foreground hover:bg-secondary transition-colors"
                   >
                     {opt}
                   </button>
@@ -229,25 +222,23 @@ export const DeepFocusOverlay: React.FC = () => {
             )}
           </div>
 
-          {/* Play/Pause */}
           <button
             onClick={() => setIsActive(!isActive)}
-            className="w-11 h-11 flex items-center justify-center text-white hover:scale-110 transition-transform"
+            className="w-11 h-11 flex items-center justify-center text-foreground hover:scale-110 transition-transform"
             title={isActive ? "Pause" : "Start"}
           >
             {isActive ? (
-              <Pause className="w-5 h-5 fill-white text-white" />
+              <Pause className="w-5 h-5 fill-foreground text-foreground" />
             ) : (
-              <Play className="w-5 h-5 fill-white text-white ml-0.5" />
+              <Play className="w-5 h-5 fill-foreground text-foreground ml-0.5" />
             )}
           </button>
 
-          {/* Finish / Complete Task */}
           <button
             onClick={handleCompleteSession}
             disabled={!isActive}
             className={cn(
-              "w-11 h-11 flex items-center justify-center text-zinc-400 hover:text-emerald-400 transition-colors",
+              "w-11 h-11 flex items-center justify-center text-muted-foreground hover:text-emerald-400 transition-colors",
               !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
             )}
             title={isActive ? "Complete Session" : "Start timer to complete session"}
@@ -257,11 +248,10 @@ export const DeepFocusOverlay: React.FC = () => {
         </div>
       </div>
 
-      {/* Bottom Key Instruction */}
       <div className="pb-2">
-        <p className="text-xs text-zinc-500 font-medium tracking-wide flex items-center gap-1">
+        <p className="text-xs text-muted-foreground font-medium tracking-wide flex items-center gap-1">
           <span>Press</span>
-          <kbd className="px-1.5 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-300 font-mono text-[10px]">Esc</kbd>
+          <kbd className="px-1.5 py-0.5 rounded bg-secondary border border-border text-muted-foreground font-mono text-[10px]">Esc</kbd>
           <span>to exit focus mode</span>
         </p>
       </div>

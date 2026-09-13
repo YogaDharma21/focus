@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, StyleSheet, Animated, Linking } from 'react-native';
-import { useAppStore, BackgroundType } from '@/lib/store';
+import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
 import { Settings, Palette, Volume2, Trash2, Info, ExternalLink } from 'lucide-react-native';
 import { VolumeSlider } from '@/components/ui/VolumeSlider';
@@ -68,11 +68,9 @@ function CustomToggleSwitch({ value, onToggle }: CustomToggleSwitchProps) {
 }
 
 export function SettingsPage() {
-  const { colors } = useTheme();
+  const { colors, themeMode, setThemeMode } = useTheme();
   
   const {
-    background,
-    setBackground,
     soundEffectEnabled,
     setSoundEffectEnabled,
     soundEffectVolume,
@@ -95,15 +93,6 @@ export function SettingsPage() {
     );
   };
 
-  const themes: { id: BackgroundType; name: string }[] = [
-    { id: 'dark', name: 'Dark' },
-    { id: 'gradient', name: 'Gradient' },
-    { id: 'mountain', name: 'Mountain' },
-    { id: 'library', name: 'Library' },
-    { id: 'cafe', name: 'Cafe' },
-    { id: 'anime-room', name: 'Anime Room' },
-  ];
-
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <View style={styles.header}>
@@ -119,26 +108,34 @@ export function SettingsPage() {
         </View>
         
         <View style={styles.themeGrid}>
-          {themes.map((theme) => {
-            const isActive = background === theme.id;
-            return (
-              <TouchableOpacity
-                key={theme.id}
-                style={[
-                  styles.themeButton,
-                  {
-                    backgroundColor: isActive ? '#27272a' : '#141414',
-                    borderColor: isActive ? '#fafafa' : '#27272a',
-                  },
-                ]}
-                onPress={() => setBackground(theme.id)}
-              >
-                <Text style={[styles.themeButtonText, { color: isActive ? '#fafafa' : '#a1a1aa' }]}>
-                  {theme.name}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+          <TouchableOpacity
+            style={[
+              styles.themeButton,
+              {
+                backgroundColor: themeMode === 'light' ? colors.muted : colors.muted,
+                borderColor: themeMode === 'light' ? colors.text : colors.border,
+              },
+            ]}
+            onPress={() => setThemeMode('light')}
+          >
+            <Text style={[styles.themeButtonText, { color: themeMode === 'light' ? colors.text : colors.mutedText }]}>
+              Light
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[
+              styles.themeButton,
+              {
+                backgroundColor: themeMode === 'dark' ? colors.muted : colors.muted,
+                borderColor: themeMode === 'dark' ? colors.text : colors.border,
+              },
+            ]}
+            onPress={() => setThemeMode('dark')}
+          >
+            <Text style={[styles.themeButtonText, { color: themeMode === 'dark' ? colors.text : colors.mutedText }]}>
+              Dark
+            </Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -153,7 +150,7 @@ export function SettingsPage() {
           style={[
             styles.autoStartCard,
             {
-              backgroundColor: colors.inputBg,
+              backgroundColor: colors.muted,
               borderColor: colors.border,
             },
           ]}
@@ -162,7 +159,7 @@ export function SettingsPage() {
         >
           <View style={styles.autoStartTextContainer}>
             <Text style={[styles.autoStartTitle, { color: colors.text }]}>SFX Enabled</Text>
-            <Text style={[styles.autoStartSubtitle, { color: colors.textMuted }]}>
+            <Text style={[styles.autoStartSubtitle, { color: colors.mutedText }]}>
               Play sound effects on timer completion
             </Text>
           </View>
@@ -172,7 +169,7 @@ export function SettingsPage() {
         <View style={styles.volumeGroup}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
             <Text style={[styles.settingLabel, { color: colors.text, marginBottom: 0 }]}>SFX Volume</Text>
-            <Text style={{ fontSize: 12, fontWeight: '600', color: colors.textMuted }}>
+            <Text style={{ fontSize: 12, fontWeight: '600', color: colors.mutedText }}>
               {Math.round((soundEffectVolume ?? 0.8) * 100)}%
             </Text>
           </View>
@@ -183,7 +180,7 @@ export function SettingsPage() {
         </View>
 
         <TouchableOpacity
-          style={[styles.testSoundBtn, { backgroundColor: colors.inputBg, borderColor: colors.border }]}
+          style={[styles.testSoundBtn, { backgroundColor: colors.muted, borderColor: colors.border }]}
           onPress={() => playCompletionSound()}
         >
           <Volume2 size={16} color={colors.text} />
@@ -215,9 +212,9 @@ export function SettingsPage() {
         </View>
 
         <View style={styles.aboutGroup}>
-          <View style={[styles.aboutRow, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
+          <View style={[styles.aboutRow, { backgroundColor: colors.muted, borderColor: colors.border }]}>
             <Text style={[styles.aboutLabel, { color: colors.text }]}>Version</Text>
-            <Text style={[styles.aboutValue, { color: colors.textMuted }]}>v0.0.1</Text>
+            <Text style={[styles.aboutValue, { color: colors.mutedText }]}>v0.0.1</Text>
           </View>
 
           <View style={[styles.aboutCard, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
@@ -227,12 +224,12 @@ export function SettingsPage() {
           </View>
 
           <TouchableOpacity
-            style={[styles.aboutLinkRow, { backgroundColor: colors.inputBg, borderColor: colors.border }]}
+            style={[styles.aboutLinkRow, { backgroundColor: colors.muted, borderColor: colors.border }]}
             onPress={() => Linking.openURL('https://github.com/YogaDharma21/focus')}
             activeOpacity={0.7}
           >
             <Text style={[styles.aboutLinkLabel, { color: colors.text }]}>GitHub Repository</Text>
-            <ExternalLink size={16} color={colors.textMuted} />
+            <ExternalLink size={16} color={colors.mutedText} />
           </TouchableOpacity>
         </View>
       </View>
