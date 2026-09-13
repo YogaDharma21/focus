@@ -6,7 +6,7 @@
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![Status](https://img.shields.io/badge/Status-In_Development-orange?style=for-the-badge)]()
 
-**Focus Extension** is a monochrome-themed Chrome extension that brings the core Focus experience directly into your browser. It provides Pomodoro and Flow timers, task management, site blocking, mood journaling, and session analytics — all from a compact popup UI.
+**Focus Extension** is a monochrome-themed Chrome extension that brings the core Focus experience directly into your browser. It provides Pomodoro and Flow timers, task management, site blocking, and session analytics — all from a compact popup UI.
 
 > This extension is part of the [Focus](../../README.md) monorepo and is currently **in active development**.
 
@@ -28,9 +28,6 @@
 
 ### Stats & Analytics
 ![Stats](./public/Screenshot-stats.png)
-
-### Mood & Notes
-![Notes](./public/Screenshot-notes.png)
 
 </details>
 
@@ -55,10 +52,6 @@
 - Automatically redirects blocked sites to a custom "blocked" page during active work/flow sessions.
 - Logs blocked attempts as distractions for later review.
 - Real-time tab monitoring — blocks on navigation and tab switch.
-
-### Notes and Mood
-- Daily mood logging with preset mood options.
-- Free-form text notes attached to each mood entry.
 
 ### Stats and Analytics
 - Today's focus minutes and completed task count.
@@ -103,7 +96,7 @@ apps/extension/
 
 ### How It Works
 
-1. **Popup** (`popup.html` + `Popup.tsx`) — The main interface users interact with. Contains tabbed navigation for timer, tasks, shield, notes, and stats. All state is persisted to `chrome.storage.local`.
+1. **Popup** (`popup.html` + `Popup.tsx`) — The main interface users interact with. Contains tabbed navigation for timer, tasks, shield, and stats. All state is persisted to `chrome.storage.local`.
 
 2. **Background Service Worker** (`background.ts`) — Runs independently of the popup. Handles the timer countdown/countup, session transitions, badge updates, desktop notifications, and enforces site blocking by monitoring tab events.
 
