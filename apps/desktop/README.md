@@ -37,7 +37,6 @@
 ## Features
 
 ### Focus & Flow Timers
-- **Pomodoro Mode** — Configurable focus & break durations with auto-start break features.
 - **Flow Mode** — Open-ended stopwatch tracking with automatic break calculation (1/5th of flow duration).
 - **Deep Focus Mode** — Immersive, distraction-free overlay with keyboard shortcuts (`Esc` / `F`).
 - **Floating Timer Capsule** — Compact floating widget view for monitoring session progress outside the main app window.
@@ -45,7 +44,7 @@
 ### Task Management
 - Create, manage, and complete tasks with priority levels (Low, Medium, High, Urgent).
 - Organize tasks into custom groups/projects.
-- Subtasks, due dates, estimated vs. completed pomodoro counts, and recurring task settings.
+- Subtasks, due dates, and recurring task settings.
 - Direct linkage between focus sessions and active tasks.
 
 ### Ambient Sound Player & Custom Backgrounds

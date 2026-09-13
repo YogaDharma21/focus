@@ -7,7 +7,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-**Focus Web** is a modern, minimalist productivity web application currently in active development. Featuring customizable Pomodoro and Flow timers, deep focus mode, automated break duration calculations, task management, distraction tracking, mood notes, and an ambient media player.
+**Focus Web** is a modern, minimalist productivity web application currently in active development. Featuring a Flow timer with smart break calculation, deep focus mode, task management, distraction tracking, mood notes, and an ambient media player.
 
 ---
 
@@ -34,11 +34,11 @@
 
 ## Key Features
 
-- **Focus & Flow Timers** — Flexible Pomodoro and Flow (Stopwatch) modes.
+- **Focus & Flow Timer** — Continuous Flow (Stopwatch) timer with smart break calculation.
 - **Smart Flow Break Time** — Automatically calculates break duration as 1/5th of your Flow session length.
 - **Deep Focus Mode** — Distraction-free immersive view with session controls and keyboard shortcuts (`Esc` / `F`).
 - **Focus Session Tasks** — Type custom focus goals directly into the timer and press `Enter` to instantly create and select new tasks.
-- **Task Management** — Organize tasks into groups, subtasks, and estimated pomodoros.
+- **Task Management** — Organize tasks into groups, subtasks, and estimated sessions.
 - **Stats & Productivity Analytics** — Track daily focus minutes, completion rates, streak metrics, and weekly trends.
 - **Mood & Notes** — Record daily mood logs and reflections.
 - **Ambient Media Player** — Background music player supporting YouTube playlists, Spotify embeds, and local focus tracks.

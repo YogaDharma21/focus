@@ -2,7 +2,7 @@
 
 import { useAppStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
-import { Pause, Play, X, CheckCircle2, Music, Volume2, VolumeX, RotateCcw } from "lucide-react";
+import { Pause, Play, X, CheckCircle2, Music, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -15,17 +15,7 @@ export function DeepFocusOverlay() {
         sessionName,
         setIsActive,
         setDeepFocusMode,
-        timerMode,
-        timerState,
-        previousMode,
-        pomodoroSettings,
-        pomodoroCount,
-        setPomodoroCount,
-        resetPomodoroCount,
         setTimeLeft,
-        setTimerState,
-        setTimerMode,
-        setPreviousMode,
         addSession,
         todos,
         selectedTodoId,
@@ -45,17 +35,7 @@ export function DeepFocusOverlay() {
             sessionName: s.sessionName,
             setIsActive: s.setIsActive,
             setDeepFocusMode: s.setDeepFocusMode,
-            timerMode: s.timerMode,
-            timerState: s.timerState,
-            previousMode: s.previousMode,
-            pomodoroSettings: s.pomodoroSettings,
-            pomodoroCount: s.pomodoroCount,
-            setPomodoroCount: s.setPomodoroCount,
-            resetPomodoroCount: s.resetPomodoroCount,
             setTimeLeft: s.setTimeLeft,
-            setTimerState: s.setTimerState,
-            setTimerMode: s.setTimerMode,
-            setPreviousMode: s.setPreviousMode,
             addSession: s.addSession,
             todos: s.todos,
             selectedTodoId: s.selectedTodoId,
@@ -130,17 +110,14 @@ export function DeepFocusOverlay() {
             );
         }
 
-        const duration =
-            timerMode === "POMODORO"
-                ? Math.min(elapsedSeconds, pomodoroSettings.work * 60)
-                : timeLeft;
+        const duration = timeLeft;
 
         if (duration > 0) {
             addSession({
                 id: crypto.randomUUID(),
                 date: new Date().toISOString(),
                 duration,
-                mode: timerMode,
+                mode: "STOPWATCH",
             });
             const selectedTodo = todos.find((t) => t.id === selectedTodoId);
             fetch("/api/sessions", {
@@ -152,70 +129,22 @@ export function DeepFocusOverlay() {
                 }),
             }).catch(() => {});
         }
-        setDeepFocusMode(false);
 
-        if (timerMode === "POMODORO" && timerState === "WORK") {
-            const nextCount = (pomodoroCount || 0) + 1;
-            setPomodoroCount(nextCount);
-            const isLongBreak = nextCount % 4 === 0;
-            const breakDuration = isLongBreak
-                ? (pomodoroSettings.longBreak || 15) * 60
-                : (pomodoroSettings.break || 5) * 60;
-
-            setPreviousMode("POMODORO");
-            setTimerState("BREAK");
-            setTimeLeft(breakDuration);
-            if (pomodoroSettings.autoStartBreak) {
-                setIsActive(true);
-            }
-            setDeepFocusMode(false);
-        } else if (timerMode === "POMODORO" && timerState === "BREAK") {
-            if (previousMode === "STOPWATCH") {
-                setTimerMode("STOPWATCH");
-                setTimerState("WORK");
-                setTimeLeft(0);
-            } else {
-                setTimerMode("POMODORO");
-                setTimerState("WORK");
-                setTimeLeft(pomodoroSettings.work * 60);
-            }
-            if (pomodoroSettings.autoStartTimer) {
-                setIsActive(true);
-                setDeepFocusMode(true);
-            } else {
-                setDeepFocusMode(false);
-            }
-        } else if (timerMode === "STOPWATCH" && duration > 0) {
-            setPreviousMode("STOPWATCH");
-            const breakSeconds = Math.floor(duration / 5);
-            if (breakSeconds > 0) {
-                setTimerMode("POMODORO");
-                setTimerState("BREAK");
-                setTimeLeft(breakSeconds);
-                if (pomodoroSettings.autoStartBreak) {
-                    setIsActive(true);
-                }
-            } else {
-                setTimeLeft(0);
-            }
-            setDeepFocusMode(false);
+        const breakSeconds = Math.floor(duration / 5);
+        if (breakSeconds > 0) {
+            setTimeLeft(breakSeconds);
+        } else {
+            setTimeLeft(0);
         }
+
+        setDeepFocusMode(false);
         sessionStartTimeRef.current = null;
     }, [
-        timerMode,
-        timerState,
-        previousMode,
         timeLeft,
         setTimeLeft,
         setIsActive,
-        setTimerState,
-        setTimerMode,
-        setPreviousMode,
         setDeepFocusMode,
         playSound,
-        pomodoroSettings,
-        pomodoroCount,
-        setPomodoroCount,
         addSession,
         selectedTodoId,
         todos,
@@ -340,50 +269,6 @@ export function DeepFocusOverlay() {
             </button>
 
             <div className="flex flex-col items-center gap-4">
-                {/* Pomodoro Cycle & Progress Indicator */}
-                {timerMode === "POMODORO" && previousMode !== "STOPWATCH" && (
-                    <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-secondary/40 border border-border/50 text-xs font-mono text-foreground/80 shadow-sm animate-in fade-in duration-150 group">
-                        <div className="flex items-center gap-1.5">
-                            {[0, 1, 2, 3].map((index) => {
-                                const currentCycleStep = (pomodoroCount || 0) % 4;
-                                const isCompleted = index < currentCycleStep;
-                                const isCurrent = index === currentCycleStep && timerState === "WORK";
-                                return (
-                                    <div
-                                        key={index}
-                                        className={cn(
-                                            "w-2 h-2 rounded-full transition-all duration-300",
-                                            isCompleted
-                                                ? "bg-primary shadow-[0_0_6px_rgba(255,255,255,0.7)]"
-                                                : isCurrent
-                                                ? "bg-primary/90 ring-2 ring-primary/40"
-                                                : "bg-muted-foreground/30",
-                                        )}
-                                        title={`Pomodoro ${index + 1} of 4`}
-                                    />
-                                );
-                            })}
-                        </div>
-                        <span className="text-[11px] font-medium text-foreground/90">
-                            {timerState === "BREAK"
-                                ? (pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0
-                                    ? `Long Break (${pomodoroSettings.longBreak || 15}m)`
-                                    : `Short Break (${pomodoroSettings.break || 5}m)`
-                                : `Pomodoro ${((pomodoroCount || 0) % 4) + 1} of 4`}
-                        </span>
-                        {(pomodoroCount || 0) % 4 !== 0 && (
-                            <button
-                                type="button"
-                                onClick={resetPomodoroCount}
-                                className="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary/60 transition-colors cursor-pointer"
-                                title="Reset pomodoro count to 1 of 4"
-                            >
-                                <RotateCcw className="w-3 h-3" />
-                            </button>
-                        )}
-                    </div>
-                )}
-
                 <div className="text-[4rem] sm:text-[6rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground select-none">
                     {formatTime(timeLeft)}
                 </div>

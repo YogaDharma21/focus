@@ -1,8 +1,8 @@
 import React, { useState, useRef } from 'react';
 import {
   Settings, Clock, Palette, Volume2, Volume1, VolumeX, Trash2, BellRing,
-  Info, Github, ExternalLink, Check, RotateCcw, Download,
-  Upload, ShieldAlert, Monitor, Pin, Database, Plus, Minus, Music
+  Info, Github, ExternalLink, Check, Download,
+  Upload, ShieldAlert, Monitor, Pin, Database, Music
 } from 'lucide-react';
 import { useDesktopStore, BackgroundType } from '../../lib/store';
 import { electron } from '../../lib/electron';
@@ -56,13 +56,6 @@ const TIMER_PRESETS = {
 
 export const SettingsPage: React.FC = () => {
   const {
-    pomodoroSettings,
-    setPomodoroSettings,
-    pomodoroCount,
-    resetPomodoroCount,
-    isActive,
-    timerState,
-    setTimeLeft,
     background,
     setBackground,
     soundEffectEnabled,
@@ -92,34 +85,6 @@ export const SettingsPage: React.FC = () => {
     setTimeout(() => {
       setFeedbackMessage(null);
     }, 3500);
-  };
-
-  const handleTimerSettingChange = (updates: Partial<typeof pomodoroSettings>) => {
-    setPomodoroSettings(updates);
-
-    // Update timeLeft if timer is not active and mode matches the setting changed
-    if (!isActive) {
-      if (updates.work !== undefined && timerState === 'WORK') {
-        setTimeLeft(updates.work * 60);
-      } else if (updates.break !== undefined && timerState === 'BREAK') {
-        setTimeLeft(updates.break * 60);
-      }
-    }
-  };
-
-  const handleWorkDurationStep = (delta: number) => {
-    const nextVal = Math.min(180, Math.max(1, (pomodoroSettings.work || 25) + delta));
-    handleTimerSettingChange({ work: nextVal });
-  };
-
-  const handleBreakDurationStep = (delta: number) => {
-    const nextVal = Math.min(60, Math.max(1, (pomodoroSettings.break || 5) + delta));
-    handleTimerSettingChange({ break: nextVal });
-  };
-
-  const handleLongBreakDurationStep = (delta: number) => {
-    const nextVal = Math.min(90, Math.max(1, (pomodoroSettings.longBreak || 15) + delta));
-    handleTimerSettingChange({ longBreak: nextVal });
   };
 
   const playTestSound = () => {
@@ -263,258 +228,14 @@ export const SettingsPage: React.FC = () => {
                 <Clock className="w-4 h-4 text-zinc-300" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-zinc-100 tracking-tight">Timer & Focus Durations</h2>
-                <p className="text-[11px] text-zinc-400">Configure Pomodoro work cycles, break durations, and sequencing.</p>
+                <h2 className="text-sm font-semibold text-zinc-100 tracking-tight">Timer & Focus</h2>
+                <p className="text-[11px] text-zinc-400">Flow mode: open-ended stopwatch with smart break calculation.</p>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Work Duration Card */}
-            <div className="bg-zinc-900/70 border border-zinc-800/90 rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-zinc-700/80 transition-colors shadow-sm">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-zinc-200">Work Duration</span>
-                  <span className="text-xs font-mono font-semibold text-zinc-100 bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-md">
-                    {pomodoroSettings.work} min
-                  </span>
-                </div>
-                <p className="text-[10px] text-zinc-500 leading-tight">Focus interval length before trigger break.</p>
-              </div>
-
-              {/* Stepper + Input */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleWorkDurationStep(-5)}
-                  className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
-                  title="Decrease by 5 mins"
-                >
-                  <Minus className="w-3.5 h-3.5" />
-                </button>
-                <input
-                  type="number"
-                  min={1}
-                  max={180}
-                  value={pomodoroSettings.work}
-                  onChange={(e) => handleTimerSettingChange({ work: Number(e.target.value) || 25 })}
-                  className="w-full text-center py-1.5 text-xs font-mono font-bold bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:outline-none focus:border-zinc-500"
-                />
-                <button
-                  onClick={() => handleWorkDurationStep(5)}
-                  className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
-                  title="Increase by 5 mins"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* Quick Presets */}
-              <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-zinc-800/60">
-                <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider mr-1">Presets:</span>
-                {TIMER_PRESETS.work.map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => handleTimerSettingChange({ work: p })}
-                    className={`text-[10px] px-2 py-1 rounded-md font-mono transition-all ${
-                      pomodoroSettings.work === p
-                        ? 'bg-zinc-100 text-zinc-950 font-bold shadow-sm'
-                        : 'bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-                    }`}
-                  >
-                    {p}m
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Short Break Card */}
-            <div className="bg-zinc-900/70 border border-zinc-800/90 rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-zinc-700/80 transition-colors shadow-sm">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-zinc-200">Short Break</span>
-                  <span className="text-xs font-mono font-semibold text-zinc-100 bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-md">
-                    {pomodoroSettings.break} min
-                  </span>
-                </div>
-                <p className="text-[10px] text-zinc-500 leading-tight">Quick rest duration after single focus session.</p>
-              </div>
-
-              {/* Stepper + Input */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleBreakDurationStep(-1)}
-                  className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
-                  title="Decrease by 1 min"
-                >
-                  <Minus className="w-3.5 h-3.5" />
-                </button>
-                <input
-                  type="number"
-                  min={1}
-                  max={60}
-                  value={pomodoroSettings.break}
-                  onChange={(e) => handleTimerSettingChange({ break: Number(e.target.value) || 5 })}
-                  className="w-full text-center py-1.5 text-xs font-mono font-bold bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:outline-none focus:border-zinc-500"
-                />
-                <button
-                  onClick={() => handleBreakDurationStep(1)}
-                  className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
-                  title="Increase by 1 min"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* Quick Presets */}
-              <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-zinc-800/60">
-                <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider mr-1">Presets:</span>
-                {TIMER_PRESETS.break.map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => handleTimerSettingChange({ break: p })}
-                    className={`text-[10px] px-2 py-1 rounded-md font-mono transition-all ${
-                      pomodoroSettings.break === p
-                        ? 'bg-zinc-100 text-zinc-950 font-bold shadow-sm'
-                        : 'bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-                    }`}
-                  >
-                    {p}m
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Long Break Card */}
-            <div className="bg-zinc-900/70 border border-zinc-800/90 rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-zinc-700/80 transition-colors shadow-sm">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-zinc-200">Long Break</span>
-                  <span className="text-xs font-mono font-semibold text-zinc-100 bg-zinc-800 border border-zinc-700 px-2 py-0.5 rounded-md">
-                    {pomodoroSettings.longBreak || 15} min
-                  </span>
-                </div>
-                <p className="text-[10px] text-zinc-500 leading-tight">Extended recovery after 4 completed focus rounds.</p>
-              </div>
-
-              {/* Stepper + Input */}
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleLongBreakDurationStep(-5)}
-                  className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
-                  title="Decrease by 5 mins"
-                >
-                  <Minus className="w-3.5 h-3.5" />
-                </button>
-                <input
-                  type="number"
-                  min={1}
-                  max={90}
-                  value={pomodoroSettings.longBreak || 15}
-                  onChange={(e) => handleTimerSettingChange({ longBreak: Number(e.target.value) || 15 })}
-                  className="w-full text-center py-1.5 text-xs font-mono font-bold bg-zinc-950 border border-zinc-800 rounded-lg text-zinc-100 focus:outline-none focus:border-zinc-500"
-                />
-                <button
-                  onClick={() => handleLongBreakDurationStep(5)}
-                  className="p-2 rounded-lg bg-zinc-950 border border-zinc-800 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
-                  title="Increase by 5 mins"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              {/* Quick Presets */}
-              <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-zinc-800/60">
-                <span className="text-[9px] text-zinc-500 font-semibold uppercase tracking-wider mr-1">Presets:</span>
-                {TIMER_PRESETS.longBreak.map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => handleTimerSettingChange({ longBreak: p })}
-                    className={`text-[10px] px-2 py-1 rounded-md font-mono transition-all ${
-                      (pomodoroSettings.longBreak || 15) === p
-                        ? 'bg-zinc-100 text-zinc-950 font-bold shadow-sm'
-                        : 'bg-zinc-950 border border-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
-                    }`}
-                  >
-                    {p}m
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Automation & Sequence Controls */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            {/* Auto-start Break Switch */}
-            <div
-              role="switch"
-              aria-checked={pomodoroSettings.autoStartBreak}
-              onClick={() => handleTimerSettingChange({ autoStartBreak: !pomodoroSettings.autoStartBreak })}
-              className="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/70 border border-zinc-800/90 hover:border-zinc-700/80 cursor-pointer transition-all shadow-sm group"
-            >
-              <div className="space-y-1 pr-4">
-                <span className="text-xs font-semibold text-zinc-200 block group-hover:text-white transition-colors">
-                  Auto-start Breaks
-                </span>
-                <span className="text-[11px] text-zinc-400 block leading-tight">
-                  Immediately launch break countdown when focus interval concludes.
-                </span>
-              </div>
-              <div className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${
-                pomodoroSettings.autoStartBreak ? 'bg-zinc-200' : 'bg-zinc-700'
-              }`}>
-                <div className={`w-5 h-5 rounded-full transition-transform duration-200 ${
-                  pomodoroSettings.autoStartBreak ? 'translate-x-5 bg-zinc-900 shadow-sm' : 'translate-x-0 bg-zinc-400'
-                }`} />
-              </div>
-            </div>
-
-            {/* Auto-start Focus Timer Switch */}
-            <div
-              role="switch"
-              aria-checked={pomodoroSettings.autoStartTimer}
-              onClick={() => handleTimerSettingChange({ autoStartTimer: !pomodoroSettings.autoStartTimer })}
-              className="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/70 border border-zinc-800/90 hover:border-zinc-700/80 cursor-pointer transition-all shadow-sm group"
-            >
-              <div className="space-y-1 pr-4">
-                <span className="text-xs font-semibold text-zinc-200 block group-hover:text-white transition-colors">
-                  Auto-start Focus Rounds
-                </span>
-                <span className="text-[11px] text-zinc-400 block leading-tight">
-                  Automatically commence the next focus block when break time is up.
-                </span>
-              </div>
-              <div className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${
-                pomodoroSettings.autoStartTimer ? 'bg-zinc-200' : 'bg-zinc-700'
-              }`}>
-                <div className={`w-5 h-5 rounded-full transition-transform duration-200 ${
-                  pomodoroSettings.autoStartTimer ? 'translate-x-5 bg-zinc-900 shadow-sm' : 'translate-x-0 bg-zinc-400'
-                }`} />
-              </div>
-            </div>
-          </div>
-
-          {/* Pomodoro Session Counter Status Card */}
-          <div className="flex items-center justify-between p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800/80 text-xs">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-zinc-950 border border-zinc-800 text-zinc-300">
-                <RotateCcw className="w-4 h-4 text-zinc-400" />
-              </div>
-              <div>
-                <span className="font-semibold text-zinc-200 block">Current Pomodoro Cycle Count</span>
-                <span className="text-[11px] text-zinc-500 font-mono">
-                  {pomodoroCount || 0} completed session{(pomodoroCount || 0) === 1 ? '' : 's'} recorded today
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                resetPomodoroCount();
-                showFeedback('Session counter reset to 0.');
-              }}
-              className="px-3 py-1.5 rounded-lg bg-zinc-950 hover:bg-zinc-800 border border-zinc-800 hover:border-zinc-700 text-zinc-300 hover:text-white text-xs font-medium transition-all shadow-sm"
-            >
-              Reset Counter
-            </button>
+          <div className="bg-zinc-900/50 border border-zinc-800/80 rounded-2xl p-5 text-xs text-zinc-400 leading-relaxed">
+            Focus Desktop uses Flow mode exclusively. The timer counts up from zero, tracking your focus duration. When you complete a session, a break is automatically calculated as 1/5th of your focus time.
           </div>
         </section>
 
@@ -898,7 +619,7 @@ export const SettingsPage: React.FC = () => {
             </div>
 
             <p className="text-xs text-zinc-300 leading-relaxed bg-zinc-950/60 p-4 rounded-xl border border-zinc-800/80">
-              Focus Desktop is engineered for deep flow state work. Featuring customizable Pomodoro and stopwatch flow timers, intelligent break sequencing, hierarchical task management, daily streak analytics, mood journaling, and embedded Lo-Fi audio stream support.
+              Focus Desktop is engineered for deep flow state work. Featuring open-ended Flow timers with intelligent break sequencing, hierarchical task management, daily streak analytics, mood journaling, and embedded Lo-Fi audio stream support.
             </p>
 
             {/* Links */}

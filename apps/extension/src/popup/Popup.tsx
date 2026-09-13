@@ -255,7 +255,7 @@ export function Popup() {
     return () => unsubscribe();
   }, []);
 
-  // Auto-activate deep focus when timer starts (Pomodoro or Flow), auto-exit when timer stops/finishes
+  // Auto-activate deep focus when timer starts, auto-exit when timer stops/finishes
   useEffect(() => {
     if (!state) return;
     if (isInitialLoadRef.current) {
@@ -263,8 +263,7 @@ export function Popup() {
       prevIsActiveRef.current = state.isActive;
       return;
     }
-    const isWorkOrFlow = state.timerState === "WORK" || state.timerState === "FLOW";
-    if (state.isActive && !prevIsActiveRef.current && !state.deepFocusMode && isWorkOrFlow) {
+    if (state.isActive && !prevIsActiveRef.current && !state.deepFocusMode && state.timerState === "FLOW") {
       updateState({ deepFocusMode: true });
     } else if (!state.isActive && prevIsActiveRef.current && state.deepFocusMode) {
       updateState({ deepFocusMode: false });
@@ -296,8 +295,7 @@ export function Popup() {
   // chrome.storage.onChanged listener reacts to start/stop the timer.
   const toggleTimer = () => {
     const starting = !state.isActive;
-    const isWorkOrFlow = state.timerState === "WORK" || state.timerState === "FLOW";
-    if (starting && isWorkOrFlow) {
+    if (starting && state.timerState === "FLOW") {
       updateState({ isActive: true, deepFocusMode: true, isMusicPlaying: soundEnabled && musicEnabled });
     } else {
       updateState({ isActive: starting, deepFocusMode: false, isMusicPlaying: false });
@@ -305,125 +303,44 @@ export function Popup() {
   };
 
   const resetTimer = () => {
-    let defaultTime = 0;
-    if (state.timerState === "WORK") {
-      defaultTime = state.pomodoroSettings.work * 60;
-    } else if (state.timerState === "BREAK") {
-      const isLongBreak = (state.pomodoroCount || 0) % 4 === 0 && (state.pomodoroCount || 0) > 0;
-      defaultTime = isLongBreak ? (state.pomodoroSettings.longBreak || 15) * 60 : state.pomodoroSettings.break * 60;
-    } else if (state.timerState === "FLOW") {
-      defaultTime = 0;
-    }
-
-    updateState({ isActive: false, deepFocusMode: false, timeLeft: defaultTime, isMusicPlaying: false });
+    updateState({ isActive: false, deepFocusMode: false, timeLeft: 0, isMusicPlaying: false });
   };
 
-  const switchTimerModeAndState = (mode: "POMODORO" | "FLOW", timerState: "WORK" | "BREAK" | "FLOW") => {
-    let nextTime = 0;
-    if (timerState === "WORK") nextTime = state.pomodoroSettings.work * 60;
-    else if (timerState === "BREAK") {
-      const isLongBreak = (state.pomodoroCount || 0) % 4 === 0 && (state.pomodoroCount || 0) > 0;
-      nextTime = isLongBreak ? (state.pomodoroSettings.longBreak || 15) * 60 : state.pomodoroSettings.break * 60;
-    }
-    else if (timerState === "FLOW") nextTime = 0;
-
-    const prevMode = timerState === "FLOW" ? "FLOW" : (timerState === "WORK" ? "POMODORO" : (state.timerMode === "FLOW" || state.timerState === "FLOW" ? "FLOW" : state.previousMode));
-
-    updateState({
-      timerMode: mode,
-      timerState,
-      previousMode: prevMode,
-      isActive: false,
-      timeLeft: nextTime
-    });
-  };
-
-  // Complete session: Flow break = elapsedFlowSeconds / 5
   const completeSession = () => {
     playSoundEffect();
-    const isWorkOrFlow = state.timerState === "WORK" || state.timerState === "FLOW";
 
-    if (isWorkOrFlow && typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
+    if (state.isActive && typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
       chrome.runtime.sendMessage({ target: "background", action: "RESTORE_BLOCKED_TABS" });
     }
-    const durationLogged = state.timerState === "FLOW" ? state.timeLeft : (state.pomodoroSettings.work * 60 - state.timeLeft);
 
-    const newSession = isWorkOrFlow ? {
+    const durationLogged = state.timeLeft > 0 ? state.timeLeft : 1;
+
+    const newSession = {
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
-      duration: durationLogged > 0 ? durationLogged : 1,
+      duration: durationLogged,
       mode: state.timerMode,
       sessionName: state.sessionName || "Focus Session",
       todoId: state.selectedTodoId || undefined
-    } : null;
+    };
 
-    const newSessionList = newSession ? [newSession, ...state.sessions] : state.sessions;
+    const newSessionList = [newSession, ...state.sessions];
     const updatedWeekly = getWeeklyMinutesFromSessions(newSessionList);
     const updatedTodayMins = getTodayMinutesFromSessions(newSessionList);
     const streaks = calculateStreaksFromSessions(newSessionList);
 
-    let updatedTodos = state.todos;
-    if (state.selectedTodoId && isWorkOrFlow) {
-      updatedTodos = state.todos.map(t => {
-        if (t.id === state.selectedTodoId) {
-          const newCompleted = (t.completedPomodoros || 0) + 1;
-          const est = t.estimatedPomodoros || 1;
-          const isFinished = newCompleted >= est;
-          return {
-            ...t,
-            completedPomodoros: newCompleted,
-            completed: t.completed || isFinished,
-            completedAt: (t.completed || isFinished) ? (t.completedAt || new Date().toISOString()) : undefined,
-            groupId: (t.completed || isFinished) ? "finished" : t.groupId
-          };
-        }
-        return t;
-      });
-    }
-
-    const completedTasksCount = updatedTodos.filter(t => t.completed).length;
-
-    let nextState: "WORK" | "BREAK" | "FLOW" = "BREAK";
-    let nextTime = 0;
-    let prevMode = state.previousMode;
-    let nextPomodoroCount = state.pomodoroCount || 0;
-
-    if (isWorkOrFlow) {
-      prevMode = state.timerState === "FLOW" ? "FLOW" : "POMODORO";
-      nextState = "BREAK";
-      if (state.timerState === "FLOW") {
-        nextTime = Math.max(1, Math.floor(state.timeLeft / 5));
-      } else {
-        nextPomodoroCount = (state.pomodoroCount || 0) + 1;
-        const isLongBreak = nextPomodoroCount % 4 === 0;
-        nextTime = isLongBreak
-          ? (state.pomodoroSettings.longBreak || 15) * 60
-          : (state.pomodoroSettings.break || 5) * 60;
-      }
-    } else {
-      // Return to previous mode after break completes
-      if (state.previousMode === "FLOW") {
-        nextState = "FLOW";
-        nextTime = 0;
-      } else {
-        nextState = "WORK";
-        nextTime = state.pomodoroSettings.work * 60;
-      }
-    }
-
-    const autoStart = isWorkOrFlow ? state.pomodoroSettings.autoStartBreak : state.pomodoroSettings.autoStartTimer;
-    const nextIsMusicPlaying = (nextState === "WORK" || nextState === "FLOW") && autoStart;
+    const completedTasksCount = state.todos.filter(t => t.completed).length;
+    const breakDuration = Math.max(1, Math.floor(state.timeLeft / 5));
 
     updateState({
-      isActive: autoStart,
-      isMusicPlaying: nextIsMusicPlaying,
-      deepFocusMode: !isWorkOrFlow && autoStart,
-      timerMode: nextState === "FLOW" ? "FLOW" : "POMODORO",
-      timerState: nextState,
-      previousMode: prevMode,
-      timeLeft: nextTime,
-      pomodoroCount: nextPomodoroCount,
-      todos: updatedTodos,
+      isActive: false,
+      isMusicPlaying: false,
+      deepFocusMode: false,
+      timerMode: "FLOW",
+      timerState: "BREAK",
+      previousMode: "FLOW",
+      timeLeft: breakDuration,
+      todos: state.todos,
       sessions: newSessionList,
       stats: {
         ...state.stats,
@@ -722,17 +639,8 @@ export function Popup() {
   const mins = Math.floor(state.timeLeft / 60);
   const secs = state.timeLeft % 60;
   const timeFormatted = `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
-  const totalDuration = state.timerState === "WORK" ? state.pomodoroSettings.work * 60 : state.pomodoroSettings.break * 60;
-  const progressValue =
-    state.timerState === "FLOW"
-      ? 100
-      : state.timerState === "WORK"
-      ? state.pomodoroSettings.work > 0
-        ? Math.min(100, Math.max(0, ((state.pomodoroSettings.work * 60 - state.timeLeft) / (state.pomodoroSettings.work * 60)) * 100))
-        : 100
-      : state.pomodoroSettings.break > 0
-      ? Math.min(100, Math.max(0, ((state.pomodoroSettings.break * 60 - state.timeLeft) / (state.pomodoroSettings.break * 60)) * 100))
-      : 100;
+  const totalDuration = 0;
+  const progressValue = state.timerState === "FLOW" ? 100 : 0;
 
   // Stats Calculations
   const finishedTasksTodayCount = state.todos.filter(t => t.completed).length;
@@ -768,7 +676,6 @@ export function Popup() {
           }}
           onToggleMusic={toggleMusicPlay}
           onSetMusicVolume={handleMusicVolumeChange}
-          onResetPomodoroCount={() => updateState({ pomodoroCount: 0 })}
           onExit={() => updateState({ deepFocusMode: false })}
         />
       </div>
@@ -807,7 +714,7 @@ export function Popup() {
               title="Toggle Floating Timer Controls"
             >
               <span className="flex items-center">
-                {state.timerState === "WORK" ? <TimerIcon className="w-3 h-3" /> : state.timerState === "BREAK" ? <Coffee className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+                {state.timerState === "BREAK" ? <Coffee className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
               </span>
               <span className="font-extrabold font-mono text-[11px] tracking-tight">
                 {timeFormatted}
@@ -844,56 +751,16 @@ export function Popup() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <span className="flex items-center">
-                {state.timerState === "WORK" ? <TimerIcon className="w-4 h-4" /> : state.timerState === "BREAK" ? <Coffee className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+                {state.timerState === "BREAK" ? <Coffee className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
               </span>
               <span className="text-sm font-bold font-sans">
-                {state.timerState === "WORK" ? "Pomodoro" : state.timerState === "BREAK" ? "Break" : "Flow"}
+                {state.timerState === "BREAK" ? "Break" : "Flow"}
               </span>
             </div>
             <div className="text-xl font-black font-mono tracking-tight">
               {timeFormatted}
             </div>
           </div>
-
-          {/* Mode Switcher Buttons Row */}
-          <div className={`grid grid-cols-3 gap-1.5 p-1 rounded-xl border mb-3 ${
-            "bg-neutral-950/80 border-neutral-800"
-          }`}>
-            <button
-              onClick={() => switchTimerModeAndState("POMODORO", "WORK")}
-              className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
-                state.timerState === "WORK"
-                  ? "bg-white text-black shadow"
-                  : "text-neutral-400 hover:text-white"
-              }`}
-            >
-              <TimerIcon className="w-3 h-3" />
-              <span>Pomodoro</span>
-            </button>
-            <button
-              onClick={() => switchTimerModeAndState("POMODORO", "BREAK")}
-              className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
-                state.timerState === "BREAK"
-                  ? "bg-white text-black shadow"
-                  : "text-neutral-400 hover:text-white"
-              }`}
-            >
-              <Coffee className="w-3 h-3" />
-              <span>Break</span>
-            </button>
-            <button
-              onClick={() => switchTimerModeAndState("FLOW", "FLOW")}
-              className={`py-1.5 px-2 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1 ${
-                state.timerState === "FLOW"
-                  ? "bg-white text-black shadow"
-                  : "text-neutral-400 hover:text-white"
-              }`}
-            >
-              <Clock className="w-3 h-3" />
-              <span>Flow</span>
-            </button>
-          </div>
-
 
           {/* Tag & Group Badge Row */}
           <div className="flex items-center justify-between mb-3 px-0.5">
@@ -1107,103 +974,6 @@ export function Popup() {
                   ))}
                 </select>
               </div>
-            </div>
-
-            {/* Focus Sessions Card */}
-            <div className={`p-3.5 rounded-2xl border ${
-              "bg-neutral-900/60 border-neutral-800/80"
-            }`}>
-              <div className="flex items-center gap-1.5 mb-2.5">
-                <Clock className="w-3.5 h-3.5 text-neutral-400" />
-                <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-neutral-400">FOCUS SESSIONS</span>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[10px] text-neutral-400 font-medium block mb-1">Estimated</label>
-                  <input
-                    type="number"
-                    min="1"
-                    value={selectedTaskDetail.estimatedPomodoros || 1}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value) || 1;
-                      const updated = state.todos.map(t => {
-                        if (t.id === selectedTaskDetail.id) {
-                          const comp = t.completedPomodoros || 0;
-                          const isFinished = comp >= val;
-                          return {
-                            ...t,
-                            estimatedPomodoros: val,
-                            completed: t.completed || isFinished,
-                            completedAt: (t.completed || isFinished) ? (t.completedAt || new Date().toISOString()) : undefined,
-                            groupId: (t.completed || isFinished) ? "finished" : t.groupId
-                          };
-                        }
-                        return t;
-                      });
-                      const completedCount = updated.filter(t => t.completed).length;
-                      updateState({ todos: updated, stats: { ...state.stats, completedTasksCount: completedCount } });
-                      const nextSelected = updated.find(t => t.id === selectedTaskDetail.id);
-                      if (nextSelected) setSelectedTaskDetail(nextSelected);
-                    }}
-                    className={`w-full p-2.5 rounded-xl border text-sm font-bold focus:outline-none ${
-                      "bg-neutral-800/80 border-neutral-700/50 text-white [color-scheme:dark]"
-                    }`}
-                  />
-                </div>
-
-                <div>
-                  <label className="text-[10px] text-neutral-400 font-medium block mb-1">Completed</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={selectedTaskDetail.completedPomodoros || 0}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value) || 0;
-                      const updated = state.todos.map(t => {
-                        if (t.id === selectedTaskDetail.id) {
-                          const est = t.estimatedPomodoros || 1;
-                          const isFinished = val >= est;
-                          return {
-                            ...t,
-                            completedPomodoros: val,
-                            completed: t.completed || isFinished,
-                            completedAt: (t.completed || isFinished) ? (t.completedAt || new Date().toISOString()) : undefined,
-                            groupId: (t.completed || isFinished) ? "finished" : t.groupId
-                          };
-                        }
-                        return t;
-                      });
-                      const completedCount = updated.filter(t => t.completed).length;
-                      updateState({ todos: updated, stats: { ...state.stats, completedTasksCount: completedCount } });
-                      const nextSelected = updated.find(t => t.id === selectedTaskDetail.id);
-                      if (nextSelected) setSelectedTaskDetail(nextSelected);
-                    }}
-                    className={`w-full p-2.5 rounded-xl border text-sm font-bold focus:outline-none ${
-                      "bg-neutral-800/80 border-neutral-700/50 text-white [color-scheme:dark]"
-                    }`}
-                  />
-                </div>
-              </div>
-
-              {/* Progress Bar & Percentage */}
-              {(() => {
-                const est = selectedTaskDetail.estimatedPomodoros || 1;
-                const comp = selectedTaskDetail.completedPomodoros || 0;
-                const pct = Math.min(100, Math.round((comp / Math.max(1, est)) * 100));
-                return (
-                  <div className="mt-3">
-                    <div className={`w-full h-2 rounded-full overflow-hidden ${"bg-neutral-800"}`}>
-                      <div
-                        className={`h-full rounded-full transition-all duration-300 ${"bg-white"}`}
-                        style={{ width: `${pct}%` }}
-                      />
-                    </div>
-                    <div className="text-[10px] font-mono font-medium text-neutral-400 text-right mt-1">
-                      {pct}% Completed
-                    </div>
-                  </div>
-                );
-              })()}
             </div>
 
             {/* Deadline Card */}
@@ -1536,87 +1306,20 @@ export function Popup() {
         {/* TIMER TAB */}
         {activeTab === "timer" && (
           <div className="flex flex-col items-center justify-between min-h-full overflow-y-auto stable-scrollbar pb-1 pt-1 gap-2">
-            {/* 3-Way Mode Switcher (Pomodoro, Break, Flow - No Minutes in Toggle Labels!) */}
-            <div className={`flex items-center p-1 rounded-lg border w-full max-w-[320px] ${
-              "bg-neutral-900 border-neutral-800"
-            }`}>
-              <button
-                onClick={() => switchTimerModeAndState("POMODORO", "WORK")}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                  state.timerState === "WORK"
-                    ? "bg-white text-black shadow-md"
-                    : "text-neutral-400 hover:text-white"
-                }`}
-              >
-                <TimerIcon className="w-3.5 h-3.5" />
-                <span>Pomodoro</span>
-              </button>
-              <button
-                onClick={() => switchTimerModeAndState("POMODORO", "BREAK")}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                  state.timerState === "BREAK"
-                    ? "bg-white text-black shadow-md"
-                    : "text-neutral-400 hover:text-white"
-                }`}
-              >
-                <Coffee className="w-3.5 h-3.5" />
-                <span>Break</span>
-              </button>
-              <button
-                onClick={() => switchTimerModeAndState("FLOW", "FLOW")}
-                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${
-                  state.timerState === "FLOW"
-                    ? "bg-white text-black shadow-md"
-                    : "text-neutral-400 hover:text-white"
-                }`}
-              >
-                <Clock className="w-3.5 h-3.5" />
-                <span>Flow</span>
-              </button>
-            </div>
-
-            {/* Pomodoro Cycle & Progress Indicator */}
-            {state.timerMode === "POMODORO" && state.previousMode !== "FLOW" && (
-              <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-mono text-neutral-300 shadow-sm mt-1 mb-0.5 group">
-                <div className="flex items-center gap-1.5">
-                  {[0, 1, 2, 3].map((index) => {
-                    const currentCycleStep = (state.pomodoroCount || 0) % 4;
-                    const isCompleted = index < currentCycleStep;
-                    const isCurrent = index === currentCycleStep && state.timerState === "WORK";
-                    return (
-                      <div
-                        key={index}
-                        className={`w-2 h-2 rounded-full transition-all ${
-                          isCompleted
-                            ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.7)]"
-                            : isCurrent
-                            ? "bg-white/80 ring-2 ring-white/30 animate-pulse"
-                            : "bg-neutral-700"
-                        }`}
-                        title={`Pomodoro ${index + 1} of 4`}
-                      />
-                    );
-                  })}
+            {/* Timer Label */}
+            <div className="flex items-center justify-center gap-2 mt-1 mb-0.5">
+              {state.timerState === "BREAK" ? (
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-mono text-neutral-300 shadow-sm">
+                  <Coffee className="w-3 h-3" />
+                  <span className="text-[10px] font-bold">Break</span>
                 </div>
-                <span className="text-[10px] font-bold text-neutral-300">
-                  {state.timerState === "BREAK"
-                    ? ((state.pomodoroCount || 0) % 4 === 0 && (state.pomodoroCount || 0) > 0
-                        ? `Long Break (${state.pomodoroSettings.longBreak || 15}m)`
-                        : `Short Break (${state.pomodoroSettings.break || 5}m)`)
-                    : `Pomodoro ${((state.pomodoroCount || 0) % 4) + 1} of 4`}
-                </span>
-                {(state.pomodoroCount || 0) % 4 !== 0 && (
-                  <button
-                    type="button"
-                    onClick={() => updateState({ pomodoroCount: 0 })}
-                    className="p-0.5 rounded text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors cursor-pointer"
-                    title="Reset pomodoro count to 1 of 4"
-                  >
-                    <RotateCcw className="w-2.5 h-2.5" />
-                  </button>
-                )}
-              </div>
-            )}
+              ) : (
+                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-xs font-mono text-neutral-300 shadow-sm">
+                  <Clock className="w-3 h-3" />
+                  <span className="text-[10px] font-bold">Flow</span>
+                </div>
+              )}
+            </div>
 
             {/* Timer Display - Big Number */}
             <div className="flex flex-col items-center justify-center my-2 py-3">
@@ -1683,9 +1386,8 @@ export function Popup() {
                     ) : (
                       state.todos.filter(t => !t.completed).map((task) => {
                         const hasDueDate = Boolean(task.dueDate);
-                        const hasPomodoros = Boolean((task.estimatedPomodoros && task.estimatedPomodoros > 0) || (task.completedPomodoros && task.completedPomodoros > 0));
                         const hasSubtasks = Boolean(task.subtasks && task.subtasks.length > 0);
-                        const hasMetadata = hasDueDate || hasPomodoros || hasSubtasks;
+                        const hasMetadata = hasDueDate || hasSubtasks;
 
                         return (
                           <button
@@ -1711,12 +1413,6 @@ export function Popup() {
                                       <div className="flex items-center gap-1 text-orange-500 font-medium">
                                         <Calendar className="w-3 h-3" />
                                         <span>{formatTaskDueDate(task.dueDate, task.dueTime)}</span>
-                                      </div>
-                                    )}
-                                    {hasPomodoros && (
-                                      <div className="flex items-center gap-1 text-neutral-400">
-                                        <Clock className="w-3 h-3" />
-                                        <span>{task.completedPomodoros || 0}/{task.estimatedPomodoros || 1}</span>
                                       </div>
                                     )}
                                     {hasSubtasks && (
@@ -1975,9 +1671,8 @@ export function Popup() {
                   .filter(t => (t.groupId || "current") === activeGroupId)
                   .map((todo) => {
                     const hasDueDate = Boolean(todo.dueDate);
-                    const hasPomodoros = Boolean((todo.estimatedPomodoros && todo.estimatedPomodoros > 0) || (todo.completedPomodoros && todo.completedPomodoros > 0));
                     const hasSubtasks = Boolean(todo.subtasks && todo.subtasks.length > 0);
-                    const hasMetadata = hasDueDate || hasPomodoros || hasSubtasks;
+                    const hasMetadata = hasDueDate || hasSubtasks;
 
                     const isSelected = state.selectedTodoId === todo.id || selectedTaskDetail?.id === todo.id;
                     return (
@@ -2017,12 +1712,6 @@ export function Popup() {
                                   <div className="flex items-center gap-1 text-orange-500 font-medium">
                                     <Calendar className="w-3 h-3" />
                                     <span>{formatTaskDueDate(todo.dueDate, todo.dueTime)}</span>
-                                  </div>
-                                )}
-                                {hasPomodoros && (
-                                  <div className="flex items-center gap-1 text-neutral-400">
-                                    <Clock className="w-3 h-3" />
-                                    <span>{todo.completedPomodoros || 0}/{todo.estimatedPomodoros || 1}</span>
                                   </div>
                                 )}
                                 {hasSubtasks && (
@@ -2074,9 +1763,9 @@ export function Popup() {
                   <h3 className="text-xs font-bold font-mono">SITE BLOCKER SHIELD</h3>
                   <p className="text-[10px] opacity-70">
                     {state.shield.enabled
-                      ? (state.isActive && (state.timerState === "WORK" || state.timerState === "FLOW")
-                          ? "Active during Work & Flow sessions"
-                          : "Paused (Active during Work & Flow sessions)")
+                      ? (state.isActive && state.timerState === "FLOW"
+                          ? "Active during Flow sessions"
+                          : "Paused (Active during Flow sessions)")
                       : "Shield currently OFF"}
                   </p>
                 </div>
@@ -2398,110 +2087,6 @@ export function Popup() {
         {/* SETTINGS TAB */}
         {activeTab === "settings" && (
           <div className="flex flex-col gap-3 h-full overflow-y-auto stable-scrollbar">
-            {/* Timer Settings */}
-            <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
-              "bg-black/40 border-neutral-800"
-            }`}>
-              <span className="text-xs font-bold text-white uppercase tracking-wider">Timer Settings</span>
-              
-              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
-                "bg-neutral-900/60 border-neutral-800"
-              }`}>
-                <span className="text-xs font-bold text-white">Work Duration</span>
-                <div className="flex items-center gap-1.5">
-                  <input
-                    type="number"
-                    min={1}
-                    max={120}
-                    value={state.pomodoroSettings.work}
-                    onChange={(e) => updateState({ pomodoroSettings: { ...state.pomodoroSettings, work: parseInt(e.target.value) || 25 } })}
-                    className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none mono-input ${
-                      "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]"
-                    }`}
-                  />
-                  <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>min</span>
-                </div>
-              </div>
-
-              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
-                "bg-neutral-900/60 border-neutral-800"
-              }`}>
-                <span className="text-xs font-bold text-white">Short Break Duration</span>
-                <div className="flex items-center gap-1.5">
-                  <input
-                    type="number"
-                    min={1}
-                    max={60}
-                    value={state.pomodoroSettings.break}
-                    onChange={(e) => updateState({ pomodoroSettings: { ...state.pomodoroSettings, break: parseInt(e.target.value) || 5 } })}
-                    className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none mono-input ${
-                      "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]"
-                    }`}
-                  />
-                  <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>min</span>
-                </div>
-              </div>
-
-              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
-                "bg-neutral-900/60 border-neutral-800"
-              }`}>
-                <span className="text-xs font-bold text-white">Long Break Duration</span>
-                <div className="flex items-center gap-1.5">
-                  <input
-                    type="number"
-                    min={1}
-                    max={60}
-                    value={state.pomodoroSettings.longBreak || 15}
-                    onChange={(e) => updateState({ pomodoroSettings: { ...state.pomodoroSettings, longBreak: parseInt(e.target.value) || 15 } })}
-                    className={`w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none mono-input ${
-                      "bg-neutral-800 border-neutral-700 text-white [color-scheme:dark]"
-                    }`}
-                  />
-                  <span className={`text-[10px] font-mono ${"text-neutral-500"}`}>min</span>
-                </div>
-              </div>
-
-              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
-                "bg-neutral-900/60 border-neutral-800"
-              }`}>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-white">Auto-start Break</span>
-                </div>
-                <div
-                  onClick={() => updateState({ pomodoroSettings: { ...state.pomodoroSettings, autoStartBreak: !state.pomodoroSettings.autoStartBreak } })}
-                  className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
-                    state.pomodoroSettings.autoStartBreak ? "bg-white" : "bg-neutral-700"
-                  }`}
-                >
-                  <div
-                    className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                      state.pomodoroSettings.autoStartBreak ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
-                    }`}
-                  />
-                </div>
-              </div>
-
-              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
-                "bg-neutral-900/60 border-neutral-800"
-              }`}>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold text-white">Auto-start Timer</span>
-                </div>
-                <div
-                  onClick={() => updateState({ pomodoroSettings: { ...state.pomodoroSettings, autoStartTimer: !state.pomodoroSettings.autoStartTimer } })}
-                  className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
-                    state.pomodoroSettings.autoStartTimer ? "bg-white" : "bg-neutral-700"
-                  }`}
-                >
-                  <div
-                    className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                      state.pomodoroSettings.autoStartTimer ? "left-[22px] bg-black" : "left-[2px] bg-neutral-400"
-                    }`}
-                  />
-                </div>
-              </div>
-            </div>
-
             {/* Appearance Section */}
             <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
               "bg-black/40 border-neutral-800"
@@ -2724,7 +2309,7 @@ export function Popup() {
                 </div>
 
                 <div className="bg-neutral-900/60 border border-neutral-800 rounded-xl p-3.5 text-neutral-400 leading-relaxed">
-                  Focus is a minimalist, monochrome productivity extension designed for distraction-free deep work, pomodoro tracking, and site blocking.
+                  Focus is a minimalist, monochrome productivity extension designed for distraction-free deep work and site blocking.
                 </div>
 
                 <button

@@ -6,10 +6,10 @@ export function FeaturesGrid() {
   const features = [
     {
       icon: Timer,
-      title: "Smart Flow & Pomodoro Timers",
-      subtitle: "Tailored to your focus style",
+      title: "Smart Flow Timer",
+      subtitle: "Continuous focus with smart breaks",
       description:
-        "Switch between traditional 25-minute Pomodoro sprints or continuous Flow mode. Flow mode automatically calculates your break length as 1/5th of your session (e.g. 50 mins flow = 10 mins break).",
+        "A continuous count-up timer that tracks your flow state and automatically calculates your break length as 1/5th of your session (e.g. 50 mins flow = 10 mins break).",
       badge: "Smart Break",
     },
     {
