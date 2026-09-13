@@ -16,10 +16,9 @@ const apps = [
     url: "https://app.focustrackers.my.id",
     tagline: "Full-featured web application available in your browser.",
     description:
-      "The web version brings together customizable Pomodoro & Flow timers, deep focus full-screen mode, lofi music player, and task tracking directly in your browser.",
+      "The web version brings together customizable Flow timers, deep focus full-screen mode, lofi music player, and task tracking directly in your browser.",
     features: [
-      "Pomodoro & Flow timer modes",
-      "Smart Flow break calculator (1/5th session length)",
+      "Flow timer mode with smart break calculator (1/5th session length)",
       "Deep Focus full-screen mode with hotkeys (Esc / F)",
       "Lofi beats player & minimalist visual themes",
       "Comprehensive stats & streak tracking",

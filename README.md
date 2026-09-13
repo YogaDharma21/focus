@@ -9,7 +9,7 @@
 
 ## Features
 
-- **Focus & Flow Timers** — Flexible Pomodoro and Flow (Stopwatch) modes.
+- **Focus & Flow Timer** — Continuous Flow (Stopwatch) timer with smart break calculation.
 - **Smart Flow Break Calculation** — Automatically calculates break duration as 1/5th of your Flow session length (e.g. 10 mins flow -> 2 mins break).
 - **Deep Focus Mode** — Distraction-free immersive view with session controls and keyboard shortcuts (`Esc` / `F`).
 - **Focus Session Tasks** — Link sessions directly to tasks, with automatic task session completion and auto-finish logic.

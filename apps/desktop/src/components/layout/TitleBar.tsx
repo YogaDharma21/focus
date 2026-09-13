@@ -8,11 +8,8 @@ export const TitleBar: React.FC = () => {
   const { 
     isAlwaysOnTop, 
     setAlwaysOnTop, 
-    timeLeft, 
     flowTimeElapsed,
     isActive, 
-    timerMode,
-    timerState 
   } = useDesktopStore();
   const [isMaximized, setIsMaximized] = React.useState(false);
 
@@ -22,10 +19,8 @@ export const TitleBar: React.FC = () => {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const activeSeconds = timerMode === 'POMODORO' ? timeLeft : flowTimeElapsed;
-  const modeLabel = timerMode === 'STOPWATCH' 
-    ? 'FLOW' 
-    : (timerState === 'WORK' ? 'FOCUS' : 'BREAK');
+  const activeSeconds = flowTimeElapsed;
+  const modeLabel = 'FLOW';
 
   const handleTogglePin = async () => {
     const nextState = !isAlwaysOnTop;

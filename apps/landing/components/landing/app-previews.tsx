@@ -20,27 +20,7 @@ import {
   Target,
 } from "lucide-react"
 
-function PomodoroDots({ completed = 0 }: { completed?: number }) {
-  return (
-    <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-secondary/40 border border-border/50">
-      {[0, 1, 2, 3].map((i) => (
-        <div
-          key={i}
-          className={`w-2 h-2 rounded-full ${
-            i < completed
-              ? "bg-primary shadow-[0_0_6px_rgba(255,255,255,0.7)]"
-              : i === completed
-                ? "bg-primary/70 ring-2 ring-primary/30 animate-pulse"
-                : "bg-muted-foreground/30"
-          }`}
-        />
-      ))}
-      <span className="text-[11px] font-medium text-muted-foreground font-mono ml-1">
-        Pomodoro {completed + 1} of 4
-      </span>
-    </div>
-  )
-}
+
 
 function ControlButtons({
   size = "normal",
@@ -147,7 +127,7 @@ export function WebTimerPreview() {
         <div className="flex gap-2 p-1 bg-secondary/40 rounded-[10px] border border-border/30 mb-4">
           <div className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-sm font-medium bg-primary text-primary-foreground shadow-md">
             <Timer className="size-3.5" />
-            <span>Pomodoro</span>
+            <span>Flow</span>
           </div>
           <div className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-sm font-medium text-muted-foreground">
             <Coffee className="size-3.5" />
@@ -155,13 +135,18 @@ export function WebTimerPreview() {
           </div>
           <div className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-sm font-medium text-muted-foreground">
             <Clock className="size-3.5" />
-            <span>Flow</span>
+            <span>Focus</span>
           </div>
         </div>
 
-        {/* Cycle Indicator */}
+        {/* Flow Status */}
         <div className="mb-5">
-          <PomodoroDots completed={1} />
+          <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-secondary/40 border border-border/50">
+            <div className="w-2 h-2 rounded-full bg-primary shadow-[0_0_6px_rgba(255,255,255,0.7)] animate-pulse" />
+            <span className="text-[11px] font-medium text-muted-foreground font-mono">
+              Flow Active
+            </span>
+          </div>
         </div>
 
         {/* Timer */}
@@ -281,31 +266,20 @@ export function DesktopTimerPreview() {
           {/* Mode Switcher */}
           <div className="bg-[#141414] border border-zinc-800/80 p-1 rounded-lg flex items-center w-56 mb-3">
             <div className="flex-1 py-1.5 text-[10px] font-semibold rounded-xl bg-[#e6e6e6] text-zinc-950 text-center shadow-sm">
-              Pomodoro
+              Flow
             </div>
             <div className="flex-1 py-1.5 text-[10px] font-semibold rounded-xl text-zinc-400 text-center">
               Break
             </div>
             <div className="flex-1 py-1.5 text-[10px] font-semibold rounded-xl text-zinc-400 text-center">
-              Flow
+              Focus
             </div>
           </div>
 
-          {/* Cycle Indicator */}
+          {/* Flow Status */}
           <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-zinc-900/90 border border-zinc-800 text-[10px] font-mono text-zinc-300 mb-4">
-            {[0, 1, 2, 3].map((i) => (
-              <div
-                key={i}
-                className={`w-1.5 h-1.5 rounded-full ${
-                  i < 1
-                    ? "bg-white shadow-[0_0_6px_rgba(255,255,255,0.7)]"
-                    : i === 1
-                      ? "bg-zinc-300 ring-2 ring-white/30 animate-pulse"
-                      : "bg-zinc-700/60"
-                }`}
-              />
-            ))}
-            <span className="ml-1">Pomodoro 2 of 4</span>
+            <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_6px_rgba(255,255,255,0.7)] animate-pulse" />
+            <span className="ml-1">Flow Active</span>
           </div>
 
           {/* Timer */}
@@ -392,13 +366,13 @@ export function MobileTimerPreview() {
         {/* Mode Switcher */}
         <div className="flex w-full max-w-[220px] p-0.5 bg-[#141414] border border-zinc-800 rounded-[10px] mb-3">
           <div className="flex-1 py-1.5 text-[9px] font-bold rounded-[10px] bg-white text-black text-center shadow-sm">
-            Pomodoro
+            Flow
           </div>
           <div className="flex-1 py-1.5 text-[9px] font-bold rounded-[10px] text-zinc-500 text-center">
             Break
           </div>
           <div className="flex-1 py-1.5 text-[9px] font-bold rounded-[10px] text-zinc-500 text-center">
-            Flow
+            Focus
           </div>
         </div>
 
@@ -530,31 +504,20 @@ export function ExtensionTimerPreview() {
         {/* Mode Switcher */}
         <div className="flex w-full max-w-[240px] p-0.5 rounded-lg border bg-neutral-900 border-neutral-800 mb-3">
           <div className="flex-1 py-1.5 rounded-lg text-[10px] font-bold bg-white text-black text-center shadow-md">
-            Pomodoro
+            Flow
           </div>
           <div className="flex-1 py-1.5 rounded-lg text-[10px] font-bold text-neutral-400 text-center">
             Break
           </div>
           <div className="flex-1 py-1.5 rounded-lg text-[10px] font-bold text-neutral-400 text-center">
-            Flow
+            Focus
           </div>
         </div>
 
-        {/* Cycle Indicator */}
+        {/* Flow Status */}
         <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-neutral-900 border border-neutral-800 text-[8px] font-mono text-neutral-300 mb-3">
-          {[0, 1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className={`w-1.5 h-1.5 rounded-full ${
-                i < 2
-                  ? "bg-white shadow-[0_0_4px_rgba(255,255,255,0.7)]"
-                  : i === 2
-                    ? "bg-white/80 ring-1 ring-white/30 animate-pulse"
-                    : "bg-neutral-700"
-              }`}
-            />
-          ))}
-          <span className="ml-0.5">Pomodoro 3 of 4</span>
+          <div className="w-1.5 h-1.5 rounded-full bg-white shadow-[0_0_4px_rgba(255,255,255,0.7)] animate-pulse" />
+          <span className="ml-0.5">Flow Active</span>
         </div>
 
         {/* Timer */}

@@ -26,22 +26,11 @@ export function DeepFocusOverlay() {
     setTimeLeft,
     isActive,
     setIsActive,
-    timerMode,
-    setTimerMode,
-    timerState,
-    setTimerState,
-    previousMode,
-    setPreviousMode,
     sessionName,
     addSession,
     addDistraction,
-    pomodoroSettings,
-    pomodoroCount,
-    setPomodoroCount,
-    resetPomodoroCount,
     selectedTodoId,
     todos,
-    incrementTodoSession,
     isMusicPlaying,
     setIsMusicPlaying,
     musicVolume,
@@ -63,74 +52,17 @@ export function DeepFocusOverlay() {
     playCompletionSound();
     setIsActive(false);
 
-    if (timerMode === 'STOPWATCH') {
-      const flowDuration = timeLeft;
-      if (flowDuration > 0) {
-        addSession({
-          id: Date.now().toString(),
-          date: new Date().toISOString(),
-          duration: flowDuration,
-          mode: 'STOPWATCH',
-        });
-        if (selectedTodoId) {
-          incrementTodoSession(selectedTodoId);
-        }
-        const breakSeconds = Math.max(Math.floor(flowDuration / 5), 1);
-        setPreviousMode('STOPWATCH');
-        setTimerMode('POMODORO');
-        setTimerState('BREAK');
-        setTimeLeft(breakSeconds);
-        if (pomodoroSettings.autoStartBreak) {
-          setIsActive(true);
-        }
-        setDeepFocusMode(false);
-      } else {
-        setTimeLeft(0);
-      }
-    } else if (timerMode === 'POMODORO' && timerState === 'WORK') {
-      let sessionDuration = (pomodoroSettings.work * 60) - timeLeft;
-      if (sessionDuration <= 0) sessionDuration = pomodoroSettings.work * 60;
-      const nextCount = (pomodoroCount || 0) + 1;
-      setPomodoroCount(nextCount);
-
+    const flowDuration = timeLeft;
+    if (flowDuration > 0) {
       addSession({
         id: Date.now().toString(),
         date: new Date().toISOString(),
-        duration: sessionDuration,
-        mode: 'POMODORO',
+        duration: flowDuration,
+        mode: 'STOPWATCH',
       });
-      if (selectedTodoId) {
-        incrementTodoSession(selectedTodoId);
-      }
-      const isLongBreak = nextCount % 4 === 0;
-      const breakDuration = isLongBreak
-        ? (pomodoroSettings.longBreak || 15) * 60
-        : (pomodoroSettings.break || 5) * 60;
-
-      setPreviousMode('POMODORO');
-      setTimerState('BREAK');
-      setTimeLeft(breakDuration);
-      if (pomodoroSettings.autoStartBreak) {
-        setIsActive(true);
-      }
-      setDeepFocusMode(false);
-    } else if (timerMode === 'POMODORO' && timerState === 'BREAK') {
-      if (previousMode === 'STOPWATCH') {
-        setTimerMode('STOPWATCH');
-        setTimerState('WORK');
-        setTimeLeft(0);
-      } else {
-        setTimerMode('POMODORO');
-        setTimerState('WORK');
-        setTimeLeft(pomodoroSettings.work * 60);
-      }
-      if (pomodoroSettings.autoStartTimer) {
-        setIsActive(true);
-        setDeepFocusMode(true);
-      } else {
-        setDeepFocusMode(false);
-      }
     }
+    setTimeLeft(0);
+    setDeepFocusMode(false);
   };
 
   return (
@@ -182,52 +114,6 @@ export function DeepFocusOverlay() {
         </TouchableOpacity>
 
         <View style={styles.content}>
-          {/* Pomodoro Cycle & Progress Indicator */}
-          {timerMode === 'POMODORO' && previousMode !== 'STOPWATCH' && (
-            <View style={[styles.cycleIndicatorContainer, { backgroundColor: colors.card, borderColor: colors.border }]}>
-              <View style={styles.cycleDotsRow}>
-                {[0, 1, 2, 3].map((index) => {
-                  const currentCycleStep = (pomodoroCount || 0) % 4;
-                  const isCompleted = index < currentCycleStep;
-                  const isCurrent = index === currentCycleStep && timerState === 'WORK';
-                  return (
-                    <View
-                      key={index}
-                      style={[
-                        styles.cycleDot,
-                        {
-                          backgroundColor: isCompleted
-                            ? colors.text
-                            : isCurrent
-                            ? colors.text
-                            : colors.border,
-                          opacity: isCompleted ? 1 : isCurrent ? 0.7 : 0.4,
-                        },
-                      ]}
-                    />
-                  );
-                })}
-              </View>
-              <Text style={[styles.cycleText, { color: colors.text }]}>
-                {timerState === 'BREAK'
-                  ? ((pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0
-                      ? `Long Break (${pomodoroSettings.longBreak || 15}m)`
-                      : `Short Break (${pomodoroSettings.break || 5}m)`)
-                  : `Pomodoro ${((pomodoroCount || 0) % 4) + 1} of 4`}
-              </Text>
-              {(pomodoroCount || 0) % 4 !== 0 && (
-                <TouchableOpacity
-                  onPress={resetPomodoroCount}
-                  style={styles.cycleResetBtn}
-                  activeOpacity={0.7}
-                  accessibilityLabel="Reset pomodoro count to 1 of 4"
-                >
-                  <RotateCcw size={11} color={colors.textMuted} />
-                </TouchableOpacity>
-              )}
-            </View>
-          )}
-
           <Text style={[styles.timerText, { color: colors.text }]}>{formatTime(timeLeft)}</Text>
 
           {(() => {
@@ -409,43 +295,6 @@ const styles = StyleSheet.create({
   content: {
     alignItems: 'center',
   },
-  cycleIndicatorContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    gap: 8,
-    marginBottom: 16,
-  },
-  cycleDotsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-  },
-  cycleDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-  },
-  cycleText: {
-    fontSize: 11,
-    fontWeight: '600',
-    fontVariant: ['tabular-nums'],
-  },
-  headerBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 20,
-  },
-  modeLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
   timerText: {
     fontSize: 72,
     fontWeight: '800',
@@ -514,9 +363,5 @@ const styles = StyleSheet.create({
     padding: 12,
     borderRadius: 10,
     alignItems: 'center',
-  },
-  cycleResetBtn: {
-    padding: 2,
-    marginLeft: 2,
   },
 });

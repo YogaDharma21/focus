@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { 
   Plus, CheckCircle2, Circle, Trash2, FolderPlus, Folder,
   ListTodo, CheckSquare2, Square, Target, X, Sparkles, List,
-  Timer, Calendar, Clock, FileText, ListChecks
+  Calendar, Clock, FileText, ListChecks
 } from 'lucide-react';
 import { useDesktopStore, TodoItem } from '../../lib/store';
 
@@ -43,8 +43,6 @@ export const TodoList: React.FC = () => {
       completed: false,
       priority: "medium",
       groupId: activeGroupId === "all" || activeGroupId === "finished" ? "current" : activeGroupId,
-      estimatedPomodoros: 1,
-      completedPomodoros: 0,
       subtasks: []
     };
 
@@ -206,10 +204,9 @@ export const TodoList: React.FC = () => {
 
                       {(() => {
                         const hasDeadline = Boolean(todo.deadline);
-                        const hasSessions = Boolean((todo.estimatedPomodoros && todo.estimatedPomodoros > 0) || (todo.completedPomodoros && todo.completedPomodoros > 0));
                         const hasSubtasks = Boolean(todo.subtasks && todo.subtasks.length > 0);
                         const hasPriority = Boolean(todo.priority && todo.priority !== 'medium');
-                        const hasMetadata = hasDeadline || hasSessions || hasSubtasks || hasPriority;
+                        const hasMetadata = hasDeadline || hasSubtasks || hasPriority;
 
                         if (!hasMetadata) return null;
 
@@ -230,12 +227,6 @@ export const TodoList: React.FC = () => {
                                     return timePart ? `${formatted}, ${timePart}` : formatted;
                                   })()}
                                 </span>
-                              </div>
-                            )}
-                            {hasSessions && (
-                              <div className="flex items-center gap-1 text-zinc-400">
-                                <Timer className="w-3 h-3" />
-                                <span>{todo.completedPomodoros || 0}/{todo.estimatedPomodoros || 1}</span>
                               </div>
                             )}
                             {hasPriority && (
@@ -361,55 +352,7 @@ export const TodoList: React.FC = () => {
               </div>
             </div>
 
-            {/* Card 2: FOCUS SESSIONS */}
-            <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 space-y-3">
-              <div className="flex items-center gap-1.5 text-zinc-400">
-                <Timer className="w-3.5 h-3.5" />
-                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-wider">FOCUS SESSIONS</span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="text-[11px] text-zinc-400 font-medium block mb-1">Estimated</label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={100}
-                    value={activeTodoDetails.estimatedPomodoros || 1}
-                    onChange={(e) => updateTodo(activeTodoDetails.id, { estimatedPomodoros: Number(e.target.value) || 1 })}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs font-semibold text-zinc-100 text-left focus:outline-none focus:border-zinc-700 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
-                </div>
-                <div>
-                  <label className="text-[11px] text-zinc-400 font-medium block mb-1">Completed</label>
-                  <input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={activeTodoDetails.completedPomodoros || 0}
-                    onChange={(e) => updateTodo(activeTodoDetails.id, { completedPomodoros: Number(e.target.value) || 0 })}
-                    className="w-full bg-zinc-900 border border-zinc-800 rounded-lg px-3 py-2 text-xs font-semibold text-zinc-100 text-left focus:outline-none focus:border-zinc-700 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                  />
-                </div>
-              </div>
-
-              {/* Progress Bar */}
-              <div>
-                <div className="h-1.5 w-full bg-zinc-800/80 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-zinc-400 rounded-full transition-all duration-300"
-                    style={{
-                      width: `${Math.min(100, Math.round(((activeTodoDetails.completedPomodoros || 0) / (activeTodoDetails.estimatedPomodoros || 1)) * 100))}%`
-                    }}
-                  />
-                </div>
-                <div className="text-[10px] text-zinc-400 font-medium text-right mt-1.5">
-                  {Math.min(100, Math.round(((activeTodoDetails.completedPomodoros || 0) / (activeTodoDetails.estimatedPomodoros || 1)) * 100))}% Completed
-                </div>
-              </div>
-            </div>
-
-            {/* Card 3: DEADLINE */}
+            {/* Card 2: DEADLINE */}
             <div className="bg-zinc-900/60 border border-zinc-800/80 rounded-xl p-3.5 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5 text-zinc-400">

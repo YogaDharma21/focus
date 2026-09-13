@@ -6,8 +6,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { useAppStore } from '@/lib/store';
 import { playCompletionSound } from '@/lib/sound';
 import {
-  Timer,
-  Coffee,
   Clock,
   CheckCircle2,
   AlertTriangle,
@@ -41,11 +39,6 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
   const {
     currentView,
     timerMode,
-    setTimerMode,
-    timerState,
-    setTimerState,
-    previousMode,
-    setPreviousMode,
     timeLeft,
     setTimeLeft,
     isActive,
@@ -53,10 +46,6 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
     selectedTodoId,
     addSession,
     addDistraction,
-    pomodoroSettings,
-    pomodoroCount,
-    setPomodoroCount,
-    incrementTodoSession,
   } = useAppStore();
 
   const isTimerScreen =
@@ -73,153 +62,36 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
   const toggleTimer = () => {
     const nextActive = !isActive;
     setIsActive(nextActive);
-    const isWorkOrFlow = timerMode === 'STOPWATCH' || (timerMode === 'POMODORO' && timerState === 'WORK');
-    if (nextActive && isWorkOrFlow) {
+    if (nextActive) {
       setDeepFocusMode(true);
     }
-  };
-
-  const selectPomodoroWork = () => {
-    setIsActive(false);
-    setTimerMode('POMODORO');
-    setTimerState('WORK');
-    setPreviousMode('POMODORO');
-    setTimeLeft(pomodoroSettings.work * 60);
-  };
-
-  const selectPomodoroBreak = () => {
-    setIsActive(false);
-    setPreviousMode(timerMode === 'STOPWATCH' ? 'STOPWATCH' : 'POMODORO');
-    setTimerMode('POMODORO');
-    setTimerState('BREAK');
-    const isLongBreak = (pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0;
-    setTimeLeft(isLongBreak ? (pomodoroSettings.longBreak || 15) * 60 : pomodoroSettings.break * 60);
-  };
-
-  const selectFlow = () => {
-    setIsActive(false);
-    setTimerMode('STOPWATCH');
-    setTimerState('WORK');
-    setPreviousMode('STOPWATCH');
-    setTimeLeft(0);
   };
 
   const handleCompleteSession = () => {
     playCompletionSound();
     setIsActive(false);
 
-    if (timerMode === 'STOPWATCH') {
-      const flowDuration = timeLeft;
-      if (flowDuration > 0) {
-        addSession({
-          id: Date.now().toString(),
-          date: new Date().toISOString(),
-          duration: flowDuration,
-          mode: 'STOPWATCH',
-        });
-        if (selectedTodoId) {
-          incrementTodoSession(selectedTodoId);
-        }
-        const breakSeconds = Math.max(Math.floor(flowDuration / 5), 1);
-        setPreviousMode('STOPWATCH');
-        setTimerMode('POMODORO');
-        setTimerState('BREAK');
-        setTimeLeft(breakSeconds);
-        if (pomodoroSettings.autoStartBreak) {
-          setIsActive(true);
-        }
-        setDeepFocusMode(false);
-      } else {
-        setTimeLeft(0);
-      }
-    } else if (timerMode === 'POMODORO' && timerState === 'WORK') {
-      let sessionDuration = pomodoroSettings.work * 60 - timeLeft;
-      if (sessionDuration <= 0) sessionDuration = pomodoroSettings.work * 60;
-      const nextCount = (pomodoroCount || 0) + 1;
-      setPomodoroCount(nextCount);
-
+    const flowDuration = timeLeft;
+    if (flowDuration > 0) {
       addSession({
         id: Date.now().toString(),
         date: new Date().toISOString(),
-        duration: sessionDuration,
-        mode: 'POMODORO',
+        duration: flowDuration,
+        mode: 'STOPWATCH',
       });
-      if (selectedTodoId) {
-        incrementTodoSession(selectedTodoId);
-      }
-      const isLongBreak = nextCount % 4 === 0;
-      const breakDuration = isLongBreak
-        ? (pomodoroSettings.longBreak || 15) * 60
-        : (pomodoroSettings.break || 5) * 60;
-
-      setPreviousMode('POMODORO');
-      setTimerState('BREAK');
-      setTimeLeft(breakDuration);
-      if (pomodoroSettings.autoStartBreak) {
-        setIsActive(true);
-      }
-      setDeepFocusMode(false);
-    } else if (timerMode === 'POMODORO' && timerState === 'BREAK') {
-      if (previousMode === 'STOPWATCH') {
-        setTimerMode('STOPWATCH');
-        setTimerState('WORK');
-        setTimeLeft(0);
-      } else {
-        setTimerMode('POMODORO');
-        setTimerState('WORK');
-        setTimeLeft(pomodoroSettings.work * 60);
-      }
-      if (pomodoroSettings.autoStartTimer) {
-        setIsActive(true);
-        setDeepFocusMode(true);
-      } else {
-        setDeepFocusMode(false);
-      }
     }
+    setTimeLeft(0);
+    setDeepFocusMode(false);
   };
 
-  const isWorkActive = timerMode === 'POMODORO' && timerState === 'WORK';
-  const isBreakActive = timerMode === 'POMODORO' && timerState === 'BREAK';
-  const isFlowActive = timerMode === 'STOPWATCH';
-
-  const progressValue =
-    timerMode === 'POMODORO'
-      ? timerState === 'WORK'
-        ? Math.min(
-            100,
-            Math.max(
-              0,
-              (((pomodoroSettings.work || 25) * 60 - timeLeft) /
-                ((pomodoroSettings.work || 25) * 60)) *
-                100
-            )
-          )
-        : Math.min(
-            100,
-            Math.max(
-              0,
-              (((pomodoroSettings.break || 5) * 60 - timeLeft) /
-                ((pomodoroSettings.break || 5) * 60)) *
-                100
-            )
-          )
-      : 100;
+  const progressValue = 100;
 
 
   const getModeTitle = () => {
-    if (timerMode === 'POMODORO') {
-      return timerState === 'WORK' ? 'Pomodoro' : 'Break';
-    }
     return 'Flow';
   };
 
   const renderModeIcon = (size: number, color: string) => {
-    if (timerMode === 'POMODORO') {
-      if (timerState === 'WORK') {
-        return <Timer size={size} color={color} />;
-      }
-      return <Coffee size={size} color={color} />;
-    }
     return <Clock size={size} color={color} />;
   };
 
@@ -288,81 +160,6 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
             <Text style={[styles.cardTime, { color: colors.text }]}>
               {formatTime(timeLeft)}
             </Text>
-          </View>
-
-          {/* Mode Selector Row */}
-          <View style={styles.modeRow}>
-            <TouchableOpacity
-              style={[
-                styles.modeBtn,
-                isWorkActive
-                  ? { backgroundColor: colors.text }
-                  : { backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.border },
-              ]}
-              onPress={selectPomodoroWork}
-              activeOpacity={0.8}
-            >
-              <Timer
-                size={14}
-                color={isWorkActive ? colors.background : colors.textMuted}
-              />
-              <Text
-                style={[
-                  styles.modeBtnText,
-                  { color: isWorkActive ? colors.background : colors.textMuted },
-                ]}
-              >
-                Pomodoro
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.modeBtn,
-                isBreakActive
-                  ? { backgroundColor: colors.text }
-                  : { backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.border },
-              ]}
-              onPress={selectPomodoroBreak}
-              activeOpacity={0.8}
-            >
-              <Coffee
-                size={14}
-                color={isBreakActive ? colors.background : colors.textMuted}
-              />
-              <Text
-                style={[
-                  styles.modeBtnText,
-                  { color: isBreakActive ? colors.background : colors.textMuted },
-                ]}
-              >
-                Break
-              </Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[
-                styles.modeBtn,
-                isFlowActive
-                  ? { backgroundColor: colors.text }
-                  : { backgroundColor: colors.inputBg, borderWidth: 1, borderColor: colors.border },
-              ]}
-              onPress={selectFlow}
-              activeOpacity={0.8}
-            >
-              <Clock
-                size={14}
-                color={isFlowActive ? colors.background : colors.textMuted}
-              />
-              <Text
-                style={[
-                  styles.modeBtnText,
-                  { color: isFlowActive ? colors.background : colors.textMuted },
-                ]}
-              >
-                Flow
-              </Text>
-            </TouchableOpacity>
           </View>
 
           {/* Progress Bar */}
@@ -583,24 +380,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '800',
     letterSpacing: -0.5,
-  },
-  modeRow: {
-    flexDirection: 'row',
-    gap: 8,
-    marginBottom: 14,
-  },
-  modeBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: 12,
-  },
-  modeBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
   },
   progressTrack: {
     height: 6,

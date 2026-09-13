@@ -5,196 +5,46 @@ import { electron } from '../../lib/electron';
 
 export const GlobalTimerEngine: React.FC = () => {
   const {
-    timerMode,
-    setTimerMode,
-    timerState,
-    setTimerState,
     timeLeft,
     setTimeLeft,
     flowTimeElapsed,
     setFlowTimeElapsed,
     isActive,
     setIsActive,
-    pomodoroSettings,
-    pomodoroCount,
-    setPomodoroCount,
     todos,
     updateTodo,
     selectedTodoId,
     addSession,
     sessionName,
-    previousMode,
-    setPreviousMode,
     setDeepFocusMode,
     setIsMusicPlaying
   } = useDesktopStore();
 
-  const prevTimerRef = React.useRef({ isActive, timerMode, timerState });
+  const prevTimerRef = React.useRef({ isActive });
 
   useEffect(() => {
     const prev = prevTimerRef.current;
-    const isRunningFocus = isActive && (
-      (timerMode === 'POMODORO' && timerState === 'WORK') ||
-      timerMode === 'STOPWATCH'
-    );
-    const wasRunningFocus = prev.isActive && (
-      (prev.timerMode === 'POMODORO' && prev.timerState === 'WORK') ||
-      prev.timerMode === 'STOPWATCH'
-    );
-
-    if (isRunningFocus && (!wasRunningFocus || prev.timerState === 'BREAK')) {
+    if (isActive && !prev.isActive) {
       setIsMusicPlaying(true);
-    } else if (!isRunningFocus && (wasRunningFocus || timerState === 'BREAK')) {
+    } else if (!isActive && prev.isActive) {
       setIsMusicPlaying(false);
     }
-
-    prevTimerRef.current = { isActive, timerMode, timerState };
-  }, [isActive, timerMode, timerState, setIsMusicPlaying]);
-
-
-
-  const handleCompleteSession = () => {
-    setIsActive(false);
-    playCompletionSound();
-
-    const activeTask = todos.find(t => t.id === selectedTodoId);
-    const title = activeTask?.text || sessionName || 'Focus Session';
-
-    if (timerMode === 'POMODORO') {
-      if (timerState === 'WORK') {
-        const durationWorked = Math.max(60, (pomodoroSettings.work * 60) - timeLeft);
-        const nextCount = (pomodoroCount || 0) + 1;
-        setPomodoroCount(nextCount);
-        
-        addSession({
-          id: crypto.randomUUID(),
-          date: new Date().toISOString(),
-          duration: durationWorked,
-          mode: 'POMODORO',
-          taskTitle: title
-        });
-
-        if (activeTask) {
-          updateTodo(activeTask.id, {
-            completedPomodoros: (activeTask.completedPomodoros || 0) + 1,
-            completed: true,
-            completedAt: new Date().toISOString(),
-            groupId: 'finished'
-          });
-        }
-
-        const isLongBreak = nextCount % 4 === 0;
-        const breakDuration = isLongBreak
-          ? (pomodoroSettings.longBreak || 15) * 60
-          : (pomodoroSettings.break || 5) * 60;
-
-        electron.showNotification(
-          isLongBreak ? "4 Pomodoros Completed!" : "Session Complete!",
-          isLongBreak 
-            ? `Great job completing 4 pomodoro sessions! Time for a ${pomodoroSettings.longBreak || 15} minute long break.`
-            : `Great work finishing "${title}"! Time for a break.`
-        );
-        
-        setPreviousMode('POMODORO');
-        setTimerState('BREAK');
-        setTimeLeft(breakDuration);
-
-        if (pomodoroSettings.autoStartBreak) {
-          setIsActive(true);
-        }
-        setDeepFocusMode(false);
-      } else {
-        if (previousMode === 'STOPWATCH') {
-          electron.showNotification("Break Complete!", "Ready to jump back into Flow state?");
-          setTimerMode('STOPWATCH');
-          setTimerState('WORK');
-          setFlowTimeElapsed(0);
-          setTimeLeft(0);
-        } else {
-          electron.showNotification("Break Complete!", "Ready to start focusing again?");
-          setTimerMode('POMODORO');
-          setTimerState('WORK');
-          setTimeLeft(pomodoroSettings.work * 60);
-        }
-        if (pomodoroSettings.autoStartTimer) {
-          setIsActive(true);
-          setDeepFocusMode(true);
-        } else {
-          setDeepFocusMode(false);
-        }
-      }
-    } else {
-      const durationWorked = Math.max(1, flowTimeElapsed);
-      const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
-      
-      addSession({
-        id: crypto.randomUUID(),
-        date: new Date().toISOString(),
-        duration: durationWorked,
-        mode: 'STOPWATCH',
-        taskTitle: title
-      });
-
-      if (activeTask) {
-        updateTodo(activeTask.id, {
-          completed: true,
-          completedAt: new Date().toISOString(),
-          groupId: 'finished'
-        });
-      }
-
-      const breakMins = Math.floor(calculatedBreakSeconds / 60);
-      const breakSecs = calculatedBreakSeconds % 60;
-      const breakStr = breakMins > 0 
-        ? `${breakMins}m${breakSecs > 0 ? ` ${breakSecs}s` : ''}` 
-        : `${breakSecs}s`;
-
-      electron.showNotification(
-        "Flow Session Complete!", 
-        `Focused for ${Math.floor(durationWorked / 60)}m. Earned ${breakStr} break!`
-      );
-      
-      setPreviousMode('STOPWATCH');
-      setTimerMode('POMODORO');
-      setTimerState('BREAK');
-      setTimeLeft(calculatedBreakSeconds);
-      setFlowTimeElapsed(0);
-
-      if (pomodoroSettings.autoStartBreak) {
-        setIsActive(true);
-      }
-      setDeepFocusMode(false);
-    }
-  };
+    prevTimerRef.current = { isActive };
+  }, [isActive, setIsMusicPlaying]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
 
     if (isActive) {
       interval = setInterval(() => {
-        if (timerMode === 'POMODORO') {
-          setTimeLeft((prev) => {
-            if (prev <= 1) {
-              return 0;
-            }
-            return prev - 1;
-          });
-        } else {
-          setFlowTimeElapsed((prev) => prev + 1);
-        }
+        setFlowTimeElapsed((prev) => prev + 1);
       }, 1000);
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, timerMode]);
-
-  useEffect(() => {
-    if (isActive && timerMode === 'POMODORO' && timeLeft === 0) {
-      handleCompleteSession();
-    }
-  }, [timeLeft, isActive, timerMode]);
+  }, [isActive, setFlowTimeElapsed]);
 
   return null;
 };
