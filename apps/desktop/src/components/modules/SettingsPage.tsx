@@ -1,28 +1,15 @@
 import React, { useState, useRef } from 'react';
 import {
   Settings, Clock, Palette, Volume2, Volume1, VolumeX, Trash2, BellRing,
-  Info, Github, ExternalLink, Check, RotateCcw, Download,
-  Upload, ShieldAlert, Monitor, Pin, Database, Plus, Minus, Music
+  Info, Github, ExternalLink, Check, Download,
+  Upload, ShieldAlert, Monitor, Pin, Database, Music
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
 import iconUrl from '../../../public/icon.png';
 
-const TIMER_PRESETS = {
-  work: [15, 25, 30, 45, 50, 60, 90],
-  break: [3, 5, 10, 15],
-  longBreak: [10, 15, 20, 30],
-};
-
 export const SettingsPage: React.FC = () => {
   const {
-    pomodoroSettings,
-    setPomodoroSettings,
-    pomodoroCount,
-    resetPomodoroCount,
-    isActive,
-    timerState,
-    setTimeLeft,
     theme,
     setTheme,
     soundEffectEnabled,
@@ -50,33 +37,6 @@ export const SettingsPage: React.FC = () => {
     setTimeout(() => {
       setFeedbackMessage(null);
     }, 3500);
-  };
-
-  const handleTimerSettingChange = (updates: Partial<typeof pomodoroSettings>) => {
-    setPomodoroSettings(updates);
-
-    if (!isActive) {
-      if (updates.work !== undefined && timerState === 'WORK') {
-        setTimeLeft(updates.work * 60);
-      } else if (updates.break !== undefined && timerState === 'BREAK') {
-        setTimeLeft(updates.break * 60);
-      }
-    }
-  };
-
-  const handleWorkDurationStep = (delta: number) => {
-    const nextVal = Math.min(180, Math.max(1, (pomodoroSettings.work || 25) + delta));
-    handleTimerSettingChange({ work: nextVal });
-  };
-
-  const handleBreakDurationStep = (delta: number) => {
-    const nextVal = Math.min(60, Math.max(1, (pomodoroSettings.break || 5) + delta));
-    handleTimerSettingChange({ break: nextVal });
-  };
-
-  const handleLongBreakDurationStep = (delta: number) => {
-    const nextVal = Math.min(90, Math.max(1, (pomodoroSettings.longBreak || 15) + delta));
-    handleTimerSettingChange({ longBreak: nextVal });
   };
 
   const playTestSound = () => {
@@ -209,248 +169,16 @@ export const SettingsPage: React.FC = () => {
                 <Clock className="w-4 h-4 text-muted-foreground" />
               </div>
               <div>
-                <h2 className="text-sm font-semibold text-foreground tracking-tight">Timer & Focus Durations</h2>
-                <p className="text-[11px] text-muted-foreground">Configure Pomodoro work cycles, break durations, and sequencing.</p>
+                <h2 className="text-sm font-semibold text-foreground tracking-tight">Timer & Focus</h2>
+                <p className="text-[11px] text-muted-foreground">Flow mode: open-ended stopwatch with smart break calculation.</p>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-secondary/70 border border-border rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-border transition-colors shadow-sm">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-foreground">Work Duration</span>
-                  <span className="text-xs font-mono font-semibold text-foreground bg-secondary border border-border px-2 py-0.5 rounded-md">
-                    {pomodoroSettings.work} min
-                  </span>
-                </div>
-                <p className="text-[10px] text-muted-foreground leading-tight">Focus interval length before trigger break.</p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleWorkDurationStep(-5)}
-                  className="p-2 rounded-lg bg-background border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-                  title="Decrease by 5 mins"
-                >
-                  <Minus className="w-3.5 h-3.5" />
-                </button>
-                <input
-                  type="number"
-                  min={1}
-                  max={180}
-                  value={pomodoroSettings.work}
-                  onChange={(e) => handleTimerSettingChange({ work: Number(e.target.value) || 25 })}
-                  className="w-full text-center py-1.5 text-xs font-mono font-bold bg-background border border-border rounded-lg text-foreground focus:outline-none focus:border-ring"
-                />
-                <button
-                  onClick={() => handleWorkDurationStep(5)}
-                  className="p-2 rounded-lg bg-background border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-                  title="Increase by 5 mins"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-border/60">
-                <span className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider mr-1">Presets:</span>
-                {TIMER_PRESETS.work.map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => handleTimerSettingChange({ work: p })}
-                    className={`text-[10px] px-2 py-1 rounded-md font-mono transition-all ${
-                      pomodoroSettings.work === p
-                        ? 'bg-primary text-primary-foreground font-bold shadow-sm'
-                        : 'bg-background border border-border text-muted-foreground hover:text-foreground hover:bg-secondary'
-                    }`}
-                  >
-                    {p}m
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-secondary/70 border border-border rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-border transition-colors shadow-sm">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-foreground">Short Break</span>
-                  <span className="text-xs font-mono font-semibold text-foreground bg-secondary border border-border px-2 py-0.5 rounded-md">
-                    {pomodoroSettings.break} min
-                  </span>
-                </div>
-                <p className="text-[10px] text-muted-foreground leading-tight">Quick rest duration after single focus session.</p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleBreakDurationStep(-1)}
-                  className="p-2 rounded-lg bg-background border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-                  title="Decrease by 1 min"
-                >
-                  <Minus className="w-3.5 h-3.5" />
-                </button>
-                <input
-                  type="number"
-                  min={1}
-                  max={60}
-                  value={pomodoroSettings.break}
-                  onChange={(e) => handleTimerSettingChange({ break: Number(e.target.value) || 5 })}
-                  className="w-full text-center py-1.5 text-xs font-mono font-bold bg-background border border-border rounded-lg text-foreground focus:outline-none focus:border-ring"
-                />
-                <button
-                  onClick={() => handleBreakDurationStep(1)}
-                  className="p-2 rounded-lg bg-background border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-                  title="Increase by 1 min"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-border/60">
-                <span className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider mr-1">Presets:</span>
-                {TIMER_PRESETS.break.map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => handleTimerSettingChange({ break: p })}
-                    className={`text-[10px] px-2 py-1 rounded-md font-mono transition-all ${
-                      pomodoroSettings.break === p
-                        ? 'bg-primary text-primary-foreground font-bold shadow-sm'
-                        : 'bg-background border border-border text-muted-foreground hover:text-foreground hover:bg-secondary'
-                    }`}
-                  >
-                    {p}m
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="bg-secondary/70 border border-border rounded-2xl p-4 flex flex-col justify-between space-y-4 hover:border-border transition-colors shadow-sm">
-              <div>
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-semibold text-foreground">Long Break</span>
-                  <span className="text-xs font-mono font-semibold text-foreground bg-secondary border border-border px-2 py-0.5 rounded-md">
-                    {pomodoroSettings.longBreak || 15} min
-                  </span>
-                </div>
-                <p className="text-[10px] text-muted-foreground leading-tight">Extended recovery after 4 completed focus rounds.</p>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => handleLongBreakDurationStep(-5)}
-                  className="p-2 rounded-lg bg-background border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-                  title="Decrease by 5 mins"
-                >
-                  <Minus className="w-3.5 h-3.5" />
-                </button>
-                <input
-                  type="number"
-                  min={1}
-                  max={90}
-                  value={pomodoroSettings.longBreak || 15}
-                  onChange={(e) => handleTimerSettingChange({ longBreak: Number(e.target.value) || 15 })}
-                  className="w-full text-center py-1.5 text-xs font-mono font-bold bg-background border border-border rounded-lg text-foreground focus:outline-none focus:border-ring"
-                />
-                <button
-                  onClick={() => handleLongBreakDurationStep(5)}
-                  className="p-2 rounded-lg bg-background border border-border text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors"
-                  title="Increase by 5 mins"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                </button>
-              </div>
-
-              <div className="flex items-center gap-1.5 flex-wrap pt-1 border-t border-border/60">
-                <span className="text-[9px] text-muted-foreground font-semibold uppercase tracking-wider mr-1">Presets:</span>
-                {TIMER_PRESETS.longBreak.map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => handleTimerSettingChange({ longBreak: p })}
-                    className={`text-[10px] px-2 py-1 rounded-md font-mono transition-all ${
-                      (pomodoroSettings.longBreak || 15) === p
-                        ? 'bg-primary text-primary-foreground font-bold shadow-sm'
-                        : 'bg-background border border-border text-muted-foreground hover:text-foreground hover:bg-secondary'
-                    }`}
-                  >
-                    {p}m
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            <div
-              role="switch"
-              aria-checked={pomodoroSettings.autoStartBreak}
-              onClick={() => handleTimerSettingChange({ autoStartBreak: !pomodoroSettings.autoStartBreak })}
-              className="flex items-center justify-between p-4 rounded-2xl bg-secondary/70 border border-border hover:border-border cursor-pointer transition-all shadow-sm group"
-            >
-              <div className="space-y-1 pr-4">
-                <span className="text-xs font-semibold text-foreground block group-hover:text-foreground transition-colors">
-                  Auto-start Breaks
-                </span>
-                <span className="text-[11px] text-muted-foreground block leading-tight">
-                  Immediately launch break countdown when focus interval concludes.
-                </span>
-              </div>
-              <div className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${
-                pomodoroSettings.autoStartBreak ? 'bg-primary' : 'bg-muted'
-              }`}>
-                <div className={`w-5 h-5 rounded-full transition-transform duration-200 ${
-                  pomodoroSettings.autoStartBreak ? 'translate-x-5 bg-primary-foreground shadow-sm' : 'translate-x-0 bg-muted-foreground'
-                }`} />
-              </div>
-            </div>
-
-            <div
-              role="switch"
-              aria-checked={pomodoroSettings.autoStartTimer}
-              onClick={() => handleTimerSettingChange({ autoStartTimer: !pomodoroSettings.autoStartTimer })}
-              className="flex items-center justify-between p-4 rounded-2xl bg-secondary/70 border border-border hover:border-border cursor-pointer transition-all shadow-sm group"
-            >
-              <div className="space-y-1 pr-4">
-                <span className="text-xs font-semibold text-foreground block group-hover:text-foreground transition-colors">
-                  Auto-start Focus Rounds
-                </span>
-                <span className="text-[11px] text-muted-foreground block leading-tight">
-                  Automatically commence the next focus block when break time is up.
-                </span>
-              </div>
-              <div className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${
-                pomodoroSettings.autoStartTimer ? 'bg-primary' : 'bg-muted'
-              }`}>
-                <div className={`w-5 h-5 rounded-full transition-transform duration-200 ${
-                  pomodoroSettings.autoStartTimer ? 'translate-x-5 bg-primary-foreground shadow-sm' : 'translate-x-0 bg-muted-foreground'
-                }`} />
-              </div>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between p-4 rounded-2xl bg-secondary/50 border border-border text-xs">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-xl bg-background border border-border text-muted-foreground">
-                <RotateCcw className="w-4 h-4 text-muted-foreground" />
-              </div>
-              <div>
-                <span className="font-semibold text-foreground block">Current Pomodoro Cycle Count</span>
-                <span className="text-[11px] text-muted-foreground font-mono">
-                  {pomodoroCount || 0} completed session{(pomodoroCount || 0) === 1 ? '' : 's'} recorded today
-                </span>
-              </div>
-            </div>
-            <button
-              onClick={() => {
-                resetPomodoroCount();
-                showFeedback('Session counter reset to 0.');
-              }}
-              className="px-3 py-1.5 rounded-lg bg-background hover:bg-secondary border border-border hover:border-border text-muted-foreground hover:text-foreground text-xs font-medium transition-all shadow-sm"
-            >
-              Reset Counter
-            </button>
+          <div className="bg-secondary/70 border border-border rounded-2xl p-5 text-xs text-muted-foreground leading-relaxed">
+            Focus Desktop uses Flow mode exclusively. The timer counts up from zero, tracking your focus duration. When you complete a session, a break is automatically calculated as 1/5th of your focus time.
           </div>
         </section>
-
         <section className="space-y-4">
           <div className="flex items-center gap-2.5">
             <div className="p-1.5 rounded-lg bg-secondary border border-border text-muted-foreground">
@@ -778,8 +506,8 @@ export const SettingsPage: React.FC = () => {
               </div>
             </div>
 
-            <p className="text-xs text-foreground leading-relaxed bg-secondary/60 p-4 rounded-xl border border-border">
-              Focus Desktop is engineered for deep flow state work. Featuring customizable Pomodoro and stopwatch flow timers, intelligent break sequencing, hierarchical task management, daily streak analytics, and embedded Lo-Fi audio stream support.
+<p className="text-xs text-foreground leading-relaxed bg-secondary/60 p-4 rounded-xl border border-border">
+              Focus Desktop is engineered for deep flow state work. Featuring open-ended Flow timers with intelligent break sequencing, hierarchical task management, daily streak analytics, and embedded Lo-Fi audio stream support.
             </p>
 
             <div className="pt-3 border-t border-border flex flex-col sm:flex-row gap-3">

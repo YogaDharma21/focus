@@ -11,7 +11,6 @@ import { DynamicIslandTimer } from '@/components/modules/DynamicIslandTimer';
 import { Clock, ListCheck, BarChart2, Settings } from 'lucide-react-native';
 
 import { useAppStore } from '@/lib/store';
-import { playCompletionSound } from '@/lib/sound';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -21,116 +20,42 @@ export default function TabLayout() {
     isActive,
     setTimeLeft,
     setIsActive,
-    timerMode,
-    setTimerMode,
-    timerState,
-    setTimerState,
-    setPreviousMode,
     deepFocusMode,
     setDeepFocusMode,
     addSession,
-    incrementTodoSession,
     setIsMusicPlaying,
   } = useAppStore();
 
   const prevActiveRef = React.useRef(isActive);
-  const prevTimerRef = React.useRef({ isActive, timerMode, timerState });
 
   React.useEffect(() => {
-    const isWorkOrFlow = timerMode === 'STOPWATCH' || (timerMode === 'POMODORO' && timerState === 'WORK');
-    if (isActive && !prevActiveRef.current && isWorkOrFlow && !deepFocusMode) {
+    if (isActive && !prevActiveRef.current && !deepFocusMode) {
       setDeepFocusMode(true);
     }
     prevActiveRef.current = isActive;
-  }, [isActive, timerMode, timerState, deepFocusMode, setDeepFocusMode]);
+  }, [isActive, deepFocusMode, setDeepFocusMode]);
 
   React.useEffect(() => {
-    const prev = prevTimerRef.current;
-    const isRunningFocus = isActive && (
-      (timerMode === 'POMODORO' && timerState === 'WORK') ||
-      timerMode === 'STOPWATCH'
-    );
-    const wasRunningFocus = prev.isActive && (
-      (prev.timerMode === 'POMODORO' && prev.timerState === 'WORK') ||
-      prev.timerMode === 'STOPWATCH'
-    );
-
-    if (isRunningFocus && (!wasRunningFocus || prev.timerState === 'BREAK')) {
+    if (isActive) {
       setIsMusicPlaying(true);
-    } else if (!isRunningFocus && (wasRunningFocus || timerState === 'BREAK')) {
+    } else {
       setIsMusicPlaying(false);
     }
-
-    prevTimerRef.current = { isActive, timerMode, timerState };
-  }, [isActive, timerMode, timerState, setIsMusicPlaying]);
+  }, [isActive, setIsMusicPlaying]);
 
   React.useEffect(() => {
     let interval: any = null;
 
     if (isActive) {
       interval = setInterval(() => {
-        const state = useAppStore.getState();
-        if (state.timerMode === 'POMODORO') {
-          setTimeLeft((prev) => {
-            if (prev <= 1) {
-              playCompletionSound();
-              setIsActive(false);
-              if (state.timerState === 'WORK') {
-                const nextCount = (state.pomodoroCount || 0) + 1;
-                state.setPomodoroCount(nextCount);
-                const isLongBreak = nextCount % 4 === 0;
-                const breakDuration = isLongBreak
-                  ? (state.pomodoroSettings.longBreak || 15) * 60
-                  : (state.pomodoroSettings.break || 5) * 60;
-
-                addSession({
-                  id: Date.now().toString(),
-                  date: new Date().toISOString(),
-                  duration: state.pomodoroSettings.work * 60,
-                  mode: 'POMODORO',
-                });
-                if (state.selectedTodoId) {
-                  incrementTodoSession(state.selectedTodoId);
-                }
-                setPreviousMode('POMODORO');
-                setTimerState('BREAK');
-                setTimeLeft(breakDuration);
-                if (state.pomodoroSettings.autoStartBreak) {
-                  setIsActive(true);
-                }
-                setDeepFocusMode(false);
-              } else {
-                if (state.previousMode === 'STOPWATCH') {
-                  setTimerMode('STOPWATCH');
-                  setTimerState('WORK');
-                  setTimeLeft(0);
-                } else {
-                  setTimerMode('POMODORO');
-                  setTimerState('WORK');
-                  setTimeLeft(state.pomodoroSettings.work * 60);
-                }
-                if (state.pomodoroSettings.autoStartTimer) {
-                  setIsActive(true);
-                  setDeepFocusMode(true);
-                } else {
-                  setDeepFocusMode(false);
-                }
-              }
-              return 0;
-            }
-            return prev - 1;
-          });
-        } else {
-          // Flow Mode (Stopwatch)
-          setTimeLeft((prev) => prev + 1);
-        }
+        setTimeLeft((prev) => prev + 1);
       }, 1000);
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, setIsActive, setTimeLeft, setTimerMode, setTimerState, setPreviousMode, setDeepFocusMode, addSession, incrementTodoSession]);
+  }, [isActive, setTimeLeft]);
 
   const bottomInset = Math.max(insets.bottom, 0);
 

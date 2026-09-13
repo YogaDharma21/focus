@@ -13,7 +13,7 @@ export interface Session {
   id: string;
   date: string;
   duration: number;
-  mode: "POMODORO" | "STOPWATCH";
+  mode: "STOPWATCH";
   taskTitle?: string;
 }
 
@@ -41,8 +41,6 @@ export interface TodoItem {
   dueDate?: string;
   subtasks?: Subtask[];
   notes?: string;
-  estimatedPomodoros?: number;
-  completedPomodoros?: number;
   recurring?: "none" | "daily" | "weekly" | "monthly";
   reminders?: string[];
   link?: string;
@@ -80,9 +78,7 @@ export interface DesktopState {
   setVolume: (volume: number) => void;
 
   // Timer State
-  timerMode: "POMODORO" | "STOPWATCH";
-  timerState: "WORK" | "BREAK";
-  previousMode: "POMODORO" | "STOPWATCH";
+  timerMode: "STOPWATCH";
   timeLeft: number;
   flowTimeElapsed: number;
   isActive: boolean;
@@ -91,9 +87,6 @@ export interface DesktopState {
   selectedTodoId: string | null;
   selectedSubtaskId: string | null;
 
-  setTimerMode: (mode: "POMODORO" | "STOPWATCH") => void;
-  setTimerState: (state: "WORK" | "BREAK") => void;
-  setPreviousMode: (mode: "POMODORO" | "STOPWATCH") => void;
   setTimeLeft: (time: number | ((prev: number) => number)) => void;
   setFlowTimeElapsed: (time: number | ((prev: number) => number)) => void;
   setIsActive: (active: boolean) => void;
@@ -101,13 +94,6 @@ export interface DesktopState {
   setSessionName: (name: string) => void;
   setSelectedTodoId: (id: string | null) => void;
   setSelectedSubtaskId: (id: string | null) => void;
-
-  // Settings
-  pomodoroSettings: { work: number; break: number; longBreak: number; autoStartBreak: boolean; autoStartTimer: boolean };
-  setPomodoroSettings: (settings: Partial<{ work: number; break: number; longBreak: number; autoStartBreak: boolean; autoStartTimer: boolean }>) => void;
-  pomodoroCount: number;
-  setPomodoroCount: (count: number | ((prev: number) => number)) => void;
-  resetPomodoroCount: () => void;
 
   // Tasks & Groups
   todos: TodoItem[];
@@ -200,10 +186,8 @@ export const useDesktopStore = create<DesktopState>()(
       setVolume: (volume) => set({ volume }),
 
       // Timer State
-      timerMode: "POMODORO",
-      timerState: "WORK",
-      previousMode: "POMODORO",
-      timeLeft: 25 * 60,
+      timerMode: "STOPWATCH",
+      timeLeft: 0,
       flowTimeElapsed: 0,
       isActive: false,
       sessionStartTime: null,
@@ -211,9 +195,6 @@ export const useDesktopStore = create<DesktopState>()(
       selectedTodoId: null,
       selectedSubtaskId: null,
 
-      setTimerMode: (mode) => set({ timerMode: mode }),
-      setTimerState: (state) => set({ timerState: state }),
-      setPreviousMode: (mode) => set({ previousMode: mode }),
       setTimeLeft: (timeOrFn) =>
         set((state) => ({
           timeLeft: typeof timeOrFn === "function" ? timeOrFn(state.timeLeft) : timeOrFn,
@@ -228,19 +209,6 @@ export const useDesktopStore = create<DesktopState>()(
       setSelectedTodoId: (id) => set({ selectedTodoId: id }),
       setSelectedSubtaskId: (id) => set({ selectedSubtaskId: id }),
 
-      // Settings
-      pomodoroSettings: { work: 25, break: 5, longBreak: 15, autoStartBreak: false, autoStartTimer: false },
-      setPomodoroSettings: (updates) =>
-        set((state) => ({
-          pomodoroSettings: { ...state.pomodoroSettings, ...updates },
-        })),
-      pomodoroCount: 0,
-      setPomodoroCount: (countOrFn) =>
-        set((state) => ({
-          pomodoroCount: typeof countOrFn === "function" ? countOrFn(state.pomodoroCount || 0) : countOrFn,
-        })),
-      resetPomodoroCount: () => set({ pomodoroCount: 0 }),
-
       // Todos & Groups
       todos: [
         {
@@ -252,8 +220,6 @@ export const useDesktopStore = create<DesktopState>()(
           category: "Development",
           groupId: "finished",
           completedAt: new Date().toISOString(),
-          estimatedPomodoros: 2,
-          completedPomodoros: 2
         },
         {
           id: "demo-task-2",
@@ -263,8 +229,6 @@ export const useDesktopStore = create<DesktopState>()(
           priority: "urgent",
           category: "Productivity",
           groupId: "current",
-          estimatedPomodoros: 4,
-          completedPomodoros: 0,
           subtasks: [
             { id: "sub-1", text: "Configure focus timer", completed: true },
             { id: "sub-2", text: "Start ambient music stream", completed: false }
@@ -359,7 +323,7 @@ export const useDesktopStore = create<DesktopState>()(
           id: "session-1",
           date: new Date().toISOString(),
           duration: 1500,
-          mode: "POMODORO",
+          mode: "STOPWATCH",
           taskTitle: "Set up Focus Desktop environment"
         }
       ],

@@ -30,9 +30,8 @@
 
 ## Key Features
 
-- **Focus & Flow Timers** — Flexible Pomodoro (Work/Break) and Flow (Stopwatch) modes.
-- **Dynamic Flow Break Math** — Elapsed Flow session duration is dynamically divided by 5 to calculate break time. Remembers previous mode to return to Flow after breaks.
-- **Task Session Estimation & Auto-Finish** — Track estimated vs. completed sessions per task. Tasks automatically mark as finished when completed sessions reach the estimate.
+- **Focus & Flow Timer** — Count-up flow timer for deep focus sessions.
+- **Dynamic Flow Break Math** — Elapsed Flow session duration is dynamically divided by 5 to calculate break time.
 - **Focus on Task Redirection** — One-tap redirection from task list or detail view straight into an active focus session linked to the task.
 - **Deep Focus Mode Overlay** — Immersive full-screen focus view with Log Distraction and Complete Session controls.
 - **Sound Player** — Native audio player for local ambient focus sounds with backdrop tap-to-close behavior.
