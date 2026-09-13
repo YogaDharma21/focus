@@ -336,9 +336,9 @@ export function SettingsPage() {
             <Text style={[styles.aboutValue, { color: colors.mutedText }]}>v0.0.1</Text>
           </View>
 
-          <View style={[styles.aboutCard, { backgroundColor: colors.muted, borderColor: colors.border }]}>
+<View style={[styles.aboutCard, { backgroundColor: colors.muted, borderColor: colors.border }]}>
             <Text style={[styles.aboutDescription, { color: colors.mutedText }]}>
-              A minimalist productivity suite designed to keep you in flow state. Features Pomodoro and Flow timers, task management with subtasks, productivity analytics, mood reflections, and ambient audio.
+              A minimalist productivity suite designed to keep you in flow state. Features Pomodoro and Flow timers, task management with subtasks, productivity analytics, and ambient audio.
             </Text>
           </View>
 

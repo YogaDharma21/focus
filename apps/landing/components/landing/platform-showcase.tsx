@@ -23,7 +23,6 @@ const apps = [
       "Deep Focus full-screen mode with hotkeys (Esc / F)",
       "Lofi beats player & minimalist visual themes",
       "Comprehensive stats & streak tracking",
-      "Mood logs and post-session reflections",
     ],
     Preview: WebTimerPreview,
   },

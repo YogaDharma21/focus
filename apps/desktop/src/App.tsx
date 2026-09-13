@@ -4,7 +4,6 @@ import { SidebarNav } from './components/layout/SidebarNav';
 import { FocusTimer } from './components/modules/FocusTimer';
 import { TodoList } from './components/modules/TodoList';
 import { StatsJournal } from './components/modules/StatsJournal';
-import { MoodTracker } from './components/modules/MoodTracker';
 import { MediaPlayer } from './components/modules/MediaPlayer';
 import { SettingsPage } from './components/modules/SettingsPage';
 import { DeepFocusOverlay } from './components/modules/DeepFocusOverlay';
@@ -73,7 +72,6 @@ export const App: React.FC = () => {
           {currentView === 'FOCUS' && <FocusTimer />}
           {currentView === 'TODO' && <TodoList />}
           {currentView === 'JOURNAL' && <StatsJournal />}
-          {currentView === 'NOTES' && <MoodTracker />}
           {currentView === 'SETTINGS' && <SettingsPage />}
         </main>
       </div>

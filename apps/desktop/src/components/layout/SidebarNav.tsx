@@ -1,5 +1,5 @@
 import React from 'react';
-import { Timer, CheckSquare, BarChart3, Smile, Settings } from 'lucide-react';
+import { Timer, CheckSquare, BarChart3, Settings } from 'lucide-react';
 import { useDesktopStore, ViewType } from '../../lib/store';
 
 export const SidebarNav: React.FC = () => {
@@ -9,7 +9,6 @@ export const SidebarNav: React.FC = () => {
     { id: "FOCUS", label: "Timer", icon: Timer },
     { id: "TODO", label: "Tasks", icon: CheckSquare },
     { id: "JOURNAL", label: "Stats", icon: BarChart3 },
-    { id: "NOTES", label: "Mood", icon: Smile },
     { id: "SETTINGS", label: "Settings", icon: Settings },
   ];
 
