@@ -14,7 +14,6 @@ import {
     Trash,
     Check,
     Sparkles,
-    Timer,
     FileText,
     Square,
     CheckSquare2,
@@ -118,7 +117,6 @@ export function TodoList() {
             category: "General",
             groupId: selectedGroupId,
             priority: "medium",
-            estimatedPomodoros: 1,
         };
 
         addTodo(todo);
@@ -382,10 +380,6 @@ export function TodoList() {
                                             )}
                                         </div>
                                     )}
-                                    <div className="flex items-center gap-1" title="Sessions (completed / estimated)">
-                                        <Timer className="w-3 h-3" />
-                                        {todo.completedPomodoros || 0}/{todo.estimatedPomodoros || 1}
-                                    </div>
                                     {todo.priority && todo.priority !== "medium" && (
                                         <div className="flex items-center gap-1">
                                             <Sparkles className="w-3 h-3" />
@@ -531,57 +525,6 @@ export function TodoList() {
                                         </SelectContent>
                                     </Select>
                                 </div>
-                            </div>
-
-                            <div className="bg-muted/30 border border-border/40 rounded-xl p-4 space-y-3">
-                                <label className="text-xs font-semibold text-muted-foreground uppercase flex items-center gap-1.5">
-                                    <Timer className="w-3.5 h-3.5 text-muted-foreground" /> Focus Sessions
-                                </label>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label className="text-[11px] text-muted-foreground mb-1 block">Estimated</label>
-                                        <Input
-                                            type="number"
-                                            min={1}
-                                            value={editingTask.estimatedPomodoros || 1}
-                                            onChange={(e) => {
-                                                updateTodo(editingTask.id, {
-                                                    estimatedPomodoros: parseInt(e.target.value) || 1,
-                                                });
-                                            }}
-                                            className="h-9 bg-background/50 border-border/50"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="text-[11px] text-muted-foreground mb-1 block">Completed</label>
-                                        <Input
-                                            type="number"
-                                            min={0}
-                                            value={editingTask.completedPomodoros || 0}
-                                            onChange={(e) => {
-                                                updateTodo(editingTask.id, {
-                                                    completedPomodoros: parseInt(e.target.value) || 0,
-                                                });
-                                            }}
-                                            className="h-9 bg-background/50 border-border/50"
-                                        />
-                                    </div>
-                                </div>
-                                {(editingTask.estimatedPomodoros || 0) > 0 && (
-                                    <div className="space-y-1 pt-1">
-                                        <div className="w-full bg-secondary/50 rounded-full h-2 overflow-hidden">
-                                            <div
-                                                className="bg-primary h-full rounded-full transition-[width] duration-300"
-                                                style={{
-                                                    width: `${Math.min(100, ((editingTask.completedPomodoros || 0) / (editingTask.estimatedPomodoros || 1)) * 100)}%`,
-                                                }}
-                                            />
-                                        </div>
-                                        <p className="text-[10px] text-muted-foreground text-right font-medium">
-                                            {Math.round(Math.min(100, ((editingTask.completedPomodoros || 0) / (editingTask.estimatedPomodoros || 1)) * 100))}% Completed
-                                        </p>
-                                    </div>
-                                )}
                             </div>
 
                             <div className="bg-muted/30 border border-border/40 rounded-xl p-4 space-y-2.5">

@@ -18,16 +18,9 @@ export function useTimerEngine() {
     const {
         isActive,
         timerMode,
-        timerState,
-        previousMode,
+        timeLeft,
         setTimeLeft,
         setIsActive,
-        setTimerState,
-        setTimerMode,
-        setPreviousMode,
-        pomodoroSettings,
-        pomodoroCount,
-        setPomodoroCount,
         addSession,
         setDeepFocusMode,
         soundEffectVolume,
@@ -37,16 +30,9 @@ export function useTimerEngine() {
         useShallow((s) => ({
             isActive: s.isActive,
             timerMode: s.timerMode,
-            timerState: s.timerState,
-            previousMode: s.previousMode,
+            timeLeft: s.timeLeft,
             setTimeLeft: s.setTimeLeft,
             setIsActive: s.setIsActive,
-            setTimerState: s.setTimerState,
-            setTimerMode: s.setTimerMode,
-            setPreviousMode: s.setPreviousMode,
-            pomodoroSettings: s.pomodoroSettings,
-            pomodoroCount: s.pomodoroCount,
-            setPomodoroCount: s.setPomodoroCount,
             addSession: s.addSession,
             setDeepFocusMode: s.setDeepFocusMode,
             soundEffectVolume: s.soundEffectVolume,
@@ -55,27 +41,21 @@ export function useTimerEngine() {
         }))
     );
 
-    const prevTimerRef = useRef({ isActive, timerMode, timerState });
+    const prevTimerRef = useRef({ isActive, timerMode });
 
     useEffect(() => {
         const prev = prevTimerRef.current;
-        const isRunningFocus = isActive && (
-            (timerMode === "POMODORO" && timerState === "WORK") ||
-            timerMode === "STOPWATCH"
-        );
-        const wasRunningFocus = prev.isActive && (
-            (prev.timerMode === "POMODORO" && prev.timerState === "WORK") ||
-            prev.timerMode === "STOPWATCH"
-        );
+        const isRunningFocus = isActive && timerMode === "STOPWATCH";
+        const wasRunningFocus = prev.isActive && prev.timerMode === "STOPWATCH";
 
-        if (isRunningFocus && (!wasRunningFocus || prev.timerState === "BREAK")) {
+        if (isRunningFocus && !wasRunningFocus) {
             setIsMusicPlaying(true);
-        } else if (!isRunningFocus && (wasRunningFocus || timerState === "BREAK")) {
+        } else if (!isRunningFocus && wasRunningFocus) {
             setIsMusicPlaying(false);
         }
 
-        prevTimerRef.current = { isActive, timerMode, timerState };
-    }, [isActive, timerMode, timerState, setIsMusicPlaying]);
+        prevTimerRef.current = { isActive, timerMode };
+    }, [isActive, timerMode, setIsMusicPlaying]);
 
     const handleAutoCompleteSession = React.useCallback(() => {
         setIsActive(false);
@@ -90,61 +70,29 @@ export function useTimerEngine() {
             // ignore
         }
 
-        if (timerMode === "POMODORO" && timerState === "WORK") {
-            const duration = pomodoroSettings.work * 60;
-            if (duration > 0) {
-                addSession({
-                    id: crypto.randomUUID(),
-                    date: new Date().toISOString(),
-                    duration,
-                    mode: "POMODORO",
-                });
-            }
+        const duration = timeLeft;
+        if (duration > 0) {
+            addSession({
+                id: crypto.randomUUID(),
+                date: new Date().toISOString(),
+                duration,
+                mode: "STOPWATCH",
+            });
 
-            const nextCount = (pomodoroCount || 0) + 1;
-            setPomodoroCount(nextCount);
-            const isLongBreak = nextCount % 4 === 0;
-            const breakDuration = isLongBreak
-                ? (pomodoroSettings.longBreak || 15) * 60
-                : (pomodoroSettings.break || 5) * 60;
-
-            setPreviousMode("POMODORO");
-            setTimerState("BREAK");
-            setTimeLeft(breakDuration);
-            if (pomodoroSettings.autoStartBreak) {
-                setIsActive(true);
-            }
-            setDeepFocusMode(false);
-        } else if (timerMode === "POMODORO" && timerState === "BREAK") {
-            if (previousMode === "STOPWATCH") {
-                setTimerMode("STOPWATCH");
-                setTimerState("WORK");
+            const breakSeconds = Math.floor(duration / 5);
+            if (breakSeconds > 0) {
+                setTimeLeft(breakSeconds);
+            } else {
                 setTimeLeft(0);
-            } else {
-                setTimerMode("POMODORO");
-                setTimerState("WORK");
-                setTimeLeft(pomodoroSettings.work * 60);
-            }
-            if (pomodoroSettings.autoStartTimer) {
-                setIsActive(true);
-                setDeepFocusMode(true);
-            } else {
-                setDeepFocusMode(false);
             }
         }
+
+        setDeepFocusMode(false);
     }, [
-        timerMode,
-        timerState,
-        previousMode,
+        timeLeft,
         setTimeLeft,
         setIsActive,
-        setTimerState,
-        setTimerMode,
-        setPreviousMode,
         setDeepFocusMode,
-        pomodoroSettings,
-        pomodoroCount,
-        setPomodoroCount,
         addSession,
         soundEffectEnabled,
         soundEffectVolume,
@@ -159,18 +107,7 @@ export function useTimerEngine() {
         if (!isActive) return;
 
         const interval = setInterval(() => {
-            const { timerMode: currentMode } = useAppStore.getState();
-            if (currentMode === "POMODORO") {
-                setTimeLeft((prev) => {
-                    if (prev <= 1) {
-                        autoCompleteRef.current();
-                        return 0;
-                    }
-                    return Math.max(0, prev - 1);
-                });
-            } else if (currentMode === "STOPWATCH") {
-                setTimeLeft((prev) => prev + 1);
-            }
+            setTimeLeft((prev) => prev + 1);
         }, 1000);
 
         return () => clearInterval(interval);

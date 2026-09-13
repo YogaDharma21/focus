@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { playCompletionSound } from '../../lib/sound';
-import { X, Play, Pause, AlertTriangle, CheckCircle2, Music, Volume2, VolumeX, RotateCcw } from 'lucide-react';
+import { X, Play, Pause, AlertTriangle, CheckCircle2, Music, Volume2, VolumeX } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
 import { cn } from '../../lib/utils';
@@ -15,24 +15,14 @@ export const DeepFocusOverlay: React.FC = () => {
     setTimeLeft,
     flowTimeElapsed,
     setFlowTimeElapsed,
-    timerMode, 
-    setTimerMode,
-    timerState,
-    setTimerState,
     isActive, 
     setIsActive,
     addDistraction,
     addSession,
-    pomodoroSettings,
-    pomodoroCount,
-    setPomodoroCount,
-    resetPomodoroCount,
     todos,
     updateTodo,
     selectedTodoId,
     sessionName,
-    previousMode,
-    setPreviousMode,
     isMusicPlaying,
     setIsMusicPlaying,
     volume,
@@ -59,7 +49,7 @@ export const DeepFocusOverlay: React.FC = () => {
 
   if (!deepFocusMode) return null;
 
-  const seconds = timerMode === 'POMODORO' ? timeLeft : flowTimeElapsed;
+  const seconds = flowTimeElapsed;
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   const timeString = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
@@ -72,111 +62,39 @@ export const DeepFocusOverlay: React.FC = () => {
 
     const title = activeTask?.text || sessionName || 'Focus Session';
 
-    if (timerMode === 'POMODORO') {
-      if (timerState === 'WORK') {
-        const durationWorked = Math.max(60, (pomodoroSettings.work * 60) - timeLeft);
-        const nextCount = (pomodoroCount || 0) + 1;
-        setPomodoroCount(nextCount);
-        
-        addSession({
-          id: crypto.randomUUID(),
-          date: new Date().toISOString(),
-          duration: durationWorked,
-          mode: 'POMODORO',
-          taskTitle: title
-        });
+    const durationWorked = Math.max(1, flowTimeElapsed);
+    const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
+    
+    addSession({
+      id: crypto.randomUUID(),
+      date: new Date().toISOString(),
+      duration: durationWorked,
+      mode: 'STOPWATCH',
+      taskTitle: title
+    });
 
-        if (activeTask) {
-          updateTodo(activeTask.id, {
-            completedPomodoros: (activeTask.completedPomodoros || 0) + 1,
-            completed: true,
-            completedAt: new Date().toISOString(),
-            groupId: 'finished'
-          });
-        }
-
-        const isLongBreak = nextCount % 4 === 0;
-        const breakDuration = isLongBreak
-          ? (pomodoroSettings.longBreak || 15) * 60
-          : (pomodoroSettings.break || 5) * 60;
-
-        electron.showNotification(
-          isLongBreak ? "4 Pomodoros Completed!" : "Session Complete!",
-          isLongBreak 
-            ? `Great job completing 4 pomodoro sessions! Time for a ${pomodoroSettings.longBreak || 15} minute long break.`
-            : `Great work finishing "${title}"! Time for a break.`
-        );
-        
-        setPreviousMode('POMODORO');
-        setTimerState('BREAK');
-        setTimeLeft(breakDuration);
-
-        if (pomodoroSettings.autoStartBreak) {
-          setIsActive(true);
-        }
-        setDeepFocusMode(false);
-      } else {
-        if (previousMode === 'STOPWATCH') {
-          electron.showNotification("Break Complete!", "Ready to jump back into Flow state?");
-          setTimerMode('STOPWATCH');
-          setTimerState('WORK');
-          setFlowTimeElapsed(0);
-          setTimeLeft(0);
-        } else {
-          electron.showNotification("Break Complete!", "Ready to start focusing again?");
-          setTimerMode('POMODORO');
-          setTimerState('WORK');
-          setTimeLeft(pomodoroSettings.work * 60);
-        }
-        if (pomodoroSettings.autoStartTimer) {
-          setIsActive(true);
-          setDeepFocusMode(true);
-        } else {
-          setDeepFocusMode(false);
-        }
-      }
-    } else {
-      const durationWorked = Math.max(1, flowTimeElapsed);
-      const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
-      
-      addSession({
-        id: crypto.randomUUID(),
-        date: new Date().toISOString(),
-        duration: durationWorked,
-        mode: 'STOPWATCH',
-        taskTitle: title
+    if (activeTask) {
+      updateTodo(activeTask.id, {
+        completed: true,
+        completedAt: new Date().toISOString(),
+        groupId: 'finished'
       });
-
-      if (activeTask) {
-        updateTodo(activeTask.id, {
-          completed: true,
-          completedAt: new Date().toISOString(),
-          groupId: 'finished'
-        });
-      }
-
-      const breakMins = Math.floor(calculatedBreakSeconds / 60);
-      const breakSecs = calculatedBreakSeconds % 60;
-      const breakStr = breakMins > 0 
-        ? `${breakMins}m${breakSecs > 0 ? ` ${breakSecs}s` : ''}` 
-        : `${breakSecs}s`;
-
-      electron.showNotification(
-        "Flow Session Complete!", 
-        `Focused for ${Math.floor(durationWorked / 60)}m. Earned ${breakStr} break!`
-      );
-      
-      setPreviousMode('STOPWATCH');
-      setTimerMode('POMODORO');
-      setTimerState('BREAK');
-      setTimeLeft(calculatedBreakSeconds);
-      setFlowTimeElapsed(0);
-
-      if (pomodoroSettings.autoStartBreak) {
-        setIsActive(true);
-      }
-      setDeepFocusMode(false);
     }
+
+    const breakMins = Math.floor(calculatedBreakSeconds / 60);
+    const breakSecs = calculatedBreakSeconds % 60;
+    const breakStr = breakMins > 0 
+      ? `${breakMins}m${breakSecs > 0 ? ` ${breakSecs}s` : ''}` 
+      : `${breakSecs}s`;
+
+    electron.showNotification(
+      "Flow Session Complete!", 
+      `Focused for ${Math.floor(durationWorked / 60)}m. Earned ${breakStr} break!`
+    );
+    
+    setFlowTimeElapsed(0);
+    setTimeLeft(0);
+    setDeepFocusMode(false);
   };
 
   return (
@@ -262,49 +180,6 @@ export const DeepFocusOverlay: React.FC = () => {
       <div />
 
       <div className="flex flex-col items-center justify-center space-y-6 my-auto">
-        {timerMode === 'POMODORO' && previousMode !== 'STOPWATCH' && (
-          <div className="flex items-center gap-2.5 px-3.5 py-1.5 rounded-full bg-secondary/80 border border-border text-xs font-mono text-muted-foreground shadow-sm animate-in fade-in duration-150 group">
-            <div className="flex items-center gap-1.5">
-              {[0, 1, 2, 3].map((index) => {
-                const currentCycleStep = (pomodoroCount || 0) % 4;
-                const isCompleted = index < currentCycleStep;
-                const isCurrent = index === currentCycleStep && timerState === 'WORK';
-                return (
-                  <div
-                    key={index}
-                    className={cn(
-                      "w-2 h-2 rounded-full transition-all duration-300",
-                      isCompleted
-                        ? "bg-foreground shadow-[0_0_6px_rgba(255,255,255,0.7)]"
-                        : isCurrent
-                        ? "bg-muted-foreground ring-2 ring-white/30"
-                        : "bg-muted"
-                    )}
-                    title={`Pomodoro ${index + 1} of 4`}
-                  />
-                );
-              })}
-            </div>
-            <span className="text-[11px] font-medium text-muted-foreground">
-              {timerState === 'BREAK'
-                ? ((pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0
-                    ? `Long Break (${pomodoroSettings.longBreak || 15}m)`
-                    : `Short Break (${pomodoroSettings.break || 5}m)`)
-                : `Pomodoro ${((pomodoroCount || 0) % 4) + 1} of 4`}
-            </span>
-            {(pomodoroCount || 0) % 4 !== 0 && (
-              <button
-                type="button"
-                onClick={resetPomodoroCount}
-                className="p-0.5 rounded text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                title="Reset pomodoro count to 1 of 4"
-              >
-                <RotateCcw className="w-3 h-3" />
-              </button>
-            )}
-          </div>
-        )}
-
         <h1 className="text-[120px] md:text-[150px] font-extrabold tracking-tight text-foreground leading-none font-sans select-none">
           {timeString}
         </h1>

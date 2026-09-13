@@ -16,7 +16,7 @@ export function Hero() {
 
         {/* Subtitle */}
         <p className="mt-5 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto font-normal leading-relaxed">
-          The minimalist productivity suite with customizable Pomodoro & Flow timers, 
+          The minimalist productivity suite with a smart Flow timer, 
           intelligent break calculations, website distraction blocking, and lofi audio.
         </p>
 

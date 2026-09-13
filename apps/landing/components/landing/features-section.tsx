@@ -28,14 +28,14 @@ const features = [
   {
     id: "smart-timer",
     label: "Smart Timer",
-    title: "Pomodoro & Flow Modes",
+    title: "Flow Mode",
     description:
-      "Switch between traditional 25-minute Pomodoro sprints with 4-cycle tracking or continuous Flow mode that auto-calculates breaks as 1/5th of your session.",
+      "A continuous count-up timer that tracks your flow state and auto-calculates breaks as 1/5th of your session.",
     badge: "Smart Break Calc",
     highlights: [
-      { icon: Timer, label: "Pomodoro with 4-cycle tracking" },
-      { icon: Clock, label: "Flow mode with auto break calc" },
-      { icon: Coffee, label: "Short & long break support" },
+      { icon: Clock, label: "Continuous flow timer" },
+      { icon: Timer, label: "Auto break calculation" },
+      { icon: Coffee, label: "1/5th session break length" },
     ],
   },
   {
@@ -134,14 +134,6 @@ function TimerIllustration() {
       <div className="m-auto w-full max-w-[280px]">
         <div className="flex gap-2 p-1 bg-secondary/40 rounded-[10px] border border-border/30 mb-4">
           <div className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-[10px] text-xs font-medium bg-primary text-primary-foreground shadow-md">
-            <Timer className="size-3" />
-            Pomodoro
-          </div>
-          <div className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-[10px] text-xs font-medium text-muted-foreground">
-            <Coffee className="size-3" />
-            Break
-          </div>
-          <div className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-[10px] text-xs font-medium text-muted-foreground">
             <Clock className="size-3" />
             Flow
           </div>

@@ -62,7 +62,7 @@ export function Blocked() {
     const isBlockingActive =
       state.shield.enabled &&
       state.isActive &&
-      (state.timerState === "WORK" || state.timerState === "FLOW");
+      state.timerState === "FLOW";
 
     if (!isBlockingActive) {
       window.location.href = targetUrl;
@@ -118,8 +118,8 @@ export function Blocked() {
           {displayDomain}
         </h1>
 
-        <p className="text-xs max-w-sm mb-6 leading-relaxed text-muted-foreground">
-          This domain is blocked during your active <b>Pomodoro Work Session</b>.
+<p className="text-xs max-w-sm mb-6 leading-relaxed text-muted-foreground">
+          This domain is blocked during your active <b>Focus Session</b>.
         </p>
 
         {/* Live Timer Card */}

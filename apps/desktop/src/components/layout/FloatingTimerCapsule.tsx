@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { playCompletionSound } from '../../lib/sound';
 import { 
-  Play, Pause, AlertTriangle, CheckCircle2, Coffee, Timer as TimerIcon, Clock 
+  Play, Pause, AlertTriangle, CheckCircle2, Clock 
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
@@ -12,19 +12,12 @@ const DISTRACTION_OPTIONS = ["Phone", "Social Media", "Bathroom", "Meeting", "Ot
 export const FloatingTimerCapsule: React.FC = () => {
   const { 
     currentView, 
-    timerMode, 
-    setTimerMode,
-    timerState, 
-    setTimerState,
     timeLeft, 
     setTimeLeft,
     flowTimeElapsed, 
     setFlowTimeElapsed,
     isActive, 
     setIsActive,
-    pomodoroSettings,
-    pomodoroCount,
-    setPomodoroCount,
     todos,
     updateTodo,
     selectedTodoId,
@@ -32,8 +25,6 @@ export const FloatingTimerCapsule: React.FC = () => {
     addSession,
     sessionName,
     setDeepFocusMode,
-    previousMode,
-    setPreviousMode
   } = useDesktopStore();
 
   const handleToggleTimer = () => {
@@ -51,112 +42,39 @@ export const FloatingTimerCapsule: React.FC = () => {
     const activeTask = todos.find(t => t.id === selectedTodoId);
     const title = activeTask?.text || sessionName || 'Focus Session';
 
-    if (timerMode === 'POMODORO') {
-      if (timerState === 'WORK') {
-        const durationWorked = Math.max(60, (pomodoroSettings.work * 60) - timeLeft);
-        const nextCount = (pomodoroCount || 0) + 1;
-        setPomodoroCount(nextCount);
-        
-        addSession({
-          id: crypto.randomUUID(),
-          date: new Date().toISOString(),
-          duration: durationWorked,
-          mode: 'POMODORO',
-          taskTitle: title
-        });
+    const durationWorked = Math.max(1, flowTimeElapsed);
+    const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
+    
+    addSession({
+      id: crypto.randomUUID(),
+      date: new Date().toISOString(),
+      duration: durationWorked,
+      mode: 'STOPWATCH',
+      taskTitle: title
+    });
 
-        if (activeTask) {
-          updateTodo(activeTask.id, {
-            completedPomodoros: (activeTask.completedPomodoros || 0) + 1,
-            completed: true,
-            completedAt: new Date().toISOString(),
-            groupId: 'finished'
-          });
-        }
-
-        const isLongBreak = nextCount % 4 === 0;
-        const breakDuration = isLongBreak
-          ? (pomodoroSettings.longBreak || 15) * 60
-          : (pomodoroSettings.break || 5) * 60;
-
-        electron.showNotification(
-          isLongBreak ? "4 Pomodoros Completed!" : "Session Complete!",
-          isLongBreak 
-            ? `Great job completing 4 pomodoro sessions! Time for a ${pomodoroSettings.longBreak || 15} minute long break.`
-            : `Great work finishing "${title}"! Time for a break.`
-        );
-        
-        setPreviousMode('POMODORO');
-        setTimerState('BREAK');
-        setTimeLeft(breakDuration);
-
-        if (pomodoroSettings.autoStartBreak) {
-          setIsActive(true);
-        }
-        setDeepFocusMode(false);
-      } else {
-        if (previousMode === 'STOPWATCH') {
-          electron.showNotification("Break Complete!", "Ready to jump back into Flow state?");
-          setTimerMode('STOPWATCH');
-          setTimerState('WORK');
-          setFlowTimeElapsed(0);
-          setTimeLeft(0);
-        } else {
-          electron.showNotification("Break Complete!", "Ready to start focusing again?");
-          setTimerMode('POMODORO');
-          setTimerState('WORK');
-          setTimeLeft(pomodoroSettings.work * 60);
-        }
-        if (pomodoroSettings.autoStartTimer) {
-          setIsActive(true);
-          setDeepFocusMode(true);
-        } else {
-          setDeepFocusMode(false);
-        }
-      }
-    } else {
-      const durationWorked = Math.max(1, flowTimeElapsed);
-      const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
-      
-      addSession({
-        id: crypto.randomUUID(),
-        date: new Date().toISOString(),
-        duration: durationWorked,
-        mode: 'STOPWATCH',
-        taskTitle: title
+    if (activeTask) {
+      updateTodo(activeTask.id, {
+        completed: true,
+        completedAt: new Date().toISOString(),
+        groupId: 'finished'
       });
-
-      if (activeTask) {
-        updateTodo(activeTask.id, {
-          completed: true,
-          completedAt: new Date().toISOString(),
-          groupId: 'finished'
-        });
-      }
-
-      const breakMins = Math.floor(calculatedBreakSeconds / 60);
-      const breakSecs = calculatedBreakSeconds % 60;
-      const breakStr = breakMins > 0 
-        ? `${breakMins}m${breakSecs > 0 ? ` ${breakSecs}s` : ''}` 
-        : `${breakSecs}s`;
-
-      electron.showNotification(
-        "Flow Session Complete!", 
-        `Focused for ${Math.floor(durationWorked / 60)}m. Earned ${breakStr} break!`
-      );
-      
-      setPreviousMode('STOPWATCH');
-      setTimerMode('POMODORO');
-      setTimerState('BREAK');
-      setTimeLeft(calculatedBreakSeconds);
-      setFlowTimeElapsed(0);
-
-      if (pomodoroSettings.autoStartBreak) {
-        setIsActive(true);
-      }
-      setDeepFocusMode(false);
     }
 
+    const breakMins = Math.floor(calculatedBreakSeconds / 60);
+    const breakSecs = calculatedBreakSeconds % 60;
+    const breakStr = breakMins > 0 
+      ? `${breakMins}m${breakSecs > 0 ? ` ${breakSecs}s` : ''}` 
+      : `${breakSecs}s`;
+
+    electron.showNotification(
+      "Flow Session Complete!", 
+      `Focused for ${Math.floor(durationWorked / 60)}m. Earned ${breakStr} break!`
+    );
+    
+    setFlowTimeElapsed(0);
+    setTimeLeft(0);
+    setDeepFocusMode(false);
     setIsExpanded(false);
   };
 
@@ -177,51 +95,12 @@ export const FloatingTimerCapsule: React.FC = () => {
 
   if (currentView === 'FOCUS') return null;
 
-  const activeSeconds = timerMode === 'POMODORO' ? timeLeft : flowTimeElapsed;
+  const activeSeconds = flowTimeElapsed;
   const m = Math.floor(activeSeconds / 60);
   const s = activeSeconds % 60;
   const timeString = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 
-  const timerLabel = timerMode === 'POMODORO' 
-    ? (timerState === 'WORK' 
-        ? `Pomodoro ${((pomodoroCount || 0) % 4) + 1}/4` 
-        : (previousMode === 'STOPWATCH'
-            ? 'Break'
-            : ((pomodoroCount || 0) % 4 === 0 && (pomodoroCount || 0) > 0 ? 'Long Break' : 'Break')))
-    : 'Flow';
-
   const activeTask = todos.find(t => t.id === selectedTodoId);
-
-  const activeTab = timerMode === 'STOPWATCH' 
-    ? 'FLOW' 
-    : (timerState === 'BREAK' ? 'BREAK' : 'POMODORO');
-
-  const renderModeIcon = () => {
-    if (activeTab === 'FLOW') return <Clock className="w-3.5 h-3.5" />;
-    if (activeTab === 'BREAK') return <Coffee className="w-3.5 h-3.5" />;
-    return <TimerIcon className="w-3.5 h-3.5" />;
-  };
-
-  const handleSelectTab = (tab: 'POMODORO' | 'BREAK' | 'FLOW') => {
-    setIsActive(false);
-    if (tab === 'POMODORO') {
-      setPreviousMode('POMODORO');
-      setTimerMode('POMODORO');
-      setTimerState('WORK');
-      setTimeLeft(pomodoroSettings.work * 60);
-    } else if (tab === 'BREAK') {
-      setPreviousMode(timerMode === 'STOPWATCH' ? 'STOPWATCH' : 'POMODORO');
-      setTimerMode('POMODORO');
-      setTimerState('BREAK');
-      setTimeLeft(pomodoroSettings.break * 60);
-    } else {
-      setPreviousMode('STOPWATCH');
-      setTimerMode('STOPWATCH');
-      setTimerState('WORK');
-      setFlowTimeElapsed(0);
-      setTimeLeft(0);
-    }
-  };
 
   return (
     <div ref={containerRef} className="fixed top-1 left-1/2 -translate-x-1/2 z-50 select-none no-drag flex flex-col items-center">
@@ -230,7 +109,7 @@ export const FloatingTimerCapsule: React.FC = () => {
           onClick={() => setIsExpanded(!isExpanded)}
           className="bg-card border border-emerald-500/80 rounded-full px-3.5 py-1 flex items-center gap-2.5 shadow-md hover:bg-secondary hover:border-emerald-400 transition-all active:scale-98 text-xs group"
         >
-          <span className="text-xs flex items-center text-foreground">{renderModeIcon()}</span>
+          <span className="text-xs flex items-center text-foreground"><Clock className="w-3.5 h-3.5" /></span>
           <span className="text-[11px] font-mono font-bold text-foreground tracking-wider">
             {timeString}
           </span>
@@ -249,8 +128,8 @@ export const FloatingTimerCapsule: React.FC = () => {
           className="bg-card border border-border rounded-full px-3 py-1 flex items-center justify-between gap-3 shadow-md hover:bg-secondary hover:border-muted-foreground transition-all active:scale-98 text-xs"
         >
           <div className="flex items-center gap-1.5 min-w-0 text-left">
-            <span className="text-xs flex items-center">{renderModeIcon()}</span>
-            <span className="text-[11px] font-semibold text-foreground tracking-tight">{timerLabel}</span>
+            <span className="text-xs flex items-center text-foreground"><Clock className="w-3.5 h-3.5" /></span>
+            <span className="text-[11px] font-semibold text-foreground tracking-tight">Flow</span>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
@@ -279,50 +158,12 @@ export const FloatingTimerCapsule: React.FC = () => {
             title="Click to collapse widget"
           >
             <div className="flex items-center gap-2">
-              <span className="text-base flex items-center text-foreground">{renderModeIcon()}</span>
-              <span className="text-xs font-bold text-foreground tracking-tight">{timerLabel}</span>
+              <span className="text-base flex items-center text-foreground"><Clock className="w-3.5 h-3.5" /></span>
+              <span className="text-xs font-bold text-foreground tracking-tight">Flow</span>
             </div>
             <span className="text-xl font-extrabold font-mono text-foreground tracking-tight">
               {timeString}
             </span>
-          </div>
-
-          <div className="grid grid-cols-3 gap-2 w-full">
-            <button
-              onClick={() => handleSelectTab('POMODORO')}
-              className={`py-1.5 px-2 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                activeTab === 'POMODORO'
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'bg-secondary text-muted-foreground border border-border hover:text-foreground'
-              }`}
-            >
-              <TimerIcon className="w-3 h-3" />
-              <span>Pomodoro</span>
-            </button>
-
-            <button
-              onClick={() => handleSelectTab('BREAK')}
-              className={`py-1.5 px-2 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                activeTab === 'BREAK'
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'bg-secondary text-muted-foreground border border-border hover:text-foreground'
-              }`}
-            >
-              <Coffee className="w-3 h-3" />
-              <span>Break</span>
-            </button>
-
-            <button
-              onClick={() => handleSelectTab('FLOW')}
-              className={`py-1.5 px-2 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                activeTab === 'FLOW'
-                  ? 'bg-primary text-primary-foreground shadow-sm'
-                  : 'bg-secondary text-muted-foreground border border-border hover:text-foreground'
-              }`}
-            >
-              <Clock className="w-3 h-3" />
-              <span>Flow</span>
-            </button>
           </div>
 
           <div className="border-t border-border pt-0.5" />
