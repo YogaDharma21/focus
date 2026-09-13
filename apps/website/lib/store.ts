@@ -56,6 +56,8 @@ interface AppState {
 
     deepFocusMode: boolean;
     setDeepFocusMode: (mode: boolean) => void;
+    theme: "light" | "dark";
+    setTheme: (theme: "light" | "dark") => void;
 
     addSession: (session: Session) => void;
     addDistraction: (category: string) => void;
