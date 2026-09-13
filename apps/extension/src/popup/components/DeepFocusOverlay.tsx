@@ -230,14 +230,14 @@ export function DeepFocusOverlay({
 
           {/* Complete Session */}
           <button
-            disabled={!state.isActive}
+            disabled={state.timerState === "BREAK" ? false : !state.isActive}
             onClick={handleComplete}
             className={`w-11 h-11 rounded-xl border-2 flex items-center justify-center transition-all ${
-              state.isActive
-                ? "border-border text-muted-foreground hover:text-emerald-400 hover:border-emerald-500/50 hover:bg-emerald-500/10"
+              (state.isActive || state.timerState === "BREAK")
+                ? "border-border text-muted-foreground hover:text-emerald-400 hover:border-emerald-500/50 hover:bg-emerald-500/10 cursor-pointer"
                 : "border-border text-muted-foreground opacity-50 cursor-not-allowed"
             }`}
-            title={state.isActive ? "Complete Session" : "Start timer first"}
+            title={state.timerState === "BREAK" ? "Finish Break & Return to Flow" : (state.isActive ? "Complete Session" : "Start timer first")}
           >
             <CheckCircle2 className="w-5 h-5" />
           </button>

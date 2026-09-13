@@ -48,6 +48,12 @@ export const DEFAULT_STATE: AppStateData = {
     }
   },
   deepFocusMode: false,
+  timerSettings: {
+    breakDuration: 5,
+    useSmartBreak: false,
+    autoStartBreak: false,
+    autoStartTimer: false
+  },
   soundEnabled: true,
   musicEnabled: true,
   isMusicPlaying: false,
@@ -188,6 +194,21 @@ export function getCachedState(): AppStateData | null {
 function migrateState(fresh: AppStateData): AppStateData {
   if (fresh.shield && !('allowedSites' in fresh.shield)) {
     fresh.shield = Object.assign({}, fresh.shield, { allowedSites: [] });
+  }
+  if (!fresh.timerSettings) {
+    fresh.timerSettings = {
+      breakDuration: 5,
+      useSmartBreak: false,
+      autoStartBreak: false,
+      autoStartTimer: false
+    };
+  } else {
+    fresh.timerSettings = {
+      breakDuration: fresh.timerSettings.breakDuration ?? 5,
+      useSmartBreak: fresh.timerSettings.useSmartBreak ?? false,
+      autoStartBreak: fresh.timerSettings.autoStartBreak ?? false,
+      autoStartTimer: fresh.timerSettings.autoStartTimer ?? false
+    };
   }
   return fresh;
 }
