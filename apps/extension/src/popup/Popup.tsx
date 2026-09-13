@@ -682,23 +682,22 @@ export function Popup() {
         <div className={`absolute top-14 left-3 right-3 z-40 p-3.5 rounded-2xl border shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${
           "bg-card border-border text-foreground shadow-background/80"
         }`}>
-          {/* Top Row: Time + Live Indicator */}
-          <div className="flex items-center gap-2 mb-2">
-            <span className="flex items-center">
-              {state.timerState === "BREAK" ? <Coffee className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
-            </span>
-            <span className="text-2xl font-black font-mono tracking-tight tabular-nums">
-              {timeFormatted}
-            </span>
-            {state.isActive && <span className="w-2 h-2 rounded-full bg-foreground animate-pulse" />}
-          </div>
+          {/* Top Row: Time + Task Selector */}
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="flex items-center">
+                {state.timerState === "BREAK" ? <Coffee className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
+              </span>
+              <span className="text-2xl font-black font-mono tracking-tight tabular-nums">
+                {timeFormatted}
+              </span>
+              {state.isActive && <span className="w-2 h-2 rounded-full bg-foreground animate-pulse" />}
+            </div>
 
-          {/* Task Selector Row */}
-          <div className="flex items-center mb-3 px-0.5">
             <button
               type="button"
               onClick={() => setShowFloatingTaskDropdown(!showFloatingTaskDropdown)}
-              className="px-2.5 py-1 rounded-lg text-xs font-bold font-sans border bg-secondary border-border text-secondary-foreground hover:bg-accent transition-colors flex items-center gap-1.5 max-w-full truncate cursor-pointer"
+              className="px-2.5 py-1 rounded-lg text-xs font-bold font-sans border bg-secondary border-border text-secondary-foreground hover:bg-accent transition-colors flex items-center gap-1.5 max-w-[220px] truncate cursor-pointer"
               title="Select or switch focus task"
             >
               {selectedTask ? (
@@ -714,7 +713,7 @@ export function Popup() {
               ) : (
                 <>
                   <ListTodo className="w-3.5 h-3.5 shrink-0 opacity-70" />
-                  <span className="opacity-80">Select task</span>
+                  <span className="opacity-80 truncate">Select task</span>
                   <ChevronDown className={`w-3 h-3 shrink-0 ${showFloatingTaskDropdown ? "rotate-180" : ""} transition-transform opacity-70`} />
                 </>
               )}
