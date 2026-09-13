@@ -185,6 +185,7 @@ export function Popup() {
   };
 
   const playSoundEffect = (overrideVolume?: number) => {
+    if (!soundEnabled || !soundEffectEnabled) return;
     const vol = typeof overrideVolume === "number" ? overrideVolume : soundEffectVolume;
     if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
       chrome.runtime.sendMessage({ target: "background", action: "PLAY_SOUND_EFFECT", volume: vol });
@@ -198,9 +199,10 @@ export function Popup() {
   };
 
   const playTestSoundEffect = (overrideVolume?: number) => {
+    if (!soundEnabled || !soundEffectEnabled) return;
     const vol = typeof overrideVolume === "number" ? overrideVolume : soundEffectVolume;
     if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
-      chrome.runtime.sendMessage({ target: "background", action: "PLAY_SOUND_EFFECT", volume: vol, force: true });
+      chrome.runtime.sendMessage({ target: "background", action: "PLAY_SOUND_EFFECT", volume: vol });
     } else {
       try {
         const audio = new Audio("/soundeffect.mp3");
@@ -301,6 +303,21 @@ export function Popup() {
   };
 
   const completeSession = () => {
+    // If in BREAK mode, finishing session concludes the break immediately and returns to Flow
+    if (state.timerState === "BREAK") {
+      playSoundEffect();
+      updateState({
+        isActive: false,
+        isMusicPlaying: false,
+        deepFocusMode: false,
+        timerMode: "FLOW",
+        timerState: "FLOW",
+        previousMode: "FLOW",
+        timeLeft: 0,
+      });
+      return;
+    }
+
     playSoundEffect();
 
     if (state.isActive && typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
@@ -324,10 +341,18 @@ export function Popup() {
     const streaks = calculateStreaksFromSessions(newSessionList);
 
     const completedTasksCount = state.todos.filter(t => t.completed).length;
-    const breakDuration = Math.max(1, Math.floor(state.timeLeft / 5));
+
+    let breakDuration: number;
+    if (state.timerSettings?.useSmartBreak) {
+      breakDuration = Math.max(1, Math.floor(state.timeLeft / 5));
+    } else {
+      breakDuration = (state.timerSettings?.breakDuration ?? 5) * 60;
+    }
+
+    const autoStartBreak = Boolean(state.timerSettings?.autoStartBreak);
 
     updateState({
-      isActive: false,
+      isActive: autoStartBreak,
       isMusicPlaying: false,
       deepFocusMode: false,
       timerMode: "FLOW",
@@ -695,21 +720,21 @@ export function Popup() {
           <div className="flex items-center gap-2">
             {/* Complete Session Button */}
             <button
-              disabled={!state.isActive}
+              disabled={state.timerState === "BREAK" ? false : !state.isActive}
               onClick={() => {
-                if (!state.isActive) return;
+                if (state.timerState !== "BREAK" && !state.isActive) return;
                 completeSession();
                 setShowFloatingTimerCard(false);
               }}
               className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
-                !state.isActive
+                state.timerState !== "BREAK" && !state.isActive
                   ? "bg-card border-border text-muted-foreground cursor-not-allowed opacity-50"
-                  : "bg-secondary border-border hover:bg-accent text-foreground"
+                  : "bg-secondary border-border hover:bg-accent text-foreground cursor-pointer"
               }`}
-              title={state.isActive ? "Complete Session" : "Start timer to complete session"}
+              title={state.timerState === "BREAK" ? "Finish Break & Return to Flow" : (state.isActive ? "Complete Session" : "Start timer to complete session")}
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
-              <span>Complete</span>
+              <span>{state.timerState === "BREAK" ? "Finish Break" : "Complete"}</span>
             </button>
 
             {/* Log Distraction Button */}
@@ -768,21 +793,21 @@ export function Popup() {
              </button>
              <div className="flex items-center gap-1.5 shrink-0">
               <button
-                disabled={!state.isActive}
+                disabled={state.timerState === "BREAK" ? false : !state.isActive}
                 onClick={() => {
-                  if (!state.isActive) return;
+                  if (state.timerState !== "BREAK" && !state.isActive) return;
                   completeSession();
                   setShowFloatingTimerCard(false);
                 }}
                 className={`py-1 px-2.5 rounded-lg border text-[10px] font-bold flex items-center justify-center gap-1 transition-all ${
-                  !state.isActive
+                  state.timerState !== "BREAK" && !state.isActive
                     ? "bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed opacity-50"
-                    : "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-white"
+                    : "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-white cursor-pointer"
                 }`}
-                title={state.isActive ? "Complete Session" : "Start timer to complete session"}
+                title={state.timerState === "BREAK" ? "Finish Break & Return to Flow" : (state.isActive ? "Complete Session" : "Start timer to complete session")}
               >
                 <CheckCircle2 className="w-3 h-3" />
-                <span>Complete</span>
+                <span>{state.timerState === "BREAK" ? "Finish Break" : "Complete"}</span>
               </button>
               <button
                 disabled={!state.isActive}
@@ -1661,17 +1686,17 @@ export function Popup() {
 
               {/* Complete Session Button */}
               <button
-                disabled={!state.isActive}
+                disabled={state.timerState === "BREAK" ? false : !state.isActive}
                 onClick={() => {
-                  if (!state.isActive) return;
+                  if (state.timerState !== "BREAK" && !state.isActive) return;
                   completeSession();
                 }}
                 className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
-                  !state.isActive
+                  state.timerState !== "BREAK" && !state.isActive
                     ? "bg-card border-border text-muted-foreground cursor-not-allowed opacity-50"
-                    : "bg-card border-border hover:bg-secondary text-foreground"
+                    : "bg-card border-border hover:bg-secondary text-foreground cursor-pointer"
                 }`}
-                title={state.isActive ? "Complete Session" : "Start timer to complete session"}
+                title={state.timerState === "BREAK" ? "Finish Break & Return to Flow" : (state.isActive ? "Complete Session" : "Start timer to complete session")}
               >
                 <CheckCircle className="w-4 h-4" />
               </button>
@@ -2180,6 +2205,127 @@ export function Popup() {
         {/* SETTINGS TAB */}
         {activeTab === "settings" && (
           <div className="flex flex-col gap-3 h-full overflow-y-auto stable-scrollbar">
+            {/* Timer Settings */}
+            <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
+              "bg-card border-border"
+            }`}>
+              <span className="text-xs font-bold text-foreground uppercase tracking-wider">Timer Settings</span>
+
+              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
+                "bg-card/60 border-border"
+              }`}>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-foreground">Break Duration</span>
+                  <span className="text-[10px] text-muted-foreground">Default break length in minutes</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <input
+                    type="number"
+                    min={1}
+                    max={60}
+                    value={state.timerSettings?.breakDuration ?? 5}
+                    onChange={(e) => {
+                      const val = parseInt(e.target.value) || 5;
+                      updateState({
+                        timerSettings: {
+                          breakDuration: Math.max(1, Math.min(60, val)),
+                          useSmartBreak: state.timerSettings?.useSmartBreak ?? false,
+                          autoStartBreak: state.timerSettings?.autoStartBreak ?? false,
+                          autoStartTimer: state.timerSettings?.autoStartTimer ?? false,
+                        }
+                      });
+                    }}
+                    className="w-14 px-2 py-1.5 rounded-lg border text-xs font-mono text-center focus:outline-none bg-secondary border-border text-foreground [color-scheme:dark]"
+                  />
+                  <span className="text-[10px] font-mono text-muted-foreground">min</span>
+                </div>
+              </div>
+
+              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
+                "bg-card/60 border-border"
+              }`}>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-foreground">Smart Break</span>
+                  <span className="text-[10px] text-muted-foreground">Auto-calculate break as 1/5th of focus time</span>
+                </div>
+                <div
+                  onClick={() => updateState({
+                    timerSettings: {
+                      breakDuration: state.timerSettings?.breakDuration ?? 5,
+                      useSmartBreak: !(state.timerSettings?.useSmartBreak ?? false),
+                      autoStartBreak: state.timerSettings?.autoStartBreak ?? false,
+                      autoStartTimer: state.timerSettings?.autoStartTimer ?? false,
+                    }
+                  })}
+                  className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
+                    state.timerSettings?.useSmartBreak ? "bg-primary" : "bg-secondary"
+                  }`}
+                >
+                  <div
+                    className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
+                      state.timerSettings?.useSmartBreak ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
+                "bg-card/60 border-border"
+              }`}>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-foreground">Auto-start Break</span>
+                  <span className="text-[10px] text-muted-foreground">Start break countdown automatically</span>
+                </div>
+                <div
+                  onClick={() => updateState({
+                    timerSettings: {
+                      breakDuration: state.timerSettings?.breakDuration ?? 5,
+                      useSmartBreak: state.timerSettings?.useSmartBreak ?? false,
+                      autoStartBreak: !(state.timerSettings?.autoStartBreak ?? false),
+                      autoStartTimer: state.timerSettings?.autoStartTimer ?? false,
+                    }
+                  })}
+                  className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
+                    state.timerSettings?.autoStartBreak ? "bg-primary" : "bg-secondary"
+                  }`}
+                >
+                  <div
+                    className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
+                      state.timerSettings?.autoStartBreak ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
+                "bg-card/60 border-border"
+              }`}>
+                <div className="flex flex-col">
+                  <span className="text-xs font-bold text-foreground">Auto-start Flow Timer</span>
+                  <span className="text-[10px] text-muted-foreground">Start next flow session when break ends</span>
+                </div>
+                <div
+                  onClick={() => updateState({
+                    timerSettings: {
+                      breakDuration: state.timerSettings?.breakDuration ?? 5,
+                      useSmartBreak: state.timerSettings?.useSmartBreak ?? false,
+                      autoStartBreak: state.timerSettings?.autoStartBreak ?? false,
+                      autoStartTimer: !(state.timerSettings?.autoStartTimer ?? false),
+                    }
+                  })}
+                  className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
+                    state.timerSettings?.autoStartTimer ? "bg-primary" : "bg-secondary"
+                  }`}
+                >
+                  <div
+                    className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
+                      state.timerSettings?.autoStartTimer ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
+                    }`}
+                  />
+                </div>
+              </div>
+            </div>
+
             {/* Appearance Section */}
             <div className={`p-4 rounded-xl border flex flex-col gap-3 ${
               "bg-card border-border"
@@ -2360,11 +2506,11 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
 
                 <button
                   onClick={() => playTestSoundEffect()}
-                  disabled={!soundEnabled}
+                  disabled={!soundEnabled || !soundEffectEnabled}
                   className={`w-full py-2.5 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-2 ${
-                    soundEnabled
-                      ? "border-border bg-secondary text-white hover:bg-secondary"
-                      : "border-border/50 bg-card/30 text-muted-foreground cursor-not-allowed"
+                    soundEnabled && soundEffectEnabled
+                      ? "border-border bg-secondary text-foreground hover:bg-accent cursor-pointer"
+                      : "border-border/50 bg-card/30 text-muted-foreground cursor-not-allowed opacity-50"
                   }`}
                 >
                   <Volume1 className="w-4 h-4" />
