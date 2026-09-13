@@ -649,22 +649,25 @@ export function Popup() {
 
       {/* Floating Timer Card Overlay */}
       {activeTab !== "timer" && showFloatingTimerCard && (
-        <div className={`absolute top-14 left-3 right-3 z-50 p-3 rounded-2xl border shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${
+        <div className={`absolute top-14 left-3 right-3 z-50 p-2.5 rounded-2xl border shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${
           "bg-neutral-900 border-neutral-800 text-white shadow-black/80"
         }`}>
-          {/* Top Row: Time + Start/Pause */}
-          <div className="flex items-center justify-between mb-2">
+          {/* Single Row: Time + Live Indicator + Start/Pause */}
+          <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <span className="flex items-center">
                 {state.timerState === "BREAK" ? <Coffee className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
               </span>
-              <span className="text-2xl font-black font-mono tracking-tight">
+              <span className="text-2xl font-black font-mono tracking-tight tabular-nums">
                 {timeFormatted}
               </span>
+              {state.isActive && (
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              )}
             </div>
             <button
               onClick={toggleTimer}
-              className={`py-1.5 px-4 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all shadow ${
+              className={`py-1.5 px-4 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all shadow shrink-0 ${
                 "bg-white text-black border-white hover:bg-neutral-200"
               }`}
             >
@@ -682,46 +685,48 @@ export function Popup() {
             </button>
           </div>
 
-          {/* Bottom Row: Task + Action Buttons */}
-          <div className="flex items-center gap-2">
+          {/* Second Row: Task + Actions */}
+          <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-neutral-800">
             {(selectedTask || state.sessionName) && (
-              <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold font-sans border bg-neutral-800/80 border-neutral-700 text-neutral-300 truncate max-w-[120px]">
+              <span className="px-2 py-0.5 rounded-lg text-[10px] font-bold font-sans border bg-neutral-800/80 border-neutral-700 text-neutral-300 truncate max-w-[140px]">
                 {selectedTask ? selectedTask.text : state.sessionName}
               </span>
             )}
-            <button
-              disabled={!state.isActive}
-              onClick={() => {
-                if (!state.isActive) return;
-                completeSession();
-                setShowFloatingTimerCard(false);
-              }}
-              className={`py-1 px-2.5 rounded-lg border text-[10px] font-bold flex items-center justify-center gap-1 transition-all ${
-                !state.isActive
-                  ? "bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed opacity-50"
-                  : "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-white"
-              }`}
-              title={state.isActive ? "Complete Session" : "Start timer to complete session"}
-            >
-              <CheckCircle2 className="w-3 h-3" />
-              <span>Complete</span>
-            </button>
-            <button
-              disabled={!state.isActive}
-              onClick={() => {
-                if (!state.isActive) return;
-                setShowFloatingTimerCard(false);
-                setShowDistractionPicker(true);
-              }}
-              className={`p-1.5 rounded-lg border transition-all ${
-                !state.isActive
-                  ? "bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed opacity-50"
-                  : "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-neutral-300"
-              }`}
-              title={state.isActive ? "Log Distraction" : "Start timer to log distraction"}
-            >
-              <AlertTriangle className="w-3 h-3" />
-            </button>
+            <div className="flex items-center gap-1.5 shrink-0">
+              <button
+                disabled={!state.isActive}
+                onClick={() => {
+                  if (!state.isActive) return;
+                  completeSession();
+                  setShowFloatingTimerCard(false);
+                }}
+                className={`py-1 px-2.5 rounded-lg border text-[10px] font-bold flex items-center justify-center gap-1 transition-all ${
+                  !state.isActive
+                    ? "bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed opacity-50"
+                    : "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-white"
+                }`}
+                title={state.isActive ? "Complete Session" : "Start timer to complete session"}
+              >
+                <CheckCircle2 className="w-3 h-3" />
+                <span>Complete</span>
+              </button>
+              <button
+                disabled={!state.isActive}
+                onClick={() => {
+                  if (!state.isActive) return;
+                  setShowFloatingTimerCard(false);
+                  setShowDistractionPicker(true);
+                }}
+                className={`p-1.5 rounded-lg border transition-all ${
+                  !state.isActive
+                    ? "bg-neutral-900 border-neutral-800 text-neutral-600 cursor-not-allowed opacity-50"
+                    : "bg-neutral-800 border-neutral-700 hover:bg-neutral-700 text-neutral-300"
+                }`}
+                title={state.isActive ? "Log Distraction" : "Start timer to log distraction"}
+              >
+                <AlertTriangle className="w-3 h-3" />
+              </button>
+            </div>
           </div>
         </div>
       )}
