@@ -42,7 +42,7 @@ export function InfoModal({ visible, onClose }: InfoModalProps) {
             </Text>
 
             <Text style={[styles.desc, { color: colors.textMuted }]}>
-              Focus is a clean, distraction-free productivity app designed to keep you in the flow with focus timers, task management, analytics, and mood reflections.
+              Focus is a clean, distraction-free productivity app designed to keep you in the flow with focus timers, task management, and analytics.
             </Text>
 
             <TouchableOpacity
