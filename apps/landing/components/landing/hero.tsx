@@ -5,7 +5,7 @@ import { WebTimerPreview } from "./app-previews"
 
 export function Hero() {
   return (
-    <section className="relative pt-28 pb-16 md:pt-36 md:pb-24">
+    <section className="relative pt-28 pb-16 md:pt-36 md:pb-24 bg-gradient-to-b from-background via-background to-muted/30">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
 
         {/* Hero Title */}
@@ -32,10 +32,10 @@ export function Hero() {
             <ExternalLink className="size-4" />
           </a>
           <a
-            href="#ecosystem"
+            href="#features"
             className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-medium text-sm border border-border transition-colors"
           >
-            Explore All 4 Apps
+            Explore Features
             <ArrowRight className="size-4" />
           </a>
         </div>
@@ -61,7 +61,7 @@ export function Hero() {
         </div>
 
         {/* App Preview Component */}
-        <div className="mt-12 max-w-2xl mx-auto">
+        <div className="mt-12 max-w-2xl mx-auto shadow-2xl shadow-black/40 rounded-xl">
           <WebTimerPreview />
         </div>
       </div>

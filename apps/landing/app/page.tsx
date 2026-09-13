@@ -1,8 +1,6 @@
 import { Header } from "@/components/landing/header"
 import { Hero } from "@/components/landing/hero"
-import { PlatformShowcase } from "@/components/landing/platform-showcase"
-import { InteractiveTimer } from "@/components/landing/interactive-timer"
-import { FeaturesGrid } from "@/components/landing/features-grid"
+import { FeaturesSection } from "@/components/landing/features-section"
 import { DownloadSection } from "@/components/landing/download-section"
 import { FAQSection } from "@/components/landing/faq-section"
 import { Footer } from "@/components/landing/footer"
@@ -13,9 +11,7 @@ export default function Home() {
       <Header />
       <main>
         <Hero />
-        <PlatformShowcase />
-        <InteractiveTimer />
-        <FeaturesGrid />
+        <FeaturesSection />
         <DownloadSection />
         <FAQSection />
       </main>
