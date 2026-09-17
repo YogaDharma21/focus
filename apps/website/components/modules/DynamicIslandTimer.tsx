@@ -23,6 +23,7 @@ export function DynamicIslandTimer() {
         setSelectedTodoId,
         soundEffectVolume,
         soundEffectEnabled,
+        soundEnabled,
     } = useAppStore(
         useShallow((s) => ({
             timeLeft: s.timeLeft,
@@ -39,6 +40,7 @@ export function DynamicIslandTimer() {
             setSelectedTodoId: s.setSelectedTodoId,
             soundEffectVolume: s.soundEffectVolume,
             soundEffectEnabled: s.soundEffectEnabled,
+            soundEnabled: s.soundEnabled ?? true,
         }))
     );
     const [isExpanded, setIsExpanded] = useState(false);
@@ -61,7 +63,7 @@ export function DynamicIslandTimer() {
     }, [isExpanded]);
 
     const playSound = React.useCallback(() => {
-        if (!soundEffectEnabled) return;
+        if (!soundEnabled || !soundEffectEnabled) return;
         const vol = (soundEffectVolume ?? 80) / 100;
         try {
             if (audioRef.current) {
@@ -80,7 +82,7 @@ export function DynamicIslandTimer() {
         } catch {
             // ignore
         }
-    }, [soundEffectEnabled, soundEffectVolume]);
+    }, [soundEnabled, soundEffectEnabled, soundEffectVolume]);
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
