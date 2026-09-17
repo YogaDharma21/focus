@@ -7,6 +7,8 @@ import { Settings, Volume1, Github, ExternalLink } from "lucide-react";
 import { useTheme } from "next-themes";
 
 export function SettingsPage() {
+    const soundEnabled = useAppStore((s) => s.soundEnabled ?? true);
+    const setSoundEnabled = useAppStore((s) => s.setSoundEnabled);
     const musicEnabled = useAppStore((s) => s.musicEnabled ?? true);
     const setMusicEnabled = useAppStore((s) => s.setMusicEnabled);
     const musicVolume = useAppStore((s) => s.musicVolume ?? 60);
@@ -19,6 +21,7 @@ export function SettingsPage() {
     const { theme, setTheme } = useTheme();
 
     const playTestSoundEffect = () => {
+        if (!soundEnabled || !soundEffectEnabled) return;
         try {
             const audio = new Audio("/soundeffect.mp3");
             audio.volume = (soundEffectVolume ?? 80) / 100;
@@ -63,8 +66,20 @@ export function SettingsPage() {
             <div className="p-4 rounded-xl border flex flex-col gap-3 bg-background/40 border-border">
                 <span className="text-xs font-bold text-foreground uppercase tracking-wider">Sound</span>
 
+                {/* Master Sound Toggle */}
+                <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-card/60 border-border">
+                    <div className="flex flex-col">
+                        <span className="text-xs font-bold text-foreground">Sound</span>
+                        <span className="text-[10px] text-muted-foreground">Enable or disable all sound</span>
+                    </div>
+                    <Switch
+                        checked={soundEnabled}
+                        onCheckedChange={setSoundEnabled}
+                    />
+                </div>
+
                 {/* Music Subsection */}
-                <div className="flex flex-col gap-2">
+                <div className={cn("flex flex-col gap-2 transition-opacity", !soundEnabled && "opacity-50")}>
                     <span className="px-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Music</span>
 
                     <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-card/60 border-border">
@@ -73,12 +88,13 @@ export function SettingsPage() {
                             <span className="text-[10px] text-muted-foreground">Enable or disable background music</span>
                         </div>
                         <Switch
-                            checked={musicEnabled}
+                            disabled={!soundEnabled}
+                            checked={soundEnabled && musicEnabled}
                             onCheckedChange={setMusicEnabled}
                         />
                     </div>
 
-                    {musicEnabled && (
+                    {soundEnabled && musicEnabled && (
                         <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-card/60 border-border">
                             <div className="flex flex-col w-full gap-2">
                                 <div className="flex items-center justify-between">
@@ -100,7 +116,7 @@ export function SettingsPage() {
                 </div>
 
                 {/* Sound Effects Subsection */}
-                <div className="flex flex-col gap-2 pt-1 border-t border-border/80">
+                <div className={cn("flex flex-col gap-2 pt-1 border-t border-border/80 transition-opacity", !soundEnabled && "opacity-50")}>
                     <span className="px-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Sound Effects</span>
 
                     <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-card/60 border-border">
@@ -109,12 +125,13 @@ export function SettingsPage() {
                             <span className="text-[10px] text-muted-foreground">Enable or disable timer sound effects</span>
                         </div>
                         <Switch
-                            checked={soundEffectEnabled}
+                            disabled={!soundEnabled}
+                            checked={soundEnabled && soundEffectEnabled}
                             onCheckedChange={setSoundEffectEnabled}
                         />
                     </div>
 
-                    {soundEffectEnabled && (
+                    {soundEnabled && soundEffectEnabled && (
                         <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-card/60 border-border">
                             <div className="flex flex-col w-full gap-2">
                                 <div className="flex items-center justify-between">
@@ -136,10 +153,10 @@ export function SettingsPage() {
 
                     <button
                         onClick={playTestSoundEffect}
-                        disabled={!soundEffectEnabled}
+                        disabled={!soundEnabled || !soundEffectEnabled}
                         className={cn(
                             "w-full py-2.5 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-2",
-                            soundEffectEnabled
+                            soundEnabled && soundEffectEnabled
                                 ? "border-border bg-secondary text-foreground hover:bg-accent cursor-pointer"
                                 : "border-border/50 bg-card/30 text-muted-foreground cursor-not-allowed opacity-50"
                         )}

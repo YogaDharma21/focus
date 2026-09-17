@@ -36,6 +36,7 @@ export function FocusTimer() {
         resetAllData,
         soundEffectVolume,
         soundEffectEnabled,
+        soundEnabled,
     } = useAppStore(
         useShallow((s) => ({
             timeLeft: s.timeLeft,
@@ -59,6 +60,7 @@ export function FocusTimer() {
             resetAllData: s.resetAllData,
             soundEffectVolume: s.soundEffectVolume,
             soundEffectEnabled: s.soundEffectEnabled,
+            soundEnabled: s.soundEnabled ?? true,
         }))
     );
 
@@ -84,7 +86,7 @@ export function FocusTimer() {
     const sessionStartTimeRef = useRef<number | null>(null);
 
     const playSound = React.useCallback(() => {
-        if (!soundEffectEnabled) return;
+        if (!soundEnabled || !soundEffectEnabled) return;
         const vol = (soundEffectVolume ?? 80) / 100;
         try {
             if (audioRef.current) {
@@ -103,7 +105,7 @@ export function FocusTimer() {
         } catch {
             // Audio play might be blocked by browser policies
         }
-    }, [soundEffectEnabled, soundEffectVolume]);
+    }, [soundEnabled, soundEffectEnabled, soundEffectVolume]);
 
     useEffect(() => {
         const unlockAudio = () => {

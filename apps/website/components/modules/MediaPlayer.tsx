@@ -23,6 +23,7 @@ export function MediaPlayer() {
         setIsMusicPlaying,
         musicVolume,
         setMusicVolume,
+        soundEnabled,
         musicEnabled,
         isMusicMuted,
         setIsMusicMuted,
@@ -35,6 +36,7 @@ export function MediaPlayer() {
             setIsMusicPlaying: s.setIsMusicPlaying,
             musicVolume: s.musicVolume,
             setMusicVolume: s.setMusicVolume,
+            soundEnabled: s.soundEnabled ?? true,
             musicEnabled: s.musicEnabled ?? true,
             isMusicMuted: s.isMusicMuted,
             setIsMusicMuted: s.setIsMusicMuted,
@@ -84,9 +86,9 @@ export function MediaPlayer() {
     }, [mediaPlayerOpen, setMediaPlayerOpen]);
 
     const togglePlay = useCallback(() => {
-        if (!musicEnabled) return;
+        if (!soundEnabled || !musicEnabled) return;
         setIsMusicPlaying(!isMusicPlaying);
-    }, [isMusicPlaying, setIsMusicPlaying, musicEnabled]);
+    }, [isMusicPlaying, setIsMusicPlaying, soundEnabled, musicEnabled]);
 
     const toggleMute = () => {
         setIsMusicMuted(!isMusicMuted);
@@ -169,7 +171,11 @@ export function MediaPlayer() {
                                     Lofi-Beats
                                 </h4>
                                 <p className="text-xs text-muted-foreground truncate">
-                                    {!musicEnabled ? "Music disabled in Settings" : "Lofi-Beats"}
+                                    {!soundEnabled
+                                        ? "Sound disabled in Settings"
+                                        : !musicEnabled
+                                          ? "Music disabled in Settings"
+                                          : "Lofi-Beats"}
                                 </p>
                             </div>
                         </div>
@@ -177,14 +183,14 @@ export function MediaPlayer() {
                         {/* Large Circular Play/Pause Button */}
                         <button
                             onClick={togglePlay}
-                            disabled={!musicEnabled}
+                            disabled={!soundEnabled || !musicEnabled}
                             className={cn(
                                 "w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg transition-all duration-200",
-                                !musicEnabled
+                                !soundEnabled || !musicEnabled
                                     ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
                                     : "bg-primary hover:bg-primary/90 text-primary-foreground active:scale-95 cursor-pointer"
                             )}
-                            title={!musicEnabled ? "Music is disabled in Settings" : isMusicPlaying ? "Pause music" : "Play music"}
+                            title={!soundEnabled ? "Sound is disabled in Settings" : !musicEnabled ? "Music is disabled in Settings" : isMusicPlaying ? "Pause music" : "Play music"}
                             aria-label={isMusicPlaying ? "Pause music" : "Play music"}
                         >
                             {isMusicPlaying ? (
