@@ -5,7 +5,6 @@ import { useShallow } from "zustand/react/shallow";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, RotateCcw, CheckCircle2, Focus, ChevronDown, ListTodo, FileText, Check, Square, CheckSquare2 } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
 import {
     Popover,
     PopoverContent,
@@ -232,8 +231,6 @@ export function FocusTimer() {
         return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
     };
 
-    const progressValue = 100;
-
     return (
         <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center min-h-[50vh] relative">
             <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
@@ -417,10 +414,6 @@ export function FocusTimer() {
                         </p>
                     </div>
                 )}
-
-                <div className="w-full max-w-xs">
-                    <Progress value={progressValue} className="h-1.5" />
-                </div>
             </div>
 
             <div className="grid grid-cols-3 items-center w-full max-w-[280px] sm:max-w-xs">
