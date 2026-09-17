@@ -16,6 +16,8 @@ interface AppState {
     setIsMusicPlaying: (playing: boolean) => void;
     musicVolume: number;
     setMusicVolume: (volume: number) => void;
+    musicEnabled: boolean;
+    setMusicEnabled: (enabled: boolean) => void;
     isMusicMuted: boolean;
     setIsMusicMuted: (muted: boolean) => void;
     soundEffectVolume: number;
@@ -125,6 +127,8 @@ export const useAppStore = create<AppState>()(
             setIsMusicPlaying: (playing) => set({ isMusicPlaying: playing }),
             musicVolume: 60,
             setMusicVolume: (volume) => set({ musicVolume: volume }),
+            musicEnabled: true,
+            setMusicEnabled: (enabled) => set({ musicEnabled: enabled, ...(enabled ? {} : { isMusicPlaying: false }) }),
             isMusicMuted: false,
             setIsMusicMuted: (muted) => set({ isMusicMuted: muted }),
             soundEffectVolume: 80,

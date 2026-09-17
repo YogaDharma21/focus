@@ -64,7 +64,7 @@ export default function Page() {
             )}>
                 <BottomNavbar />
                 
-                <div className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 md:pl-28 pb-24 z-10 relative">
+                <div className="flex-1 w-full max-w-7xl mx-auto p-4 sm:p-6 md:px-28 pb-24 z-10 relative flex flex-col">
                     <header className="relative flex items-center justify-between mb-8 gap-2">
                         <div className="flex items-center gap-3">
                             <img src="/icon-192.png" alt="Focus Logo" className="w-8 h-8 rounded-lg object-contain shadow-sm" />
@@ -84,9 +84,9 @@ export default function Page() {
                         </div>
                     </header>
 
-                    <div className="w-full">
+                    <div className="w-full flex-1 flex flex-col justify-center">
                         {currentView === "FOCUS" && (
-                            <div className="flex items-center justify-center min-h-[60vh]">
+                            <div className="flex-1 flex items-center justify-center min-h-[55vh]">
                                 <FocusTimer />
                             </div>
                         )}

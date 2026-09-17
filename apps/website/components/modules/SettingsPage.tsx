@@ -3,13 +3,14 @@
 import { useAppStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Settings, Clock, Palette, Volume2, Trash2, Info, Github, ExternalLink } from "lucide-react";
+import { Settings, Volume1, Github, ExternalLink } from "lucide-react";
 import { useTheme } from "next-themes";
 
 export function SettingsPage() {
+    const musicEnabled = useAppStore((s) => s.musicEnabled ?? true);
+    const setMusicEnabled = useAppStore((s) => s.setMusicEnabled);
+    const musicVolume = useAppStore((s) => s.musicVolume ?? 60);
+    const setMusicVolume = useAppStore((s) => s.setMusicVolume);
     const soundEffectEnabled = useAppStore((s) => s.soundEffectEnabled);
     const setSoundEffectEnabled = useAppStore((s) => s.setSoundEffectEnabled);
     const soundEffectVolume = useAppStore((s) => s.soundEffectVolume);
@@ -28,148 +29,160 @@ export function SettingsPage() {
     };
 
     return (
-        <div className="w-full space-y-6">
-            <div className="flex items-center gap-2 mb-6 text-foreground">
-                <Settings className="w-6 h-6" />
-                <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
-            </div>
-
-            {/* Timer Section */}
-            <div className="bg-card border border-border/50 rounded-[var(--radius)] p-5 space-y-4 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-semibold text-foreground/80">
-                    <Clock className="w-4 h-4" />
-                    <h2>Timer</h2>
-                </div>
-                
-                <div className="p-3 rounded-[var(--radius)] bg-secondary/20">
-                    <p className="text-sm text-muted-foreground">Flow mode (count-up timer). Complete a session to get a suggested break.</p>
-                </div>
+        <div className="w-full space-y-4">
+            <div className="flex items-center gap-2 mb-2 text-foreground">
+                <Settings className="w-5 h-5" />
+                <h1 className="text-xl font-bold tracking-tight">Settings</h1>
             </div>
 
             {/* Appearance Section */}
-            <div className="bg-card border border-border/50 rounded-[var(--radius)] p-5 space-y-4 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-semibold text-foreground/80">
-                    <Palette className="w-4 h-4" />
-                    <h2>Appearance</h2>
-                </div>
-                
-                <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
-                    <Label className="font-medium">Theme</Label>
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => setTheme("light")}
-                            className={cn(
-                                "px-4 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-all",
-                                theme === "light"
-                                    ? "bg-primary text-primary-foreground shadow-md"
-                                    : "bg-secondary/30 hover:bg-secondary/50 text-foreground"
-                            )}
-                        >
-                            Light
-                        </button>
-                        <button
-                            onClick={() => setTheme("dark")}
-                            className={cn(
-                                "px-4 py-1.5 rounded-[var(--radius)] text-sm font-medium transition-all",
-                                theme === "dark"
-                                    ? "bg-primary text-primary-foreground shadow-md"
-                                    : "bg-secondary/30 hover:bg-secondary/50 text-foreground"
-                            )}
-                        >
-                            Dark
-                        </button>
-                    </div>
+            <div className="p-4 rounded-xl border flex flex-col gap-3 bg-background/40 border-border">
+                <span className="text-xs font-bold text-foreground uppercase tracking-wider">Appearance</span>
+                <div className="flex items-center gap-2">
+                    {(["light", "dark"] as const).map((mode) => {
+                        const isActive = theme === mode;
+                        return (
+                            <button
+                                key={mode}
+                                onClick={() => setTheme(mode)}
+                                className={cn(
+                                    "flex-1 px-3 py-2.5 rounded-xl text-xs font-bold transition-all border cursor-pointer",
+                                    isActive
+                                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                        : "bg-card/60 text-muted-foreground border-border hover:bg-secondary hover:text-foreground"
+                                )}
+                            >
+                                {mode === "light" ? "Light" : "Dark"}
+                            </button>
+                        );
+                    })}
                 </div>
             </div>
 
             {/* Sound Section */}
-            <div className="bg-card border border-border/50 rounded-[var(--radius)] p-5 space-y-4 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-semibold text-foreground/80">
-                    <Volume2 className="w-4 h-4" />
-                    <h2>Sound</h2>
-                </div>
+            <div className="p-4 rounded-xl border flex flex-col gap-3 bg-background/40 border-border">
+                <span className="text-xs font-bold text-foreground uppercase tracking-wider">Sound</span>
 
-                <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
-                    <Label className="font-medium">Sound Effect Enabled</Label>
-                    <Switch
-                        checked={soundEffectEnabled}
-                        onCheckedChange={setSoundEffectEnabled}
-                    />
-                </div>
+                {/* Music Subsection */}
+                <div className="flex flex-col gap-2">
+                    <span className="px-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Music</span>
 
-                <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
-                    <div className="space-y-1">
-                        <Label className="font-medium">Sound Effect Volume</Label>
-                        <p className="text-xs text-muted-foreground">{soundEffectVolume}%</p>
+                    <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-card/60 border-border">
+                        <div className="flex flex-col">
+                            <span className="text-xs font-bold text-foreground">Music</span>
+                            <span className="text-[10px] text-muted-foreground">Enable or disable background music</span>
+                        </div>
+                        <Switch
+                            checked={musicEnabled}
+                            onCheckedChange={setMusicEnabled}
+                        />
                     </div>
-                    <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        step="1"
-                        disabled={!soundEffectEnabled}
-                        value={soundEffectVolume ?? 80}
-                        onChange={(e) => setSoundEffectVolume(parseInt(e.target.value))}
-                        className="w-32 sm:w-48 h-1.5 bg-white/20 rounded-full appearance-none cursor-pointer accent-white [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:bg-white [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md disabled:opacity-40"
-                    />
+
+                    {musicEnabled && (
+                        <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-card/60 border-border">
+                            <div className="flex flex-col w-full gap-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-bold text-foreground">Music Volume</span>
+                                    <span className="font-mono text-xs text-foreground">{musicVolume}%</span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    step="1"
+                                    value={musicVolume}
+                                    onChange={(e) => setMusicVolume(parseInt(e.target.value, 10))}
+                                    className="w-full h-1 rounded bg-secondary accent-current cursor-pointer"
+                                />
+                            </div>
+                        </div>
+                    )}
                 </div>
 
-                <div className="flex justify-end pt-2">
-                    <Button variant="outline" onClick={playTestSoundEffect} disabled={!soundEffectEnabled} className="gap-2">
-                        <Volume2 className="w-4 h-4" />
-                        Test Sound
-                    </Button>
+                {/* Sound Effects Subsection */}
+                <div className="flex flex-col gap-2 pt-1 border-t border-border/80">
+                    <span className="px-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Sound Effects</span>
+
+                    <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-card/60 border-border">
+                        <div className="flex flex-col">
+                            <span className="text-xs font-bold text-foreground">Sound Effects</span>
+                            <span className="text-[10px] text-muted-foreground">Enable or disable timer sound effects</span>
+                        </div>
+                        <Switch
+                            checked={soundEffectEnabled}
+                            onCheckedChange={setSoundEffectEnabled}
+                        />
+                    </div>
+
+                    {soundEffectEnabled && (
+                        <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-card/60 border-border">
+                            <div className="flex flex-col w-full gap-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs font-bold text-foreground">Sound Effects Volume</span>
+                                    <span className="font-mono text-xs text-foreground">{soundEffectVolume}%</span>
+                                </div>
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    step="1"
+                                    value={soundEffectVolume ?? 80}
+                                    onChange={(e) => setSoundEffectVolume(parseInt(e.target.value, 10))}
+                                    className="w-full h-1 rounded bg-secondary accent-current cursor-pointer"
+                                />
+                            </div>
+                        </div>
+                    )}
+
+                    <button
+                        onClick={playTestSoundEffect}
+                        disabled={!soundEffectEnabled}
+                        className={cn(
+                            "w-full py-2.5 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-2",
+                            soundEffectEnabled
+                                ? "border-border bg-secondary text-foreground hover:bg-accent cursor-pointer"
+                                : "border-border/50 bg-card/30 text-muted-foreground cursor-not-allowed opacity-50"
+                        )}
+                    >
+                        <Volume1 className="w-4 h-4" />
+                        Test Sound Effect
+                    </button>
                 </div>
             </div>
 
             {/* Data Section */}
-            <div className="bg-card border border-border/50 rounded-[var(--radius)] p-5 space-y-4 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-semibold text-foreground/80">
-                    <Trash2 className="w-4 h-4" />
-                    <h2>Data</h2>
-                </div>
-                
-                <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
-                    <div className="space-y-1">
-                        <Label className="font-medium text-destructive">Reset All Data</Label>
-                        <p className="text-xs text-muted-foreground">
-                            Permanently delete all tasks, notes, sessions, and settings.
-                        </p>
-                    </div>
-                    <Button 
-                        variant="destructive" 
-                        onClick={() => {
-                            if (window.confirm("Are you sure you want to reset all data to defaults? This action cannot be undone.")) {
-                                resetAllData();
-                            }
-                        }}
-                    >
-                        Reset
-                    </Button>
-                </div>
+            <div className="p-4 rounded-xl border flex flex-col gap-3 bg-background/40 border-border">
+                <span className="text-xs font-bold text-foreground uppercase tracking-wider">Data</span>
+                <button
+                    onClick={() => {
+                        if (window.confirm("Are you sure you want to reset all data to defaults? This action cannot be undone.")) {
+                            resetAllData();
+                        }
+                    }}
+                    className="w-full py-2.5 rounded-xl font-bold text-xs border border-red-900/50 bg-red-950/20 text-red-500 hover:bg-red-950/50 hover:text-red-400 transition-all cursor-pointer"
+                >
+                    Reset All Data
+                </button>
             </div>
+
             {/* About Section */}
-            <div className="bg-card border border-border/50 rounded-[var(--radius)] p-5 space-y-4 shadow-sm">
-                <div className="flex items-center gap-2 text-sm font-semibold text-foreground/80">
-                    <Info className="w-4 h-4" />
-                    <h2>About</h2>
-                </div>
-                
-                <div className="space-y-3 text-sm">
-                    <div className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20">
-                        <span className="font-medium">Version</span>
-                        <span className="text-xs font-mono text-muted-foreground">v0.0.1</span>
+            <div className="p-4 rounded-xl border flex flex-col gap-3 bg-background/40 border-border">
+                <span className="text-xs font-bold text-foreground uppercase tracking-wider">About</span>
+                <div className="space-y-2 text-xs">
+                    <div className="flex items-center justify-between bg-card/60 border border-border rounded-xl px-4 py-3">
+                        <span className="font-medium text-foreground">Version</span>
+                        <span className="font-mono text-muted-foreground">v0.0.1</span>
                     </div>
 
-                    <div className="p-3 rounded-[var(--radius)] bg-secondary/20 text-xs text-muted-foreground leading-relaxed">
-                        A minimalist productivity suite designed to keep you in flow state. Features a count-up flow timer, task management with subtasks, productivity analytics, and ambient audio.
+                    <div className="bg-card/60 border border-border rounded-xl p-3.5 text-muted-foreground leading-relaxed">
+                        Focus is a minimalist, monochrome productivity suite designed to keep you in flow state. Features a count-up flow timer, task management with subtasks, productivity analytics, and ambient audio.
                     </div>
 
                     <a
                         href="https://github.com/YogaDharma21/focus"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="flex items-center justify-between p-3 rounded-[var(--radius)] bg-secondary/20 hover:bg-secondary/40 transition-colors text-xs font-medium text-foreground"
+                        className="w-full py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-between border border-border bg-card/60 hover:bg-secondary text-foreground transition-all cursor-pointer"
                     >
                         <div className="flex items-center gap-2">
                             <Github className="w-4 h-4" />
