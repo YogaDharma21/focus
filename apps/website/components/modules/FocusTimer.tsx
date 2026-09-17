@@ -5,7 +5,6 @@ import { useShallow } from "zustand/react/shallow";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, RotateCcw, CheckCircle2, Focus, ChevronDown, ListTodo, FileText, Check, Square, CheckSquare2 } from "lucide-react";
-import { Progress } from "@/components/ui/progress";
 import {
     Popover,
     PopoverContent,
@@ -37,6 +36,7 @@ export function FocusTimer() {
         resetAllData,
         soundEffectVolume,
         soundEffectEnabled,
+        soundEnabled,
     } = useAppStore(
         useShallow((s) => ({
             timeLeft: s.timeLeft,
@@ -60,6 +60,7 @@ export function FocusTimer() {
             resetAllData: s.resetAllData,
             soundEffectVolume: s.soundEffectVolume,
             soundEffectEnabled: s.soundEffectEnabled,
+            soundEnabled: s.soundEnabled ?? true,
         }))
     );
 
@@ -85,7 +86,7 @@ export function FocusTimer() {
     const sessionStartTimeRef = useRef<number | null>(null);
 
     const playSound = React.useCallback(() => {
-        if (!soundEffectEnabled) return;
+        if (!soundEnabled || !soundEffectEnabled) return;
         const vol = (soundEffectVolume ?? 80) / 100;
         try {
             if (audioRef.current) {
@@ -104,7 +105,7 @@ export function FocusTimer() {
         } catch {
             // Audio play might be blocked by browser policies
         }
-    }, [soundEffectEnabled, soundEffectVolume]);
+    }, [soundEnabled, soundEffectEnabled, soundEffectVolume]);
 
     useEffect(() => {
         const unlockAudio = () => {
@@ -231,8 +232,6 @@ export function FocusTimer() {
         const secs = seconds % 60;
         return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
     };
-
-    const progressValue = 100;
 
     return (
         <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center min-h-[50vh] relative">
@@ -417,10 +416,6 @@ export function FocusTimer() {
                         </p>
                     </div>
                 )}
-
-                <div className="w-full max-w-xs">
-                    <Progress value={progressValue} className="h-1.5" />
-                </div>
             </div>
 
             <div className="grid grid-cols-3 items-center w-full max-w-[280px] sm:max-w-xs">
