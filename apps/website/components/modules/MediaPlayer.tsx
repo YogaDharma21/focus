@@ -7,9 +7,7 @@ import {
     Music,
     ChevronDown,
     Volume2,
-    Volume1,
     VolumeX,
-    BellRing,
     Play,
     Pause,
     Disc,
@@ -25,12 +23,10 @@ export function MediaPlayer() {
         setIsMusicPlaying,
         musicVolume,
         setMusicVolume,
+        soundEnabled,
+        musicEnabled,
         isMusicMuted,
         setIsMusicMuted,
-        soundEffectVolume,
-        setSoundEffectVolume,
-        soundEffectEnabled,
-        setSoundEffectEnabled,
     } = useAppStore(
         useShallow((s) => ({
             localUrl: s.localUrl,
@@ -40,12 +36,10 @@ export function MediaPlayer() {
             setIsMusicPlaying: s.setIsMusicPlaying,
             musicVolume: s.musicVolume,
             setMusicVolume: s.setMusicVolume,
+            soundEnabled: s.soundEnabled ?? true,
+            musicEnabled: s.musicEnabled ?? true,
             isMusicMuted: s.isMusicMuted,
             setIsMusicMuted: s.setIsMusicMuted,
-            soundEffectVolume: s.soundEffectVolume,
-            setSoundEffectVolume: s.setSoundEffectVolume,
-            soundEffectEnabled: s.soundEffectEnabled,
-            setSoundEffectEnabled: s.setSoundEffectEnabled,
         }))
     );
 
@@ -92,8 +86,9 @@ export function MediaPlayer() {
     }, [mediaPlayerOpen, setMediaPlayerOpen]);
 
     const togglePlay = useCallback(() => {
+        if (!soundEnabled || !musicEnabled) return;
         setIsMusicPlaying(!isMusicPlaying);
-    }, [isMusicPlaying, setIsMusicPlaying]);
+    }, [isMusicPlaying, setIsMusicPlaying, soundEnabled, musicEnabled]);
 
     const toggleMute = () => {
         setIsMusicMuted(!isMusicMuted);
@@ -104,21 +99,6 @@ export function MediaPlayer() {
         setMusicVolume(val);
         if (val > 0 && isMusicMuted) {
             setIsMusicMuted(false);
-        }
-    };
-
-    const handleSFXVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const val = parseInt(e.target.value, 10);
-        setSoundEffectVolume(val);
-    };
-
-    const playTestSoundEffect = () => {
-        try {
-            const audio = new Audio("/soundeffect.mp3");
-            audio.volume = (soundEffectVolume ?? 80) / 100;
-            audio.play().catch(() => {});
-        } catch {
-            // ignore
         }
     };
 
@@ -191,7 +171,11 @@ export function MediaPlayer() {
                                     Lofi-Beats
                                 </h4>
                                 <p className="text-xs text-muted-foreground truncate">
-                                    Lofi-Beats
+                                    {!soundEnabled
+                                        ? "Sound disabled in Settings"
+                                        : !musicEnabled
+                                          ? "Music disabled in Settings"
+                                          : "Lofi-Beats"}
                                 </p>
                             </div>
                         </div>
@@ -199,7 +183,14 @@ export function MediaPlayer() {
                         {/* Large Circular Play/Pause Button */}
                         <button
                             onClick={togglePlay}
-                            className="w-10 h-10 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground active:scale-95 transition-all duration-200 flex items-center justify-center shrink-0 shadow-lg"
+                            disabled={!soundEnabled || !musicEnabled}
+                            className={cn(
+                                "w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg transition-all duration-200",
+                                !soundEnabled || !musicEnabled
+                                    ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                                    : "bg-primary hover:bg-primary/90 text-primary-foreground active:scale-95 cursor-pointer"
+                            )}
+                            title={!soundEnabled ? "Sound is disabled in Settings" : !musicEnabled ? "Music is disabled in Settings" : isMusicPlaying ? "Pause music" : "Play music"}
                             aria-label={isMusicPlaying ? "Pause music" : "Play music"}
                         >
                             {isMusicPlaying ? (
