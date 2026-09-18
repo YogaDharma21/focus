@@ -12,6 +12,10 @@ import {
   Play,
   Pause,
   Plus,
+  ChevronDown,
+  Check,
+  ListTodo,
+  X,
 } from 'lucide-react-native';
 
 interface HeaderProps {
@@ -31,19 +35,23 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
-  const { deepFocusMode, setDeepFocusMode } = useAppStore();
+  const { setDeepFocusMode } = useAppStore();
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
+  const [taskPickerOpen, setTaskPickerOpen] = useState(false);
 
   const {
     currentView,
-    timerMode,
     timeLeft,
     setTimeLeft,
     isActive,
     setIsActive,
     selectedTodoId,
+    setSelectedTodoId,
+    sessionName,
+    setSessionName,
+    todos,
     addSession,
     addDistraction,
   } = useAppStore();
@@ -82,13 +90,6 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
     }
     setTimeLeft(0);
     setDeepFocusMode(false);
-  };
-
-  const progressValue = 100;
-
-
-  const getModeTitle = () => {
-    return 'Flow';
   };
 
   const renderModeIcon = (size: number, color: string) => {
@@ -149,59 +150,58 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
             },
           ]}
         >
-          {/* Card Top Row: Title + Time */}
+          {/* Card Top Row: Time + Task Selector */}
           <View style={styles.cardHeader}>
             <View style={styles.cardHeaderTitleRow}>
               {renderModeIcon(18, colors.text)}
+              <Text style={[styles.cardTime, { color: colors.text }]}>
+                {formatTime(timeLeft)}
+              </Text>
+              {isActive && <View style={[styles.activeDot, { backgroundColor: colors.text }]} />}
             </View>
-            <Text style={[styles.cardTime, { color: colors.text }]}>
-              {formatTime(timeLeft)}
-            </Text>
+            <TouchableOpacity
+              style={[styles.taskSelectorBtn, { backgroundColor: colors.muted, borderColor: colors.border }]}
+              onPress={() => setTaskPickerOpen(true)}
+              activeOpacity={0.8}
+              accessibilityLabel="Select or switch focus task"
+            >
+              {!selectedTodoId && !sessionName && <ListTodo size={14} color={colors.mutedText} />}
+              <Text style={[styles.taskSelectorText, { color: colors.text }]} numberOfLines={1}>
+                {todos.find((todo) => todo.id === selectedTodoId)?.text || sessionName || 'Select task'}
+              </Text>
+              <ChevronDown size={14} color={colors.mutedText} />
+            </TouchableOpacity>
           </View>
 
-          {/* Progress Bar */}
-          <View style={[styles.progressTrack, { backgroundColor: colors.border }]}>
-            <View
-              style={[
-                styles.progressFill,
-                { backgroundColor: colors.primary, width: `${progressValue}%` },
-              ]}
-            />
-          </View>
-
-          {/* Horizontal Divider */}
-          <View style={[styles.divider, { backgroundColor: colors.border }]} />
-
-          {/* Action Buttons Row with Centered Distraction Button and Equal Sized Action Buttons */}
+          {/* Action Buttons Row */}
           <View style={styles.cardActionsRow}>
-            {/* Complete Session Button (LEFT - flex: 1) */}
             <TouchableOpacity
               style={[
                 styles.actionPillBtn,
-                { backgroundColor: colors.muted, borderColor: colors.border },
+                { backgroundColor: colors.muted, borderColor: colors.border, opacity: !isActive ? 0.5 : 1 },
               ]}
               onPress={handleCompleteSession}
+              disabled={!isActive}
               activeOpacity={0.8}
             >
-              <CheckCircle2 size={16} color={colors.text} />
-              <Text style={[styles.actionBtnText, { color: colors.text }]}>
+              <CheckCircle2 size={14} color={isActive ? colors.text : colors.mutedText} />
+              <Text style={[styles.actionBtnText, { color: isActive ? colors.text : colors.mutedText }]}>
                 Complete
               </Text>
             </TouchableOpacity>
 
-            {/* Distraction Alert Button (CENTER) */}
             <TouchableOpacity
               style={[
                 styles.distractionBtn,
-                { backgroundColor: colors.muted, borderColor: colors.border },
+                { backgroundColor: colors.muted, borderColor: colors.border, opacity: !isActive ? 0.5 : 1 },
               ]}
               onPress={() => setDistractionModalOpen(true)}
+              disabled={!isActive}
               activeOpacity={0.8}
             >
               <AlertTriangle size={16} color={colors.mutedText} />
             </TouchableOpacity>
 
-            {/* Start / Pause Main Action Button (RIGHT - flex: 1) */}
             <TouchableOpacity
               style={[styles.actionPillBtn, { backgroundColor: colors.text }]}
               onPress={toggleTimer}
@@ -226,6 +226,65 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
           </View>
         </View>
       )}
+
+      {/* Floating Task Picker */}
+      <Modal
+        visible={taskPickerOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setTaskPickerOpen(false)}
+      >
+        <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setTaskPickerOpen(false)}>
+          <TouchableOpacity
+            activeOpacity={1}
+            style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]}
+            onPress={() => {}}
+          >
+            <View style={styles.taskPickerHeader}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Select task</Text>
+              <TouchableOpacity onPress={() => setTaskPickerOpen(false)} style={styles.closeBtn}>
+                <X size={18} color={colors.mutedText} />
+              </TouchableOpacity>
+            </View>
+
+            <TouchableOpacity
+              style={[styles.taskOption, { backgroundColor: !selectedTodoId && !sessionName ? colors.border : colors.muted, borderColor: colors.border }]}
+              onPress={() => {
+                setSelectedTodoId(null);
+                setSessionName('');
+                setTaskPickerOpen(false);
+              }}
+            >
+              <View style={styles.taskOptionLeft}>
+                <Plus size={16} color={colors.text} />
+                <Text style={[styles.taskOptionText, { color: colors.text }]}>Custom focus</Text>
+              </View>
+              {!selectedTodoId && !sessionName && <Check size={16} color={colors.text} />}
+            </TouchableOpacity>
+
+            {todos.filter((todo) => !todo.completed).map((todo) => {
+              const isSelected = selectedTodoId === todo.id;
+              return (
+                <TouchableOpacity
+                  key={todo.id}
+                  style={[styles.taskOption, { backgroundColor: isSelected ? colors.border : colors.muted, borderColor: colors.border }]}
+                  onPress={() => {
+                    setSelectedTodoId(todo.id);
+                    setSessionName(todo.text);
+                    setTaskPickerOpen(false);
+                  }}
+                >
+                  <View style={styles.taskOptionLeft}>
+                    <ListTodo size={16} color={colors.text} />
+                    <Text style={[styles.taskOptionText, { color: colors.text }]} numberOfLines={1}>{todo.text}</Text>
+                  </View>
+                  {isSelected && <Check size={16} color={colors.text} />}
+                </TouchableOpacity>
+              );
+            })}
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
 
       {/* Distraction Logger Modal */}
       <Modal
@@ -362,7 +421,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 14,
+    marginBottom: 12,
   },
   cardHeaderTitleRow: {
     flexDirection: 'row',
@@ -378,21 +437,26 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: -0.5,
   },
-  progressTrack: {
-    height: 6,
-    borderRadius: 3,
-    overflow: 'hidden',
-    width: '100%',
-    marginBottom: 12,
+  activeDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
   },
-  progressFill: {
-    height: '100%',
-    borderRadius: 3,
+  taskSelectorBtn: {
+    maxWidth: 190,
+    minWidth: 118,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
   },
-  divider: {
-    height: 1,
-    width: '100%',
-    marginBottom: 14,
+  taskSelectorText: {
+    flexShrink: 1,
+    fontSize: 11,
+    fontWeight: '700',
   },
   cardActionsRow: {
     flexDirection: 'row',
@@ -464,6 +528,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
+  },
+  taskPickerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  closeBtn: {
+    padding: 4,
+  },
+  taskOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 8,
+  },
+  taskOptionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+  },
+  taskOptionText: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '600',
   },
 });
 

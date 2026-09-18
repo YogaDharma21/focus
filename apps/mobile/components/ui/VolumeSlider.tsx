@@ -16,6 +16,7 @@ interface VolumeSliderProps {
   onValueChange: (value: number) => void;
   style?: StyleProp<ViewStyle>;
   trackHeight?: number;
+  disabled?: boolean;
 }
 
 export function VolumeSlider({
@@ -23,6 +24,7 @@ export function VolumeSlider({
   onValueChange,
   style,
   trackHeight = 8,
+  disabled = false,
 }: VolumeSliderProps) {
   const { colors } = useTheme();
   const trackRef = useRef<View>(null);
@@ -30,6 +32,7 @@ export function VolumeSlider({
   const pageXRef = useRef<number>(0);
 
   const updateFromPosition = (relativeX: number) => {
+    if (disabled) return;
     if (widthRef.current <= 0) return;
     const ratio = Math.max(0, Math.min(1, relativeX / widthRef.current));
     // Continuous precision rounded to 2 decimal places (1% resolution: e.g. 0.01, 0.13, 0.37, 0.42, 0.68, 0.99)
@@ -73,8 +76,9 @@ export function VolumeSlider({
     <View
       ref={trackRef}
       onLayout={onLayout}
-      {...panResponder.panHandlers}
-      style={[styles.container, style]}
+      {...(!disabled ? panResponder.panHandlers : {})}
+      pointerEvents={disabled ? 'none' : 'auto'}
+      style={[styles.container, disabled && styles.disabled, style]}
     >
       <View
         style={[
@@ -118,6 +122,9 @@ const styles = StyleSheet.create({
     height: 32,
     justifyContent: 'center',
     position: 'relative',
+  },
+  disabled: {
+    opacity: 0.4,
   },
   track: {
     width: '100%',
