@@ -33,6 +33,8 @@ export function DeepFocusOverlay() {
     todos,
     isMusicPlaying,
     setIsMusicPlaying,
+    soundEnabled,
+    musicEnabled,
     musicVolume,
     setMusicVolume,
   } = useAppStore();
@@ -78,7 +80,7 @@ export function DeepFocusOverlay() {
         ]}
       >
         {/* Top Left Lofi-Beats Music Pill */}
-        <TouchableOpacity
+        {soundEnabled && musicEnabled && <TouchableOpacity
           style={[
             styles.musicPillBtn,
             {
@@ -97,7 +99,7 @@ export function DeepFocusOverlay() {
           {isMusicPlaying ? (
             <View style={[styles.activeDot, { backgroundColor: colors.text }]} />
           ) : null}
-        </TouchableOpacity>
+        </TouchableOpacity>}
 
         <TouchableOpacity
           style={[
@@ -185,7 +187,10 @@ export function DeepFocusOverlay() {
                     styles.distractionItem,
                     { backgroundColor: isMusicPlaying ? colors.card : colors.muted, borderColor: isMusicPlaying ? colors.mutedText : colors.border },
                   ]}
-                  onPress={() => setIsMusicPlaying(!isMusicPlaying)}
+                  onPress={() => {
+                    if (soundEnabled && musicEnabled) setIsMusicPlaying(!isMusicPlaying);
+                  }}
+                  disabled={!soundEnabled || !musicEnabled}
                 >
                   <Text style={{ color: colors.text, fontWeight: '600' }}>
                     {isMusicPlaying ? 'Pause Lofi Audio' : 'Play Lofi Audio'}
@@ -203,6 +208,7 @@ export function DeepFocusOverlay() {
                 <VolumeSlider
                   value={musicVolume}
                   onValueChange={setMusicVolume}
+                  disabled={!soundEnabled || !musicEnabled}
                 />
               </View>
 

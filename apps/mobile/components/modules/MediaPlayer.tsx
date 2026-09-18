@@ -24,12 +24,10 @@ export function MediaPlayer() {
     setMediaUrl,
     isMusicPlaying,
     setIsMusicPlaying,
+    soundEnabled,
+    musicEnabled,
     musicVolume,
     setMusicVolume,
-    soundEffectVolume,
-    setSoundEffectVolume,
-    soundEffectEnabled,
-    setSoundEffectEnabled,
   } = useAppStore();
 
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
@@ -49,6 +47,7 @@ export function MediaPlayer() {
 
   const playSound = useCallback(async (url: string) => {
     try {
+      if (!soundEnabled || !musicEnabled) return;
       await setAudioModeAsync({
         playsInSilentMode: true,
         shouldPlayInBackground: true,
@@ -71,7 +70,7 @@ export function MediaPlayer() {
     } catch (error) {
       console.log('Error loading audio:', error);
     }
-  }, [musicVolume, setIsMusicPlaying]);
+  }, [musicEnabled, musicVolume, setIsMusicPlaying, soundEnabled]);
 
   const changeVolume = (newVol: number) => {
     setMusicVolume(newVol);
@@ -82,7 +81,10 @@ export function MediaPlayer() {
 
   useEffect(() => {
     const syncState = async () => {
-      if (isMusicPlaying) {
+      if (!soundEnabled || !musicEnabled) {
+        if (isMusicPlaying) setIsMusicPlaying(false);
+        if (soundRef.current) soundRef.current.pause();
+      } else if (isMusicPlaying) {
         if (!soundRef.current) {
           const track = localPlaylist[currentTrackIndex] || localPlaylist[0];
           if (track) {
@@ -98,13 +100,15 @@ export function MediaPlayer() {
       }
     };
     syncState();
-  }, [isMusicPlaying, currentTrackIndex, localPlaylist, playSound]);
+  }, [isMusicPlaying, currentTrackIndex, localPlaylist, musicEnabled, playSound, setIsMusicPlaying, soundEnabled]);
 
   const togglePlay = async () => {
+    if (!soundEnabled || !musicEnabled) return;
     setIsMusicPlaying(!isMusicPlaying);
   };
 
   const selectTrack = async (index: number) => {
+    if (!soundEnabled || !musicEnabled) return;
     setCurrentTrackIndex(index);
     const track = localPlaylist[index];
     if (track) {
@@ -114,6 +118,8 @@ export function MediaPlayer() {
   };
 
   const currentTrack = localPlaylist[currentTrackIndex] || localPlaylist[0];
+
+  if (!soundEnabled || !musicEnabled) return null;
 
   return (
     <>

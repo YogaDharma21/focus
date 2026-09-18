@@ -24,6 +24,8 @@ export default function TabLayout() {
     setDeepFocusMode,
     addSession,
     setIsMusicPlaying,
+    soundEnabled,
+    musicEnabled,
   } = useAppStore();
 
   const prevActiveRef = React.useRef(isActive);
@@ -37,11 +39,11 @@ export default function TabLayout() {
 
   React.useEffect(() => {
     if (isActive) {
-      setIsMusicPlaying(true);
+      setIsMusicPlaying(soundEnabled && musicEnabled);
     } else {
       setIsMusicPlaying(false);
     }
-  }, [isActive, setIsMusicPlaying]);
+  }, [isActive, musicEnabled, setIsMusicPlaying, soundEnabled]);
 
   React.useEffect(() => {
     let interval: any = null;
