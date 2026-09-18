@@ -66,6 +66,10 @@ interface AppState {
   setMediaPlayerOpen: (open: boolean) => void;
   isMusicPlaying: boolean;
   setIsMusicPlaying: (playing: boolean) => void;
+  soundEnabled: boolean;
+  setSoundEnabled: (enabled: boolean) => void;
+  musicEnabled: boolean;
+  setMusicEnabled: (enabled: boolean) => void;
   musicVolume: number;
   setMusicVolume: (volume: number) => void;
   soundEffectVolume: number;
@@ -161,6 +165,10 @@ export const useAppStore = create<AppState>()(
       setMediaPlayerOpen: (open) => set({ mediaPlayerOpen: open }),
       isMusicPlaying: false,
       setIsMusicPlaying: (playing) => set({ isMusicPlaying: playing }),
+      soundEnabled: true,
+      setSoundEnabled: (enabled) => set({ soundEnabled: enabled, ...(enabled ? {} : { isMusicPlaying: false, mediaPlayerOpen: false }) }),
+      musicEnabled: true,
+      setMusicEnabled: (enabled) => set({ musicEnabled: enabled, ...(enabled ? {} : { isMusicPlaying: false, mediaPlayerOpen: false }) }),
       musicVolume: 0.8,
       setMusicVolume: (volume) => set({ musicVolume: volume }),
       soundEffectVolume: 0.8,
