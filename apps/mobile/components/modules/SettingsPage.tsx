@@ -9,9 +9,10 @@ import { playCompletionSound } from '@/lib/sound';
 interface CustomToggleSwitchProps {
   value: boolean;
   onToggle: () => void;
+  disabled?: boolean;
 }
 
-function CustomToggleSwitch({ value, onToggle }: CustomToggleSwitchProps) {
+function CustomToggleSwitch({ value, onToggle, disabled = false }: CustomToggleSwitchProps) {
   const animatedValue = useRef(new Animated.Value(value ? 1 : 0)).current;
 
   useEffect(() => {
@@ -40,10 +41,11 @@ function CustomToggleSwitch({ value, onToggle }: CustomToggleSwitchProps) {
   return (
     <TouchableOpacity
       activeOpacity={0.8}
-      onPress={onToggle}
+      onPress={disabled ? undefined : onToggle}
+      disabled={disabled}
       accessibilityRole="switch"
-      accessibilityState={{ checked: value }}
-      style={styles.switchTouchable}
+      accessibilityState={{ checked: value, disabled }}
+      style={[styles.switchTouchable, disabled && styles.disabledControl]}
     >
       <Animated.View
         style={[
@@ -67,10 +69,54 @@ function CustomToggleSwitch({ value, onToggle }: CustomToggleSwitchProps) {
   );
 }
 
+function SettingToggleRow({
+  title,
+  subtitle,
+  value,
+  onToggle,
+  disabled = false,
+  colors,
+}: {
+  title: string;
+  subtitle: string;
+  value: boolean;
+  onToggle: () => void;
+  disabled?: boolean;
+  colors: { text: string; mutedText: string; muted: string; border: string };
+}) {
+  return (
+    <TouchableOpacity
+      style={[
+        styles.autoStartCard,
+        {
+          backgroundColor: colors.muted,
+          borderColor: colors.border,
+          opacity: disabled ? 0.5 : 1,
+        },
+      ]}
+      onPress={disabled ? undefined : onToggle}
+      disabled={disabled}
+      activeOpacity={0.7}
+    >
+      <View style={styles.autoStartTextContainer}>
+        <Text style={[styles.autoStartTitle, { color: colors.text }]}>{title}</Text>
+        <Text style={[styles.autoStartSubtitle, { color: colors.mutedText }]}>{subtitle}</Text>
+      </View>
+      <CustomToggleSwitch value={value} onToggle={onToggle} disabled={disabled} />
+    </TouchableOpacity>
+  );
+}
+
 export function SettingsPage() {
   const { colors, themeMode, setThemeMode } = useTheme();
   
   const {
+    soundEnabled,
+    setSoundEnabled,
+    musicEnabled,
+    setMusicEnabled,
+    musicVolume,
+    setMusicVolume,
     soundEffectEnabled,
     setSoundEffectEnabled,
     soundEffectVolume,
@@ -146,45 +192,73 @@ export function SettingsPage() {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Sound</Text>
         </View>
 
+        <SettingToggleRow
+          title="Sound"
+          subtitle="Enable or disable all sound"
+          value={soundEnabled}
+          onToggle={() => setSoundEnabled(!soundEnabled)}
+          colors={colors}
+        />
+
+        <Text style={[styles.subsectionTitle, { color: colors.mutedText }]}>Music</Text>
+        <SettingToggleRow
+          title="Music"
+          subtitle="Enable or disable background music"
+          value={musicEnabled && soundEnabled}
+          onToggle={() => setMusicEnabled(!musicEnabled)}
+          disabled={!soundEnabled}
+          colors={colors}
+        />
+
+        {soundEnabled && musicEnabled && (
+          <View style={styles.volumeGroup}>
+            <View style={styles.volumeHeader}>
+              <Text style={[styles.settingLabel, { color: colors.text, marginBottom: 0 }]}>Music Volume</Text>
+              <Text style={{ fontSize: 12, fontWeight: '600', color: colors.mutedText }}>
+                {Math.round((musicVolume ?? 0.8) * 100)}%
+              </Text>
+            </View>
+            <VolumeSlider value={musicVolume ?? 0.8} onValueChange={setMusicVolume} />
+          </View>
+        )}
+
+        <Text style={[styles.subsectionTitle, styles.subsectionDivider, { color: colors.mutedText, borderTopColor: colors.border }]}>Sound Effects</Text>
+        <SettingToggleRow
+          title="Sound Effects"
+          subtitle="Enable or disable timer sound effects"
+          value={soundEffectEnabled && soundEnabled}
+          onToggle={() => setSoundEffectEnabled(!soundEffectEnabled)}
+          disabled={!soundEnabled}
+          colors={colors}
+        />
+
+        {soundEnabled && soundEffectEnabled && (
+          <View style={styles.volumeGroup}>
+            <View style={styles.volumeHeader}>
+              <Text style={[styles.settingLabel, { color: colors.text, marginBottom: 0 }]}>Sound Effects Volume</Text>
+              <Text style={{ fontSize: 12, fontWeight: '600', color: colors.mutedText }}>
+                {Math.round((soundEffectVolume ?? 0.8) * 100)}%
+              </Text>
+            </View>
+            <VolumeSlider value={soundEffectVolume ?? 0.8} onValueChange={setSoundEffectVolume} />
+          </View>
+        )}
+
         <TouchableOpacity
           style={[
-            styles.autoStartCard,
+            styles.testSoundBtn,
             {
               backgroundColor: colors.muted,
               borderColor: colors.border,
+              opacity: soundEnabled && soundEffectEnabled ? 1 : 0.45,
             },
           ]}
-          onPress={() => setSoundEffectEnabled(!soundEffectEnabled)}
+          onPress={playCompletionSound}
+          disabled={!soundEnabled || !soundEffectEnabled}
           activeOpacity={0.7}
         >
-          <View style={styles.autoStartTextContainer}>
-            <Text style={[styles.autoStartTitle, { color: colors.text }]}>SFX Enabled</Text>
-            <Text style={[styles.autoStartSubtitle, { color: colors.mutedText }]}>
-              Play sound effects on timer completion
-            </Text>
-          </View>
-          <CustomToggleSwitch value={soundEffectEnabled} onToggle={() => setSoundEffectEnabled(!soundEffectEnabled)} />
-        </TouchableOpacity>
-
-        <View style={styles.volumeGroup}>
-          <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-            <Text style={[styles.settingLabel, { color: colors.text, marginBottom: 0 }]}>SFX Volume</Text>
-            <Text style={{ fontSize: 12, fontWeight: '600', color: colors.mutedText }}>
-              {Math.round((soundEffectVolume ?? 0.8) * 100)}%
-            </Text>
-          </View>
-          <VolumeSlider
-            value={soundEffectVolume ?? 0.8}
-            onValueChange={setSoundEffectVolume}
-          />
-        </View>
-
-        <TouchableOpacity
-          style={[styles.testSoundBtn, { backgroundColor: colors.muted, borderColor: colors.border }]}
-          onPress={() => playCompletionSound()}
-        >
-          <Volume2 size={16} color={colors.text} />
-          <Text style={[styles.testSoundText, { color: colors.text }]}>Test Sound</Text>
+          <Volume2 size={16} color={soundEnabled && soundEffectEnabled ? colors.text : colors.mutedText} />
+          <Text style={[styles.testSoundText, { color: soundEnabled && soundEffectEnabled ? colors.text : colors.mutedText }]}>Test Sound Effect</Text>
         </TouchableOpacity>
       </View>
 
@@ -217,8 +291,8 @@ export function SettingsPage() {
             <Text style={[styles.aboutValue, { color: colors.mutedText }]}>v0.0.1</Text>
           </View>
 
-          <View style={[styles.aboutCard, { backgroundColor: colors.inputBg, borderColor: colors.border }]}>
-            <Text style={[styles.aboutDescription, { color: colors.textMuted }]}>
+          <View style={[styles.aboutCard, { backgroundColor: colors.muted, borderColor: colors.border }]}>
+            <Text style={[styles.aboutDescription, { color: colors.mutedText }]}>
               A minimalist productivity suite designed to keep you in flow state. Features a flow timer, task management with subtasks, productivity analytics, and ambient audio.
             </Text>
           </View>
@@ -341,6 +415,27 @@ const styles = StyleSheet.create({
   volumeGroup: {
     marginBottom: 16,
     marginTop: 8,
+  },
+  volumeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  subsectionTitle: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginTop: 8,
+    marginBottom: 2,
+  },
+  subsectionDivider: {
+    borderTopWidth: 1,
+    paddingTop: 12,
+  },
+  disabledControl: {
+    opacity: 0.5,
   },
   volumeBarRow: {
     flexDirection: 'row',

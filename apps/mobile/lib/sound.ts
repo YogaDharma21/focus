@@ -3,13 +3,14 @@ import { useAppStore } from './store';
 
 const soundSource = require('../assets/soundeffect.mp3');
 
-export async function playCompletionSound(forcePlay = false) {
+export async function playCompletionSound() {
   try {
     const state = useAppStore.getState();
+    const soundEnabled = state.soundEnabled ?? true;
     const soundEffectEnabled = state.soundEffectEnabled ?? true;
     const soundEffectVolume = state.soundEffectVolume ?? 0.8;
 
-    if (!soundEffectEnabled && !forcePlay) return;
+    if (!soundEnabled || !soundEffectEnabled) return;
 
     await setAudioModeAsync({
       playsInSilentMode: true,
@@ -35,6 +36,6 @@ export async function playCompletionSound(forcePlay = false) {
 }
 
 export async function playTestCompletionSound() {
-  await playCompletionSound(true);
+  await playCompletionSound();
 }
 
