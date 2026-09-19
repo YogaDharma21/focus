@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { playCompletionSound } from '../../lib/sound';
 import { 
-  Play, Pause, AlertTriangle, CheckCircle2, Clock, Coffee
+  Play, Pause, AlertTriangle, CheckCircle2, Clock, Coffee,
+  ListTodo, ChevronDown, X
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
@@ -23,11 +24,18 @@ export const FloatingTimerCapsule: React.FC = () => {
     todos,
     updateTodo,
     selectedTodoId,
+    setSelectedTodoId,
     addDistraction,
     addSession,
     sessionName,
+    setSessionName,
     setDeepFocusMode,
   } = useDesktopStore();
+
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [showDistractionMenu, setShowDistractionMenu] = useState(false);
+  const [showTaskDropdown, setShowTaskDropdown] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   const handleToggleTimer = () => {
     const nextActive = !isActive;
@@ -91,15 +99,12 @@ export const FloatingTimerCapsule: React.FC = () => {
     setIsExpanded(false);
   };
 
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [showDistractionMenu, setShowDistractionMenu] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
         setIsExpanded(false);
         setShowDistractionMenu(false);
+        setShowTaskDropdown(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -117,91 +122,149 @@ export const FloatingTimerCapsule: React.FC = () => {
 
   return (
     <div ref={containerRef} className="fixed top-1 left-1/2 -translate-x-1/2 z-50 select-none no-drag flex flex-col items-center">
-      {isActive ? (
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="bg-card border border-emerald-500/80 rounded-full px-3.5 py-1 flex items-center gap-2.5 shadow-md hover:bg-secondary hover:border-emerald-400 transition-all active:scale-98 text-xs group"
-        >
-          <span className="text-xs flex items-center text-foreground"><Clock className="w-3.5 h-3.5" /></span>
-          <span className="text-[11px] font-mono font-bold text-foreground tracking-wider">
-            {timeString}
-          </span>
-          <div
-            onClick={(e) => {
-              e.stopPropagation();
-              handleToggleTimer();
-            }}
-            className="w-2.5 h-2.5 rounded-full bg-emerald-500 group-hover:bg-emerald-400 transition-all shrink-0 shadow-sm"
-            title="Pause Timer"
-          />
-        </button>
-      ) : (
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="bg-card border border-border rounded-full px-3 py-1 flex items-center justify-between gap-3 shadow-md hover:bg-secondary hover:border-muted-foreground transition-all active:scale-98 text-xs"
-        >
-          <div className="flex items-center gap-1.5 min-w-0 text-left">
-            <span className="text-xs flex items-center text-foreground">
-              {timerState === "BREAK" ? <Coffee className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
-            </span>
-            <span className="text-[11px] font-semibold text-foreground tracking-tight">
-              {timerState === "BREAK" ? "Break" : "Flow"}
-            </span>
-          </div>
+      {/* Collapsed pill - always visible */}
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className={cn(
+          "flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold transition-all shadow-sm",
+          isExpanded
+            ? "bg-primary text-primary-foreground border-primary"
+            : "bg-card border-border text-foreground hover:bg-secondary",
+          isActive && "border-foreground/60 ring-1 ring-foreground/30"
+        )}
+        title="Toggle Floating Timer Controls"
+      >
+        <span className="flex items-center">
+          {timerState === "BREAK" ? <Coffee className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
+        </span>
+        <span className="font-extrabold font-mono text-[11px] tracking-tight">
+          {timeString}
+        </span>
+        {isActive && (
+          <span className="w-1.5 h-1.5 rounded-full bg-foreground animate-pulse" />
+        )}
+      </button>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <span className="text-[11px] font-mono font-bold text-foreground tracking-wider">
-              {timeString}
-            </span>
-            <div
-              onClick={(e) => {
-                e.stopPropagation();
-                handleToggleTimer();
-              }}
-              className="w-5 h-5 rounded-full bg-primary text-primary-foreground hover:bg-primary/90 transition-all flex items-center justify-center shrink-0 shadow-sm"
-              title="Start Timer"
-            >
-              <Play className="w-3 h-3 fill-primary-foreground ml-0.5" />
-            </div>
-          </div>
-        </button>
-      )}
-
+      {/* Expanded card - matches extension layout */}
       {isExpanded && (
-        <div className="w-[360px] bg-card border border-border rounded-2xl p-4 shadow-2xl space-y-3 animate-in fade-in slide-in-from-top-2 zoom-in-95 duration-200 relative mt-1.5">
-          <div 
-            onClick={() => setIsExpanded(false)}
-            className="flex items-center justify-between cursor-pointer hover:opacity-80 transition-opacity pb-0.5"
-            title="Click to collapse widget"
-          >
-            <div className="flex items-center gap-2">
-              <span className="text-base flex items-center text-foreground">
-                {timerState === "BREAK" ? <Coffee className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+        <div className="w-[360px] bg-card border border-border rounded-2xl p-3.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 relative mt-1.5">
+          {/* Top Row: Time + Task Selector */}
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="flex items-center">
+                {timerState === "BREAK" ? <Coffee className="w-4 h-4" /> : <Clock className="w-4 h-4" />}
               </span>
-              <span className="text-xs font-bold text-foreground tracking-tight">
-                {timerState === "BREAK" ? "Break" : "Flow"}
+              <span className="text-2xl font-black font-mono tracking-tight tabular-nums">
+                {timeString}
               </span>
+              {isActive && <span className="w-2 h-2 rounded-full bg-foreground animate-pulse" />}
             </div>
-            <span className="text-xl font-extrabold font-mono text-foreground tracking-tight">
-              {timeString}
-            </span>
+
+            {/* Task Selector */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowTaskDropdown(!showTaskDropdown)}
+                className="px-2.5 py-1 rounded-lg text-xs font-bold font-sans border bg-secondary border-border text-secondary-foreground hover:bg-accent transition-colors flex items-center gap-1.5 max-w-[220px] truncate cursor-pointer"
+                title="Select or switch focus task"
+              >
+                {activeTask ? (
+                  <>
+                    <span className="truncate">{activeTask.text}</span>
+                    <ChevronDown className={cn("w-3 h-3 shrink-0 transition-transform opacity-70", showTaskDropdown && "rotate-180")} />
+                  </>
+                ) : sessionName ? (
+                  <>
+                    <span className="truncate">{sessionName}</span>
+                    <ChevronDown className={cn("w-3 h-3 shrink-0 transition-transform opacity-70", showTaskDropdown && "rotate-180")} />
+                  </>
+                ) : (
+                  <>
+                    <ListTodo className="w-3.5 h-3.5 shrink-0 opacity-70" />
+                    <span className="opacity-80 truncate">Select task</span>
+                    <ChevronDown className={cn("w-3 h-3 shrink-0 transition-transform opacity-70", showTaskDropdown && "rotate-180")} />
+                  </>
+                )}
+              </button>
+
+              {/* Task Dropdown */}
+              {showTaskDropdown && (
+                <div className="absolute top-full right-0 mt-1 w-60 bg-card border border-border rounded-2xl shadow-2xl z-50 p-2 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="flex items-center justify-between px-2 py-1.5">
+                    <span className="text-[10px] font-mono font-bold uppercase opacity-60">FOCUS TOPIC</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowTaskDropdown(false)}
+                      className="text-[10px] font-mono opacity-50 hover:opacity-100 p-1"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (setSelectedTodoId) setSelectedTodoId(null);
+                      if (setSessionName) setSessionName("");
+                      setShowTaskDropdown(false);
+                    }}
+                    className={cn(
+                      "w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all",
+                      !activeTask ? "bg-primary/10 text-foreground font-bold" : "hover:bg-secondary/80 text-muted-foreground"
+                    )}
+                  >
+                    <div className="flex items-center gap-2">
+                      <ListTodo className="w-3.5 h-3.5 shrink-0 text-foreground" />
+                      <span>Custom Focus</span>
+                    </div>
+                    {!activeTask && <CheckCircle2 className="w-3.5 h-3.5" />}
+                  </button>
+
+                  <div className="px-2 pt-1 text-[10px] font-mono font-bold uppercase opacity-50 text-muted-foreground">MY TASKS</div>
+
+                  <div className="max-h-36 overflow-y-auto stable-scrollbar space-y-0.5">
+                    {todos.filter(t => !t.completed).length === 0 ? (
+                      <div className="px-3 py-2 text-[11px] font-mono opacity-50 italic text-center text-muted-foreground">No pending tasks</div>
+                    ) : (
+                      todos.filter(t => !t.completed).map((task) => (
+                        <button
+                          key={task.id}
+                          type="button"
+                          onClick={() => {
+                            if (setSelectedTodoId) setSelectedTodoId(task.id);
+                            if (setSessionName) setSessionName(task.text);
+                            setShowTaskDropdown(false);
+                          }}
+                          className={cn(
+                            "w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all",
+                            activeTask?.id === task.id ? "bg-primary/10 text-foreground font-bold" : "hover:bg-secondary/80 text-muted-foreground"
+                          )}
+                        >
+                          <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
+                            <ListTodo className="w-3.5 h-3.5 shrink-0 text-foreground" />
+                            <span className="truncate">{task.text}</span>
+                          </div>
+                          {activeTask?.id === task.id && <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />}
+                        </button>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
-          <div className="border-t border-border pt-0.5" />
-
-          <div>
-            <p className="text-xs font-semibold text-foreground truncate">
-              {activeTask ? activeTask.text : (sessionName || "General Focus")}
-            </p>
-          </div>
-
-          <div className="flex items-center justify-between gap-2 pt-1 relative">
+          {/* Bottom Row: Control Buttons */}
+          <div className="flex items-center gap-2">
+            {/* Complete Session Button */}
             <button
               onClick={handleCompleteSession}
               disabled={!isActive}
               className={cn(
-                "flex-1 flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-xl bg-secondary border border-border text-[11px] font-medium text-foreground hover:bg-muted transition-colors",
-                !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
+                "flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all",
+                !isActive
+                  ? "bg-card border-border text-muted-foreground cursor-not-allowed opacity-50"
+                  : "bg-secondary border-border hover:bg-accent text-foreground cursor-pointer"
               )}
               title={isActive ? "Complete Session" : "Start timer to complete session"}
             >
@@ -209,21 +272,27 @@ export const FloatingTimerCapsule: React.FC = () => {
               <span>Complete</span>
             </button>
 
+            {/* Log Distraction Button */}
             <div className="relative">
               <button
-                onClick={() => setShowDistractionMenu(!showDistractionMenu)}
                 disabled={!isActive}
+                onClick={() => {
+                  if (!isActive) return;
+                  setShowDistractionMenu(!showDistractionMenu);
+                }}
                 className={cn(
-                  "w-8 h-8 rounded-xl bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-rose-400 transition-colors",
-                  !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
+                  "p-2 rounded-xl border transition-all",
+                  !isActive
+                    ? "bg-card border-border text-muted-foreground cursor-not-allowed opacity-50"
+                    : "bg-secondary border-border hover:bg-accent text-muted-foreground"
                 )}
                 title={isActive ? "Log Distraction" : "Start timer to log distraction"}
               >
-                <AlertTriangle className="w-3.5 h-3.5" />
+                <AlertTriangle className="w-4 h-4" />
               </button>
 
               {isActive && showDistractionMenu && (
-                <div className="absolute bottom-11 left-1/2 -translate-x-1/2 w-40 bg-card border border-border rounded-2xl shadow-2xl z-50 p-2 space-y-1 animate-in zoom-in-95 duration-150">
+                <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-40 bg-card border border-border rounded-2xl shadow-2xl z-50 p-2 space-y-1 animate-in zoom-in-95 duration-150">
                   {DISTRACTION_OPTIONS.map((opt) => (
                     <button
                       key={opt}
@@ -240,18 +309,19 @@ export const FloatingTimerCapsule: React.FC = () => {
               )}
             </div>
 
+            {/* Start / Pause Button */}
             <button
               onClick={handleToggleTimer}
-              className="flex-1 flex items-center justify-center gap-1.5 px-4 py-1.5 rounded-xl bg-primary text-primary-foreground font-semibold text-[11px] hover:bg-primary/90 transition-colors shadow-sm"
+              className="flex-1 py-2 px-3 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all shadow bg-primary text-primary-foreground border-primary hover:bg-accent"
             >
               {isActive ? (
                 <>
-                  <Pause className="w-3 h-3 fill-primary-foreground" />
+                  <Pause className="w-3.5 h-3.5 fill-current" />
                   <span>Pause</span>
                 </>
               ) : (
                 <>
-                  <Play className="w-3 h-3 fill-primary-foreground ml-0.5" />
+                  <Play className="w-3.5 h-3.5 fill-current ml-0.5" />
                   <span>Start</span>
                 </>
               )}
