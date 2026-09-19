@@ -20,6 +20,7 @@ export function FocusTimer() {
         timerState,
         setTimeLeft,
         setIsActive,
+        setTimerState,
         setSessionStartTime,
         sessionName,
         setSessionName,
@@ -45,6 +46,7 @@ export function FocusTimer() {
             timerState: s.timerState,
             setTimeLeft: s.setTimeLeft,
             setIsActive: s.setIsActive,
+            setTimerState: s.setTimerState,
             setSessionStartTime: s.setSessionStartTime,
             sessionName: s.sessionName,
             setSessionName: s.setSessionName,
@@ -170,8 +172,11 @@ export function FocusTimer() {
         const breakSeconds = Math.floor(duration / 5);
         if (breakSeconds > 0) {
             setTimeLeft(breakSeconds);
+            setTimerState("BREAK");
+            setIsActive(true);
         } else {
             setTimeLeft(0);
+            setTimerState("FLOW");
         }
 
         setDeepFocusMode(false);
@@ -198,6 +203,7 @@ export function FocusTimer() {
         timeLeft,
         setTimeLeft,
         setIsActive,
+        setTimerState,
         setDeepFocusMode,
         playSound,
         sessionName,
@@ -227,6 +233,7 @@ export function FocusTimer() {
     const resetTimer = () => {
         setIsActive(false);
         setTimeLeft(0);
+        setTimerState("FLOW");
     };
 
     const formatTime = (seconds: number) => {
