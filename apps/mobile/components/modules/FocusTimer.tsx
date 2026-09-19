@@ -127,6 +127,7 @@ export function FocusTimer() {
     resetAllData,
     toggleSubtask,
     setDeepFocusMode,
+    autoStartBreak,
   } = useAppStore();
 
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
@@ -195,7 +196,7 @@ export function FocusTimer() {
     if (breakSeconds > 0) {
       setTimeLeft(breakSeconds);
       setTimerState('BREAK');
-      setIsActive(true);
+      setIsActive(autoStartBreak ?? true);
     } else {
       setTimeLeft(0);
       setTimerState('FLOW');

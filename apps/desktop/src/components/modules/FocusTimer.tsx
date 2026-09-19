@@ -34,6 +34,8 @@ export const FocusTimer: React.FC = () => {
     sessionName,
     setSessionName,
     setDeepFocusMode,
+    autoStartBreak,
+    autoStartFlow,
   } = useDesktopStore();
 
   const [showTaskDropdown, setShowTaskDropdown] = useState(false);
@@ -71,6 +73,7 @@ export const FocusTimer: React.FC = () => {
       setFlowTimeElapsed(0);
       setTimeLeft(0);
       setTimerState("FLOW");
+      setIsActive(autoStartFlow ?? true);
       setDeepFocusMode(false);
       return;
     }
@@ -111,7 +114,7 @@ export const FocusTimer: React.FC = () => {
     setFlowTimeElapsed(0);
     setTimeLeft(calculatedBreakSeconds);
     setTimerState("BREAK");
-    setIsActive(true);
+    setIsActive(autoStartBreak ?? true);
     setDeepFocusMode(false);
   };
 

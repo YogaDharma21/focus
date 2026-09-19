@@ -28,7 +28,9 @@ export const DeepFocusOverlay: React.FC = () => {
     isMusicPlaying,
     setIsMusicPlaying,
     volume,
-    setVolume
+    setVolume,
+    autoStartBreak,
+    autoStartFlow,
   } = useDesktopStore();
 
   const [showDistractionMenu, setShowDistractionMenu] = useState(false);
@@ -66,6 +68,7 @@ export const DeepFocusOverlay: React.FC = () => {
       setFlowTimeElapsed(0);
       setTimeLeft(0);
       setTimerState("FLOW");
+      setIsActive(autoStartFlow ?? true);
       setDeepFocusMode(false);
       return;
     }
@@ -105,7 +108,7 @@ export const DeepFocusOverlay: React.FC = () => {
     setFlowTimeElapsed(0);
     setTimeLeft(calculatedBreakSeconds);
     setTimerState("BREAK");
-    setIsActive(true);
+    setIsActive(autoStartBreak ?? true);
     setDeepFocusMode(false);
   };
 
