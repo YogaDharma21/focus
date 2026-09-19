@@ -16,6 +16,7 @@ export function DeepFocusOverlay() {
         setIsActive,
         setDeepFocusMode,
         setTimeLeft,
+        setTimerState,
         addSession,
         todos,
         selectedTodoId,
@@ -36,6 +37,7 @@ export function DeepFocusOverlay() {
             setIsActive: s.setIsActive,
             setDeepFocusMode: s.setDeepFocusMode,
             setTimeLeft: s.setTimeLeft,
+            setTimerState: s.setTimerState,
             addSession: s.addSession,
             todos: s.todos,
             selectedTodoId: s.selectedTodoId,
@@ -133,8 +135,11 @@ export function DeepFocusOverlay() {
         const breakSeconds = Math.floor(duration / 5);
         if (breakSeconds > 0) {
             setTimeLeft(breakSeconds);
+            setTimerState("BREAK");
+            setIsActive(true);
         } else {
             setTimeLeft(0);
+            setTimerState("FLOW");
         }
 
         setDeepFocusMode(false);
@@ -143,6 +148,7 @@ export function DeepFocusOverlay() {
         timeLeft,
         setTimeLeft,
         setIsActive,
+        setTimerState,
         setDeepFocusMode,
         playSound,
         addSession,
