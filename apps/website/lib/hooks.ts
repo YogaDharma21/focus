@@ -25,9 +25,12 @@ export function useTimerEngine() {
         setTimerState,
         addSession,
         setDeepFocusMode,
+        soundEnabled,
         soundEffectVolume,
         soundEffectEnabled,
         setIsMusicPlaying,
+        autoStartBreak,
+        autoStartFlow,
     } = useAppStore(
         useShallow((s) => ({
             isActive: s.isActive,
@@ -39,27 +42,30 @@ export function useTimerEngine() {
             setTimerState: s.setTimerState,
             addSession: s.addSession,
             setDeepFocusMode: s.setDeepFocusMode,
+            soundEnabled: s.soundEnabled ?? true,
             soundEffectVolume: s.soundEffectVolume,
             soundEffectEnabled: s.soundEffectEnabled,
             setIsMusicPlaying: s.setIsMusicPlaying,
+            autoStartBreak: s.autoStartBreak ?? true,
+            autoStartFlow: s.autoStartFlow ?? true,
         }))
     );
 
-    const prevTimerRef = useRef({ isActive, timerMode });
+    const prevTimerRef = useRef({ isActive, timerMode, timerState });
 
     useEffect(() => {
         const prev = prevTimerRef.current;
-        const isRunningFocus = isActive && timerMode === "STOPWATCH";
-        const wasRunningFocus = prev.isActive && prev.timerMode === "STOPWATCH";
+        const isRunningFlow = isActive && timerMode === "STOPWATCH" && timerState === "FLOW";
+        const wasRunningFlow = prev.isActive && prev.timerMode === "STOPWATCH" && prev.timerState === "FLOW";
 
-        if (isRunningFocus && !wasRunningFocus) {
+        if (isRunningFlow && !wasRunningFlow) {
             setIsMusicPlaying(true);
-        } else if (!isRunningFocus && wasRunningFocus) {
+        } else if (!isRunningFlow && wasRunningFlow) {
             setIsMusicPlaying(false);
         }
 
-        prevTimerRef.current = { isActive, timerMode };
-    }, [isActive, timerMode, setIsMusicPlaying]);
+        prevTimerRef.current = { isActive, timerMode, timerState };
+    }, [isActive, timerMode, timerState, setIsMusicPlaying]);
 
     const handleAutoCompleteSession = React.useCallback(() => {
         setIsActive(false);
@@ -87,7 +93,7 @@ export function useTimerEngine() {
             if (breakSeconds > 0) {
                 setTimeLeft(breakSeconds);
                 setTimerState("BREAK");
-                setIsActive(true);
+                setIsActive(autoStartBreak);
             } else {
                 setTimeLeft(0);
             }
@@ -103,6 +109,7 @@ export function useTimerEngine() {
         addSession,
         soundEffectEnabled,
         soundEffectVolume,
+        autoStartBreak,
     ]);
 
     const autoCompleteRef = useRef(handleAutoCompleteSession);
@@ -118,8 +125,21 @@ export function useTimerEngine() {
                 if (timerState === "BREAK") {
                     const next = prev - 1;
                     if (next <= 0) {
+                        try {
+                            if ((soundEnabled ?? true) && (soundEffectEnabled ?? true)) {
+                                const audio = new Audio("/soundeffect.mp3");
+                                audio.volume = (soundEffectVolume ?? 80) / 100;
+                                audio.play().catch(() => {});
+                            }
+                        } catch {
+                            // ignore
+                        }
                         setTimerState("FLOW");
-                        setIsActive(false);
+                        if (autoStartFlow) {
+                            setDeepFocusMode(true);
+                        } else {
+                            setIsActive(false);
+                        }
                         return 0;
                     }
                     return next;
@@ -129,5 +149,5 @@ export function useTimerEngine() {
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive]);
+    }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive, setDeepFocusMode, autoStartFlow, soundEnabled, soundEffectEnabled, soundEffectVolume]);
 }

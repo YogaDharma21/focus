@@ -29,6 +29,7 @@ export function DeepFocusOverlay() {
         setIsMusicMuted,
         soundEffectVolume,
         soundEffectEnabled,
+        autoStartBreak,
     } = useAppStore(
         useShallow((s) => ({
             timeLeft: s.timeLeft,
@@ -50,6 +51,7 @@ export function DeepFocusOverlay() {
             setIsMusicMuted: s.setIsMusicMuted,
             soundEffectVolume: s.soundEffectVolume,
             soundEffectEnabled: s.soundEffectEnabled,
+            autoStartBreak: s.autoStartBreak ?? true,
         }))
     );
 
@@ -136,7 +138,7 @@ export function DeepFocusOverlay() {
         if (breakSeconds > 0) {
             setTimeLeft(breakSeconds);
             setTimerState("BREAK");
-            setIsActive(true);
+            setIsActive(autoStartBreak);
         } else {
             setTimeLeft(0);
             setTimerState("FLOW");
@@ -154,6 +156,7 @@ export function DeepFocusOverlay() {
         addSession,
         selectedTodoId,
         todos,
+        autoStartBreak,
     ]);
 
     useEffect(() => {

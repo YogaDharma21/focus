@@ -87,6 +87,8 @@ export interface DesktopState {
   sessionName: string;
   selectedTodoId: string | null;
   selectedSubtaskId: string | null;
+  autoStartBreak: boolean;
+  autoStartFlow: boolean;
 
   setTimeLeft: (time: number | ((prev: number) => number)) => void;
   setFlowTimeElapsed: (time: number | ((prev: number) => number)) => void;
@@ -96,6 +98,8 @@ export interface DesktopState {
   setSessionName: (name: string) => void;
   setSelectedTodoId: (id: string | null) => void;
   setSelectedSubtaskId: (id: string | null) => void;
+  setAutoStartBreak: (enabled: boolean) => void;
+  setAutoStartFlow: (enabled: boolean) => void;
 
   // Tasks & Groups
   todos: TodoItem[];
@@ -209,6 +213,10 @@ export const useDesktopStore = create<DesktopState>()(
       setTimerState: (state) => set({ timerState: state }),
       setIsActive: (active) => set({ isActive: active }),
       setSessionStartTime: (time) => set({ sessionStartTime: time }),
+      autoStartBreak: true,
+      setAutoStartBreak: (enabled) => set({ autoStartBreak: enabled }),
+      autoStartFlow: true,
+      setAutoStartFlow: (enabled) => set({ autoStartFlow: enabled }),
       setSessionName: (name) => set({ sessionName: name }),
       setSelectedTodoId: (id) => set({ selectedTodoId: id }),
       setSelectedSubtaskId: (id) => set({ selectedSubtaskId: id }),

@@ -32,11 +32,15 @@ interface AppState {
     timeLeft: number;
     isActive: boolean;
     sessionStartTime: string | null;
+    autoStartBreak: boolean;
+    autoStartFlow: boolean;
     setTimerMode: (mode: "STOPWATCH") => void;
     setTimerState: (state: "FLOW" | "BREAK") => void;
     setTimeLeft: (time: number | ((prev: number) => number)) => void;
     setIsActive: (active: boolean) => void;
     setSessionStartTime: (time: string | null) => void;
+    setAutoStartBreak: (enabled: boolean) => void;
+    setAutoStartFlow: (enabled: boolean) => void;
     sessionName: string;
     setSessionName: (name: string) => void;
     selectedTodoId: string | null;
@@ -155,6 +159,10 @@ export const useAppStore = create<AppState>()(
                 })),
             setIsActive: (active) => set({ isActive: active }),
             setSessionStartTime: (time) => set({ sessionStartTime: time }),
+            autoStartBreak: true,
+            setAutoStartBreak: (enabled) => set({ autoStartBreak: enabled }),
+            autoStartFlow: true,
+            setAutoStartFlow: (enabled) => set({ autoStartFlow: enabled }),
             sessionName: "",
             setSessionName: (name) => set({ sessionName: name }),
             selectedTodoId: null,
@@ -313,6 +321,8 @@ export const useAppStore = create<AppState>()(
                     timeLeft: 0,
                     isActive: false,
                     sessionStartTime: null,
+                    autoStartBreak: true,
+                    autoStartFlow: true,
                     sessionName: "",
                     selectedTodoId: null,
                     selectedSubtaskId: null,

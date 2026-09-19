@@ -47,6 +47,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
     setTimeLeft,
     isActive,
     setIsActive,
+    setTimerState,
     selectedTodoId,
     setSelectedTodoId,
     sessionName,
@@ -54,6 +55,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
     todos,
     addSession,
     addDistraction,
+    autoStartBreak,
   } = useAppStore();
 
   const isTimerScreen =
@@ -88,7 +90,15 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
         mode: 'STOPWATCH',
       });
     }
-    setTimeLeft(0);
+    const breakSeconds = Math.floor(flowDuration / 5);
+    if (breakSeconds > 0) {
+      setTimeLeft(breakSeconds);
+      setTimerState('BREAK');
+      setIsActive(autoStartBreak ?? true);
+    } else {
+      setTimeLeft(0);
+      setTimerState('FLOW');
+    }
     setDeepFocusMode(false);
   };
 
