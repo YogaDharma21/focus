@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { playCompletionSound } from '../../lib/sound';
 import { 
-  Play, Pause, AlertTriangle, CheckCircle2, Clock 
+  Play, Pause, AlertTriangle, CheckCircle2, Clock, Coffee
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
@@ -10,13 +10,15 @@ import { cn } from '../../lib/utils';
 const DISTRACTION_OPTIONS = ["Phone", "Social Media", "Bathroom", "Meeting", "Other"];
 
 export const FloatingTimerCapsule: React.FC = () => {
-  const { 
-    currentView, 
-    timeLeft, 
+  const {
+    currentView,
+    timeLeft,
     setTimeLeft,
-    flowTimeElapsed, 
+    setTimerState,
+    flowTimeElapsed,
     setFlowTimeElapsed,
-    isActive, 
+    timerState,
+    isActive,
     setIsActive,
     todos,
     updateTodo,
@@ -39,12 +41,21 @@ export const FloatingTimerCapsule: React.FC = () => {
     setIsActive(false);
     playCompletionSound();
 
+    if (timerState === "BREAK") {
+      setFlowTimeElapsed(0);
+      setTimeLeft(0);
+      setTimerState("FLOW");
+      setDeepFocusMode(false);
+      setIsExpanded(false);
+      return;
+    }
+
     const activeTask = todos.find(t => t.id === selectedTodoId);
     const title = activeTask?.text || sessionName || 'Focus Session';
 
     const durationWorked = Math.max(1, flowTimeElapsed);
     const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
-    
+
     addSession({
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
@@ -63,17 +74,19 @@ export const FloatingTimerCapsule: React.FC = () => {
 
     const breakMins = Math.floor(calculatedBreakSeconds / 60);
     const breakSecs = calculatedBreakSeconds % 60;
-    const breakStr = breakMins > 0 
-      ? `${breakMins}m${breakSecs > 0 ? ` ${breakSecs}s` : ''}` 
+    const breakStr = breakMins > 0
+      ? `${breakMins}m${breakSecs > 0 ? ` ${breakSecs}s` : ''}`
       : `${breakSecs}s`;
 
     electron.showNotification(
-      "Flow Session Complete!", 
+      "Flow Session Complete!",
       `Focused for ${Math.floor(durationWorked / 60)}m. Earned ${breakStr} break!`
     );
-    
+
     setFlowTimeElapsed(0);
-    setTimeLeft(0);
+    setTimeLeft(calculatedBreakSeconds);
+    setTimerState("BREAK");
+    setIsActive(true);
     setDeepFocusMode(false);
     setIsExpanded(false);
   };
@@ -95,7 +108,7 @@ export const FloatingTimerCapsule: React.FC = () => {
 
   if (currentView === 'FOCUS') return null;
 
-  const activeSeconds = flowTimeElapsed;
+  const activeSeconds = timerState === "BREAK" ? timeLeft : flowTimeElapsed;
   const m = Math.floor(activeSeconds / 60);
   const s = activeSeconds % 60;
   const timeString = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
@@ -128,8 +141,12 @@ export const FloatingTimerCapsule: React.FC = () => {
           className="bg-card border border-border rounded-full px-3 py-1 flex items-center justify-between gap-3 shadow-md hover:bg-secondary hover:border-muted-foreground transition-all active:scale-98 text-xs"
         >
           <div className="flex items-center gap-1.5 min-w-0 text-left">
-            <span className="text-xs flex items-center text-foreground"><Clock className="w-3.5 h-3.5" /></span>
-            <span className="text-[11px] font-semibold text-foreground tracking-tight">Flow</span>
+            <span className="text-xs flex items-center text-foreground">
+              {timerState === "BREAK" ? <Coffee className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+            </span>
+            <span className="text-[11px] font-semibold text-foreground tracking-tight">
+              {timerState === "BREAK" ? "Break" : "Flow"}
+            </span>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
@@ -158,8 +175,12 @@ export const FloatingTimerCapsule: React.FC = () => {
             title="Click to collapse widget"
           >
             <div className="flex items-center gap-2">
-              <span className="text-base flex items-center text-foreground"><Clock className="w-3.5 h-3.5" /></span>
-              <span className="text-xs font-bold text-foreground tracking-tight">Flow</span>
+              <span className="text-base flex items-center text-foreground">
+                {timerState === "BREAK" ? <Coffee className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+              </span>
+              <span className="text-xs font-bold text-foreground tracking-tight">
+                {timerState === "BREAK" ? "Break" : "Flow"}
+              </span>
             </div>
             <span className="text-xl font-extrabold font-mono text-foreground tracking-tight">
               {timeString}

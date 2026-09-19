@@ -7,8 +7,10 @@ export const GlobalTimerEngine: React.FC = () => {
   const {
     timeLeft,
     setTimeLeft,
+    setTimerState,
     flowTimeElapsed,
     setFlowTimeElapsed,
+    timerState,
     isActive,
     setIsActive,
     todos,
@@ -37,14 +39,26 @@ export const GlobalTimerEngine: React.FC = () => {
 
     if (isActive) {
       interval = setInterval(() => {
-        setFlowTimeElapsed((prev) => prev + 1);
+        if (timerState === 'BREAK') {
+          setTimeLeft((prev) => {
+            const next = prev - 1;
+            if (next <= 0) {
+              setTimerState('FLOW');
+              setIsActive(false);
+              return 0;
+            }
+            return next;
+          });
+        } else {
+          setFlowTimeElapsed((prev) => prev + 1);
+        }
       }, 1000);
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, setFlowTimeElapsed]);
+  }, [isActive, setFlowTimeElapsed, setTimeLeft, timerState, setTimerState, setIsActive]);
 
   return null;
 };

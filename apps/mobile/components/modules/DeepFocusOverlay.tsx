@@ -24,6 +24,8 @@ export function DeepFocusOverlay() {
     setDeepFocusMode,
     timeLeft,
     setTimeLeft,
+    timerState,
+    setTimerState,
     isActive,
     setIsActive,
     sessionName,
@@ -63,7 +65,16 @@ export function DeepFocusOverlay() {
         mode: 'STOPWATCH',
       });
     }
-    setTimeLeft(0);
+
+    const breakSeconds = Math.floor(flowDuration / 5);
+    if (breakSeconds > 0) {
+      setTimeLeft(breakSeconds);
+      setTimerState('BREAK');
+      setIsActive(true);
+    } else {
+      setTimeLeft(0);
+      setTimerState('FLOW');
+    }
     setDeepFocusMode(false);
   };
 

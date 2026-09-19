@@ -79,6 +79,7 @@ export interface DesktopState {
 
   // Timer State
   timerMode: "STOPWATCH";
+  timerState: "FLOW" | "BREAK";
   timeLeft: number;
   flowTimeElapsed: number;
   isActive: boolean;
@@ -89,6 +90,7 @@ export interface DesktopState {
 
   setTimeLeft: (time: number | ((prev: number) => number)) => void;
   setFlowTimeElapsed: (time: number | ((prev: number) => number)) => void;
+  setTimerState: (state: "FLOW" | "BREAK") => void;
   setIsActive: (active: boolean) => void;
   setSessionStartTime: (time: string | null) => void;
   setSessionName: (name: string) => void;
@@ -187,6 +189,7 @@ export const useDesktopStore = create<DesktopState>()(
 
       // Timer State
       timerMode: "STOPWATCH",
+      timerState: "FLOW",
       timeLeft: 0,
       flowTimeElapsed: 0,
       isActive: false,
@@ -203,6 +206,7 @@ export const useDesktopStore = create<DesktopState>()(
         set((state) => ({
           flowTimeElapsed: typeof timeOrFn === "function" ? timeOrFn(state.flowTimeElapsed) : timeOrFn,
         })),
+      setTimerState: (state) => set({ timerState: state }),
       setIsActive: (active) => set({ isActive: active }),
       setSessionStartTime: (time) => set({ sessionStartTime: time }),
       setSessionName: (name) => set({ sessionName: name }),
