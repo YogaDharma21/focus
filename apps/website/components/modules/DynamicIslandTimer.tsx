@@ -16,6 +16,7 @@ export function DynamicIslandTimer() {
         setSessionName,
         setIsActive,
         setTimeLeft,
+        setTimerState,
         addSession,
         setSessionStartTime,
         setDeepFocusMode,
@@ -34,6 +35,7 @@ export function DynamicIslandTimer() {
             setSessionName: s.setSessionName,
             setIsActive: s.setIsActive,
             setTimeLeft: s.setTimeLeft,
+            setTimerState: s.setTimerState,
             addSession: s.addSession,
             setSessionStartTime: s.setSessionStartTime,
             setDeepFocusMode: s.setDeepFocusMode,
@@ -119,8 +121,11 @@ export function DynamicIslandTimer() {
         const breakSeconds = Math.floor(duration / 5);
         if (breakSeconds > 0) {
             setTimeLeft(breakSeconds);
+            setTimerState("BREAK");
+            setIsActive(true);
         } else {
             setTimeLeft(0);
+            setTimerState("FLOW");
         }
 
         setDeepFocusMode(false);

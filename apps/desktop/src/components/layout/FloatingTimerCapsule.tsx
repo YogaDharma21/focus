@@ -10,14 +10,15 @@ import { cn } from '../../lib/utils';
 const DISTRACTION_OPTIONS = ["Phone", "Social Media", "Bathroom", "Meeting", "Other"];
 
 export const FloatingTimerCapsule: React.FC = () => {
-  const { 
-    currentView, 
-    timeLeft, 
+  const {
+    currentView,
+    timeLeft,
     setTimeLeft,
-    flowTimeElapsed, 
+    setTimerState,
+    flowTimeElapsed,
     setFlowTimeElapsed,
     timerState,
-    isActive, 
+    isActive,
     setIsActive,
     todos,
     updateTodo,
@@ -40,12 +41,21 @@ export const FloatingTimerCapsule: React.FC = () => {
     setIsActive(false);
     playCompletionSound();
 
+    if (timerState === "BREAK") {
+      setFlowTimeElapsed(0);
+      setTimeLeft(0);
+      setTimerState("FLOW");
+      setDeepFocusMode(false);
+      setIsExpanded(false);
+      return;
+    }
+
     const activeTask = todos.find(t => t.id === selectedTodoId);
     const title = activeTask?.text || sessionName || 'Focus Session';
 
     const durationWorked = Math.max(1, flowTimeElapsed);
     const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
-    
+
     addSession({
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
@@ -64,17 +74,19 @@ export const FloatingTimerCapsule: React.FC = () => {
 
     const breakMins = Math.floor(calculatedBreakSeconds / 60);
     const breakSecs = calculatedBreakSeconds % 60;
-    const breakStr = breakMins > 0 
-      ? `${breakMins}m${breakSecs > 0 ? ` ${breakSecs}s` : ''}` 
+    const breakStr = breakMins > 0
+      ? `${breakMins}m${breakSecs > 0 ? ` ${breakSecs}s` : ''}`
       : `${breakSecs}s`;
 
     electron.showNotification(
-      "Flow Session Complete!", 
+      "Flow Session Complete!",
       `Focused for ${Math.floor(durationWorked / 60)}m. Earned ${breakStr} break!`
     );
-    
+
     setFlowTimeElapsed(0);
-    setTimeLeft(0);
+    setTimeLeft(calculatedBreakSeconds);
+    setTimerState("BREAK");
+    setIsActive(true);
     setDeepFocusMode(false);
     setIsExpanded(false);
   };
@@ -96,7 +108,7 @@ export const FloatingTimerCapsule: React.FC = () => {
 
   if (currentView === 'FOCUS') return null;
 
-  const activeSeconds = flowTimeElapsed;
+  const activeSeconds = timerState === "BREAK" ? timeLeft : flowTimeElapsed;
   const m = Math.floor(activeSeconds / 60);
   const s = activeSeconds % 60;
   const timeString = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;

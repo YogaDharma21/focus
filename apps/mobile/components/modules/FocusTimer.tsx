@@ -114,6 +114,7 @@ export function FocusTimer() {
     setTimeLeft,
     isActive,
     setIsActive,
+    setTimerState,
     sessionName,
     setSessionName,
     todos,
@@ -173,6 +174,7 @@ export function FocusTimer() {
       });
     }
     setTimeLeft(0);
+    setTimerState('FLOW');
   };
 
   const handleCompleteSession = () => {
@@ -188,7 +190,16 @@ export function FocusTimer() {
         mode: 'STOPWATCH',
       });
     }
-    setTimeLeft(0);
+
+    const breakSeconds = Math.floor(flowDuration / 5);
+    if (breakSeconds > 0) {
+      setTimeLeft(breakSeconds);
+      setTimerState('BREAK');
+      setIsActive(true);
+    } else {
+      setTimeLeft(0);
+      setTimerState('FLOW');
+    }
     setDeepFocusMode(false);
   };
 

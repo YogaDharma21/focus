@@ -14,6 +14,7 @@ export const FocusTimer: React.FC = () => {
   const {
     timeLeft,
     setTimeLeft,
+    setTimerState,
     flowTimeElapsed,
     setFlowTimeElapsed,
     timerState,
@@ -66,12 +67,20 @@ export const FocusTimer: React.FC = () => {
     setIsActive(false);
     playCompletionSound();
 
+    if (timerState === "BREAK") {
+      setFlowTimeElapsed(0);
+      setTimeLeft(0);
+      setTimerState("FLOW");
+      setDeepFocusMode(false);
+      return;
+    }
+
     const currentTask = todos.find(t => t.id === selectedTodoId);
     const title = currentTask?.text || sessionName || 'Focus Session';
 
     const durationWorked = Math.max(1, flowTimeElapsed);
     const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
-    
+
     addSession({
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
@@ -90,23 +99,27 @@ export const FocusTimer: React.FC = () => {
 
     const breakMins = Math.floor(calculatedBreakSeconds / 60);
     const breakSecs = calculatedBreakSeconds % 60;
-    const breakStr = breakMins > 0 
-      ? `${breakMins}m${breakSecs > 0 ? ` ${breakSecs}s` : ''}` 
+    const breakStr = breakMins > 0
+      ? `${breakMins}m${breakSecs > 0 ? ` ${breakSecs}s` : ''}`
       : `${breakSecs}s`;
 
     electron.showNotification(
-      "Flow Session Complete!", 
+      "Flow Session Complete!",
       `Focused for ${Math.floor(durationWorked / 60)}m. Earned ${breakStr} break!`
     );
-    
+
     setFlowTimeElapsed(0);
-    setTimeLeft(0);
+    setTimeLeft(calculatedBreakSeconds);
+    setTimerState("BREAK");
+    setIsActive(true);
     setDeepFocusMode(false);
   };
 
   const resetTimer = () => {
     setIsActive(false);
     setFlowTimeElapsed(0);
+    setTimeLeft(0);
+    setTimerState("FLOW");
   };
 
   const formatDisplayTime = (totalSeconds: number) => {
@@ -133,7 +146,7 @@ export const FocusTimer: React.FC = () => {
     }
   };
 
-  const activeSeconds = flowTimeElapsed;
+  const activeSeconds = timerState === "BREAK" ? timeLeft : flowTimeElapsed;
   const progressPercent = Math.min(100, (flowTimeElapsed / 3600) * 100);
 
   const activeTask = todos.find((t) => t.id === selectedTodoId);
