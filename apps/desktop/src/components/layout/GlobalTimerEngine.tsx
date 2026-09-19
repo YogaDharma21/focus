@@ -23,17 +23,19 @@ export const GlobalTimerEngine: React.FC = () => {
     autoStartFlow,
   } = useDesktopStore();
 
-  const prevTimerRef = React.useRef({ isActive });
+  const prevTimerRef = React.useRef({ isActive, timerState });
 
   useEffect(() => {
     const prev = prevTimerRef.current;
-    if (isActive && !prev.isActive) {
+    const isRunningFlow = isActive && timerState === 'FLOW';
+    const wasRunningFlow = prev.isActive && prev.timerState === 'FLOW';
+    if (isRunningFlow && !wasRunningFlow) {
       setIsMusicPlaying(true);
-    } else if (!isActive && prev.isActive) {
+    } else if (!isRunningFlow && wasRunningFlow) {
       setIsMusicPlaying(false);
     }
-    prevTimerRef.current = { isActive };
-  }, [isActive, setIsMusicPlaying]);
+    prevTimerRef.current = { isActive, timerState };
+  }, [isActive, timerState, setIsMusicPlaying]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;

@@ -42,12 +42,12 @@ export default function TabLayout() {
   }, [isActive, deepFocusMode, setDeepFocusMode]);
 
   React.useEffect(() => {
-    if (isActive) {
+    if (isActive && timerState === 'FLOW') {
       setIsMusicPlaying(soundEnabled && musicEnabled);
     } else {
       setIsMusicPlaying(false);
     }
-  }, [isActive, musicEnabled, setIsMusicPlaying, soundEnabled]);
+  }, [isActive, timerState, musicEnabled, setIsMusicPlaying, soundEnabled]);
 
   React.useEffect(() => {
     let interval: any = null;

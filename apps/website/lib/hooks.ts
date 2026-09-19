@@ -51,21 +51,21 @@ export function useTimerEngine() {
         }))
     );
 
-    const prevTimerRef = useRef({ isActive, timerMode });
+    const prevTimerRef = useRef({ isActive, timerMode, timerState });
 
     useEffect(() => {
         const prev = prevTimerRef.current;
-        const isRunningFocus = isActive && timerMode === "STOPWATCH";
-        const wasRunningFocus = prev.isActive && prev.timerMode === "STOPWATCH";
+        const isRunningFlow = isActive && timerMode === "STOPWATCH" && timerState === "FLOW";
+        const wasRunningFlow = prev.isActive && prev.timerMode === "STOPWATCH" && prev.timerState === "FLOW";
 
-        if (isRunningFocus && !wasRunningFocus) {
+        if (isRunningFlow && !wasRunningFlow) {
             setIsMusicPlaying(true);
-        } else if (!isRunningFocus && wasRunningFocus) {
+        } else if (!isRunningFlow && wasRunningFlow) {
             setIsMusicPlaying(false);
         }
 
-        prevTimerRef.current = { isActive, timerMode };
-    }, [isActive, timerMode, setIsMusicPlaying]);
+        prevTimerRef.current = { isActive, timerMode, timerState };
+    }, [isActive, timerMode, timerState, setIsMusicPlaying]);
 
     const handleAutoCompleteSession = React.useCallback(() => {
         setIsActive(false);
