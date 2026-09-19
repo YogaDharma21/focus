@@ -28,10 +28,12 @@ interface AppState {
     setSoundEffectEnabled: (enabled: boolean) => void;
 
     timerMode: "STOPWATCH";
+    timerState: "FLOW" | "BREAK";
     timeLeft: number;
     isActive: boolean;
     sessionStartTime: string | null;
     setTimerMode: (mode: "STOPWATCH") => void;
+    setTimerState: (state: "FLOW" | "BREAK") => void;
     setTimeLeft: (time: number | ((prev: number) => number)) => void;
     setIsActive: (active: boolean) => void;
     setSessionStartTime: (time: string | null) => void;
@@ -141,10 +143,12 @@ export const useAppStore = create<AppState>()(
             setSoundEffectEnabled: (enabled) => set({ soundEffectEnabled: enabled }),
 
             timerMode: "STOPWATCH",
+            timerState: "FLOW",
             timeLeft: 0,
             isActive: false,
             sessionStartTime: null,
             setTimerMode: (mode) => set({ timerMode: mode }),
+            setTimerState: (state) => set({ timerState: state }),
             setTimeLeft: (timeOrFn) =>
                 set((state) => ({
                     timeLeft: typeof timeOrFn === "function" ? timeOrFn(state.timeLeft) : timeOrFn,
@@ -305,6 +309,7 @@ export const useAppStore = create<AppState>()(
                     mediaPlayerOpen: false,
                     isMusicPlaying: false,
                     timerMode: "STOPWATCH",
+                    timerState: "FLOW",
                     timeLeft: 0,
                     isActive: false,
                     sessionStartTime: null,

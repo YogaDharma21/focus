@@ -31,7 +31,8 @@ import {
   X,
   ChevronDown,
   FileText,
-
+  Clock,
+  Coffee,
 } from 'lucide-react-native';
 
 const DISTRACTION_CATEGORIES = [
@@ -108,6 +109,7 @@ export function FocusTimer() {
   const {
     timerMode,
     setTimerMode,
+    timerState,
     timeLeft,
     setTimeLeft,
     isActive,
@@ -204,6 +206,21 @@ export function FocusTimer() {
     <View style={styles.container}>
       {/* Timer Content Container (No Card Box) */}
       <View style={styles.timerContent}>
+        <View
+          style={[
+            styles.modePill,
+            { backgroundColor: colors.muted, borderColor: colors.border },
+          ]}
+        >
+          {timerState === 'BREAK' ? (
+            <Coffee size={12} color={colors.mutedText} />
+          ) : (
+            <Clock size={12} color={colors.mutedText} />
+          )}
+          <Text style={[styles.modePillText, { color: colors.mutedText }]}>
+            {timerState === 'BREAK' ? 'Break' : 'Flow'}
+          </Text>
+        </View>
         <Text style={[styles.timeDisplay, { color: colors.text }]}>
           {formatTime(timeLeft)}
         </Text>
@@ -543,6 +560,22 @@ const styles = StyleSheet.create({
     letterSpacing: -2,
     fontVariant: ['tabular-nums'],
     marginVertical: 12,
+  },
+  modePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+    alignSelf: 'center',
+  },
+  modePillText: {
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
   },
   selectedTaskCardContainer: {
     width: '100%',
