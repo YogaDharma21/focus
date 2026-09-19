@@ -56,7 +56,7 @@ export const FloatingTimerCapsule: React.FC = () => {
       setTimeLeft(0);
       setTimerState("FLOW");
       setIsActive(autoStartFlow ?? true);
-      setDeepFocusMode(false);
+      setDeepFocusMode(autoStartFlow ?? true);
       setIsExpanded(false);
       return;
     }

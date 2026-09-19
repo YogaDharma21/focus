@@ -179,10 +179,6 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="bg-secondary/70 border border-border rounded-2xl p-5 text-xs text-muted-foreground leading-relaxed">
-            Focus Desktop uses Flow mode exclusively. The timer counts up from zero, tracking your focus duration. When you complete a session, a break is automatically calculated as 1/5th of your focus time.
-          </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div
               role="switch"

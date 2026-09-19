@@ -11,6 +11,7 @@ import { DynamicIslandTimer } from '@/components/modules/DynamicIslandTimer';
 import { Clock, ListCheck, BarChart2, Settings } from 'lucide-react-native';
 
 import { useAppStore } from '@/lib/store';
+import { playCompletionSound } from '@/lib/sound';
 
 export default function TabLayout() {
   const insets = useSafeAreaInsets();
@@ -57,8 +58,13 @@ export default function TabLayout() {
           if (timerState === 'BREAK') {
             const next = prev - 1;
             if (next <= 0) {
+              void playCompletionSound();
               setTimerState('FLOW');
-              setIsActive(autoStartFlow ?? true);
+              if (autoStartFlow ?? true) {
+                setDeepFocusMode(true);
+              } else {
+                setIsActive(false);
+              }
               return 0;
             }
             return next;
@@ -71,7 +77,7 @@ export default function TabLayout() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive, autoStartFlow]);
+  }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive, setDeepFocusMode, autoStartFlow]);
 
   const bottomInset = Math.max(insets.bottom, 0);
 

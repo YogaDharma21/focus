@@ -123,8 +123,21 @@ export function useTimerEngine() {
                 if (timerState === "BREAK") {
                     const next = prev - 1;
                     if (next <= 0) {
+                        try {
+                            if (soundEffectEnabled ?? true) {
+                                const audio = new Audio("/soundeffect.mp3");
+                                audio.volume = (soundEffectVolume ?? 80) / 100;
+                                audio.play().catch(() => {});
+                            }
+                        } catch {
+                            // ignore
+                        }
                         setTimerState("FLOW");
-                        setIsActive(autoStartFlow);
+                        if (autoStartFlow) {
+                            setDeepFocusMode(true);
+                        } else {
+                            setIsActive(false);
+                        }
                         return 0;
                     }
                     return next;
@@ -134,5 +147,5 @@ export function useTimerEngine() {
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive, autoStartFlow]);
+    }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive, setDeepFocusMode, autoStartFlow, soundEffectEnabled, soundEffectVolume]);
 }
