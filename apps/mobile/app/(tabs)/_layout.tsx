@@ -28,6 +28,7 @@ export default function TabLayout() {
     setIsMusicPlaying,
     soundEnabled,
     musicEnabled,
+    autoStartFlow,
   } = useAppStore();
 
   const prevActiveRef = React.useRef(isActive);
@@ -57,7 +58,7 @@ export default function TabLayout() {
             const next = prev - 1;
             if (next <= 0) {
               setTimerState('FLOW');
-              setIsActive(false);
+              setIsActive(autoStartFlow ?? true);
               return 0;
             }
             return next;
@@ -70,7 +71,7 @@ export default function TabLayout() {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive]);
+  }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive, autoStartFlow]);
 
   const bottomInset = Math.max(insets.bottom, 0);
 

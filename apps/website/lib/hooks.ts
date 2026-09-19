@@ -28,6 +28,8 @@ export function useTimerEngine() {
         soundEffectVolume,
         soundEffectEnabled,
         setIsMusicPlaying,
+        autoStartBreak,
+        autoStartFlow,
     } = useAppStore(
         useShallow((s) => ({
             isActive: s.isActive,
@@ -42,6 +44,8 @@ export function useTimerEngine() {
             soundEffectVolume: s.soundEffectVolume,
             soundEffectEnabled: s.soundEffectEnabled,
             setIsMusicPlaying: s.setIsMusicPlaying,
+            autoStartBreak: s.autoStartBreak ?? true,
+            autoStartFlow: s.autoStartFlow ?? true,
         }))
     );
 
@@ -87,7 +91,7 @@ export function useTimerEngine() {
             if (breakSeconds > 0) {
                 setTimeLeft(breakSeconds);
                 setTimerState("BREAK");
-                setIsActive(true);
+                setIsActive(autoStartBreak);
             } else {
                 setTimeLeft(0);
             }
@@ -103,6 +107,7 @@ export function useTimerEngine() {
         addSession,
         soundEffectEnabled,
         soundEffectVolume,
+        autoStartBreak,
     ]);
 
     const autoCompleteRef = useRef(handleAutoCompleteSession);
@@ -119,7 +124,7 @@ export function useTimerEngine() {
                     const next = prev - 1;
                     if (next <= 0) {
                         setTimerState("FLOW");
-                        setIsActive(false);
+                        setIsActive(autoStartFlow);
                         return 0;
                     }
                     return next;
@@ -129,5 +134,5 @@ export function useTimerEngine() {
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive]);
+    }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive, autoStartFlow]);
 }

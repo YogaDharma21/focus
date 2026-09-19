@@ -18,6 +18,10 @@ export function SettingsPage() {
     const soundEffectVolume = useAppStore((s) => s.soundEffectVolume);
     const setSoundEffectVolume = useAppStore((s) => s.setSoundEffectVolume);
     const resetAllData = useAppStore((s) => s.resetAllData);
+    const autoStartBreak = useAppStore((s) => s.autoStartBreak ?? true);
+    const setAutoStartBreak = useAppStore((s) => s.setAutoStartBreak);
+    const autoStartFlow = useAppStore((s) => s.autoStartFlow ?? true);
+    const setAutoStartFlow = useAppStore((s) => s.setAutoStartFlow);
     const { theme, setTheme } = useTheme();
 
     const playTestSoundEffect = () => {
@@ -59,6 +63,33 @@ export function SettingsPage() {
                             </button>
                         );
                     })}
+                </div>
+            </div>
+
+            {/* Timer Section */}
+            <div className="p-4 rounded-xl border flex flex-col gap-3 bg-background/40 border-border">
+                <span className="text-xs font-bold text-foreground uppercase tracking-wider">Timer</span>
+
+                <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-card/60 border-border">
+                    <div className="flex flex-col">
+                        <span className="text-xs font-bold text-foreground">Auto-start Break</span>
+                        <span className="text-[10px] text-muted-foreground">Start break countdown automatically</span>
+                    </div>
+                    <Switch
+                        checked={autoStartBreak}
+                        onCheckedChange={setAutoStartBreak}
+                    />
+                </div>
+
+                <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-card/60 border-border">
+                    <div className="flex flex-col">
+                        <span className="text-xs font-bold text-foreground">Auto-start Flow Timer</span>
+                        <span className="text-[10px] text-muted-foreground">Start next flow session when break ends</span>
+                    </div>
+                    <Switch
+                        checked={autoStartFlow}
+                        onCheckedChange={setAutoStartFlow}
+                    />
                 </div>
             </div>
 

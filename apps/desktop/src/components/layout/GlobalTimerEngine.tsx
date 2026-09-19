@@ -19,7 +19,8 @@ export const GlobalTimerEngine: React.FC = () => {
     addSession,
     sessionName,
     setDeepFocusMode,
-    setIsMusicPlaying
+    setIsMusicPlaying,
+    autoStartFlow,
   } = useDesktopStore();
 
   const prevTimerRef = React.useRef({ isActive });
@@ -44,7 +45,7 @@ export const GlobalTimerEngine: React.FC = () => {
             const next = prev - 1;
             if (next <= 0) {
               setTimerState('FLOW');
-              setIsActive(false);
+              setIsActive(autoStartFlow ?? true);
               return 0;
             }
             return next;
@@ -58,7 +59,7 @@ export const GlobalTimerEngine: React.FC = () => {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, setFlowTimeElapsed, setTimeLeft, timerState, setTimerState, setIsActive]);
+  }, [isActive, setFlowTimeElapsed, setTimeLeft, timerState, setTimerState, setIsActive, autoStartFlow]);
 
   return null;
 };

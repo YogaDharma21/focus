@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, StyleSheet, Animated, Linking } from 'react-native';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
-import { Settings, Palette, Volume2, Trash2, Info, ExternalLink } from 'lucide-react-native';
+import { Settings, Palette, Volume2, Trash2, Info, ExternalLink, Timer } from 'lucide-react-native';
 import { VolumeSlider } from '@/components/ui/VolumeSlider';
 import { playCompletionSound } from '@/lib/sound';
 
@@ -121,6 +121,10 @@ export function SettingsPage() {
     setSoundEffectEnabled,
     soundEffectVolume,
     setSoundEffectVolume,
+    autoStartBreak,
+    setAutoStartBreak,
+    autoStartFlow,
+    setAutoStartFlow,
     resetAllData,
   } = useAppStore();
 
@@ -183,6 +187,30 @@ export function SettingsPage() {
             </Text>
           </TouchableOpacity>
         </View>
+      </View>
+
+      {/* Timer Section */}
+      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={styles.sectionHeader}>
+          <Timer size={18} color={colors.text} />
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Timer</Text>
+        </View>
+
+        <SettingToggleRow
+          title="Auto-start Break"
+          subtitle="Start break countdown automatically"
+          value={autoStartBreak ?? true}
+          onToggle={() => setAutoStartBreak(!(autoStartBreak ?? true))}
+          colors={colors}
+        />
+
+        <SettingToggleRow
+          title="Auto-start Flow Timer"
+          subtitle="Start next flow session when break ends"
+          value={autoStartFlow ?? true}
+          onToggle={() => setAutoStartFlow(!(autoStartFlow ?? true))}
+          colors={colors}
+        />
       </View>
 
       {/* Sound Section */}

@@ -21,6 +21,10 @@ export const SettingsPage: React.FC = () => {
     mediaType,
     isAlwaysOnTop,
     setAlwaysOnTop,
+    autoStartBreak,
+    setAutoStartBreak,
+    autoStartFlow,
+    setAutoStartFlow,
     todos,
     sessions,
     groups
@@ -177,6 +181,54 @@ export const SettingsPage: React.FC = () => {
 
           <div className="bg-secondary/70 border border-border rounded-2xl p-5 text-xs text-muted-foreground leading-relaxed">
             Focus Desktop uses Flow mode exclusively. The timer counts up from zero, tracking your focus duration. When you complete a session, a break is automatically calculated as 1/5th of your focus time.
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div
+              role="switch"
+              aria-checked={autoStartBreak ?? true}
+              onClick={() => setAutoStartBreak(!(autoStartBreak ?? true))}
+              className="flex items-center justify-between p-4 rounded-2xl bg-secondary/70 border border-border hover:border-border cursor-pointer transition-all shadow-sm group"
+            >
+              <div className="space-y-1 pr-4">
+                <span className="text-xs font-semibold text-foreground block">
+                  Auto-start Break
+                </span>
+                <span className="text-[11px] text-muted-foreground block leading-tight">
+                  Start break countdown automatically
+                </span>
+              </div>
+              <div className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${
+                (autoStartBreak ?? true) ? 'bg-primary' : 'bg-muted'
+              }`}>
+                <div className={`w-5 h-5 rounded-full transition-transform duration-200 ${
+                  (autoStartBreak ?? true) ? 'translate-x-5 bg-primary-foreground shadow-sm' : 'translate-x-0 bg-muted-foreground'
+                }`} />
+              </div>
+            </div>
+
+            <div
+              role="switch"
+              aria-checked={autoStartFlow ?? true}
+              onClick={() => setAutoStartFlow(!(autoStartFlow ?? true))}
+              className="flex items-center justify-between p-4 rounded-2xl bg-secondary/70 border border-border hover:border-border cursor-pointer transition-all shadow-sm group"
+            >
+              <div className="space-y-1 pr-4">
+                <span className="text-xs font-semibold text-foreground block">
+                  Auto-start Flow Timer
+                </span>
+                <span className="text-[11px] text-muted-foreground block leading-tight">
+                  Start next flow session when break ends
+                </span>
+              </div>
+              <div className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${
+                (autoStartFlow ?? true) ? 'bg-primary' : 'bg-muted'
+              }`}>
+                <div className={`w-5 h-5 rounded-full transition-transform duration-200 ${
+                  (autoStartFlow ?? true) ? 'translate-x-5 bg-primary-foreground shadow-sm' : 'translate-x-0 bg-muted-foreground'
+                }`} />
+              </div>
+            </div>
           </div>
         </section>
         <section className="space-y-4">

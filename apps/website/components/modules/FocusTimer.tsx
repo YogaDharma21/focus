@@ -39,6 +39,7 @@ export function FocusTimer() {
         soundEffectVolume,
         soundEffectEnabled,
         soundEnabled,
+        autoStartBreak,
     } = useAppStore(
         useShallow((s) => ({
             timeLeft: s.timeLeft,
@@ -65,6 +66,7 @@ export function FocusTimer() {
             soundEffectVolume: s.soundEffectVolume,
             soundEffectEnabled: s.soundEffectEnabled,
             soundEnabled: s.soundEnabled ?? true,
+            autoStartBreak: s.autoStartBreak ?? true,
         }))
     );
 
@@ -173,7 +175,7 @@ export function FocusTimer() {
         if (breakSeconds > 0) {
             setTimeLeft(breakSeconds);
             setTimerState("BREAK");
-            setIsActive(true);
+            setIsActive(autoStartBreak);
         } else {
             setTimeLeft(0);
             setTimerState("FLOW");
@@ -216,6 +218,7 @@ export function FocusTimer() {
         addSession,
         selectedTodo,
         setSessionStartTime,
+        autoStartBreak,
     ]);
 
     const toggleTimer = () => setIsActive(!isActive);
