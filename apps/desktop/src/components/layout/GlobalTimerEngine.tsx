@@ -44,8 +44,13 @@ export const GlobalTimerEngine: React.FC = () => {
           setTimeLeft((prev) => {
             const next = prev - 1;
             if (next <= 0) {
+              playCompletionSound();
               setTimerState('FLOW');
-              setIsActive(autoStartFlow ?? true);
+              if (autoStartFlow ?? true) {
+                setDeepFocusMode(true);
+              } else {
+                setIsActive(false);
+              }
               return 0;
             }
             return next;
@@ -59,7 +64,7 @@ export const GlobalTimerEngine: React.FC = () => {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, setFlowTimeElapsed, setTimeLeft, timerState, setTimerState, setIsActive, autoStartFlow]);
+  }, [isActive, setFlowTimeElapsed, setTimeLeft, timerState, setTimerState, setIsActive, setDeepFocusMode, autoStartFlow]);
 
   return null;
 };
