@@ -25,6 +25,7 @@ export function DynamicIslandTimer() {
         soundEffectVolume,
         soundEffectEnabled,
         soundEnabled,
+        autoStartBreak,
     } = useAppStore(
         useShallow((s) => ({
             timeLeft: s.timeLeft,
@@ -43,6 +44,7 @@ export function DynamicIslandTimer() {
             soundEffectVolume: s.soundEffectVolume,
             soundEffectEnabled: s.soundEffectEnabled,
             soundEnabled: s.soundEnabled ?? true,
+            autoStartBreak: s.autoStartBreak ?? true,
         }))
     );
     const [isExpanded, setIsExpanded] = useState(false);
@@ -120,7 +122,7 @@ export function DynamicIslandTimer() {
         if (breakSeconds > 0) {
             setTimeLeft(breakSeconds);
             setTimerState("BREAK");
-            setIsActive(true);
+            setIsActive(autoStartBreak);
         } else {
             setTimeLeft(0);
             setTimerState("FLOW");

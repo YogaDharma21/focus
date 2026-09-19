@@ -19,20 +19,23 @@ export const GlobalTimerEngine: React.FC = () => {
     addSession,
     sessionName,
     setDeepFocusMode,
-    setIsMusicPlaying
+    setIsMusicPlaying,
+    autoStartFlow,
   } = useDesktopStore();
 
-  const prevTimerRef = React.useRef({ isActive });
+  const prevTimerRef = React.useRef({ isActive, timerState });
 
   useEffect(() => {
     const prev = prevTimerRef.current;
-    if (isActive && !prev.isActive) {
+    const isRunningFlow = isActive && timerState === 'FLOW';
+    const wasRunningFlow = prev.isActive && prev.timerState === 'FLOW';
+    if (isRunningFlow && !wasRunningFlow) {
       setIsMusicPlaying(true);
-    } else if (!isActive && prev.isActive) {
+    } else if (!isRunningFlow && wasRunningFlow) {
       setIsMusicPlaying(false);
     }
-    prevTimerRef.current = { isActive };
-  }, [isActive, setIsMusicPlaying]);
+    prevTimerRef.current = { isActive, timerState };
+  }, [isActive, timerState, setIsMusicPlaying]);
 
   useEffect(() => {
     let interval: NodeJS.Timeout | null = null;
@@ -43,8 +46,13 @@ export const GlobalTimerEngine: React.FC = () => {
           setTimeLeft((prev) => {
             const next = prev - 1;
             if (next <= 0) {
+              playCompletionSound();
               setTimerState('FLOW');
-              setIsActive(false);
+              if (autoStartFlow ?? true) {
+                setDeepFocusMode(true);
+              } else {
+                setIsActive(false);
+              }
               return 0;
             }
             return next;
@@ -58,7 +66,7 @@ export const GlobalTimerEngine: React.FC = () => {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, setFlowTimeElapsed, setTimeLeft, timerState, setTimerState, setIsActive]);
+  }, [isActive, setFlowTimeElapsed, setTimeLeft, timerState, setTimerState, setIsActive, setDeepFocusMode, autoStartFlow]);
 
   return null;
 };

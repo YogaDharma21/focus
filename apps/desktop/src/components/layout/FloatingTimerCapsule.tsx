@@ -30,6 +30,8 @@ export const FloatingTimerCapsule: React.FC = () => {
     sessionName,
     setSessionName,
     setDeepFocusMode,
+    autoStartBreak,
+    autoStartFlow,
   } = useDesktopStore();
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -53,7 +55,8 @@ export const FloatingTimerCapsule: React.FC = () => {
       setFlowTimeElapsed(0);
       setTimeLeft(0);
       setTimerState("FLOW");
-      setDeepFocusMode(false);
+      setIsActive(autoStartFlow ?? true);
+      setDeepFocusMode(autoStartFlow ?? true);
       setIsExpanded(false);
       return;
     }
@@ -94,7 +97,7 @@ export const FloatingTimerCapsule: React.FC = () => {
     setFlowTimeElapsed(0);
     setTimeLeft(calculatedBreakSeconds);
     setTimerState("BREAK");
-    setIsActive(true);
+    setIsActive(autoStartBreak ?? true);
     setDeepFocusMode(false);
     setIsExpanded(false);
   };

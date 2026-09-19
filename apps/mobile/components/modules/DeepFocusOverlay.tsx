@@ -39,6 +39,7 @@ export function DeepFocusOverlay() {
     musicEnabled,
     musicVolume,
     setMusicVolume,
+    autoStartBreak,
   } = useAppStore();
 
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
@@ -70,7 +71,7 @@ export function DeepFocusOverlay() {
     if (breakSeconds > 0) {
       setTimeLeft(breakSeconds);
       setTimerState('BREAK');
-      setIsActive(true);
+      setIsActive(autoStartBreak ?? true);
     } else {
       setTimeLeft(0);
       setTimerState('FLOW');
