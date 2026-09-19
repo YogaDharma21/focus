@@ -4,7 +4,7 @@ import { useAppStore, TodoItem } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
 import React, { useState, useEffect, useRef, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, RotateCcw, CheckCircle2, Focus, ChevronDown, ListTodo, FileText, Check, Square, CheckSquare2 } from "lucide-react";
+import { Play, Pause, RotateCcw, CheckCircle2, Focus, ChevronDown, ListTodo, FileText, Check, Square, CheckSquare2, Clock, Coffee } from "lucide-react";
 import {
     Popover,
     PopoverContent,
@@ -17,8 +17,10 @@ export function FocusTimer() {
     const {
         timeLeft,
         isActive,
+        timerState,
         setTimeLeft,
         setIsActive,
+        setTimerState,
         setSessionStartTime,
         sessionName,
         setSessionName,
@@ -41,8 +43,10 @@ export function FocusTimer() {
         useShallow((s) => ({
             timeLeft: s.timeLeft,
             isActive: s.isActive,
+            timerState: s.timerState,
             setTimeLeft: s.setTimeLeft,
             setIsActive: s.setIsActive,
+            setTimerState: s.setTimerState,
             setSessionStartTime: s.setSessionStartTime,
             sessionName: s.sessionName,
             setSessionName: s.setSessionName,
@@ -168,8 +172,11 @@ export function FocusTimer() {
         const breakSeconds = Math.floor(duration / 5);
         if (breakSeconds > 0) {
             setTimeLeft(breakSeconds);
+            setTimerState("BREAK");
+            setIsActive(true);
         } else {
             setTimeLeft(0);
+            setTimerState("FLOW");
         }
 
         setDeepFocusMode(false);
@@ -196,6 +203,7 @@ export function FocusTimer() {
         timeLeft,
         setTimeLeft,
         setIsActive,
+        setTimerState,
         setDeepFocusMode,
         playSound,
         sessionName,
@@ -225,6 +233,7 @@ export function FocusTimer() {
     const resetTimer = () => {
         setIsActive(false);
         setTimeLeft(0);
+        setTimerState("FLOW");
     };
 
     const formatTime = (seconds: number) => {
@@ -238,6 +247,20 @@ export function FocusTimer() {
             <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
 
             <div className="flex flex-col items-center gap-4 mb-12 w-full">
+                <div className="flex items-center justify-center gap-2 mt-1 mb-0.5">
+                    {timerState === "BREAK" ? (
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-mono text-muted-foreground shadow-sm">
+                            <Coffee className="w-3 h-3" />
+                            <span className="text-[10px] font-bold">Break</span>
+                        </div>
+                    ) : (
+                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-mono text-muted-foreground shadow-sm">
+                            <Clock className="w-3 h-3" />
+                            <span className="text-[10px] font-bold">Flow</span>
+                        </div>
+                    )}
+                </div>
+
                 <div className="text-[3.5rem] sm:text-[5rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow">
                     {formatTime(timeLeft)}
                 </div>

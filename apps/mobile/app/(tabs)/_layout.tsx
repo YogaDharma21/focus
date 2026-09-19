@@ -20,6 +20,8 @@ export default function TabLayout() {
     isActive,
     setTimeLeft,
     setIsActive,
+    setTimerState,
+    timerState,
     deepFocusMode,
     setDeepFocusMode,
     addSession,
@@ -50,14 +52,25 @@ export default function TabLayout() {
 
     if (isActive) {
       interval = setInterval(() => {
-        setTimeLeft((prev) => prev + 1);
+        setTimeLeft((prev) => {
+          if (timerState === 'BREAK') {
+            const next = prev - 1;
+            if (next <= 0) {
+              setTimerState('FLOW');
+              setIsActive(false);
+              return 0;
+            }
+            return next;
+          }
+          return prev + 1;
+        });
       }, 1000);
     }
 
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, setTimeLeft]);
+  }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive]);
 
   const bottomInset = Math.max(insets.bottom, 0);
 

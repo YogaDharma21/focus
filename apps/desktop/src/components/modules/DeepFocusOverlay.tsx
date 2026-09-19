@@ -8,14 +8,16 @@ import { cn } from '../../lib/utils';
 const DISTRACTION_OPTIONS = ["Phone", "Social Media", "Bathroom", "Meeting", "Other"];
 
 export const DeepFocusOverlay: React.FC = () => {
-  const { 
-    deepFocusMode, 
-    setDeepFocusMode, 
-    timeLeft, 
+  const {
+    deepFocusMode,
+    setDeepFocusMode,
+    timeLeft,
     setTimeLeft,
+    setTimerState,
     flowTimeElapsed,
     setFlowTimeElapsed,
-    isActive, 
+    timerState,
+    isActive,
     setIsActive,
     addDistraction,
     addSession,
@@ -49,7 +51,7 @@ export const DeepFocusOverlay: React.FC = () => {
 
   if (!deepFocusMode) return null;
 
-  const seconds = flowTimeElapsed;
+  const seconds = timerState === "BREAK" ? timeLeft : flowTimeElapsed;
   const m = Math.floor(seconds / 60);
   const s = seconds % 60;
   const timeString = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
@@ -60,11 +62,19 @@ export const DeepFocusOverlay: React.FC = () => {
     setIsActive(false);
     playCompletionSound();
 
+    if (timerState === "BREAK") {
+      setFlowTimeElapsed(0);
+      setTimeLeft(0);
+      setTimerState("FLOW");
+      setDeepFocusMode(false);
+      return;
+    }
+
     const title = activeTask?.text || sessionName || 'Focus Session';
 
     const durationWorked = Math.max(1, flowTimeElapsed);
     const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
-    
+
     addSession({
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
@@ -83,17 +93,19 @@ export const DeepFocusOverlay: React.FC = () => {
 
     const breakMins = Math.floor(calculatedBreakSeconds / 60);
     const breakSecs = calculatedBreakSeconds % 60;
-    const breakStr = breakMins > 0 
-      ? `${breakMins}m${breakSecs > 0 ? ` ${breakSecs}s` : ''}` 
+    const breakStr = breakMins > 0
+      ? `${breakMins}m${breakSecs > 0 ? ` ${breakSecs}s` : ''}`
       : `${breakSecs}s`;
 
     electron.showNotification(
-      "Flow Session Complete!", 
+      "Flow Session Complete!",
       `Focused for ${Math.floor(durationWorked / 60)}m. Earned ${breakStr} break!`
     );
-    
+
     setFlowTimeElapsed(0);
-    setTimeLeft(0);
+    setTimeLeft(calculatedBreakSeconds);
+    setTimerState("BREAK");
+    setIsActive(true);
     setDeepFocusMode(false);
   };
 

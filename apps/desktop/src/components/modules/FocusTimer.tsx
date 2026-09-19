@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { playCompletionSound } from '../../lib/sound';
 import { 
   Play, Pause, RotateCcw, AlertTriangle, Focus, CheckCircle2, 
-  ChevronDown, Check, CheckSquare2, Square, Clock, ListTodo, Edit3, X, FileText
+  ChevronDown, Check, CheckSquare2, Square, Clock, Coffee, ListTodo, Edit3, X, FileText
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
@@ -14,8 +14,10 @@ export const FocusTimer: React.FC = () => {
   const {
     timeLeft,
     setTimeLeft,
+    setTimerState,
     flowTimeElapsed,
     setFlowTimeElapsed,
+    timerState,
     isActive,
     setIsActive,
     todos,
@@ -65,12 +67,20 @@ export const FocusTimer: React.FC = () => {
     setIsActive(false);
     playCompletionSound();
 
+    if (timerState === "BREAK") {
+      setFlowTimeElapsed(0);
+      setTimeLeft(0);
+      setTimerState("FLOW");
+      setDeepFocusMode(false);
+      return;
+    }
+
     const currentTask = todos.find(t => t.id === selectedTodoId);
     const title = currentTask?.text || sessionName || 'Focus Session';
 
     const durationWorked = Math.max(1, flowTimeElapsed);
     const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
-    
+
     addSession({
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
@@ -89,23 +99,27 @@ export const FocusTimer: React.FC = () => {
 
     const breakMins = Math.floor(calculatedBreakSeconds / 60);
     const breakSecs = calculatedBreakSeconds % 60;
-    const breakStr = breakMins > 0 
-      ? `${breakMins}m${breakSecs > 0 ? ` ${breakSecs}s` : ''}` 
+    const breakStr = breakMins > 0
+      ? `${breakMins}m${breakSecs > 0 ? ` ${breakSecs}s` : ''}`
       : `${breakSecs}s`;
 
     electron.showNotification(
-      "Flow Session Complete!", 
+      "Flow Session Complete!",
       `Focused for ${Math.floor(durationWorked / 60)}m. Earned ${breakStr} break!`
     );
-    
+
     setFlowTimeElapsed(0);
-    setTimeLeft(0);
+    setTimeLeft(calculatedBreakSeconds);
+    setTimerState("BREAK");
+    setIsActive(true);
     setDeepFocusMode(false);
   };
 
   const resetTimer = () => {
     setIsActive(false);
     setFlowTimeElapsed(0);
+    setTimeLeft(0);
+    setTimerState("FLOW");
   };
 
   const formatDisplayTime = (totalSeconds: number) => {
@@ -132,7 +146,7 @@ export const FocusTimer: React.FC = () => {
     }
   };
 
-  const activeSeconds = flowTimeElapsed;
+  const activeSeconds = timerState === "BREAK" ? timeLeft : flowTimeElapsed;
   const progressPercent = Math.min(100, (flowTimeElapsed / 3600) * 100);
 
   const activeTask = todos.find((t) => t.id === selectedTodoId);
@@ -140,7 +154,20 @@ export const FocusTimer: React.FC = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-full max-w-2xl mx-auto w-full select-none space-y-6">
       {/* Giant Digital Clock Display */}
-      <div className="my-2">
+      <div className="my-2 flex flex-col items-center gap-2">
+        <div className="flex items-center justify-center gap-2 mt-1 mb-0.5">
+          {timerState === "BREAK" ? (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-mono text-muted-foreground shadow-sm">
+              <Coffee className="w-3 h-3" />
+              <span className="text-[10px] font-bold">Break</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-mono text-muted-foreground shadow-sm">
+              <Clock className="w-3 h-3" />
+              <span className="text-[10px] font-bold">Flow</span>
+            </div>
+          )}
+        </div>
         <h1 className="text-[100px] md:text-[120px] font-extrabold tracking-tighter text-foreground leading-none font-sans select-none">
           {formatDisplayTime(activeSeconds)}
         </h1>

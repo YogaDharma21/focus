@@ -18,9 +18,11 @@ export function useTimerEngine() {
     const {
         isActive,
         timerMode,
+        timerState,
         timeLeft,
         setTimeLeft,
         setIsActive,
+        setTimerState,
         addSession,
         setDeepFocusMode,
         soundEffectVolume,
@@ -30,9 +32,11 @@ export function useTimerEngine() {
         useShallow((s) => ({
             isActive: s.isActive,
             timerMode: s.timerMode,
+            timerState: s.timerState,
             timeLeft: s.timeLeft,
             setTimeLeft: s.setTimeLeft,
             setIsActive: s.setIsActive,
+            setTimerState: s.setTimerState,
             addSession: s.addSession,
             setDeepFocusMode: s.setDeepFocusMode,
             soundEffectVolume: s.soundEffectVolume,
@@ -82,6 +86,8 @@ export function useTimerEngine() {
             const breakSeconds = Math.floor(duration / 5);
             if (breakSeconds > 0) {
                 setTimeLeft(breakSeconds);
+                setTimerState("BREAK");
+                setIsActive(true);
             } else {
                 setTimeLeft(0);
             }
@@ -92,6 +98,7 @@ export function useTimerEngine() {
         timeLeft,
         setTimeLeft,
         setIsActive,
+        setTimerState,
         setDeepFocusMode,
         addSession,
         soundEffectEnabled,
@@ -107,9 +114,20 @@ export function useTimerEngine() {
         if (!isActive) return;
 
         const interval = setInterval(() => {
-            setTimeLeft((prev) => prev + 1);
+            setTimeLeft((prev) => {
+                if (timerState === "BREAK") {
+                    const next = prev - 1;
+                    if (next <= 0) {
+                        setTimerState("FLOW");
+                        setIsActive(false);
+                        return 0;
+                    }
+                    return next;
+                }
+                return prev + 1;
+            });
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [isActive, setTimeLeft]);
+    }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive]);
 }
