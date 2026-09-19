@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { playCompletionSound } from '../../lib/sound';
 import { 
-  Play, Pause, AlertTriangle, CheckCircle2, Clock 
+  Play, Pause, AlertTriangle, CheckCircle2, Clock, Coffee
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
@@ -16,6 +16,7 @@ export const FloatingTimerCapsule: React.FC = () => {
     setTimeLeft,
     flowTimeElapsed, 
     setFlowTimeElapsed,
+    timerState,
     isActive, 
     setIsActive,
     todos,
@@ -128,8 +129,12 @@ export const FloatingTimerCapsule: React.FC = () => {
           className="bg-card border border-border rounded-full px-3 py-1 flex items-center justify-between gap-3 shadow-md hover:bg-secondary hover:border-muted-foreground transition-all active:scale-98 text-xs"
         >
           <div className="flex items-center gap-1.5 min-w-0 text-left">
-            <span className="text-xs flex items-center text-foreground"><Clock className="w-3.5 h-3.5" /></span>
-            <span className="text-[11px] font-semibold text-foreground tracking-tight">Flow</span>
+            <span className="text-xs flex items-center text-foreground">
+              {timerState === "BREAK" ? <Coffee className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+            </span>
+            <span className="text-[11px] font-semibold text-foreground tracking-tight">
+              {timerState === "BREAK" ? "Break" : "Flow"}
+            </span>
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
@@ -158,8 +163,12 @@ export const FloatingTimerCapsule: React.FC = () => {
             title="Click to collapse widget"
           >
             <div className="flex items-center gap-2">
-              <span className="text-base flex items-center text-foreground"><Clock className="w-3.5 h-3.5" /></span>
-              <span className="text-xs font-bold text-foreground tracking-tight">Flow</span>
+              <span className="text-base flex items-center text-foreground">
+                {timerState === "BREAK" ? <Coffee className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
+              </span>
+              <span className="text-xs font-bold text-foreground tracking-tight">
+                {timerState === "BREAK" ? "Break" : "Flow"}
+              </span>
             </div>
             <span className="text-xl font-extrabold font-mono text-foreground tracking-tight">
               {timeString}

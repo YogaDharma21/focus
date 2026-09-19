@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react';
 import { playCompletionSound } from '../../lib/sound';
 import { 
   Play, Pause, RotateCcw, AlertTriangle, Focus, CheckCircle2, 
-  ChevronDown, Check, CheckSquare2, Square, Clock, ListTodo, Edit3, X, FileText
+  ChevronDown, Check, CheckSquare2, Square, Clock, Coffee, ListTodo, Edit3, X, FileText
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
@@ -16,6 +16,7 @@ export const FocusTimer: React.FC = () => {
     setTimeLeft,
     flowTimeElapsed,
     setFlowTimeElapsed,
+    timerState,
     isActive,
     setIsActive,
     todos,
@@ -140,7 +141,20 @@ export const FocusTimer: React.FC = () => {
   return (
     <div className="flex flex-col items-center justify-center min-h-full max-w-2xl mx-auto w-full select-none space-y-6">
       {/* Giant Digital Clock Display */}
-      <div className="my-2">
+      <div className="my-2 flex flex-col items-center gap-2">
+        <div className="flex items-center justify-center gap-2 mt-1 mb-0.5">
+          {timerState === "BREAK" ? (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-mono text-muted-foreground shadow-sm">
+              <Coffee className="w-3 h-3" />
+              <span className="text-[10px] font-bold">Break</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-mono text-muted-foreground shadow-sm">
+              <Clock className="w-3 h-3" />
+              <span className="text-[10px] font-bold">Flow</span>
+            </div>
+          )}
+        </div>
         <h1 className="text-[100px] md:text-[120px] font-extrabold tracking-tighter text-foreground leading-none font-sans select-none">
           {formatDisplayTime(activeSeconds)}
         </h1>
