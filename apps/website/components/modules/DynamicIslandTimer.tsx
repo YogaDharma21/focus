@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useAppStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
-import { Play, Pause, CheckCircle2, Clock, Coffee, ChevronDown, ListTodo, Check, X } from "lucide-react";
+import { Play, Pause, CheckCircle2, Clock, ChevronDown, ListTodo, Check, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DistractionCounter } from "./DistractionCounter";
 
@@ -11,7 +11,6 @@ export function DynamicIslandTimer() {
     const {
         timeLeft,
         isActive,
-        timerState,
         sessionName,
         setSessionName,
         setIsActive,
@@ -30,7 +29,6 @@ export function DynamicIslandTimer() {
         useShallow((s) => ({
             timeLeft: s.timeLeft,
             isActive: s.isActive,
-            timerState: s.timerState,
             sessionName: s.sessionName,
             setSessionName: s.setSessionName,
             setIsActive: s.setIsActive,
@@ -177,20 +175,6 @@ export function DynamicIslandTimer() {
                                 {formatTime(timeLeft)}
                             </span>
                             {isActive && <span className="w-2 h-2 rounded-full bg-foreground animate-pulse" />}
-                        </div>
-
-                        <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-secondary border border-border text-[10px] font-bold font-mono text-muted-foreground">
-                            {timerState === "BREAK" ? (
-                                <>
-                                    <Coffee className="w-3 h-3" />
-                                    <span>Break</span>
-                                </>
-                            ) : (
-                                <>
-                                    <Clock className="w-3 h-3" />
-                                    <span>Flow</span>
-                                </>
-                            )}
                         </div>
 
                         <button
