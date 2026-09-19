@@ -25,6 +25,7 @@ export function useTimerEngine() {
         setTimerState,
         addSession,
         setDeepFocusMode,
+        soundEnabled,
         soundEffectVolume,
         soundEffectEnabled,
         setIsMusicPlaying,
@@ -41,6 +42,7 @@ export function useTimerEngine() {
             setTimerState: s.setTimerState,
             addSession: s.addSession,
             setDeepFocusMode: s.setDeepFocusMode,
+            soundEnabled: s.soundEnabled ?? true,
             soundEffectVolume: s.soundEffectVolume,
             soundEffectEnabled: s.soundEffectEnabled,
             setIsMusicPlaying: s.setIsMusicPlaying,
@@ -124,7 +126,7 @@ export function useTimerEngine() {
                     const next = prev - 1;
                     if (next <= 0) {
                         try {
-                            if (soundEffectEnabled ?? true) {
+                            if ((soundEnabled ?? true) && (soundEffectEnabled ?? true)) {
                                 const audio = new Audio("/soundeffect.mp3");
                                 audio.volume = (soundEffectVolume ?? 80) / 100;
                                 audio.play().catch(() => {});
@@ -147,5 +149,5 @@ export function useTimerEngine() {
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive, setDeepFocusMode, autoStartFlow, soundEffectEnabled, soundEffectVolume]);
+    }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive, setDeepFocusMode, autoStartFlow, soundEnabled, soundEffectEnabled, soundEffectVolume]);
 }
