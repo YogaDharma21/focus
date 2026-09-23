@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { TitleBar } from './components/layout/TitleBar';
 import { SidebarNav } from './components/layout/SidebarNav';
 import { FocusTimer } from './components/modules/FocusTimer';
@@ -6,11 +6,16 @@ import { TodoList } from './components/modules/TodoList';
 import { StatsJournal } from './components/modules/StatsJournal';
 import { MediaPlayer } from './components/modules/MediaPlayer';
 import { SettingsPage } from './components/modules/SettingsPage';
+import { ShieldPage } from './components/modules/ShieldPage';
+import { ShieldBlockOverlay } from './components/modules/ShieldBlockOverlay';
 import { DeepFocusOverlay } from './components/modules/DeepFocusOverlay';
 import { FloatingTimerCapsule } from './components/layout/FloatingTimerCapsule';
 import { GlobalTimerEngine } from './components/layout/GlobalTimerEngine';
 import { useDesktopStore } from './lib/store';
 import { electron } from './lib/electron';
+import type { ShieldViolation } from './lib/shield';
+
+const SHIELD_SNOOZE_MS = 10 * 60 * 1000;
 
 export const App: React.FC = () => {
   const { 
@@ -19,8 +24,15 @@ export const App: React.FC = () => {
     setDeepFocusMode, 
     isActive, 
     setIsActive,
-    theme
+    theme,
+    shield,
+    timerState,
+    shieldViolations,
+    dismissShieldViolations,
   } = useDesktopStore();
+
+  const shieldSnoozedUntil = useRef(new Map<string, number>());
+  const handleDismissShieldViolationsRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     // Register IPC listeners from electron main process
@@ -43,6 +55,73 @@ export const App: React.FC = () => {
       cleanupAction();
     };
   }, [deepFocusMode, isActive]);
+
+  // Keep the main-process Shield monitor in sync with config + session state.
+  useEffect(() => {
+    electron.syncShieldState({
+      shield: {
+        enabled: shield.enabled,
+        blockedSites: shield.blockedSites,
+        allowedSites: shield.allowedSites,
+        blockedApps: shield.blockedApps,
+      },
+      session: { isActive, timerState },
+    });
+  }, [shield, isActive, timerState]);
+
+  // Handle Shield detections from the main process: log once per item,
+  // surface the block overlay, and respect 10-minute snoozes on dismiss.
+  useEffect(() => {
+    const handleViolation = (violation: ShieldViolation) => {
+      const state = useDesktopStore.getState();
+      const key = `${violation.kind}:${violation.match}`;
+      const alreadyShown = state.shieldViolations.some(
+        (v) => v.kind === violation.kind && v.match === violation.match
+      );
+      if (alreadyShown) return;
+      if (Date.now() < (shieldSnoozedUntil.current.get(key) ?? 0)) return;
+      state.pushShieldViolation(violation);
+      if (violation.kind === "app") {
+        state.addShieldDistraction("Shield Blocked App", {
+          app: violation.process ?? violation.match,
+        });
+      } else {
+        state.addShieldDistraction("Shield Blocked Site", {
+          website: violation.title ?? violation.match,
+        });
+      }
+    };
+
+    return electron.onShieldViolation(handleViolation);
+  }, []);
+
+  const handleDismissShieldViolations = () => {
+    const state = useDesktopStore.getState();
+    const now = Date.now();
+    const keys: string[] = [];
+    for (const v of state.shieldViolations) {
+      const key = `${v.kind}:${v.match}`;
+      keys.push(key);
+      shieldSnoozedUntil.current.set(key, now + SHIELD_SNOOZE_MS);
+    }
+    // Tell the main process so the system-wide overlay stops re-showing too.
+    // Guarded: the forwarded action echoes back here with an empty list.
+    if (keys.length > 0) {
+      electron.sendShieldOverlayAction('dismiss', keys);
+    }
+    dismissShieldViolations();
+  };
+  handleDismissShieldViolationsRef.current = handleDismissShieldViolations;
+
+  // Actions triggered from the system-wide Shield overlay window.
+  useEffect(() => {
+    return electron.onShieldOverlayAction((action) => {
+      const state = useDesktopStore.getState();
+      if (action === 'pause-timer') state.setIsActive(false);
+      else if (action === 'disable-shield') state.setShieldEnabled(false);
+      handleDismissShieldViolationsRef.current();
+    });
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -72,9 +151,15 @@ export const App: React.FC = () => {
           {currentView === 'FOCUS' && <FocusTimer />}
           {currentView === 'TODO' && <TodoList />}
           {currentView === 'JOURNAL' && <StatsJournal />}
+          {currentView === 'SHIELD' && <ShieldPage />}
           {currentView === 'SETTINGS' && <SettingsPage />}
         </main>
       </div>
+
+      {/* Shield block overlay (dismiss snoozes detections for 10 minutes) */}
+      {shieldViolations.length > 0 && (
+        <ShieldBlockOverlay onDismiss={handleDismissShieldViolations} />
+      )}
 
       {/* Persistent Audio Media Player */}
       <MediaPlayer />
