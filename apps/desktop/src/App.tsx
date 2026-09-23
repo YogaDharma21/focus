@@ -32,6 +32,7 @@ export const App: React.FC = () => {
   } = useDesktopStore();
 
   const shieldSnoozedUntil = useRef(new Map<string, number>());
+  const handleDismissShieldViolationsRef = useRef<() => void>(() => {});
 
   useEffect(() => {
     // Register IPC listeners from electron main process
@@ -101,6 +102,17 @@ export const App: React.FC = () => {
     }
     dismissShieldViolations();
   };
+  handleDismissShieldViolationsRef.current = handleDismissShieldViolations;
+
+  // Actions triggered from the system-wide Shield overlay window.
+  useEffect(() => {
+    return electron.onShieldOverlayAction((action) => {
+      const state = useDesktopStore.getState();
+      if (action === 'pause-timer') state.setIsActive(false);
+      else if (action === 'disable-shield') state.setShieldEnabled(false);
+      handleDismissShieldViolationsRef.current();
+    });
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
