@@ -1,7 +1,14 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import {
+  DEFAULT_SHIELD_CONFIG,
+  ShieldConfig,
+  ShieldViolation,
+  normalizeAppName,
+  normalizeSite,
+} from "./shield";
 
-export type ViewType = "FOCUS" | "TODO" | "JOURNAL" | "SETTINGS";
+export type ViewType = "FOCUS" | "TODO" | "JOURNAL" | "SHIELD" | "SETTINGS";
 
 export interface Group {
   id: string;
@@ -21,6 +28,8 @@ export interface Distraction {
   id: string;
   timestamp: string;
   category: string;
+  website?: string;
+  app?: string;
 }
 
 export interface Subtask {
@@ -128,6 +137,23 @@ export interface DesktopState {
   setDeepFocusMode: (mode: boolean) => void;
   theme: "light" | "dark";
   setTheme: (theme: "light" | "dark") => void;
+
+  // Focus Shield (app + website blocking)
+  shield: ShieldConfig;
+  setShieldEnabled: (enabled: boolean) => void;
+  addBlockedSite: (site: string) => void;
+  removeBlockedSite: (site: string) => void;
+  addAllowedSite: (site: string) => void;
+  removeAllowedSite: (site: string) => void;
+  addBlockedApp: (app: string) => void;
+  removeBlockedApp: (app: string) => void;
+
+  // Shield violations are ephemeral (never persisted)
+  shieldViolations: ShieldViolation[];
+  pushShieldViolation: (violation: ShieldViolation) => void;
+  resolveShieldViolation: (kind: ShieldViolation["kind"], match: string) => void;
+  dismissShieldViolations: () => void;
+  addShieldDistraction: (category: string, detail?: { website?: string; app?: string }) => void;
 }
 
 export const useDesktopStore = create<DesktopState>()(
@@ -359,9 +385,133 @@ export const useDesktopStore = create<DesktopState>()(
       setDeepFocusMode: (mode) => set({ deepFocusMode: mode }),
       theme: "dark" as "light" | "dark",
       setTheme: (t) => set({ theme: t }),
+
+      // Focus Shield
+      shield: { ...DEFAULT_SHIELD_CONFIG },
+      setShieldEnabled: (enabled) =>
+        set((state) => ({ shield: { ...state.shield, enabled } })),
+      addBlockedSite: (site) => {
+        const clean = normalizeSite(site);
+        if (!clean) return;
+        set((state) => {
+          if (state.shield.blockedSites.includes(clean)) return state;
+          return {
+            shield: {
+              ...state.shield,
+              blockedSites: [...state.shield.blockedSites, clean],
+            },
+          };
+        });
+      },
+      removeBlockedSite: (site) =>
+        set((state) => ({
+          shield: {
+            ...state.shield,
+            blockedSites: state.shield.blockedSites.filter((s) => s !== site),
+          },
+        })),
+      addAllowedSite: (site) => {
+        const clean = normalizeSite(site);
+        if (!clean) return;
+        set((state) => {
+          if (state.shield.allowedSites.includes(clean)) return state;
+          return {
+            shield: {
+              ...state.shield,
+              allowedSites: [...state.shield.allowedSites, clean],
+            },
+          };
+        });
+      },
+      removeAllowedSite: (site) =>
+        set((state) => ({
+          shield: {
+            ...state.shield,
+            allowedSites: state.shield.allowedSites.filter((s) => s !== site),
+          },
+        })),
+      addBlockedApp: (app) => {
+        const clean = normalizeAppName(app);
+        if (!clean) return;
+        set((state) => {
+          if (state.shield.blockedApps.includes(clean)) return state;
+          return {
+            shield: {
+              ...state.shield,
+              blockedApps: [...state.shield.blockedApps, clean],
+            },
+          };
+        });
+      },
+      removeBlockedApp: (app) =>
+        set((state) => ({
+          shield: {
+            ...state.shield,
+            blockedApps: state.shield.blockedApps.filter((a) => a !== app),
+          },
+        })),
+
+      shieldViolations: [],
+      pushShieldViolation: (violation) =>
+        set((state) => {
+          const last = state.shieldViolations[state.shieldViolations.length - 1];
+          if (
+            last &&
+            last.kind === violation.kind &&
+            last.match === violation.match &&
+            Date.now() - new Date(last.timestamp).getTime() < 5000
+          ) {
+            return state;
+          }
+          return {
+            shieldViolations: [...state.shieldViolations.slice(-9), violation],
+          };
+        }),
+      dismissShieldViolations: () => set({ shieldViolations: [] }),
+      resolveShieldViolation: (kind, match) =>
+        set((state) => ({
+          shieldViolations: state.shieldViolations.filter(
+            (v) => !(v.kind === kind && v.match === match),
+          ),
+        })),
+      addShieldDistraction: (category, detail) =>
+        set((state) => ({
+          distractions: [
+            ...(state.distractions || []),
+            {
+              id: crypto.randomUUID(),
+              timestamp: new Date().toISOString(),
+              category,
+              ...(detail?.website ? { website: detail.website } : {}),
+              ...(detail?.app ? { app: detail.app } : {}),
+            },
+          ],
+        })),
     }),
     {
       name: "focus-desktop-storage-v1",
+      version: 1,
+      migrate: (persistedState: unknown) => {
+        const persisted = (persistedState ?? {}) as Record<string, unknown>;
+        const storedShield = (persisted.shield ?? {}) as Partial<ShieldConfig>;
+        return {
+          ...(persisted as object),
+          shield: {
+            ...DEFAULT_SHIELD_CONFIG,
+            ...storedShield,
+            blockedSites:
+              storedShield.blockedSites ?? DEFAULT_SHIELD_CONFIG.blockedSites,
+            allowedSites:
+              storedShield.allowedSites ?? DEFAULT_SHIELD_CONFIG.allowedSites,
+            blockedApps:
+              storedShield.blockedApps ?? DEFAULT_SHIELD_CONFIG.blockedApps,
+          },
+        };
+      },
+      partialize: (state) => {
+        const { shieldViolations: _omit, ...persisted } = state;
+        return persisted;
+      },
     }
   )
 );
