@@ -26,7 +26,11 @@ export interface ElectronAPI {
   syncShieldState: (payload: ShieldSyncPayload) => void;
   terminateBlockedProcess: (imageName: string) => Promise<{ success: boolean; error?: string }>;
   onShieldViolation: (callback: (violation: ShieldViolation) => void) => () => void;
+  sendShieldOverlayAction: (action: ShieldOverlayAction) => void;
+  onShieldOverlayAction: (callback: (action: ShieldOverlayAction) => void) => () => void;
 }
+
+export type ShieldOverlayAction = 'pause-timer' | 'disable-shield' | 'dismiss';
 
 declare global {
   interface Window {
@@ -78,6 +82,13 @@ export const electron = {
   },
   onShieldViolation: (callback: (violation: ShieldViolation) => void) => {
     if (window.electron) return window.electron.onShieldViolation(callback);
+    return () => {};
+  },
+  sendShieldOverlayAction: (action: ShieldOverlayAction) => {
+    if (window.electron) window.electron.sendShieldOverlayAction(action);
+  },
+  onShieldOverlayAction: (callback: (action: ShieldOverlayAction) => void) => {
+    if (window.electron) return window.electron.onShieldOverlayAction(callback);
     return () => {};
   }
 };

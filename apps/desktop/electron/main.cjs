@@ -18,6 +18,7 @@ if (process.platform === "win32") {
 }
 
 let mainWindow = null;
+let shieldWindow = null;
 let tray = null;
 
 function createDummyTrayIcon() {
@@ -210,6 +211,13 @@ function setupIPC() {
     ipcMain.handle("shield:terminate-process", async (_event, imageName) => {
         return terminateBlockedProcess(imageName);
     });
+
+    ipcMain.on("shield:overlay-action", (_event, action) => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send("shield-overlay-action", action);
+        }
+        hideShieldOverlay();
+    });
 }
 
 // --- Focus Shield Enforcement ------------------------------------------------
@@ -248,6 +256,9 @@ function updateShieldState(payload) {
             isActive: !!payload.session.isActive,
             timerState: payload.session.timerState === "BREAK" ? "BREAK" : "FLOW",
         };
+    }
+    if (!isShieldBlockingRequired()) {
+        hideShieldOverlay();
     }
 }
 
@@ -399,6 +410,7 @@ function reportShieldViolation(violation) {
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send("shield-violation", violation);
     }
+    showShieldOverlay(violation);
     const key = `${violation.kind}:${violation.match}`;
     if (shouldNotify(key) && Notification.isSupported()) {
         const label =
@@ -407,7 +419,7 @@ function reportShieldViolation(violation) {
                 : `Blocked site detected: ${violation.match}`;
         new Notification({
             title: "Focus Shield",
-            body: `${label} — open Focus to take action.`,
+            body: `${label} — take action in the Shield overlay.`,
         }).show();
     }
 }
@@ -484,6 +496,73 @@ async function terminateBlockedProcess(imageName) {
         return { success: true };
     } catch (err) {
         return { success: false, error: String((err && err.message) || err) };
+    }
+}
+
+function createShieldWindow() {
+    if (shieldWindow && !shieldWindow.isDestroyed()) return shieldWindow;
+
+    shieldWindow = new BrowserWindow({
+        fullscreen: true,
+        frame: false,
+        transparent: true,
+        backgroundColor: "#00000000",
+        show: false,
+        skipTaskbar: true,
+        resizable: false,
+        minimizable: false,
+        maximizable: false,
+        closable: true,
+        focusable: true,
+        alwaysOnTop: true,
+        webPreferences: {
+            preload: path.join(__dirname, "preload.cjs"),
+            contextIsolation: true,
+            nodeIntegration: false,
+            webSecurity: true,
+        },
+    });
+    // Sit above fullscreen apps and the taskbar while visible.
+    shieldWindow.setAlwaysOnTop(true, "screen-saver");
+
+    const isDev =
+        process.env.VITE_DEV_SERVER_URL || process.argv.includes("--dev");
+    const devUrl = process.env.VITE_DEV_SERVER_URL || "http://localhost:5173";
+    if (isDev) {
+        shieldWindow.loadURL(`${devUrl}?overlay=shield`).catch(() => {});
+    } else {
+        shieldWindow.loadFile(path.join(__dirname, "../dist/index.html"), {
+            query: { overlay: "shield" },
+        });
+    }
+
+    shieldWindow.on("closed", () => {
+        shieldWindow = null;
+    });
+
+    return shieldWindow;
+}
+
+function showShieldOverlay(violation) {
+    try {
+        const win = createShieldWindow();
+        if (win.isDestroyed()) return;
+        win.webContents.send("shield-violation", violation);
+        if (!win.isVisible()) win.show();
+        win.moveTop();
+        win.focus();
+    } catch (err) {
+        console.error("Shield overlay show failed:", err);
+    }
+}
+
+function hideShieldOverlay() {
+    try {
+        if (shieldWindow && !shieldWindow.isDestroyed() && shieldWindow.isVisible()) {
+            shieldWindow.hide();
+        }
+    } catch (err) {
+        console.error("Shield overlay hide failed:", err);
     }
 }
 
