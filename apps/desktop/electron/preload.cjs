@@ -25,7 +25,7 @@ contextBridge.exposeInMainWorld('electron', {
     ipcRenderer.on('shield-violation', handler);
     return () => ipcRenderer.removeListener('shield-violation', handler);
   },
-  sendShieldOverlayAction: (action) => ipcRenderer.send('shield:overlay-action', action),
+  sendShieldOverlayAction: (action, keys) => ipcRenderer.send('shield:overlay-action', { action, keys }),
   onShieldOverlayAction: (callback) => {
     const handler = (_event, action) => callback(action);
     ipcRenderer.on('shield-overlay-action', handler);

@@ -96,9 +96,18 @@ export const App: React.FC = () => {
   }, []);
 
   const handleDismissShieldViolations = () => {
+    const state = useDesktopStore.getState();
     const now = Date.now();
-    for (const v of useDesktopStore.getState().shieldViolations) {
-      shieldSnoozedUntil.current.set(`${v.kind}:${v.match}`, now + SHIELD_SNOOZE_MS);
+    const keys: string[] = [];
+    for (const v of state.shieldViolations) {
+      const key = `${v.kind}:${v.match}`;
+      keys.push(key);
+      shieldSnoozedUntil.current.set(key, now + SHIELD_SNOOZE_MS);
+    }
+    // Tell the main process so the system-wide overlay stops re-showing too.
+    // Guarded: the forwarded action echoes back here with an empty list.
+    if (keys.length > 0) {
+      electron.sendShieldOverlayAction('dismiss', keys);
     }
     dismissShieldViolations();
   };

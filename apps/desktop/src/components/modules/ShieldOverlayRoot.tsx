@@ -57,6 +57,8 @@ export const ShieldOverlayRoot: React.FC = () => {
 
   if (violations.length === 0) return null;
 
+  const violationKeys = violations.map((v) => `${v.kind}:${v.match}`);
+
   return (
     <div className="w-screen h-screen bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 select-none font-sans">
       <ShieldBlockCard
@@ -66,7 +68,7 @@ export const ShieldOverlayRoot: React.FC = () => {
         terminateError={terminateError}
         onPauseTimer={() => electron.sendShieldOverlayAction('pause-timer')}
         onDisableShield={() => electron.sendShieldOverlayAction('disable-shield')}
-        onDismiss={() => electron.sendShieldOverlayAction('dismiss')}
+        onDismiss={() => electron.sendShieldOverlayAction('dismiss', violationKeys)}
       />
     </div>
   );
