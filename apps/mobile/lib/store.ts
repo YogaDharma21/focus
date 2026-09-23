@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeStorage } from './storage';
+import { DEFAULT_SHIELD, ShieldConfig } from './shield';
 
 export type ViewType = 'FOCUS' | 'TODO' | 'JOURNAL' | 'SETTINGS';
 
@@ -23,6 +24,7 @@ export interface Distraction {
   id: string;
   timestamp: string;
   category: string;
+  website?: string;
 }
 
 export interface SubTask {
@@ -114,7 +116,16 @@ interface AppState {
   setDeepFocusMode: (mode: boolean) => void;
 
   addSession: (session: Session) => void;
-  addDistraction: (category: string) => void;
+  addDistraction: (category: string, website?: string) => void;
+
+  shield: ShieldConfig;
+  setShieldEnabled: (enabled: boolean) => void;
+  addBlockedSite: (site: string) => void;
+  removeBlockedSite: (site: string) => void;
+  addAllowedSite: (site: string) => void;
+  removeAllowedSite: (site: string) => void;
+  addBlockedApp: (app: string) => void;
+  removeBlockedApp: (app: string) => void;
 
   resetAllData: () => void;
 
@@ -260,7 +271,7 @@ export const useAppStore = create<AppState>()(
           sessions: [...(state.sessions || []), session],
         })),
 
-      addDistraction: (category) =>
+      addDistraction: (category, website) =>
         set((state) => ({
           distractions: [
             ...(state.distractions || []),
@@ -268,8 +279,60 @@ export const useAppStore = create<AppState>()(
               id: generateId(),
               timestamp: new Date().toISOString(),
               category,
+              ...(website ? { website } : {}),
             },
           ],
+        })),
+
+      shield: { ...DEFAULT_SHIELD },
+      setShieldEnabled: (enabled) =>
+        set((state) => ({
+          shield: { ...state.shield, enabled },
+        })),
+      addBlockedSite: (site) =>
+        set((state) => {
+          const clean = site.toLowerCase().trim();
+          if (!clean || state.shield.blockedSites.includes(clean)) return state;
+          return {
+            shield: { ...state.shield, blockedSites: [...state.shield.blockedSites, clean] },
+          };
+        }),
+      removeBlockedSite: (site) =>
+        set((state) => ({
+          shield: {
+            ...state.shield,
+            blockedSites: state.shield.blockedSites.filter((s) => s !== site),
+          },
+        })),
+      addAllowedSite: (site) =>
+        set((state) => {
+          const clean = site.toLowerCase().trim();
+          if (!clean || state.shield.allowedSites.includes(clean)) return state;
+          return {
+            shield: { ...state.shield, allowedSites: [...state.shield.allowedSites, clean] },
+          };
+        }),
+      removeAllowedSite: (site) =>
+        set((state) => ({
+          shield: {
+            ...state.shield,
+            allowedSites: state.shield.allowedSites.filter((s) => s !== site),
+          },
+        })),
+      addBlockedApp: (app) =>
+        set((state) => {
+          const clean = app.toLowerCase().trim();
+          if (!clean || state.shield.blockedApps.includes(clean)) return state;
+          return {
+            shield: { ...state.shield, blockedApps: [...state.shield.blockedApps, clean] },
+          };
+        }),
+      removeBlockedApp: (app) =>
+        set((state) => ({
+          shield: {
+            ...state.shield,
+            blockedApps: state.shield.blockedApps.filter((a) => a !== app),
+          },
         })),
 
       addSubtask: (todoId, text) =>
@@ -335,6 +398,7 @@ export const useAppStore = create<AppState>()(
           ],
           sessions: [],
           distractions: [],
+          shield: { ...DEFAULT_SHIELD },
           sessionName: '',
           selectedTodoId: null,
           selectedSubtaskId: null,
@@ -350,6 +414,20 @@ export const useAppStore = create<AppState>()(
     {
       name: 'focus-mobile-storage-v1',
       storage: createJSONStorage(() => safeStorage),
+      version: 2,
+      migrate: (persisted: unknown) => {
+        const state = (persisted || {}) as Partial<AppState>;
+        const shield = (state as { shield?: Partial<ShieldConfig> }).shield;
+        return {
+          ...state,
+          shield: {
+            enabled: shield?.enabled ?? DEFAULT_SHIELD.enabled,
+            blockedSites: shield?.blockedSites ?? [...DEFAULT_SHIELD.blockedSites],
+            allowedSites: shield?.allowedSites ?? [],
+            blockedApps: shield?.blockedApps ?? [],
+          },
+        } as AppState;
+      },
     }
   )
 );

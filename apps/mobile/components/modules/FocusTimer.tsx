@@ -33,6 +33,8 @@ import {
   FileText,
   Clock,
   Coffee,
+  Shield,
+  ShieldCheck,
 } from 'lucide-react-native';
 
 const DISTRACTION_CATEGORIES = [
@@ -128,6 +130,7 @@ export function FocusTimer() {
     toggleSubtask,
     setDeepFocusMode,
     autoStartBreak,
+    shield,
   } = useAppStore();
 
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
@@ -233,6 +236,28 @@ export function FocusTimer() {
             {timerState === 'BREAK' ? 'Break' : 'Flow'}
           </Text>
         </View>
+        {shield?.enabled ? (
+          <View
+            style={[
+              styles.shieldRow,
+              { backgroundColor: colors.muted, borderColor: colors.border },
+            ]}
+          >
+            {isActive && timerState === 'FLOW' ? (
+              <ShieldCheck size={11} color={colors.text} />
+            ) : (
+              <Shield size={11} color={colors.mutedText} />
+            )}
+            <Text style={[styles.shieldRowText, { color: colors.mutedText }]}>
+              {isActive && timerState === 'FLOW' ? 'Shield blocking' : 'Shield armed'}
+              {' • '}
+              {shield.blockedSites.length} site{shield.blockedSites.length === 1 ? '' : 's'}
+              {shield.blockedApps.length > 0
+                ? ` • ${shield.blockedApps.length} app${shield.blockedApps.length === 1 ? '' : 's'}`
+                : ''}
+            </Text>
+          </View>
+        ) : null}
         <Text style={[styles.timeDisplay, { color: colors.text }]}>
           {formatTime(timeLeft)}
         </Text>
@@ -588,6 +613,21 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
+  },
+  shieldRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 1,
+    alignSelf: 'center',
+    marginTop: 8,
+  },
+  shieldRowText: {
+    fontSize: 10,
+    fontWeight: '700',
   },
   selectedTaskCardContainer: {
     width: '100%',

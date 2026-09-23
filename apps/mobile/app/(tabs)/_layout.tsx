@@ -7,8 +7,9 @@ import { useTheme } from '@/context/ThemeContext';
 import { Header } from '@/components/Header';
 import { MediaPlayer } from '@/components/modules/MediaPlayer';
 import { DeepFocusOverlay } from '@/components/modules/DeepFocusOverlay';
+import { ShieldBlockedModal } from '@/components/modules/ShieldBlockedModal';
 import { DynamicIslandTimer } from '@/components/modules/DynamicIslandTimer';
-import { Clock, ListCheck, BarChart2, Settings } from 'lucide-react-native';
+import { Clock, ListCheck, BarChart2, Settings, Shield } from 'lucide-react-native';
 
 import { useAppStore } from '@/lib/store';
 import { playCompletionSound } from '@/lib/sound';
@@ -129,6 +130,13 @@ export default function TabLayout() {
             }}
           />
           <Tabs.Screen
+            name="shield"
+            options={{
+              title: 'Shield',
+              tabBarIcon: ({ color }) => <Shield size={22} color={color} />,
+            }}
+          />
+          <Tabs.Screen
             name="settings"
             options={{
               title: 'Settings',
@@ -140,6 +148,7 @@ export default function TabLayout() {
 
       <MediaPlayer />
       <DeepFocusOverlay />
+      <ShieldBlockedModal />
     </View>
   );
 }

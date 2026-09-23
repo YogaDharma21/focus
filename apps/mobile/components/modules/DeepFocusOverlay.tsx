@@ -5,8 +5,9 @@ import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
 import { Radius } from '@/constants/theme';
 import { playCompletionSound } from '@/lib/sound';
+import { logBlockedAppAttempt } from '@/lib/shieldGuard';
 import { VolumeSlider } from '@/components/ui/VolumeSlider';
-import { Play, Pause, X, AlertTriangle, CheckCircle2, Plus, Music, RotateCcw } from 'lucide-react-native';
+import { Play, Pause, X, AlertTriangle, CheckCircle2, Plus, Music, ShieldCheck, ShieldAlert } from 'lucide-react-native';
 
 const DISTRACTION_CATEGORIES = [
   'Social Media',
@@ -40,10 +41,12 @@ export function DeepFocusOverlay() {
     musicVolume,
     setMusicVolume,
     autoStartBreak,
+    shield,
   } = useAppStore();
 
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
   const [musicModalOpen, setMusicModalOpen] = useState(false);
+  const [appSlipModalOpen, setAppSlipModalOpen] = useState(false);
 
   if (!deepFocusMode) return null;
 
@@ -137,6 +140,32 @@ export function DeepFocusOverlay() {
               <Text style={[styles.sessionText, { color: colors.mutedText }]}>{displayTitle}</Text>
             ) : null;
           })()}
+
+          {/* Shield status */}
+          {shield?.enabled ? (
+            <TouchableOpacity
+              style={[
+                styles.shieldPill,
+                { backgroundColor: colors.card, borderColor: colors.border },
+              ]}
+              onPress={() => {
+                if ((shield?.blockedApps?.length ?? 0) > 0) setAppSlipModalOpen(true);
+              }}
+              activeOpacity={0.7}
+            >
+              {isActive && timerState === 'FLOW' ? (
+                <ShieldCheck size={14} color={colors.text} />
+              ) : (
+                <ShieldAlert size={14} color={colors.mutedText} />
+              )}
+              <Text style={[styles.shieldPillText, { color: colors.mutedText }]}>
+                {isActive && timerState === 'FLOW'
+                  ? `Shield blocking ${shield.blockedSites.length} site${shield.blockedSites.length === 1 ? '' : 's'}`
+                  : 'Shield on — activates during Flow'}
+                {(shield?.blockedApps?.length ?? 0) > 0 ? ' • tap to log app slip' : ''}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
 
           {/* Deep Focus Controls Row */}
           <View style={styles.controlsRow}>
@@ -266,6 +295,39 @@ export function DeepFocusOverlay() {
             </TouchableOpacity>
           </TouchableOpacity>
         </Modal>
+        {/* Blocked App Slip Logger Modal */}
+        <Modal visible={appSlipModalOpen} transparent animationType="fade" onRequestClose={() => setAppSlipModalOpen(false)}>
+          <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setAppSlipModalOpen(false)}>
+            <TouchableOpacity activeOpacity={1} style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => {}}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>Opened a Blocked App?</Text>
+              <Text style={[styles.modalSub, { color: colors.mutedText }]}>
+                Mobile OS sandboxes prevent automatic detection. Tap the app you opened to log it
+                as a Shield distraction.
+              </Text>
+              <View style={{ gap: 8, marginVertical: 12 }}>
+                {(shield?.blockedApps ?? []).map((app) => (
+                  <TouchableOpacity
+                    key={app}
+                    style={[styles.distractionItem, { backgroundColor: colors.muted, borderColor: colors.border }]}
+                    onPress={() => {
+                      logBlockedAppAttempt(app);
+                      setAppSlipModalOpen(false);
+                    }}
+                  >
+                    <Text style={{ color: colors.text, fontWeight: '500' }}>{app}</Text>
+                    <Plus size={16} color={colors.mutedText} />
+                  </TouchableOpacity>
+                ))}
+              </View>
+              <TouchableOpacity
+                style={[styles.closeModalBtn, { backgroundColor: colors.border }]}
+                onPress={() => setAppSlipModalOpen(false)}
+              >
+                <Text style={{ color: colors.text, fontWeight: '600' }}>Cancel</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          </TouchableOpacity>
+        </Modal>
       </View>
     </Modal>
   );
@@ -322,6 +384,20 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '500',
     marginTop: 12,
+  },
+  shieldPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginTop: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
+    borderWidth: 1,
+  },
+  shieldPillText: {
+    fontSize: 11,
+    fontWeight: '600',
   },
   controlsRow: {
     flexDirection: 'row',

@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, StyleSheet, Animated, Linking } from 'react-native';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, StyleSheet, Animated } from 'react-native';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
+import { openGuardedUrl } from '@/lib/shieldGuard';
 import { Settings, Palette, Volume2, Trash2, Info, ExternalLink, Timer } from 'lucide-react-native';
 import { VolumeSlider } from '@/components/ui/VolumeSlider';
 import { playCompletionSound } from '@/lib/sound';
@@ -327,7 +328,7 @@ export function SettingsPage() {
 
           <TouchableOpacity
             style={[styles.aboutLinkRow, { backgroundColor: colors.muted, borderColor: colors.border }]}
-            onPress={() => Linking.openURL('https://github.com/YogaDharma21/focus')}
+            onPress={() => void openGuardedUrl('https://github.com/YogaDharma21/focus')}
             activeOpacity={0.7}
           >
             <Text style={[styles.aboutLinkLabel, { color: colors.text }]}>GitHub Repository</Text>
