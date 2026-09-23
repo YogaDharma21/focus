@@ -26,7 +26,7 @@ export interface ElectronAPI {
   syncShieldState: (payload: ShieldSyncPayload) => void;
   terminateBlockedProcess: (imageName: string) => Promise<{ success: boolean; error?: string }>;
   onShieldViolation: (callback: (violation: ShieldViolation) => void) => () => void;
-  sendShieldOverlayAction: (action: ShieldOverlayAction) => void;
+  sendShieldOverlayAction: (action: ShieldOverlayAction, keys?: string[]) => void;
   onShieldOverlayAction: (callback: (action: ShieldOverlayAction) => void) => () => void;
 }
 
@@ -84,8 +84,8 @@ export const electron = {
     if (window.electron) return window.electron.onShieldViolation(callback);
     return () => {};
   },
-  sendShieldOverlayAction: (action: ShieldOverlayAction) => {
-    if (window.electron) window.electron.sendShieldOverlayAction(action);
+  sendShieldOverlayAction: (action: ShieldOverlayAction, keys?: string[]) => {
+    if (window.electron) window.electron.sendShieldOverlayAction(action, keys);
   },
   onShieldOverlayAction: (callback: (action: ShieldOverlayAction) => void) => {
     if (window.electron) return window.electron.onShieldOverlayAction(callback);

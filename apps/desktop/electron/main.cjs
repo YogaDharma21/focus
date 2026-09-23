@@ -19,6 +19,8 @@ if (process.platform === "win32") {
 
 let mainWindow = null;
 let shieldWindow = null;
+let shieldWindowReady = false;
+let shieldPendingViolations = [];
 let tray = null;
 
 function createDummyTrayIcon() {
@@ -212,7 +214,19 @@ function setupIPC() {
         return terminateBlockedProcess(imageName);
     });
 
-    ipcMain.on("shield:overlay-action", (_event, action) => {
+    ipcMain.on("shield:overlay-action", (_event, payload) => {
+        const action = typeof payload === "string" ? payload : payload?.action;
+        const keys = typeof payload === "object" && Array.isArray(payload?.keys)
+            ? payload.keys
+            : [];
+        if (action === "dismiss") {
+            // Snooze the dismissed detections so repeat polls stop
+            // re-showing the overlay for the next 10 minutes.
+            const until = Date.now() + SHIELD_SNOOZE_MS;
+            for (const key of keys) {
+                if (key) shieldSnoozedKeys.set(String(key), until);
+            }
+        }
         if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.webContents.send("shield-overlay-action", action);
         }
@@ -229,6 +243,7 @@ function setupIPC() {
 
 const SHIELD_POLL_INTERVAL_MS = 5000;
 const SHIELD_NOTIFY_COOLDOWN_MS = 60000;
+const SHIELD_SNOOZE_MS = 10 * 60 * 1000;
 
 let shieldConfig = {
     enabled: false,
@@ -239,6 +254,14 @@ let shieldConfig = {
 let shieldSession = { isActive: false, timerState: "FLOW" };
 let shieldPollTimer = null;
 const shieldLastNotified = new Map();
+const shieldSnoozedKeys = new Map();
+
+function isShieldKeySnoozed(key) {
+    const until = shieldSnoozedKeys.get(key) ?? 0;
+    if (Date.now() < until) return true;
+    shieldSnoozedKeys.delete(key);
+    return false;
+}
 
 function updateShieldState(payload) {
     if (!payload || typeof payload !== "object") return;
@@ -407,11 +430,12 @@ function shouldNotify(key) {
 }
 
 function reportShieldViolation(violation) {
+    const key = `${violation.kind}:${violation.match}`;
+    if (isShieldKeySnoozed(key)) return;
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send("shield-violation", violation);
     }
     showShieldOverlay(violation);
-    const key = `${violation.kind}:${violation.match}`;
     if (shouldNotify(key) && Notification.isSupported()) {
         const label =
             violation.kind === "app"
@@ -502,6 +526,8 @@ async function terminateBlockedProcess(imageName) {
 function createShieldWindow() {
     if (shieldWindow && !shieldWindow.isDestroyed()) return shieldWindow;
 
+    shieldWindowReady = false;
+
     shieldWindow = new BrowserWindow({
         fullscreen: true,
         frame: false,
@@ -538,19 +564,59 @@ function createShieldWindow() {
 
     shieldWindow.on("closed", () => {
         shieldWindow = null;
+        shieldWindowReady = false;
+        shieldPendingViolations = [];
+    });
+
+    // Reveal only after the first paint so the window never flashes blank.
+    // Reloads (dev HMR) re-mark readiness via did-finish-load.
+    shieldWindow.once("ready-to-show", () => {
+        shieldWindowReady = true;
+        flushShieldPending();
+    });
+    shieldWindow.webContents.on("did-finish-load", () => {
+        if (shieldWindow && !shieldWindow.isDestroyed() && shieldWindow.isVisible()) {
+            shieldWindowReady = true;
+        }
     });
 
     return shieldWindow;
+}
+
+function flushShieldPending() {
+    if (
+        !shieldWindow ||
+        shieldWindow.isDestroyed() ||
+        !shieldWindowReady ||
+        shieldPendingViolations.length === 0
+    ) {
+        return;
+    }
+    for (const v of shieldPendingViolations) {
+        shieldWindow.webContents.send("shield-violation", v);
+    }
+    shieldPendingViolations = [];
+    revealShieldWindow();
+}
+
+function revealShieldWindow() {
+    if (!shieldWindow || shieldWindow.isDestroyed() || shieldWindow.isVisible()) return;
+    shieldWindow.show();
+    shieldWindow.moveTop();
+    shieldWindow.focus();
 }
 
 function showShieldOverlay(violation) {
     try {
         const win = createShieldWindow();
         if (win.isDestroyed()) return;
+        if (!shieldWindowReady) {
+            // Still loading: queue the violation and reveal once painted.
+            shieldPendingViolations.push(violation);
+            return;
+        }
         win.webContents.send("shield-violation", violation);
-        if (!win.isVisible()) win.show();
-        win.moveTop();
-        win.focus();
+        revealShieldWindow();
     } catch (err) {
         console.error("Shield overlay show failed:", err);
     }
