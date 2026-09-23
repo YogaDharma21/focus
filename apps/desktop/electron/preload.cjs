@@ -17,5 +17,12 @@ contextBridge.exposeInMainWorld('electron', {
     const handler = (_event, action) => callback(action);
     ipcRenderer.on('timer-action', handler);
     return () => ipcRenderer.removeListener('timer-action', handler);
+  },
+  syncShieldState: (payload) => ipcRenderer.send('shield:sync', payload),
+  terminateBlockedProcess: (imageName) => ipcRenderer.invoke('shield:terminate-process', imageName),
+  onShieldViolation: (callback) => {
+    const handler = (_event, violation) => callback(violation);
+    ipcRenderer.on('shield-violation', handler);
+    return () => ipcRenderer.removeListener('shield-violation', handler);
   }
 });
