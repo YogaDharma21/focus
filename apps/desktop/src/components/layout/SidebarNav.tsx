@@ -1,6 +1,7 @@
 import React from 'react';
 import { Timer, CheckSquare, BarChart3, Shield, Settings } from 'lucide-react';
 import { useDesktopStore, ViewType } from '../../lib/store';
+import { cn } from '../../lib/utils';
 
 export const SidebarNav: React.FC = () => {
   const { currentView, setView, shield, isActive, timerState } = useDesktopStore();
@@ -16,36 +17,46 @@ export const SidebarNav: React.FC = () => {
   ];
 
   return (
-    <aside className="w-16 md:w-56 h-full bg-background border-r border-border flex flex-col justify-between p-3 select-none z-20">
-      <div className="space-y-4">
-        <div className="px-3 pt-1 hidden md:block">
-          <p className="text-[10px] font-semibold text-muted-foreground tracking-wider uppercase">Menu</p>
-        </div>
-
-        <nav className="space-y-1">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = currentView === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => setView(item.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-all text-xs font-medium relative ${
-                  active
-                    ? "bg-secondary text-foreground font-semibold border border-border shadow-sm"
-                    : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-                }`}
-              >
-                <Icon className={`w-4 h-4 ${active ? "text-foreground" : "text-muted-foreground"}`} />
-                <span className="hidden md:inline">{item.label}</span>
-                {item.dot && (
-                  <span className="absolute right-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" title="Shield enforcing" />
+    <div className="absolute left-4 top-1/2 -translate-y-1/2 z-30 flex flex-col select-none">
+      <nav
+        aria-label="Primary"
+        className="flex flex-col items-center gap-2 p-2 bg-card border border-border shadow-lg rounded-2xl"
+      >
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const active = currentView === item.id;
+          return (
+            <button
+              key={item.id}
+              onClick={() => setView(item.id)}
+              title={item.label}
+              aria-label={item.label}
+              aria-current={active ? "page" : undefined}
+              className={cn(
+                "relative flex items-center justify-center w-11 h-11 rounded-xl transition-all duration-300 ease-out group",
+                active
+                  ? "bg-primary text-primary-foreground shadow-md"
+                  : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+              )}
+            >
+              <span
+                className={cn(
+                  "transform transition-transform duration-300",
+                  active ? "scale-110" : "group-hover:scale-105"
                 )}
-              </button>
-            );
-          })}
-        </nav>
-      </div>
-    </aside>
+              >
+                <Icon className="w-5 h-5" />
+              </span>
+              {item.dot && (
+                <span
+                  className="absolute right-1.5 top-1.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"
+                  title="Shield enforcing"
+                />
+              )}
+            </button>
+          );
+        })}
+      </nav>
+    </div>
   );
 };

@@ -144,10 +144,10 @@ export const App: React.FC = () => {
       <FloatingTimerCapsule />
 
       {/* Main Workspace Body */}
-      <div className="flex-1 flex overflow-hidden z-10">
+      <div className="flex-1 flex overflow-hidden z-10 relative">
         <SidebarNav />
 
-        <main className="flex-1 overflow-y-auto p-6 relative">
+        <main className="flex-1 overflow-y-auto py-6 pr-6 pl-24 relative">
           {currentView === 'FOCUS' && <FocusTimer />}
           {currentView === 'TODO' && <TodoList />}
           {currentView === 'JOURNAL' && <StatsJournal />}
