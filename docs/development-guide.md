@@ -5,7 +5,7 @@ Welcome to the **Focus** development environment. Follow this guide to set up, b
 ## Prerequisites
 
 - **Node.js**: v18.0.0 or higher (v22 recommended)
-- **npm**: v9.0.0 or higher
+- **pnpm**: v10.0.0 or higher
 - **Git**: For version control
 
 ## Quick Start
@@ -14,8 +14,8 @@ Welcome to the **Focus** development environment. Follow this guide to set up, b
 
 ```bash
 cd apps/landing
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) or specified port.
 
@@ -23,24 +23,24 @@ Open [http://localhost:3000](http://localhost:3000) or specified port.
 
 ```bash
 cd apps/website
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 ### 3. Desktop Application (`apps/desktop`)
 
 ```bash
 cd apps/desktop
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 ### 4. Browser Extension (`apps/extension`)
 
 ```bash
 cd apps/extension
-npm install
-npm run build
+pnpm install
+pnpm run build
 ```
 Load the `apps/extension/dist` directory as an unpacked extension in Chrome / Edge (`chrome://extensions`).
 
