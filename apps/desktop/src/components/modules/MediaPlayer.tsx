@@ -1,6 +1,7 @@
 import React, { useRef, useEffect } from 'react';
 import { Music, Play, Pause, Volume2, VolumeX, BellRing, ChevronDown, Disc, Volume1 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
+import { electron } from '../../lib/electron';
 import { playTestCompletionSound } from '../../lib/sound';
 
 export const MediaPlayer: React.FC = () => {
@@ -14,32 +15,174 @@ export const MediaPlayer: React.FC = () => {
     soundEffectVolume,
     setSoundEffectVolume,
     volume,
-    setVolume
+    setVolume,
+    autoPauseOnExternalAudio
   } = useDesktopStore();
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const fadeIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const autoPausedRef = useRef(false);
+  const autoPauseArmedRef = useRef(false);
+  const externalActiveRef = useRef(false);
+  const savedTimeRef = useRef(0);
+
+  const clearFade = () => {
+    if (fadeIntervalRef.current !== null) {
+      clearInterval(fadeIntervalRef.current);
+      fadeIntervalRef.current = null;
+    }
+  };
+
+  useEffect(() => () => clearFade(), []);
 
   useEffect(() => {
-    if (audioRef.current) {
+    if (audioRef.current && fadeIntervalRef.current === null) {
       audioRef.current.volume = volume;
     }
   }, [volume]);
 
+  const fadeOutThenPause = (audio: HTMLAudioElement, fadeDuration: number) => {
+    clearFade();
+    try {
+      savedTimeRef.current = audio.currentTime || 0;
+    } catch {
+      savedTimeRef.current = 0;
+    }
+    if (!(fadeDuration > 0) || audio.paused || audio.volume <= 0.01) {
+      autoPauseArmedRef.current = true;
+      audio.pause();
+      return;
+    }
+    const startVol = audio.volume;
+    const totalSteps = Math.max(1, Math.round((fadeDuration * 1000) / 25));
+    const delta = startVol / totalSteps;
+    fadeIntervalRef.current = setInterval(() => {
+      const nextVol = audio.volume - delta;
+      if (nextVol <= 0.005 || audio.paused) {
+        clearFade();
+        audio.volume = useDesktopStore.getState().volume ?? 0.8;
+        autoPauseArmedRef.current = true;
+        audio.pause();
+      } else {
+        audio.volume = Math.max(0, Math.min(1, nextVol));
+      }
+    }, 25);
+  };
+
+  const fadeInAndPlay = (audio: HTMLAudioElement, targetVolume: number, fadeDuration: number, startTime: number) => {
+    clearFade();
+    if (startTime > 0) {
+      try {
+        audio.currentTime = startTime;
+      } catch {
+        // Seeking may fail before metadata loads; playback still resumes.
+      }
+    }
+    if (!(fadeDuration > 0) || !(targetVolume > 0)) {
+      audio.volume = Math.max(0, Math.min(1, targetVolume));
+      audio.play().catch((err) => {
+        console.warn("Audio play failed", err);
+      });
+      return;
+    }
+    audio.volume = 0;
+    audio.play().then(() => {
+      const totalSteps = Math.max(1, Math.round((fadeDuration * 1000) / 25));
+      const delta = targetVolume / totalSteps;
+      fadeIntervalRef.current = setInterval(() => {
+        const nextVol = audio.volume + delta;
+        if (nextVol >= targetVolume - 0.005 || audio.paused) {
+          audio.volume = targetVolume;
+          clearFade();
+        } else {
+          audio.volume = Math.max(0, Math.min(1, nextVol));
+        }
+      }, 25);
+    }).catch((err) => {
+      console.warn("Audio play failed", err);
+      autoPausedRef.current = false;
+    });
+  };
+
+  const handleExternalAudio = (playing: boolean) => {
+    externalActiveRef.current = playing;
+    const audio = audioRef.current;
+    if (!audio) return;
+    const state = useDesktopStore.getState();
+    if (!state.autoPauseOnExternalAudio) {
+      if (!playing && autoPausedRef.current && state.isMusicPlaying) {
+        autoPausedRef.current = false;
+        fadeInAndPlay(audio, state.volume ?? 0.8, state.autoPauseFadeDuration ?? 2, savedTimeRef.current);
+      }
+      return;
+    }
+    const fadeDuration = state.autoPauseFadeDuration ?? 2;
+    if (playing) {
+      if (state.isMusicPlaying && !audio.paused && !autoPausedRef.current) {
+        autoPausedRef.current = true;
+        fadeOutThenPause(audio, fadeDuration);
+      }
+    } else if (autoPausedRef.current && state.isMusicPlaying) {
+      autoPausedRef.current = false;
+      fadeInAndPlay(audio, state.volume ?? 0.8, fadeDuration, savedTimeRef.current);
+    }
+  };
+
+  useEffect(() => {
+    let disposed = false;
+    electron.getExternalAudioState().then((s) => {
+      if (!disposed && s && s.playing) handleExternalAudio(true);
+    }).catch(() => {});
+    const cleanup = electron.onExternalAudioState((s) => {
+      handleExternalAudio(!!s?.playing);
+    });
+    return () => {
+      disposed = true;
+      cleanup();
+    };
+  }, []);
+
   useEffect(() => {
     if (!audioRef.current) return;
+    const audio = audioRef.current;
     if (isMusicPlaying) {
-      audioRef.current.play().catch((err) => {
+      const state = useDesktopStore.getState();
+      if (state.autoPauseOnExternalAudio && externalActiveRef.current) {
+        autoPausedRef.current = true;
+        return;
+      }
+      autoPausedRef.current = false;
+      audio.play().catch((err) => {
         console.warn("Audio play failed", err);
         setIsMusicPlaying(false);
       });
     } else {
-      audioRef.current.pause();
+      clearFade();
+      autoPausedRef.current = false;
+      audio.pause();
     }
   }, [isMusicPlaying, setIsMusicPlaying]);
 
   const togglePlay = () => {
     setIsMusicPlaying(!isMusicPlaying);
   };
+
+  // React to the auto-pause setting being flipped mid-playback: enabling it
+  // while external audio is active fades out immediately; disabling it while
+  // auto-paused fades back in.
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const state = useDesktopStore.getState();
+    if (!state.isMusicPlaying) return;
+    if (autoPauseOnExternalAudio && externalActiveRef.current && !audio.paused && !autoPausedRef.current) {
+      autoPausedRef.current = true;
+      fadeOutThenPause(audio, state.autoPauseFadeDuration ?? 2);
+    } else if (!autoPauseOnExternalAudio && autoPausedRef.current) {
+      autoPausedRef.current = false;
+      fadeInAndPlay(audio, state.volume ?? 0.8, state.autoPauseFadeDuration ?? 2, savedTimeRef.current);
+    }
+  }, [autoPauseOnExternalAudio]);
 
   return (
     <div className="fixed bottom-3 right-3 z-30 select-none">
@@ -48,7 +191,14 @@ export const MediaPlayer: React.FC = () => {
         src="./music1.mp3"
         loop
         onPlay={() => setIsMusicPlaying(true)}
-        onPause={() => setIsMusicPlaying(false)}
+        onPause={() => {
+          if (autoPauseArmedRef.current) {
+            autoPauseArmedRef.current = false;
+            return;
+          }
+          autoPausedRef.current = false;
+          setIsMusicPlaying(false);
+        }}
       />
 
       {mediaPlayerOpen ? (

@@ -82,6 +82,10 @@ export interface DesktopState {
   setMediaPlayerOpen: (open: boolean) => void;
   isMusicPlaying: boolean;
   setIsMusicPlaying: (playing: boolean) => void;
+  autoPauseOnExternalAudio: boolean;
+  autoPauseFadeDuration: number;
+  setAutoPauseOnExternalAudio: (enabled: boolean) => void;
+  setAutoPauseFadeDuration: (duration: number) => void;
   setSoundEffectEnabled: (enabled: boolean) => void;
   setSoundEffectVolume: (volume: number) => void;
   setVolume: (volume: number) => void;
@@ -213,6 +217,10 @@ export const useDesktopStore = create<DesktopState>()(
       setMediaPlayerOpen: (open) => set({ mediaPlayerOpen: open }),
       isMusicPlaying: false,
       setIsMusicPlaying: (playing) => set({ isMusicPlaying: playing }),
+      autoPauseOnExternalAudio: false,
+      autoPauseFadeDuration: 2,
+      setAutoPauseOnExternalAudio: (enabled) => set({ autoPauseOnExternalAudio: enabled }),
+      setAutoPauseFadeDuration: (duration) => set({ autoPauseFadeDuration: duration }),
       setSoundEffectEnabled: (enabled) => set({ soundEffectEnabled: enabled }),
       setSoundEffectVolume: (volume) => set({ soundEffectVolume: volume }),
       setVolume: (volume) => set({ volume }),
@@ -496,6 +504,11 @@ export const useDesktopStore = create<DesktopState>()(
         const storedShield = (persisted.shield ?? {}) as Partial<ShieldConfig>;
         return {
           ...(persisted as object),
+          autoPauseOnExternalAudio: persisted.autoPauseOnExternalAudio ?? false,
+          autoPauseFadeDuration:
+            typeof persisted.autoPauseFadeDuration === "number"
+              ? persisted.autoPauseFadeDuration
+              : 2,
           shield: {
             ...DEFAULT_SHIELD_CONFIG,
             ...storedShield,

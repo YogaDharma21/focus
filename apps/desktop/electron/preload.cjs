@@ -19,6 +19,12 @@ contextBridge.exposeInMainWorld('electron', {
     return () => ipcRenderer.removeListener('timer-action', handler);
   },
   syncShieldState: (payload) => ipcRenderer.send('shield:sync', payload),
+  getExternalAudioState: () => ipcRenderer.invoke('audio:get-external-state'),
+  onExternalAudioState: (callback) => {
+    const handler = (_event, state) => callback(state);
+    ipcRenderer.on('audio:external-state', handler);
+    return () => ipcRenderer.removeListener('audio:external-state', handler);
+  },
   terminateBlockedProcess: (imageName) => ipcRenderer.invoke('shield:terminate-process', imageName),
   onShieldViolation: (callback) => {
     const handler = (_event, violation) => callback(violation);

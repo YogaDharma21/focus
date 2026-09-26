@@ -13,6 +13,11 @@ export interface ShieldSyncPayload {
   };
 }
 
+export interface ExternalAudioState {
+  supported: boolean;
+  playing: boolean;
+}
+
 export interface ElectronAPI {
   minimizeWindow: () => void;
   maximizeWindow: () => void;
@@ -24,6 +29,8 @@ export interface ElectronAPI {
   onShortcut: (callback: (command: string) => void) => () => void;
   onTimerAction: (callback: (action: string) => void) => () => void;
   syncShieldState: (payload: ShieldSyncPayload) => void;
+  getExternalAudioState: () => Promise<ExternalAudioState>;
+  onExternalAudioState: (callback: (state: ExternalAudioState) => void) => () => void;
   terminateBlockedProcess: (imageName: string) => Promise<{ success: boolean; error?: string }>;
   onShieldViolation: (callback: (violation: ShieldViolation) => void) => () => void;
   sendShieldOverlayAction: (action: ShieldOverlayAction, keys?: string[]) => void;
@@ -75,6 +82,14 @@ export const electron = {
   },
   syncShieldState: (payload: ShieldSyncPayload) => {
     if (window.electron) window.electron.syncShieldState(payload);
+  },
+  getExternalAudioState: async (): Promise<ExternalAudioState> => {
+    if (window.electron) return await window.electron.getExternalAudioState();
+    return { supported: false, playing: false };
+  },
+  onExternalAudioState: (callback: (state: ExternalAudioState) => void) => {
+    if (window.electron) return window.electron.onExternalAudioState(callback);
+    return () => {};
   },
   terminateBlockedProcess: async (imageName: string) => {
     if (window.electron) return window.electron.terminateBlockedProcess(imageName);
