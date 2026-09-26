@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import {
   Settings, Clock, Palette, Volume2, Volume1, VolumeX, Trash2, BellRing,
   Info, Github, ExternalLink, Check, Download,
@@ -19,6 +19,10 @@ export const SettingsPage: React.FC = () => {
     volume,
     setVolume,
     mediaType,
+    autoPauseOnExternalAudio,
+    setAutoPauseOnExternalAudio,
+    autoPauseFadeDuration,
+    setAutoPauseFadeDuration,
     isAlwaysOnTop,
     setAlwaysOnTop,
     autoStartBreak,
@@ -34,7 +38,16 @@ export const SettingsPage: React.FC = () => {
   const [resetConfirmText, setResetConfirmText] = useState('');
   const [notificationStatus, setNotificationStatus] = useState<string | null>(null);
   const [feedbackMessage, setFeedbackMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
+  const [externalAudioSupported, setExternalAudioSupported] = useState(true);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    electron.getExternalAudioState().then((s) => {
+      if (!cancelled && s) setExternalAudioSupported(s.supported !== false);
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   const showFeedback = (text: string, type: 'success' | 'error' = 'success') => {
     setFeedbackMessage({ text, type });
@@ -379,6 +392,58 @@ export const SettingsPage: React.FC = () => {
                 <span className="font-mono font-semibold text-muted-foreground uppercase bg-secondary px-2 py-0.5 rounded border border-border">
                   {mediaType}
                 </span>
+              </div>
+
+              <div className="space-y-3 pt-3 border-t border-border/60">
+                <div
+                  role="switch"
+                  aria-checked={autoPauseOnExternalAudio}
+                  onClick={() => setAutoPauseOnExternalAudio(!autoPauseOnExternalAudio)}
+                  className={`flex items-center justify-between cursor-pointer group ${!externalAudioSupported ? 'opacity-50 pointer-events-none' : ''}`}
+                >
+                  <div className="space-y-1 pr-4">
+                    <span className="text-xs font-semibold text-foreground">
+                      Auto-Pause on Audio
+                    </span>
+                    <span className="text-[11px] text-muted-foreground block leading-tight">
+                      {externalAudioSupported
+                        ? 'Fade music out when other apps play audio, fade back in when they stop.'
+                        : 'External audio detection is unavailable on this system.'}
+                    </span>
+                  </div>
+                  <div className={`w-11 h-6 rounded-full p-0.5 transition-colors duration-200 shrink-0 ${
+                    autoPauseOnExternalAudio ? 'bg-primary' : 'bg-muted'
+                  }`}>
+                    <div className={`w-5 h-5 rounded-full transition-transform duration-200 ${
+                      autoPauseOnExternalAudio ? 'translate-x-5 bg-primary-foreground shadow-sm' : 'translate-x-0 bg-muted-foreground'
+                    }`} />
+                  </div>
+                </div>
+
+                {autoPauseOnExternalAudio && externalAudioSupported && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground font-medium">Resume Fade Speed</span>
+                      <span className="font-mono font-semibold text-foreground">
+                        {(autoPauseFadeDuration ?? 2) === 0 ? 'Instant (0s)' : `${autoPauseFadeDuration ?? 2}s`}
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min={0}
+                      max={5}
+                      step={0.5}
+                      value={autoPauseFadeDuration ?? 2}
+                      onChange={(e) => setAutoPauseFadeDuration(Number(e.target.value))}
+                      className="w-full h-2 bg-background rounded-lg accent-primary cursor-pointer"
+                    />
+                    <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
+                      <span>0s (Instant)</span>
+                      <span>2.5s</span>
+                      <span>5s</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

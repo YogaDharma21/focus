@@ -9,12 +9,17 @@ const {
     nativeImage,
 } = require("electron");
 const path = require("path");
-const { execFile } = require("child_process");
+const fs = require("fs");
+const { execFile, spawn } = require("child_process");
 
-// Set application name and Windows AppUserModelID for notifications
+// Set application name and Windows AppUserModelID for notifications.
+// The explicit AppUserModelID doubles as our identity for external-audio
+// detection: the watcher excludes our own media session so our Lo-Fi music
+// never counts as "external" audio.
+const APP_USER_MODEL_ID = "com.yogacode.focus-desktop";
 app.setName("Focus Desktop");
 if (process.platform === "win32") {
-    app.setAppUserModelId("Focus Desktop");
+    app.setAppUserModelId(APP_USER_MODEL_ID);
 }
 
 let mainWindow = null;
@@ -214,6 +219,10 @@ function setupIPC() {
         return terminateBlockedProcess(imageName);
     });
 
+    ipcMain.handle("audio:get-external-state", () => {
+        return { supported: externalAudioSupported, playing: externalAudioPlaying };
+    });
+
     ipcMain.on("shield:overlay-action", (_event, payload) => {
         const action = typeof payload === "string" ? payload : payload?.action;
         const keys = typeof payload === "object" && Array.isArray(payload?.keys)
@@ -370,12 +379,21 @@ function matchBlockedApp(processImage) {
     return null;
 }
 
-function execFileAsync(file, args) {
+function execFileAsync(file, args, env) {
     return new Promise((resolve) => {
-        execFile(file, args, { timeout: 8000, windowsHide: true }, (err, stdout) => {
-            if (err) return resolve("");
-            resolve(stdout || "");
-        });
+        execFile(
+            file,
+            args,
+            {
+                timeout: 8000,
+                windowsHide: true,
+                ...(env ? { env: { ...process.env, ...env } } : {}),
+            },
+            (err, stdout) => {
+                if (err) return resolve("");
+                resolve(stdout || "");
+            }
+        );
     });
 }
 
@@ -632,6 +650,100 @@ function hideShieldOverlay() {
     }
 }
 
+// --- External Audio Detection ------------------------------------------------
+// Mirrors the extension's auto-pause-on-external-audio behavior on desktop.
+// Windows has no chrome.tabs API, so a small PowerShell watcher polls the
+// system media-session manager (SMTC) and reports when another app starts or
+// stops media playback. The renderer's MediaPlayer listens for
+// "audio:external-state" and fades the ambient music out/in accordingly.
+
+const EXTERNAL_AUDIO_POLL_MS = 1500;
+
+let externalAudioSupported = process.platform === "win32";
+let externalAudioPlaying = false;
+let externalAudioProc = null;
+
+function setExternalAudioPlaying(playing) {
+    const next = !!playing;
+    if (next === externalAudioPlaying) return;
+    externalAudioPlaying = next;
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send("audio:external-state", {
+            playing: externalAudioPlaying,
+        });
+    }
+}
+
+function startExternalAudioMonitor() {
+    if (process.platform !== "win32") {
+        externalAudioSupported = false;
+        return;
+    }
+    if (externalAudioProc) return;
+    const scriptPath = path.join(__dirname, "external-audio-watch.ps1");
+    // In packaged builds electron-builder copies electron/**/*, but guard
+    // anyway so a missing script degrades to "unsupported" instead of a crash.
+    if (!fs.existsSync(scriptPath)) {
+        externalAudioSupported = false;
+        return;
+    }
+    try {
+        const child = spawn(
+            "powershell",
+            [
+                "-NoProfile",
+                "-NonInteractive",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                scriptPath,
+                "-PollMs",
+                String(EXTERNAL_AUDIO_POLL_MS),
+                "-ExcludeAppId",
+                APP_USER_MODEL_ID,
+            ],
+            { windowsHide: true, stdio: ["ignore", "pipe", "ignore"] }
+        );
+        externalAudioProc = child;
+        let buffer = "";
+        child.stdout.on("data", (chunk) => {
+            buffer += chunk.toString();
+            let idx;
+            while ((idx = buffer.indexOf("\n")) !== -1) {
+                const line = buffer.slice(0, idx).trim();
+                buffer = buffer.slice(idx + 1);
+                if (line === "EXTERNAL_PLAYING") setExternalAudioPlaying(true);
+                else if (line === "EXTERNAL_STOPPED") setExternalAudioPlaying(false);
+                else if (line === "EXTERNAL_UNSUPPORTED") {
+                    externalAudioSupported = false;
+                }
+            }
+        });
+        child.on("exit", () => {
+            if (externalAudioProc === child) externalAudioProc = null;
+        });
+        child.on("error", () => {
+            externalAudioSupported = false;
+            externalAudioProc = null;
+        });
+    } catch (err) {
+        console.error("External audio monitor failed to start:", err);
+        externalAudioSupported = false;
+        externalAudioProc = null;
+    }
+}
+
+function stopExternalAudioMonitor() {
+    try {
+        if (externalAudioProc && !externalAudioProc.killed) {
+            externalAudioProc.kill();
+        }
+    } catch {
+        // Best-effort cleanup on shutdown.
+    }
+    externalAudioProc = null;
+}
+
 function registerShortcuts() {
     try {
         globalShortcut.register("CommandOrControl+Alt+F", () => {
@@ -656,6 +768,7 @@ app.whenReady().then(() => {
     createTray();
     setupIPC();
     startShieldMonitor();
+    startExternalAudioMonitor();
     registerShortcuts();
 
     app.on("activate", () => {
@@ -665,6 +778,7 @@ app.whenReady().then(() => {
 
 app.on("will-quit", () => {
     globalShortcut.unregisterAll();
+    stopExternalAudioMonitor();
 });
 
 app.on("window-all-closed", () => {
