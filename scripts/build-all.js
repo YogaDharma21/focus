@@ -19,7 +19,7 @@ for (const app of targetApps) {
   if (fs.existsSync(pkgPath)) {
     console.log(`📦 Building [${app}]...`);
     try {
-      execSync("npm run build", { cwd: appPath, stdio: "inherit" });
+      execSync("pnpm run build", { cwd: appPath, stdio: "inherit" });
       console.log(`✅ [${app}] built successfully!\n`);
     } catch (err) {
       console.error(`❌ Build failed for [${app}]:`, err.message);

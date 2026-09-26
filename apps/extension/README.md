@@ -125,15 +125,15 @@ apps/extension/
 ### Prerequisites
 
 - Node.js v18+
-- npm
+- pnpm v10+
 - A Chromium-based browser (Chrome, Edge, Brave, etc.)
 
 ### Install and Build
 
 ```bash
 cd apps/extension
-npm install
-npm run build
+pnpm install
+pnpm run build
 ```
 
 ### Load in Chrome
@@ -147,7 +147,7 @@ npm run build
 ### Development
 
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 After making changes, go to `chrome://extensions/` and click the reload button on the extension card.
