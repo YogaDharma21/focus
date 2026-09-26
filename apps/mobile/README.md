@@ -55,7 +55,7 @@
 ### Prerequisites
 
 - Node.js (v18+ recommended)
-- npm / yarn / pnpm
+- pnpm (v10+ recommended)
 - Expo Go app on mobile OR Android Studio / Xcode for emulators.
 
 ### Development Setup
@@ -69,13 +69,13 @@
 2. **Install dependencies:**
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. **Start the Expo development server:**
 
    ```bash
-   npx expo start
+   pnpm dlx expo start
    ```
 
 4. **Run on target platform:**

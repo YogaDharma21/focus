@@ -19,7 +19,7 @@ Please provide a clear and concise description of what this PR does, why it is n
 ## Verification & Screenshots
 
 - [ ] Tested locally across affected apps
-- [ ] Verified build succeeds without errors (`npm run build`)
+- [ ] Verified build succeeds without errors (`pnpm run build`)
 
 | Desktop / Web | Mobile / Extension |
 |---|---|

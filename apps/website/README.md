@@ -57,7 +57,7 @@
 ### Prerequisites
 
 - Node.js (v18+ recommended)
-- npm / yarn / pnpm
+- pnpm (v10+ recommended)
 
 ### Development Setup
 
@@ -70,13 +70,13 @@
 2. **Install dependencies:**
 
    ```bash
-   npm install
+   pnpm install
    ```
 
 3. **Run development server:**
 
    ```bash
-   npm run dev
+   pnpm run dev
    ```
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser.

@@ -123,22 +123,22 @@ focus/
 ### Prerequisites
 
 - Node.js (v18+ recommended)
-- npm / yarn / pnpm
+- pnpm (v10+ recommended)
 
 ### Desktop Development Setup
 
 ```bash
 cd apps/desktop
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 ### Web Development Setup
 
 ```bash
 cd apps/website
-npm install
-npm run dev
+pnpm install
+pnpm run dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
@@ -147,8 +147,8 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ```bash
 cd apps/mobile
-npm install
-npx expo start
+pnpm install
+pnpm dlx expo start
 ```
 
 Scan the QR code with Expo Go or run on Android Emulator / iOS Simulator.
@@ -157,8 +157,8 @@ Scan the QR code with Expo Go or run on Android Emulator / iOS Simulator.
 
 ```bash
 cd apps/extension
-npm install
-npm run build
+pnpm install
+pnpm run build
 ```
 
 Then load the `apps/extension/dist` folder as an unpacked extension in `chrome://extensions/` (Developer mode enabled).
