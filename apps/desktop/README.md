@@ -104,19 +104,19 @@ apps/desktop/
 ### Prerequisites
 
 - Node.js (v18+ recommended)
-- npm / yarn / pnpm
+- pnpm (v10+ recommended)
 
 ### Development Setup
 
 1. **Install dependencies**:
    ```bash
    cd apps/desktop
-   npm install
+   pnpm install
    ```
 
 2. **Run dev server**:
    ```bash
-   npm run dev
+   pnpm run dev
    ```
    This launches Vite in watch mode alongside Electron with hot module replacement (HMR).
 
@@ -125,7 +125,7 @@ apps/desktop/
 To compile TypeScript, bundle React assets with Vite, and generate the Windows installer via `electron-builder`:
 
 ```bash
-npm run dist
+pnpm run dist
 ```
 
 Output binaries will be located in `apps/desktop/dist/release/`.
