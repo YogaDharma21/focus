@@ -7,7 +7,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-**Focus Web** is a modern, minimalist productivity web application currently in active development. Featuring a Flow timer with smart break calculation, deep focus mode, task management, distraction tracking, and an ambient media player.
+**Focus Web** is a modern, minimalist productivity web application currently in active development. Featuring a Flow timer with smart break calculation, deep focus mode, session history, distraction tracking, and an ambient media player.
 
 ---
 
@@ -18,9 +18,6 @@
 
 ### Focus Session
 ![Main Dashboard](./public/screenshots/screenshot-main.png)
-
-### Task Management
-![Task Management](./public/screenshots/screenshot-tasks.png)
 
 ### Stats & Analytics
 ![Stats & Journal](./public/screenshots/screenshot-stats.png)
@@ -34,9 +31,8 @@
 - **Focus & Flow Timer** — Continuous Flow (Stopwatch) timer with smart break calculation.
 - **Smart Flow Break Time** — Automatically calculates break duration as 1/5th of your Flow session length.
 - **Deep Focus Mode** — Distraction-free immersive view with session controls and keyboard shortcuts (`Esc` / `F`).
-- **Focus Session Tasks** — Type custom focus goals directly into the timer and press `Enter` to instantly create and select new tasks.
-- **Task Management** — Organize tasks into groups, subtasks, and estimated sessions.
-- **Stats & Productivity Analytics** — Track daily focus minutes, completion rates, streak metrics, and weekly trends.
+- **Session History & Stats** — Every session is logged automatically with duration.
+- **Stats & Productivity Analytics** — Track daily focus minutes, session counts, streak metrics, and weekly trends.
 - **Ambient Media Player** — Background music player supporting YouTube playlists, Spotify embeds, and local focus tracks.
 - **Custom Backgrounds** — Dynamic backgrounds including dark gradients, mountain scenes, cozy cafes, and anime rooms.
 

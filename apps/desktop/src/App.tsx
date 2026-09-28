@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import { TitleBar } from './components/layout/TitleBar';
 import { SidebarNav } from './components/layout/SidebarNav';
 import { FocusTimer } from './components/modules/FocusTimer';
-import { TodoList } from './components/modules/TodoList';
 import { StatsJournal } from './components/modules/StatsJournal';
 import { MediaPlayer } from './components/modules/MediaPlayer';
 import { SettingsPage } from './components/modules/SettingsPage';
@@ -149,7 +148,6 @@ export const App: React.FC = () => {
 
         <main className="flex-1 overflow-y-auto py-6 pr-6 pl-24 relative">
           {currentView === 'FOCUS' && <FocusTimer />}
-          {currentView === 'TODO' && <TodoList />}
           {currentView === 'JOURNAL' && <StatsJournal />}
           {currentView === 'SHIELD' && <ShieldPage />}
           {currentView === 'SETTINGS' && <SettingsPage />}

@@ -12,10 +12,6 @@ import {
   Play,
   Pause,
   Plus,
-  ChevronDown,
-  Check,
-  ListTodo,
-  X,
 } from 'lucide-react-native';
 
 interface HeaderProps {
@@ -39,7 +35,6 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
-  const [taskPickerOpen, setTaskPickerOpen] = useState(false);
 
   const {
     currentView,
@@ -48,11 +43,6 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
     isActive,
     setIsActive,
     setTimerState,
-    selectedTodoId,
-    setSelectedTodoId,
-    sessionName,
-    setSessionName,
-    todos,
     addSession,
     addDistraction,
     autoStartBreak,
@@ -160,7 +150,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
             },
           ]}
         >
-          {/* Card Top Row: Time + Task Selector */}
+          {/* Card Top Row: Time */}
           <View style={styles.cardHeader}>
             <View style={styles.cardHeaderTitleRow}>
               {renderModeIcon(18, colors.text)}
@@ -169,18 +159,6 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
               </Text>
               {isActive && <View style={[styles.activeDot, { backgroundColor: colors.text }]} />}
             </View>
-            <TouchableOpacity
-              style={[styles.taskSelectorBtn, { backgroundColor: colors.muted, borderColor: colors.border }]}
-              onPress={() => setTaskPickerOpen(true)}
-              activeOpacity={0.8}
-              accessibilityLabel="Select or switch focus task"
-            >
-              {!selectedTodoId && !sessionName && <ListTodo size={14} color={colors.mutedText} />}
-              <Text style={[styles.taskSelectorText, { color: colors.text }]} numberOfLines={1}>
-                {todos.find((todo) => todo.id === selectedTodoId)?.text || sessionName || 'Select task'}
-              </Text>
-              <ChevronDown size={14} color={colors.mutedText} />
-            </TouchableOpacity>
           </View>
 
           {/* Action Buttons Row */}
@@ -236,65 +214,6 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
           </View>
         </View>
       )}
-
-      {/* Floating Task Picker */}
-      <Modal
-        visible={taskPickerOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setTaskPickerOpen(false)}
-      >
-        <TouchableOpacity style={styles.modalBackdrop} activeOpacity={1} onPress={() => setTaskPickerOpen(false)}>
-          <TouchableOpacity
-            activeOpacity={1}
-            style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]}
-            onPress={() => {}}
-          >
-            <View style={styles.taskPickerHeader}>
-              <Text style={[styles.modalTitle, { color: colors.text }]}>Select task</Text>
-              <TouchableOpacity onPress={() => setTaskPickerOpen(false)} style={styles.closeBtn}>
-                <X size={18} color={colors.mutedText} />
-              </TouchableOpacity>
-            </View>
-
-            <TouchableOpacity
-              style={[styles.taskOption, { backgroundColor: !selectedTodoId && !sessionName ? colors.border : colors.muted, borderColor: colors.border }]}
-              onPress={() => {
-                setSelectedTodoId(null);
-                setSessionName('');
-                setTaskPickerOpen(false);
-              }}
-            >
-              <View style={styles.taskOptionLeft}>
-                <Plus size={16} color={colors.text} />
-                <Text style={[styles.taskOptionText, { color: colors.text }]}>Custom focus</Text>
-              </View>
-              {!selectedTodoId && !sessionName && <Check size={16} color={colors.text} />}
-            </TouchableOpacity>
-
-            {todos.filter((todo) => !todo.completed).map((todo) => {
-              const isSelected = selectedTodoId === todo.id;
-              return (
-                <TouchableOpacity
-                  key={todo.id}
-                  style={[styles.taskOption, { backgroundColor: isSelected ? colors.border : colors.muted, borderColor: colors.border }]}
-                  onPress={() => {
-                    setSelectedTodoId(todo.id);
-                    setSessionName(todo.text);
-                    setTaskPickerOpen(false);
-                  }}
-                >
-                  <View style={styles.taskOptionLeft}>
-                    <ListTodo size={16} color={colors.text} />
-                    <Text style={[styles.taskOptionText, { color: colors.text }]} numberOfLines={1}>{todo.text}</Text>
-                  </View>
-                  {isSelected && <Check size={16} color={colors.text} />}
-                </TouchableOpacity>
-              );
-            })}
-          </TouchableOpacity>
-        </TouchableOpacity>
-      </Modal>
 
       {/* Distraction Logger Modal */}
       <Modal
@@ -452,22 +371,6 @@ const styles = StyleSheet.create({
     height: 7,
     borderRadius: 4,
   },
-  taskSelectorBtn: {
-    maxWidth: 190,
-    minWidth: 118,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  taskSelectorText: {
-    flexShrink: 1,
-    fontSize: 11,
-    fontWeight: '700',
-  },
   cardActionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -538,35 +441,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 4,
-  },
-  taskPickerHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  closeBtn: {
-    padding: 4,
-  },
-  taskOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 12,
-    borderRadius: 10,
-    borderWidth: 1,
-    marginBottom: 8,
-  },
-  taskOptionLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    flex: 1,
-  },
-  taskOptionText: {
-    flex: 1,
-    fontSize: 13,
-    fontWeight: '600',
   },
 });
 

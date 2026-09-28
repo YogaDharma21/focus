@@ -3,7 +3,6 @@
 import { BottomNavbar } from "@/components/layout/BottomNavbar";
 import { MediaPlayer } from "@/components/modules/MediaPlayer";
 import { FocusTimer } from "@/components/modules/FocusTimer";
-import { TodoList } from "@/components/modules/TodoList";
 import { StatsJournal } from "@/components/modules/StatsJournal";
 import { DynamicIslandTimer } from "@/components/modules/DynamicIslandTimer";
 import { DeepFocusOverlay } from "@/components/modules/DeepFocusOverlay";
@@ -91,13 +90,9 @@ export default function Page() {
                             </div>
                         )}
 
-                        {(currentView === "TODO" || currentView === "JOURNAL") && (
+                        {currentView === "JOURNAL" && (
                             <div className="max-w-2xl mx-auto w-full pb-8 pt-12">
-                                {currentView === "TODO" ? (
-                                    <TodoList />
-                                ) : (
-                                    <StatsJournal />
-                                )}
+                                <StatsJournal />
                             </div>
                         )}
 

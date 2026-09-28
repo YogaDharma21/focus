@@ -11,6 +11,10 @@ import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
 import { VolumeSlider } from '@/components/ui/VolumeSlider';
+import {
+  FLOATING_TAB_BAR_HEIGHT,
+  FLOATING_TAB_BAR_BOTTOM_GAP,
+} from '@/components/FloatingTabBar';
 import { Play, Pause, Music, Volume2, X, ChevronUp, ChevronDown } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -33,7 +37,11 @@ export function MediaPlayer() {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const soundRef = useRef<AudioPlayer | null>(null);
 
-  const bottomOffset = 56 + Math.max(insets.bottom, 0) + 12;
+  const bottomOffset =
+    Math.max(insets.bottom, 0) +
+    FLOATING_TAB_BAR_BOTTOM_GAP +
+    FLOATING_TAB_BAR_HEIGHT +
+    10;
 
   useEffect(() => {
     return () => {

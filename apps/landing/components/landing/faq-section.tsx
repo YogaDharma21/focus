@@ -26,7 +26,7 @@ export function FAQSection() {
     {
       question: "Can I use Focus offline on Desktop and Mobile?",
       answer:
-        "Yes! Focus Desktop (Electron) and Focus Mobile (Expo / React Native) store session data, audio files, and task entries locally. Your data persists offline and automatically synchronizes when internet connectivity is available.",
+        "Yes! Focus Desktop (Electron) and Focus Mobile (Expo / React Native) store session data, audio files, and history entries locally. Your data persists offline and automatically synchronizes when internet connectivity is available.",
     },
     {
       question: "Is Focus open source?",

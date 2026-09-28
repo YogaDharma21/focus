@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppStore, ViewType } from "@/lib/store";
-import { Timer, CheckSquare, BarChart2, Settings } from "lucide-react";
+import { Timer, BarChart2, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function BottomNavbar() {
@@ -14,11 +14,6 @@ export function BottomNavbar() {
         icon: React.ReactNode;
     }[] = [
         { label: "Focus", value: "FOCUS", icon: <Timer className="w-5 h-5" /> },
-        {
-            label: "Tasks",
-            value: "TODO",
-            icon: <CheckSquare className="w-5 h-5" />,
-        },
         {
             label: "Stats",
             value: "JOURNAL",

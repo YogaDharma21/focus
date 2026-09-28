@@ -1,17 +1,11 @@
 import React from 'react';
-import { 
-  Clock, Activity, CheckCircle2, ListTodo, Flame, Target, BarChart2, TrendingUp 
+import {
+  Clock, Activity, Flame, BarChart2, TrendingUp
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 
 export const StatsJournal: React.FC = () => {
-  const { sessions, todos, distractions, flowTimeElapsed } = useDesktopStore();
-
-  // 1. Current Timer status string for top floating capsule
-  const activeSeconds = flowTimeElapsed;
-  const m = Math.floor(activeSeconds / 60);
-  const s = activeSeconds % 60;
-  const timeString = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  const { sessions, distractions } = useDesktopStore();
 
   const now = new Date();
   const currentMinutesPassed = now.getHours() * 60 + now.getMinutes();
@@ -30,13 +24,6 @@ export const StatsJournal: React.FC = () => {
     );
   });
   const minutesToday = Math.round(todaySessions.reduce((acc, s) => acc + s.duration, 0) / 60);
-
-  const tasksTodayCount = todos.filter(t => t.completed).length;
-  const pendingTasksCount = todos.filter(t => !t.completed).length;
-  const totalTasksCount = todos.length;
-  const completionRatePercent = totalTasksCount > 0 
-    ? Math.round((tasksTodayCount / totalTasksCount) * 100) 
-    : 0;
 
   const calculateStreak = () => {
     if (!sessions || sessions.length === 0) return { current: 0, best: 0 };
@@ -187,7 +174,7 @@ export const StatsJournal: React.FC = () => {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="bg-card border border-border rounded-2xl p-5 shadow-sm text-center flex flex-col items-center justify-center space-y-2">
           <div className="w-10 h-10 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground">
             <Activity className="w-5 h-5" />
@@ -198,56 +185,29 @@ export const StatsJournal: React.FC = () => {
 
         <div className="bg-card border border-border rounded-2xl p-5 shadow-sm text-center flex flex-col items-center justify-center space-y-2">
           <div className="w-10 h-10 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground">
-            <CheckCircle2 className="w-5 h-5" />
+            <BarChart2 className="w-5 h-5" />
           </div>
-          <span className="text-3xl font-extrabold text-foreground font-sans">{tasksTodayCount}</span>
-          <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Tasks Today</span>
-        </div>
-
-        <div className="bg-card border border-border rounded-2xl p-5 shadow-sm text-center flex flex-col items-center justify-center space-y-2">
-          <div className="w-10 h-10 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground">
-            <ListTodo className="w-5 h-5" />
-          </div>
-          <span className="text-3xl font-extrabold text-foreground font-sans">{pendingTasksCount}</span>
-          <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Pending Tasks</span>
+          <span className="text-3xl font-extrabold text-foreground font-sans">{todaySessions.length}</span>
+          <span className="text-[10px] font-bold tracking-widest text-muted-foreground uppercase">Sessions Today</span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground">
-              <Flame className="w-4 h-4" />
-            </div>
-            <span className="text-sm font-bold text-foreground tracking-tight">Longest Streak</span>
+      <div className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-4">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground">
+            <Flame className="w-4 h-4" />
           </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground font-medium">Current</span>
-              <span className="text-sm font-bold text-foreground font-mono">{currentStreak} Days</span>
-            </div>
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground font-medium">Best</span>
-              <span className="text-sm font-bold text-foreground font-mono">{bestStreak} Days</span>
-            </div>
-          </div>
+          <span className="text-sm font-bold text-foreground tracking-tight">Longest Streak</span>
         </div>
 
-        <div className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-4">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground">
-              <Target className="w-4 h-4" />
-            </div>
-            <span className="text-sm font-bold text-foreground tracking-tight">Completion Rate</span>
+        <div className="space-y-2">
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground font-medium">Current</span>
+            <span className="text-sm font-bold text-foreground font-mono">{currentStreak} Days</span>
           </div>
-
-          <div className="space-y-1">
-            <h3 className="text-3xl font-extrabold text-foreground font-sans">{completionRatePercent}%</h3>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground font-medium pt-1">
-              <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground" />
-              <span>Tasks Finished</span>
-            </div>
+          <div className="flex items-center justify-between text-xs">
+            <span className="text-muted-foreground font-medium">Best</span>
+            <span className="text-sm font-bold text-foreground font-mono">{bestStreak} Days</span>
           </div>
         </div>
       </div>
