@@ -21,8 +21,6 @@ export const SettingsPage: React.FC = () => {
     mediaType,
     autoPauseOnExternalAudio,
     setAutoPauseOnExternalAudio,
-    autoPauseFadeDuration,
-    setAutoPauseFadeDuration,
     isAlwaysOnTop,
     setAlwaysOnTop,
     autoStartBreak,
@@ -419,31 +417,6 @@ export const SettingsPage: React.FC = () => {
                     }`} />
                   </div>
                 </div>
-
-                {autoPauseOnExternalAudio && externalAudioSupported && (
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground font-medium">Resume Fade Speed</span>
-                      <span className="font-mono font-semibold text-foreground">
-                        {(autoPauseFadeDuration ?? 2) === 0 ? 'Instant (0s)' : `${autoPauseFadeDuration ?? 2}s`}
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min={0}
-                      max={5}
-                      step={0.5}
-                      value={autoPauseFadeDuration ?? 2}
-                      onChange={(e) => setAutoPauseFadeDuration(Number(e.target.value))}
-                      className="w-full h-2 bg-background rounded-lg accent-primary cursor-pointer"
-                    />
-                    <div className="flex justify-between text-[10px] text-muted-foreground font-mono">
-                      <span>0s (Instant)</span>
-                      <span>2.5s</span>
-                      <span>5s</span>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>

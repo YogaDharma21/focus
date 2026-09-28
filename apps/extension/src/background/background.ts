@@ -66,6 +66,68 @@ async function setMusicCurrentTime(val: number): Promise<void> {
   }
 }
 
+// ─── Auto-Pause Timing (fixed constants) ────────────────────────────────────
+// External audio must be continuously audible for this long before the music
+// pauses, so brief blips (play then instantly pause a video) are ignored.
+// Likewise, silence must persist this long before the music resumes, so
+// buffering/seeking gaps don't cause pause/resume flapping.
+const EXTERNAL_AUDIO_MIN_DURATION_MS = 3000;
+const RESUME_MIN_SILENCE_MS = 3000;
+// Fade transition used for auto-pause/resume. Fixed; no longer user-configurable.
+const AUTO_PAUSE_FADE_DURATION = 2;
+
+const SESSION_EXTERNAL_AUDIO_SINCE_KEY = "focus_external_audio_since";
+const SESSION_SILENCE_SINCE_KEY = "focus_silence_since";
+let cachedExternalAudioSince = 0;
+let cachedSilenceSince = 0;
+let delayedAudioSyncTimer: ReturnType<typeof setTimeout> | null = null;
+
+async function getSessionNumber(key: string): Promise<number> {
+  if (typeof chrome !== "undefined" && chrome.storage?.session) {
+    try {
+      const res = await chrome.storage.session.get(key);
+      if (res && typeof res[key] === "number") {
+        return res[key];
+      }
+    } catch {
+      // Fallback to cache
+    }
+  }
+  return key === SESSION_EXTERNAL_AUDIO_SINCE_KEY ? cachedExternalAudioSince : cachedSilenceSince;
+}
+
+async function setSessionNumber(key: string, val: number): Promise<void> {
+  if (key === SESSION_EXTERNAL_AUDIO_SINCE_KEY) cachedExternalAudioSince = val;
+  else cachedSilenceSince = val;
+  if (typeof chrome !== "undefined" && chrome.storage?.session) {
+    try {
+      await chrome.storage.session.set({ [key]: val });
+    } catch {
+      // Ignore if session storage fails
+    }
+  }
+}
+
+async function clearAudioDelayTracking(): Promise<void> {
+  if (delayedAudioSyncTimer !== null) {
+    clearTimeout(delayedAudioSyncTimer);
+    delayedAudioSyncTimer = null;
+  }
+  await setSessionNumber(SESSION_EXTERNAL_AUDIO_SINCE_KEY, 0);
+  await setSessionNumber(SESSION_SILENCE_SINCE_KEY, 0);
+}
+
+function scheduleDelayedAudioSync(delayMs: number): void {
+  if (delayedAudioSyncTimer !== null) {
+    clearTimeout(delayedAudioSyncTimer);
+    delayedAudioSyncTimer = null;
+  }
+  delayedAudioSyncTimer = setTimeout(() => {
+    delayedAudioSyncTimer = null;
+    scheduleSyncExternalAudioState("delayed-audio-check");
+  }, Math.max(0, delayMs));
+}
+
 // ─── Offscreen Audio Helpers ───────────────────────────────────────────
 
 async function hasOffscreenDocument(): Promise<boolean> {
@@ -208,15 +270,14 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
       } else if (message.action === "SET_AUTO_PAUSE_ON_EXTERNAL_AUDIO") {
         const enabled = Boolean(message.enabled);
         saveStoredState({ autoPauseOnExternalAudio: enabled }).then(async () => {
+          await clearAudioDelayTracking();
           await scheduleSyncExternalAudioState("SET_AUTO_PAUSE_ON_EXTERNAL_AUDIO");
           sendResponse({ success: true });
         });
         return true;
       } else if (message.action === "SET_AUTO_PAUSE_FADE_DURATION") {
-        const duration = typeof message.duration === "number" ? Math.max(0, Math.min(10, message.duration)) : 2;
-        saveStoredState({ autoPauseFadeDuration: duration }).then(() => {
-          sendResponse({ success: true });
-        });
+        // Legacy no-op kept for back-compat: fade is now a fixed constant.
+        sendResponse({ success: true });
         return true;
       }
     }
@@ -497,7 +558,7 @@ async function performSyncExternalAudioState(_reason?: string): Promise<void> {
   const musicEnabled = state.musicEnabled ?? true;
   const autoPauseEnabled = Boolean(state.autoPauseOnExternalAudio);
   const isMusicPlaying = Boolean(state.isMusicPlaying);
-  const fadeDuration = typeof state.autoPauseFadeDuration === "number" ? state.autoPauseFadeDuration : 2;
+  const fadeDuration = AUTO_PAUSE_FADE_DURATION;
   const musicVolume = state.musicVolume ?? 0.8;
   const wasAutoPaused = await getMusicAutoPaused();
 
@@ -506,6 +567,7 @@ async function performSyncExternalAudioState(_reason?: string): Promise<void> {
       await setMusicAutoPaused(false);
       await setMusicCurrentTime(0);
     }
+    await clearAudioDelayTracking();
     await sendToOffscreen("PAUSE_MUSIC");
     return;
   }
@@ -516,34 +578,67 @@ async function performSyncExternalAudioState(_reason?: string): Promise<void> {
       await setMusicAutoPaused(false);
       await setMusicCurrentTime(0);
     }
+    await clearAudioDelayTracking();
     await sendToOffscreen("PLAY_MUSIC", { volume: musicVolume, fadeDuration });
     return;
   }
 
   const isExternalAudible = await checkAnyTabAudible();
+  const now = Date.now();
 
   if (isExternalAudible) {
-    if (!wasAutoPaused) {
-      // First detection of external audio -> pause music and save playback position.
-      // Only do this on the initial transition. Repeated PAUSE_MUSIC calls while
-      // already paused would hit a recycled offscreen document (fresh Audio element
-      // at currentTime=0) and overwrite the saved position with 0.
-      await setMusicAutoPaused(true);
-      const pauseResult = await sendToOffscreen("PAUSE_MUSIC", { fadeDuration });
-      if (pauseResult && typeof pauseResult.currentTime === "number") {
-        await setMusicCurrentTime(pauseResult.currentTime);
-      }
-    }
-    // Already auto-paused: skip. Position is already saved in session storage.
-  } else {
-    // No external tab is producing audio
+    // External audio present: drop any pending silence tracking.
+    await setSessionNumber(SESSION_SILENCE_SINCE_KEY, 0);
     if (wasAutoPaused) {
+      // Already auto-paused: skip. Position is already saved in session storage.
+      await setSessionNumber(SESSION_EXTERNAL_AUDIO_SINCE_KEY, 0);
+      return;
+    }
+    // Require sustained audible audio before pausing so sub-3s blips are ignored.
+    let since = await getSessionNumber(SESSION_EXTERNAL_AUDIO_SINCE_KEY);
+    if (!since) {
+      since = now;
+      await setSessionNumber(SESSION_EXTERNAL_AUDIO_SINCE_KEY, since);
+    }
+    const elapsed = now - since;
+    if (elapsed < EXTERNAL_AUDIO_MIN_DURATION_MS) {
+      scheduleDelayedAudioSync(EXTERNAL_AUDIO_MIN_DURATION_MS - elapsed);
+      return;
+    }
+    // Sustained external audio -> pause music and save playback position.
+    // Only do this on the initial transition. Repeated PAUSE_MUSIC calls while
+    // already paused would hit a recycled offscreen document (fresh Audio element
+    // at currentTime=0) and overwrite the saved position with 0.
+    await setSessionNumber(SESSION_EXTERNAL_AUDIO_SINCE_KEY, 0);
+    await setMusicAutoPaused(true);
+    const pauseResult = await sendToOffscreen("PAUSE_MUSIC", { fadeDuration });
+    if (pauseResult && typeof pauseResult.currentTime === "number") {
+      await setMusicCurrentTime(pauseResult.currentTime);
+    }
+  } else {
+    // No external tab is producing audio: drop any pending audible tracking
+    // so a blip that ended early never pauses.
+    await setSessionNumber(SESSION_EXTERNAL_AUDIO_SINCE_KEY, 0);
+    if (wasAutoPaused) {
+      // Require sustained silence before resuming.
+      let silenceSince = await getSessionNumber(SESSION_SILENCE_SINCE_KEY);
+      if (!silenceSince) {
+        silenceSince = now;
+        await setSessionNumber(SESSION_SILENCE_SINCE_KEY, silenceSince);
+      }
+      const silentFor = now - silenceSince;
+      if (silentFor < RESUME_MIN_SILENCE_MS) {
+        scheduleDelayedAudioSync(RESUME_MIN_SILENCE_MS - silentFor);
+        return;
+      }
       // Resume from auto-pause - restore saved playback position
       const savedTime = await getMusicCurrentTime();
+      await setSessionNumber(SESSION_SILENCE_SINCE_KEY, 0);
       await setMusicAutoPaused(false);
       await setMusicCurrentTime(0);
       await sendToOffscreen("PLAY_MUSIC", { volume: musicVolume, fadeDuration, currentTime: savedTime });
     } else {
+      await setSessionNumber(SESSION_SILENCE_SINCE_KEY, 0);
       // Ensure music is playing
       await sendToOffscreen("PLAY_MUSIC", { volume: musicVolume });
     }
@@ -660,7 +755,6 @@ if (typeof chrome !== "undefined" && chrome.storage) {
         newState.isMusicPlaying !== oldState.isMusicPlaying ||
         newState.autoPauseOnExternalAudio !== oldState.autoPauseOnExternalAudio ||
         newState.musicVolume !== oldState.musicVolume ||
-        newState.autoPauseFadeDuration !== oldState.autoPauseFadeDuration ||
         newState.soundEnabled !== oldState.soundEnabled ||
         newState.musicEnabled !== oldState.musicEnabled;
 
@@ -678,6 +772,7 @@ if (typeof chrome !== "undefined" && chrome.runtime) {
     chrome.runtime.onStartup.addListener(() => {
       setMusicAutoPaused(false);
       setMusicCurrentTime(0);
+      clearAudioDelayTracking();
       scheduleSyncExternalAudioState("runtime.onStartup");
     });
   }
@@ -685,6 +780,7 @@ if (typeof chrome !== "undefined" && chrome.runtime) {
     chrome.runtime.onInstalled.addListener(() => {
       setMusicAutoPaused(false);
       setMusicCurrentTime(0);
+      clearAudioDelayTracking();
       scheduleSyncExternalAudioState("runtime.onInstalled");
     });
   }
