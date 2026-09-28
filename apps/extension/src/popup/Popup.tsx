@@ -77,7 +77,6 @@ export function Popup() {
   const musicEnabled = state?.musicEnabled ?? true;
   const soundEffectEnabled = state?.soundEffectEnabled ?? true;
   const autoPauseOnExternalAudio = state?.autoPauseOnExternalAudio ?? false;
-  const autoPauseFadeDuration = state?.autoPauseFadeDuration ?? 2;
 
   const handleMusicVolumeChange = (v: number) => {
     updateState({ musicVolume: v });
@@ -129,13 +128,6 @@ export function Popup() {
     updateState({ autoPauseOnExternalAudio: next });
     if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
       chrome.runtime.sendMessage({ target: "background", action: "SET_AUTO_PAUSE_ON_EXTERNAL_AUDIO", enabled: next });
-    }
-  };
-
-  const handleAutoPauseFadeDurationChange = (d: number) => {
-    updateState({ autoPauseFadeDuration: d });
-    if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
-      chrome.runtime.sendMessage({ target: "background", action: "SET_AUTO_PAUSE_FADE_DURATION", duration: d });
     }
   };
 
@@ -1324,56 +1316,24 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
                 </div>
 
                 {soundEnabled && musicEnabled && (
-                  <>
-                    <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-secondary border-border">
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-foreground">Auto-Pause on Audio</span>
-                        <span className="text-[10px] text-muted-foreground">Pause music when other tabs play audio</span>
-                      </div>
-                      <div
-                        onClick={toggleAutoPauseOnExternalAudio}
-                        className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center shrink-0 ${
-                          autoPauseOnExternalAudio ? "bg-primary" : "bg-[#3f3f46]"
-                        }`}
-                      >
-                        <div
-                          className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                            autoPauseOnExternalAudio ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
-                          }`}
-                        />
-                      </div>
+                  <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-secondary border-border">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-foreground">Auto-Pause on Audio</span>
+                      <span className="text-[10px] text-muted-foreground">Pause music when other tabs play audio</span>
                     </div>
-
-                    {autoPauseOnExternalAudio && (
-                      <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-secondary border-border">
-                        <div className="flex flex-col w-full gap-2">
-                          <div className="flex items-center justify-between">
-                            <div className="flex flex-col">
-                              <span className="text-xs font-bold text-foreground">Resume Fade Speed</span>
-                              <span className="text-[10px] text-muted-foreground">Fade transition duration</span>
-                            </div>
-                            <span className="font-mono text-xs text-white">
-                              {autoPauseFadeDuration === 0 ? "Instant (0s)" : `${autoPauseFadeDuration}s`}
-                            </span>
-                          </div>
-                          <input
-                            type="range"
-                            min="0"
-                            max="5"
-                            step="0.5"
-                            value={autoPauseFadeDuration}
-                            onChange={(e) => handleAutoPauseFadeDurationChange(parseFloat(e.target.value))}
-                            className="w-full h-1 rounded bg-secondary accent-current cursor-pointer"
-                          />
-                          <div className="flex justify-between text-[9px] text-muted-foreground font-mono">
-                            <span>0s (Instant)</span>
-                            <span>2.5s</span>
-                            <span>5s</span>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </>
+                    <div
+                      onClick={toggleAutoPauseOnExternalAudio}
+                      className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center shrink-0 ${
+                        autoPauseOnExternalAudio ? "bg-primary" : "bg-[#3f3f46]"
+                      }`}
+                    >
+                      <div
+                        className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
+                          autoPauseOnExternalAudio ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
+                        }`}
+                      />
+                    </div>
+                  </div>
                 )}
               </div>
 
