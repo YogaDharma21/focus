@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import {
   Timer as TimerIcon,
-  CheckSquare,
   Shield,
   BarChart3,
   Play,
@@ -15,8 +14,6 @@ import {
   Clock,
   CheckCircle2,
   Circle,
-  Square,
-  CheckSquare2,
   ShieldAlert,
   ShieldCheck,
   Info,
@@ -26,10 +23,7 @@ import {
   MessageSquarePlus,
   Settings as SettingsIcon,
   AlertTriangle,
-  FolderPlus,
   ArrowRight,
-  ListTodo,
-  Edit3,
   Paintbrush,
   Music,
   Volume2,
@@ -38,47 +32,15 @@ import {
   ChevronUp,
   ChevronDown,
   Activity,
-  Target,
-  CheckCircle2 as TaskDone,
-  Calendar,
-  ListChecks,
-  Sparkles,
-  ListFilter,
-  FileText,
   Coffee,
-  Check,
   TrendingUp,
   Focus,
 } from "lucide-react";
-import { format } from "date-fns";
 import { DeepFocusOverlay } from "./components/DeepFocusOverlay";
 import { Progress } from "../components/ui/progress";
-import { AppStateData, TodoItem, PriorityType, ThemeMode } from "../types";
+import { AppStateData, ThemeMode } from "../types";
 import { getStoredState, saveStoredState, subscribeToStateChanges, getCachedState, DEFAULT_STATE, getWeeklyMinutesFromSessions, getTodayMinutesFromSessions, calculateStreaksFromSessions, DAYS_OF_WEEK } from "../lib/storage";
 import "../index.css";
-
-function formatTaskDueDate(dueDate?: string, dueTime?: string): string {
-  if (!dueDate) return "";
-  try {
-    let dateObj: Date;
-    if (dueDate.includes("T")) {
-      dateObj = new Date(dueDate);
-    } else if (dueTime) {
-      dateObj = new Date(`${dueDate}T${dueTime}`);
-    } else {
-      dateObj = new Date(`${dueDate}T00:00:00`);
-    }
-
-    if (isNaN(dateObj.getTime())) return dueDate;
-
-    if (dueTime || (dueDate.includes("T") && (dateObj.getHours() !== 0 || dateObj.getMinutes() !== 0))) {
-      return format(dateObj, "MMM d, HH:mm");
-    }
-    return format(dateObj, "MMM d");
-  } catch {
-    return dueDate;
-  }
-}
 
 const DISTRACTION_CATEGORIES = [
   "Phone",
@@ -90,25 +52,17 @@ const DISTRACTION_CATEGORIES = [
 
 export function Popup() {
   const [state, setState] = useState<AppStateData | null>(getCachedState());
-  const [activeTab, setActiveTab] = useState<"timer" | "tasks" | "shield" | "stats" | "settings">("timer");
+  const [activeTab, setActiveTab] = useState<"timer" | "shield" | "stats" | "settings">("timer");
   const [showDistractionPicker, setShowDistractionPicker] = useState(false);
   const [showFloatingTimerCard, setShowFloatingTimerCard] = useState(false);
-  const [showTaskDropdown, setShowTaskDropdown] = useState(false);
-  const [showFloatingTaskDropdown, setShowFloatingTaskDropdown] = useState(false);
-  const [selectedTaskDetail, setSelectedTaskDetail] = useState<TodoItem | null>(null);
 
   // Deep Focus Mode: auto-activate when timer starts
   const prevIsActiveRef = useRef(state?.isActive ?? false);
   const isInitialLoadRef = useRef(true);
 
   // Local inputs
-  const [newTaskText, setNewTaskText] = useState("");
-  const [activeGroupId, setActiveGroupId] = useState<string>("current");
-  const [newGroupName, setNewGroupName] = useState("");
-  const [showAddGroupInput, setShowAddGroupInput] = useState(false);
   const [newSiteUrl, setNewSiteUrl] = useState("");
   const [shieldListTab, setShieldListTab] = useState<"blocked" | "unblocked">("blocked");
-  const [newSubtaskText, setNewSubtaskText] = useState("");
 
   // Settings inputs
 
@@ -331,16 +285,13 @@ export function Popup() {
       date: new Date().toISOString(),
       duration: durationLogged,
       mode: state.timerMode,
-      sessionName: state.sessionName || "Focus Session",
-      todoId: state.selectedTodoId || undefined
+      sessionName: state.sessionName || "Focus Session"
     };
 
     const newSessionList = [newSession, ...state.sessions];
     const updatedWeekly = getWeeklyMinutesFromSessions(newSessionList);
     const updatedTodayMins = getTodayMinutesFromSessions(newSessionList);
     const streaks = calculateStreaksFromSessions(newSessionList);
-
-    const completedTasksCount = state.todos.filter(t => t.completed).length;
 
     const breakDuration = Math.max(1, Math.floor(state.timeLeft / 5));
 
@@ -354,15 +305,13 @@ export function Popup() {
       timerState: "BREAK",
       previousMode: "FLOW",
       timeLeft: breakDuration,
-      todos: state.todos,
       sessions: newSessionList,
       stats: {
         ...state.stats,
         todayMinutes: updatedTodayMins,
         weeklyMinutes: updatedWeekly,
         streakDays: streaks.current,
-        longestStreak: streaks.best,
-        completedTasksCount
+        longestStreak: streaks.best
       }
     });
   };
@@ -384,131 +333,11 @@ export function Popup() {
 
   // Reset All Extension Data to Factory Defaults
   const resetAllData = () => {
-    if (window.confirm("Are you sure you want to reset all extension data to defaults? This will clear all tasks, sessions, and stats.")) {
+    if (window.confirm("Are you sure you want to reset all extension data to defaults? This will clear all sessions and stats.")) {
       saveStoredState(DEFAULT_STATE).then((fresh) => {
         setState(fresh);
       });
     }
-  };
-
-  // Goal input key handler (pressing Enter creates a task)
-  const handleGoalKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && state.sessionName.trim()) {
-      e.preventDefault();
-      const existing = state.todos.find(t => t.text.toLowerCase() === state.sessionName.trim().toLowerCase());
-      if (existing) {
-        updateState({ selectedTodoId: existing.id });
-      } else {
-        const newTodo: TodoItem = {
-          id: crypto.randomUUID(),
-          text: state.sessionName.trim(),
-          completed: false,
-          priority: "medium",
-          groupId: "current",
-          subtasks: []
-        };
-        updateState({
-          todos: [newTodo, ...state.todos],
-          selectedTodoId: newTodo.id
-        });
-      }
-    }
-  };
-
-  // Task Handlers
-  const addTodo = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTaskText.trim()) return;
-    const item: TodoItem = {
-      id: crypto.randomUUID(),
-      text: newTaskText.trim(),
-      completed: false,
-      priority: "medium",
-      groupId: activeGroupId === "finished" ? "current" : activeGroupId,
-      subtasks: []
-    };
-    updateState({ todos: [item, ...state.todos] });
-    setNewTaskText("");
-  };
-
-  const toggleTodo = (id: string) => {
-    const updated = state.todos.map(t => {
-      if (t.id === id) {
-        const nextCompleted = !t.completed;
-        return {
-          ...t,
-          completed: nextCompleted,
-          completedAt: nextCompleted ? new Date().toISOString() : undefined,
-          groupId: nextCompleted ? "finished" : "current"
-        };
-      }
-      return t;
-    });
-    const completedCount = updated.filter(t => t.completed).length;
-    updateState({ todos: updated, stats: { ...state.stats, completedTasksCount: completedCount } });
-  };
-
-  const deleteTodo = (id: string) => {
-    updateState({
-      todos: state.todos.filter(t => t.id !== id),
-      selectedTodoId: state.selectedTodoId === id ? null : state.selectedTodoId,
-      ...(state.selectedTodoId === id ? { sessionName: "" } : {})
-    });
-    if (selectedTaskDetail?.id === id) setSelectedTaskDetail(null);
-  };
-
-  const focusOnTask = (task: TodoItem) => {
-    updateState({
-      selectedTodoId: task.id,
-      sessionName: task.text
-    });
-    setSelectedTaskDetail(null);
-    setActiveTab("timer");
-  };
-
-  // Subtask Handlers
-  const addSubtask = (todoId: string, text: string) => {
-    if (!text.trim()) return;
-    const updated = state.todos.map(t => {
-      if (t.id === todoId) {
-        const newSub = { id: crypto.randomUUID(), text: text.trim(), completed: false };
-        return { ...t, subtasks: [...(t.subtasks || []), newSub] };
-      }
-      return t;
-    });
-    updateState({ todos: updated });
-    if (selectedTaskDetail?.id === todoId) {
-      setSelectedTaskDetail(updated.find(t => t.id === todoId) || null);
-    }
-  };
-
-  const toggleSubtask = (todoId: string, subId: string) => {
-    const updated = state.todos.map(t => {
-      if (t.id === todoId) {
-        const subs = (t.subtasks || []).map(s => s.id === subId ? { ...s, completed: !s.completed } : s);
-        return { ...t, subtasks: subs };
-      }
-      return t;
-    });
-    updateState({ todos: updated });
-    if (selectedTaskDetail?.id === todoId) {
-      setSelectedTaskDetail(updated.find(t => t.id === todoId) || null);
-    }
-  };
-
-  // Group Handlers
-  const addCustomGroup = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newGroupName.trim()) return;
-    const newGroup = {
-      id: crypto.randomUUID(),
-      name: newGroupName.trim(),
-      type: "custom" as const
-    };
-    updateState({ groups: [...state.groups, newGroup] });
-    setActiveGroupId(newGroup.id);
-    setNewGroupName("");
-    setShowAddGroupInput(false);
   };
 
   // Shield Handlers
@@ -565,9 +394,6 @@ export function Popup() {
     }
   };
 
-  // Selected Task Object
-  const selectedTask = state.todos.find(t => t.id === state.selectedTodoId);
-
   // Time calculations
   const mins = Math.floor(state.timeLeft / 60);
   const secs = state.timeLeft % 60;
@@ -576,10 +402,8 @@ export function Popup() {
   const progressValue = state.timerState === "FLOW" ? 100 : 0;
 
   // Stats Calculations
-  const finishedTasksTodayCount = state.todos.filter(t => t.completed).length;
-  const pendingTasksCount = state.todos.filter(t => !t.completed).length;
-  const taskDoneRatePercent = state.todos.length > 0 ? Math.round((finishedTasksTodayCount / state.todos.length) * 100) : 100;
   const dynamicWeeklyMinutes = getWeeklyMinutesFromSessions(state.sessions);
+  const weekTotalMinutes = Object.values(dynamicWeeklyMinutes).reduce((a, b) => a + b, 0);
   const dynamicTodayMinutes = getTodayMinutesFromSessions(state.sessions);
   const dynamicStreaks = calculateStreaksFromSessions(state.sessions);
   const maxWeeklyMins = Math.max(120, ...Object.values(dynamicWeeklyMinutes));
@@ -639,7 +463,6 @@ export function Popup() {
             <button
               onClick={() => {
                 setShowFloatingTimerCard(!showFloatingTimerCard);
-                setShowFloatingTaskDropdown(false);
               }}
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold transition-all shadow-sm ${
                 showFloatingTimerCard
@@ -682,7 +505,7 @@ export function Popup() {
         <div className={`absolute top-14 left-3 right-3 z-40 p-3.5 rounded-2xl border shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${
           "bg-card border-border text-foreground shadow-background/80"
         }`}>
-          {/* Top Row: Time + Task Selector */}
+          {/* Top Row: Time + Session Name */}
           <div className="flex items-center justify-between gap-2 mb-3">
             <div className="flex items-center gap-2 shrink-0">
               <span className="flex items-center">
@@ -694,30 +517,14 @@ export function Popup() {
               {state.isActive && <span className="w-2 h-2 rounded-full bg-foreground animate-pulse" />}
             </div>
 
-            <button
-              type="button"
-              onClick={() => setShowFloatingTaskDropdown(!showFloatingTaskDropdown)}
-              className="px-2.5 py-1 rounded-lg text-xs font-bold font-sans border bg-secondary border-border text-secondary-foreground hover:bg-accent transition-colors flex items-center gap-1.5 max-w-[220px] truncate cursor-pointer"
-              title="Select or switch focus task"
-            >
-              {selectedTask ? (
-                <>
-                  <span className="truncate">{selectedTask.text}</span>
-                  <ChevronDown className={`w-3 h-3 shrink-0 ${showFloatingTaskDropdown ? "rotate-180" : ""} transition-transform opacity-70`} />
-                </>
-              ) : state.sessionName ? (
-                <>
-                  <span className="truncate">{state.sessionName}</span>
-                  <ChevronDown className={`w-3 h-3 shrink-0 ${showFloatingTaskDropdown ? "rotate-180" : ""} transition-transform opacity-70`} />
-                </>
-              ) : (
-                <>
-                  <ListTodo className="w-3.5 h-3.5 shrink-0 opacity-70" />
-                  <span className="opacity-80 truncate">Select task</span>
-                  <ChevronDown className={`w-3 h-3 shrink-0 ${showFloatingTaskDropdown ? "rotate-180" : ""} transition-transform opacity-70`} />
-                </>
-              )}
-            </button>
+            {state.sessionName ? (
+              <span
+                className="px-2.5 py-1 rounded-lg text-xs font-bold font-sans border bg-secondary border-border text-secondary-foreground max-w-[220px] truncate"
+                title={state.sessionName}
+              >
+                {state.sessionName}
+              </span>
+            ) : null}
           </div>
 
           {/* Control Action Buttons Row */}
@@ -729,7 +536,6 @@ export function Popup() {
                 if (state.timerState !== "BREAK" && !state.isActive) return;
                 completeSession();
                 setShowFloatingTimerCard(false);
-                setShowFloatingTaskDropdown(false);
               }}
               className={`flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
                 state.timerState !== "BREAK" && !state.isActive
@@ -748,7 +554,6 @@ export function Popup() {
               onClick={() => {
                 if (!state.isActive) return;
                 setShowFloatingTimerCard(false);
-                setShowFloatingTaskDropdown(false);
                 setShowDistractionPicker(true);
               }}
               className={`p-2 rounded-xl border transition-all ${
@@ -783,100 +588,6 @@ export function Popup() {
           </div>
         </div>
       )}
-
-      {/* Floating Task Dropdown */}
-      {activeTab !== "timer" && showFloatingTimerCard && showFloatingTaskDropdown && (
-        <>
-          <div
-            className="fixed inset-0 z-45"
-            onClick={() => setShowFloatingTaskDropdown(false)}
-          />
-          <div className={`absolute top-14 left-3 right-3 z-50 p-2.5 rounded-2xl border shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${"bg-card border-border text-foreground shadow-2xl"}`}>
-            <div className="flex items-center justify-between px-2 py-1.5">
-              <span className="text-[10px] font-mono font-bold uppercase opacity-60">FOCUS TOPIC</span>
-              <button
-                type="button"
-                onClick={() => setShowFloatingTaskDropdown(false)}
-                className="text-[10px] font-mono opacity-50 hover:opacity-100 p-1"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            {/* Custom Focus Option */}
-            <button
-              type="button"
-              onClick={() => {
-                updateState({ selectedTodoId: null, sessionName: "" });
-                setShowFloatingTaskDropdown(false);
-              }}
-              className={`w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all ${!selectedTask ? "bg-primary/10 text-foreground font-bold" : "hover:bg-secondary/80 text-muted-foreground"}`}
-            >
-              <div className="flex items-center gap-2">
-                <Edit3 className="w-3.5 h-3.5 shrink-0 text-foreground" />
-                <div className="flex flex-col">
-                  <span className="leading-tight">Custom Focus</span>
-                  <span className="text-[10px] font-mono text-muted-foreground">Type custom goal</span>
-                </div>
-              </div>
-              {!selectedTask && <Check className="w-3.5 h-3.5" />}
-            </button>
-
-            {/* Task List Header */}
-            <div className="px-2 pt-1 text-[10px] font-mono font-bold uppercase opacity-50 text-muted-foreground">MY TASKS</div>
-
-            {/* Tasks List */}
-            <div className="max-h-36 overflow-y-auto stable-scrollbar space-y-0.5">
-              {state.todos.filter(t => !t.completed).length === 0 ? (
-                <div className="px-3 py-2 text-[11px] font-mono opacity-50 italic text-center text-muted-foreground">No pending tasks</div>
-              ) : (
-                state.todos.filter(t => !t.completed).map((task) => {
-                  const hasDueDate = Boolean(task.dueDate);
-                  const hasSubtasks = Boolean(task.subtasks && task.subtasks.length > 0);
-                  const hasMetadata = hasDueDate || hasSubtasks;
-
-                  return (
-                    <button
-                      key={task.id}
-                      type="button"
-                      onClick={() => {
-                        updateState({ selectedTodoId: task.id, sessionName: task.text });
-                        setShowFloatingTaskDropdown(false);
-                      }}
-                      className={`w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all ${selectedTask?.id === task.id ? "bg-primary/10 text-foreground font-bold" : "hover:bg-secondary/80 text-muted-foreground"}`}
-                    >
-                      <div className="flex items-start gap-2 min-w-0 flex-1 pr-2">
-                        <ListTodo className="w-3.5 h-3.5 shrink-0 mt-0.5 text-foreground" />
-                        <div className="flex flex-col min-w-0 flex-1 gap-0.5">
-                          <span className="truncate">{task.text}</span>
-                          {hasMetadata && (
-                            <div className="flex items-center gap-2.5 text-[10px] font-mono text-muted-foreground flex-wrap">
-                              {hasDueDate && (
-                                <div className="flex items-center gap-1 text-orange-500 font-medium">
-                                  <Calendar className="w-3 h-3" />
-                                  <span>{formatTaskDueDate(task.dueDate, task.dueTime)}</span>
-                                </div>
-                              )}
-                              {hasSubtasks && (
-                                <div className="flex items-center gap-1 text-muted-foreground">
-                                  <ListChecks className="w-3 h-3" />
-                                  <span>{task.subtasks!.filter(s => s.completed).length}/{task.subtasks!.length}</span>
-                                </div>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      {selectedTask?.id === task.id && <Check className="w-3.5 h-3.5 shrink-0" />}
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        </>
-      )}
-
 
       {/* Distraction Picker Modal */}
       {showDistractionPicker && (
@@ -916,305 +627,12 @@ export function Popup() {
         </div>
       )}
 
-      {/* Task Detail View Modal */}
-      {selectedTaskDetail && (
-        <div className={`absolute inset-0 z-50 p-4 flex flex-col justify-between overflow-y-auto stable-scrollbar animate-in fade-in duration-200 ${
-          "bg-background text-foreground"
-        }`}>
-          {/* Header */}
-          <div className="flex items-center justify-between pb-2">
-            <h2 className="text-[11px] font-bold font-mono uppercase tracking-wider text-muted-foreground">TASK DETAILS</h2>
-            <button
-              onClick={() => setSelectedTaskDetail(null)}
-              className={`p-1 rounded-lg transition-colors ${
-                "text-muted-foreground hover:text-foreground hover:bg-secondary"
-              }`}
-            >
-              <X className="w-4 h-4" />
-            </button>
-          </div>
-
-          <div className="space-y-3.5 my-2 text-xs overflow-y-auto stable-scrollbar pr-1 flex-1">
-            {/* Task Title */}
-            <div>
-              <input
-                type="text"
-                value={selectedTaskDetail.text}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, text: val } : t);
-                  updateState({ todos: updated });
-                  setSelectedTaskDetail({ ...selectedTaskDetail, text: val });
-                }}
-                className={`w-full bg-transparent text-xl font-extrabold focus:outline-none focus:border-b pb-0.5 ${
-                  "text-foreground focus:border-border"
-                }`}
-              />
-            </div>
-
-            {/* Priority & Group Grid */}
-            <div className="grid grid-cols-2 gap-3">
-              {/* Priority */}
-              <div className={`p-3 rounded-2xl border ${
-                "bg-card/60 border-border"
-              }`}>
-                <div className="flex items-center gap-1.5 mb-2">
-                  <Sparkles className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-muted-foreground">PRIORITY</span>
-                </div>
-                <select
-                  value={selectedTaskDetail.priority || "medium"}
-                  onChange={(e) => {
-                    const val = e.target.value as PriorityType;
-                    const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, priority: val } : t);
-                    updateState({ todos: updated });
-                    setSelectedTaskDetail({ ...selectedTaskDetail, priority: val });
-                  }}
-                  className={`w-full p-2.5 rounded-xl border text-xs font-semibold focus:outline-none cursor-pointer ${
-                    "bg-secondary border-border text-foreground"
-                  }`}
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                  <option value="urgent">Urgent</option>
-                </select>
-              </div>
-
-              {/* Group */}
-              <div className={`p-3 rounded-2xl border ${
-                "bg-card/60 border-border"
-              }`}>
-                <div className="flex items-center gap-1.5 mb-2">
-                  <ListFilter className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-muted-foreground">GROUP</span>
-                </div>
-                <select
-                  value={selectedTaskDetail.groupId || "current"}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, groupId: val } : t);
-                    updateState({ todos: updated });
-                    setSelectedTaskDetail({ ...selectedTaskDetail, groupId: val });
-                  }}
-                  className={`w-full p-2.5 rounded-xl border text-xs font-semibold focus:outline-none cursor-pointer ${
-                    "bg-secondary border-border text-foreground"
-                  }`}
-                >
-                  {state.groups.map(g => (
-                    <option key={g.id} value={g.id}>{g.name}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-{/* Deadline Card */}
-            <div className={`p-3.5 rounded-2xl border ${
-              "bg-card/60 border-border"
-            }`}>
-              <div className="flex items-center justify-between mb-2.5">
-                <div className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-muted-foreground">DEADLINE</span>
-                </div>
-                {(selectedTaskDetail.dueDate || selectedTaskDetail.dueTime) && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, dueDate: '', dueTime: '' } : t);
-                      updateState({ todos: updated });
-                      setSelectedTaskDetail({ ...selectedTaskDetail, dueDate: '', dueTime: '' });
-                    }}
-                    className="text-[10px] font-mono text-red-400 hover:text-red-300 transition-colors"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="date"
-                  value={selectedTaskDetail.dueDate || ""}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, dueDate: val } : t);
-                    updateState({ todos: updated });
-                    setSelectedTaskDetail({ ...selectedTaskDetail, dueDate: val });
-                  }}
-                  className={`w-full p-2.5 rounded-xl border text-xs font-mono focus:outline-none ${
-                    "bg-secondary border-border text-foreground [color-scheme:dark]"
-                  }`}
-                />
-                <input
-                  type="time"
-                  value={selectedTaskDetail.dueTime || ""}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, dueTime: val } : t);
-                    updateState({ todos: updated });
-                    setSelectedTaskDetail({ ...selectedTaskDetail, dueTime: val });
-                  }}
-                  className={`w-full p-2.5 rounded-xl border text-xs font-mono focus:outline-none ${
-                    "bg-secondary border-border text-foreground [color-scheme:dark]"
-                  }`}
-                />
-              </div>
-            </div>
-
-            {/* Notes Card */}
-            <div className={`p-3.5 rounded-2xl border ${
-              "bg-card/60 border-border"
-            }`}>
-              <div className="flex items-center justify-between mb-2.5">
-                <div className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-muted-foreground">DEADLINE</span>
-                </div>
-                {(selectedTaskDetail.dueDate || selectedTaskDetail.dueTime) && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, dueDate: '', dueTime: '' } : t);
-                      updateState({ todos: updated });
-                      setSelectedTaskDetail({ ...selectedTaskDetail, dueDate: '', dueTime: '' });
-                    }}
-                    className="text-[10px] font-mono text-red-400 hover:text-red-300 transition-colors"
-                  >
-                    Clear
-                  </button>
-                )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <input
-                  type="date"
-                  value={selectedTaskDetail.dueDate || ""}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, dueDate: val } : t);
-                    updateState({ todos: updated });
-                    setSelectedTaskDetail({ ...selectedTaskDetail, dueDate: val });
-                  }}
-                  className={`w-full p-2.5 rounded-xl border text-xs font-mono focus:outline-none ${
-                    "bg-secondary border-border text-foreground [color-scheme:dark]"
-                  }`}
-                />
-                <input
-                  type="time"
-                  value={selectedTaskDetail.dueTime || ""}
-                  onChange={(e) => {
-                    const val = e.target.value;
-                    const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, dueTime: val } : t);
-                    updateState({ todos: updated });
-                    setSelectedTaskDetail({ ...selectedTaskDetail, dueTime: val });
-                  }}
-                  className={`w-full p-2.5 rounded-xl border text-xs font-mono focus:outline-none ${
-                    "bg-secondary border-border text-foreground [color-scheme:dark]"
-                  }`}
-                />
-              </div>
-            </div>
-
-            {/* Notes Card */}
-            <div className={`p-3.5 rounded-2xl border ${
-              "bg-card/60 border-border"
-            }`}>
-              <div className="flex items-center gap-1.5 mb-2.5">
-                <FileText className="w-3.5 h-3.5 text-muted-foreground" />
-                <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-muted-foreground">NOTES</span>
-              </div>
-              <textarea
-                rows={3}
-                value={selectedTaskDetail.notes || ""}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  const updated = state.todos.map(t => t.id === selectedTaskDetail.id ? { ...t, notes: val } : t);
-                  updateState({ todos: updated });
-                  setSelectedTaskDetail({ ...selectedTaskDetail, notes: val });
-                }}
-                placeholder="Add notes or details for this task..."
-                className={`w-full p-3 rounded-xl border text-xs focus:outline-none resize-none min-h-[75px] ${
-                  "bg-secondary border-border text-foreground placeholder-muted-foreground"
-                }`}
-              />
-            </div>
-
-            {/* Subtasks Card */}
-            <div className={`p-3.5 rounded-2xl border ${
-              "bg-card/60 border-border"
-            }`}>
-              <div className="flex items-center justify-between mb-2.5">
-                <div className="flex items-center gap-1.5">
-                  <CheckSquare className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span className="text-[10px] font-bold font-mono uppercase tracking-wider text-muted-foreground">SUBTASKS</span>
-                </div>
-                <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
-                  "bg-secondary border-border text-muted-foreground"
-                }`}>
-                  {(selectedTaskDetail.subtasks || []).filter(s => s.completed).length}/{(selectedTaskDetail.subtasks || []).length}
-                </span>
-              </div>
-
-              <form onSubmit={(e) => { e.preventDefault(); if (newSubtaskText.trim()) { addSubtask(selectedTaskDetail.id, newSubtaskText); setNewSubtaskText(""); } }} className="mb-2">
-                <input
-                  type="text"
-                  value={newSubtaskText}
-                  onChange={(e) => setNewSubtaskText(e.target.value)}
-                  placeholder="Add a subtask..."
-                  className={`w-full p-2.5 rounded-xl border text-xs focus:outline-none ${
-                    "bg-secondary border-border text-foreground placeholder-muted-foreground"
-                  }`}
-                />
-              </form>
-
-              <div className="space-y-1.5 max-h-36 overflow-y-auto stable-scrollbar">
-                {(selectedTaskDetail.subtasks || []).map(sub => (
-                  <div key={sub.id} className={`p-2 rounded-xl border flex items-center justify-between text-xs ${
-                    "bg-secondary/40 border-border/40"
-                  }`}>
-                    <div className="flex items-center gap-2 flex-1">
-                      <button type="button" onClick={() => toggleSubtask(selectedTaskDetail.id, sub.id)}>
-                        {sub.completed ? <CheckSquare2 className="w-3.5 h-3.5 text-foreground" /> : <Square className="w-3.5 h-3.5 text-muted-foreground" />}
-                      </button>
-                      <span className={sub.completed ? "line-through text-muted-foreground" : ("text-foreground")}>{sub.text}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Bottom Action Bar: Focus on this task button & Delete Task */}
-          <div className="flex items-center justify-between gap-3 pt-3 mt-1 border-t border-border/60">
-            <button
-              onClick={() => focusOnTask(selectedTaskDetail)}
-              className={`py-2 px-3 rounded-xl font-extrabold text-xs border flex items-center justify-center gap-2 transition-all ${
-                "bg-primary text-primary-foreground border-primary hover:bg-accent"
-              }`}
-            >
-              <Play className="w-3.5 h-3.5 fill-current" />
-              <span>FOCUS ON THIS TASK</span>
-            </button>
-
-            <button
-              onClick={() => deleteTodo(selectedTaskDetail.id)}
-              className="text-red-400 hover:text-red-300 font-medium text-xs flex items-center gap-1.5 transition-colors py-1.5 px-2.5 rounded-xl hover:bg-red-500/10"
-            >
-              <Trash2 className="w-3.5 h-3.5" />
-              <span>Delete Task</span>
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Main Navigation Bar */}
       <nav className={`flex items-center gap-1 px-3 py-2 z-10 ${
         "bg-card/60"
       }`}>
         {[
           { id: "timer", label: "Timer", icon: TimerIcon },
-          { id: "tasks", label: "Tasks", icon: CheckSquare, badge: state.todos.filter(t => !t.completed).length },
           { id: "shield", label: "Shield", icon: Shield, activeIndicator: state.shield.enabled && state.isActive },
           { id: "stats", label: "Stats", icon: BarChart3 }
         ].map((tab) => {
@@ -1232,15 +650,6 @@ export function Popup() {
             >
               <div className="relative">
                 <Icon className="w-4 h-4" />
-                {tab.badge !== undefined && tab.badge > 0 && (
-                  <span className={`absolute -top-1.5 -right-2 text-[8px] font-mono font-bold w-3.5 h-3.5 rounded-full flex items-center justify-center ${
-                    isActive
-                      ? "bg-background text-foreground"
-                      : "bg-secondary text-foreground border border-border"
-                  }`}>
-                    {tab.badge}
-                  </span>
-                )}
                 {tab.activeIndicator && (
                   <span className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full animate-ping ${
                     "bg-foreground"
@@ -1413,193 +822,18 @@ export function Popup() {
               </span>
             </div>
 
-            {/* Focus Session Goal / Task Selector */}
+            {/* Focus Session Goal */}
             <div className="w-full max-w-[280px] mb-2 relative">
-              {/* Task Selector Dropdown Menu (Pops UPWARDS so Timer Controls below remain visible!) */}
-              {showTaskDropdown && (
-                <div className={`absolute bottom-full left-0 right-0 mb-1.5 z-50 p-2 rounded-lg border shadow-2xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-1 ${
-                  "bg-card border-border text-foreground"
-                }`}>
-                  <div className="flex items-center justify-between px-2 py-1">
-                    <span className="text-[10px] font-mono font-bold uppercase opacity-60">FOCUS TOPIC</span>
-                    <button
-                      type="button"
-                      onClick={() => setShowTaskDropdown(false)}
-                      className="text-[10px] font-mono opacity-50 hover:opacity-100"
-                    >
-                      <X className="w-3 h-3" />
-                    </button>
-                  </div>
-
-                  {/* Custom Focus Option */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      updateState({ selectedTodoId: null, sessionName: "" });
-                      setShowTaskDropdown(false);
-                    }}
-                    className={`w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all ${
-                      !selectedTask
-                        ? "bg-primary/10 text-foreground font-bold"
-                        : "hover:bg-secondary/80 text-muted-foreground"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2">
-                      <Edit3 className={`w-3.5 h-3.5 shrink-0 ${"text-foreground"}`} />
-                      <div className="flex flex-col">
-                        <span className="leading-tight">Custom Focus</span>
-                        <span className={`text-[10px] font-mono ${"text-muted-foreground"}`}>
-                          Type custom goal
-                        </span>
-                      </div>
-                    </div>
-                    {!selectedTask && <Check className="w-3.5 h-3.5" />}
-                  </button>
-
-
-                  {/* Task List Header */}
-                  <div className="px-2 pt-1 text-[10px] font-mono font-bold uppercase opacity-50">
-                    MY TASKS
-                  </div>
-
-                  {/* Tasks List */}
-                  <div className="max-h-36 overflow-y-auto stable-scrollbar space-y-0.5">
-                    {state.todos.filter(t => !t.completed).length === 0 ? (
-                      <div className="px-3 py-2 text-[11px] font-mono opacity-50 italic text-center">
-                        No pending tasks
-                      </div>
-                    ) : (
-                      state.todos.filter(t => !t.completed).map((task) => {
-                        const hasDueDate = Boolean(task.dueDate);
-                        const hasSubtasks = Boolean(task.subtasks && task.subtasks.length > 0);
-                        const hasMetadata = hasDueDate || hasSubtasks;
-
-                        return (
-                          <button
-                            key={task.id}
-                            type="button"
-                            onClick={() => {
-                              updateState({ selectedTodoId: task.id, sessionName: task.text });
-                              setShowTaskDropdown(false);
-                            }}
-                            className={`w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all ${
-                              selectedTask?.id === task.id
-                                ? "bg-primary/10 text-foreground font-bold"
-                                : "hover:bg-secondary/80 text-muted-foreground"
-                            }`}
-                          >
-                            <div className="flex items-start gap-2 min-w-0 flex-1 pr-2">
-                              <ListTodo className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${"text-foreground"}`} />
-                              <div className="flex flex-col min-w-0 flex-1 gap-0.5">
-                                <span className="truncate">{task.text}</span>
-                                {hasMetadata && (
-                                  <div className="flex items-center gap-2.5 text-[10px] font-mono text-muted-foreground flex-wrap">
-                                    {hasDueDate && (
-                                      <div className="flex items-center gap-1 text-orange-500 font-medium">
-                                        <Calendar className="w-3 h-3" />
-                                        <span>{formatTaskDueDate(task.dueDate, task.dueTime)}</span>
-                                      </div>
-                                    )}
-                                    {hasSubtasks && (
-                                      <div className="flex items-center gap-1 text-muted-foreground">
-                                        <ListChecks className="w-3 h-3" />
-                                        <span>{task.subtasks!.filter(s => s.completed).length}/{task.subtasks!.length}</span>
-                                      </div>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                            {selectedTask?.id === task.id && (
-                              <Check className="w-3.5 h-3.5 shrink-0" />
-                            )}
-                          </button>
-                        );
-                      })
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {selectedTask ? (
-                /* Task Selected (Locked Typing Mode - Matches Reference Image) */
-                <button
-                  type="button"
-                  onClick={() => setShowTaskDropdown(!showTaskDropdown)}
-                  className={`w-full px-4 py-3 rounded-lg border transition-all flex flex-col items-center justify-center gap-1 shadow-sm ${
-                    "bg-card border-border hover:border-border text-foreground"
-                  }`}
-                  title="Click to select another task or custom focus"
-                >
-                  <div className="flex items-center justify-center gap-2 max-w-full">
-                    <ListTodo className={`w-4 h-4 shrink-0 ${"text-foreground"}`} />
-                    <span className="font-semibold text-sm tracking-tight truncate max-w-[200px]">
-                      {selectedTask.text}
-                    </span>
-                  </div>
-                  <ChevronDown className={`w-3.5 h-3.5 opacity-60 transition-transform duration-200 ${"text-foreground"}`} />
-                </button>
-              ) : (
-                /* Custom Focus Mode (Editable Input Mode) */
-                <div className="w-full flex items-center rounded-lg border bg-card border-border focus-within:border-foreground px-2 py-1 transition-colors">
-                  <input
-                    type="text"
-                    value={state.sessionName}
-                    onChange={(e) => updateState({ sessionName: e.target.value })}
-                    onKeyDown={handleGoalKeyDown}
-                    placeholder="Session Goal (Press Enter)..."
-                    className="flex-1 min-w-0 bg-transparent text-xs text-center font-medium text-foreground placeholder-muted-foreground focus:outline-none pl-6 pr-1 py-1"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowTaskDropdown(!showTaskDropdown)}
-                    className="shrink-0 p-1 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
-                    title="Select from your tasks"
-                  >
-                    <ListTodo className="w-4 h-4 text-foreground" />
-                  </button>
-                </div>
-              )}
+              <div className="w-full flex items-center rounded-lg border bg-card border-border focus-within:border-foreground px-2 py-1 transition-colors">
+                <input
+                  type="text"
+                  value={state.sessionName}
+                  onChange={(e) => updateState({ sessionName: e.target.value })}
+                  placeholder="Session Goal..."
+                  className="flex-1 min-w-0 bg-transparent text-xs text-center font-medium text-foreground placeholder-muted-foreground focus:outline-none px-1 py-1"
+                />
+              </div>
             </div>
-
-            {/* Subtasks Section for Selected Task */}
-            {selectedTask && (selectedTask.subtasks || []).length > 0 && (
-              <div className={`w-full max-w-[280px] p-2.5 mb-2 rounded-lg border flex flex-col gap-1.5 ${
-                "bg-card/90 border-border"
-              }`}>
-                <div className="flex items-center justify-between text-[11px] font-mono font-bold opacity-70">
-                  <span>SUBTASKS</span>
-                  <span>
-                    {(selectedTask.subtasks || []).filter(s => s.completed).length} / {(selectedTask.subtasks || []).length}
-                  </span>
-                </div>
-                <div className="space-y-1 max-h-24 overflow-y-auto stable-scrollbar pt-1 text-[11px]">
-                  {selectedTask.subtasks!.map(s => (
-                    <div key={s.id} className="flex items-center gap-1.5">
-                      <button onClick={() => toggleSubtask(selectedTask.id, s.id)}>
-                        {s.completed ? <CheckSquare2 className="w-3 h-3 text-foreground" /> : <Square className="w-3 h-3 opacity-60" />}
-                      </button>
-                      <span className={s.completed ? "line-through opacity-50" : ""}>{s.text}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Task Notes Section for Selected Task */}
-            {selectedTask && selectedTask.notes && selectedTask.notes.trim().length > 0 && (
-              <div className={`w-full max-w-[280px] p-2.5 mb-2 rounded-lg border flex flex-col gap-1 ${
-                "bg-card/90 border-border"
-              }`}>
-                <div className="flex items-center gap-1.5 text-[11px] font-mono font-bold opacity-70">
-                  <FileText className="w-3.5 h-3.5 text-muted-foreground" />
-                  <span>TASK NOTES</span>
-                </div>
-                <p className="text-xs text-foreground whitespace-pre-wrap leading-relaxed">
-                  {selectedTask.notes}
-                </p>
-              </div>
-            )}
 
             {/* Control Buttons Grid */}
             <div className="flex items-center gap-2">
@@ -1670,166 +904,6 @@ export function Popup() {
               >
                 <Focus className="w-4 h-4" />
               </button>
-            </div>
-          </div>
-        )}
-
-        {/* TASKS TAB */}
-        {activeTab === "tasks" && (
-          <div className="flex flex-col h-full overflow-y-auto stable-scrollbar gap-2.5">
-            {/* Task Group Filter Tabs */}
-            <div className="flex items-center justify-between gap-1 overflow-x-auto pb-1">
-              <div className="flex items-center gap-1 overflow-x-auto">
-                {state.groups.map((group) => (
-                  <button
-                    key={group.id}
-                    onClick={() => setActiveGroupId(group.id)}
-                    className={`px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold transition-all whitespace-nowrap ${
-                      activeGroupId === group.id
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-card text-muted-foreground border border-border"
-                    }`}
-                  >
-                    {group.name}
-                  </button>
-                ))}
-              </div>
-
-              <button
-                onClick={() => setShowAddGroupInput(!showAddGroupInput)}
-                className={`p-1 rounded-lg border text-xs font-mono font-bold flex-shrink-0 ${
-                  "bg-card border-border text-foreground"
-                }`}
-                title="Add Custom Group"
-              >
-                <FolderPlus className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            {showAddGroupInput && (
-              <form onSubmit={addCustomGroup} className="flex gap-2">
-                <input
-                  type="text"
-                  value={newGroupName}
-                  onChange={(e) => setNewGroupName(e.target.value)}
-                  placeholder="New group name..."
-                  className={`flex-1 px-3 py-1.5 rounded-xl text-xs font-mono border focus:outline-none ${
-                    "bg-card border-border text-foreground"
-                  }`}
-                />
-                <button type="submit" className={`px-3 py-1.5 rounded-xl font-bold text-xs border ${
-                  "bg-primary text-primary-foreground border-primary"
-                }`}>
-                  Create
-                </button>
-              </form>
-            )}
-
-            {/* Quick Add Task Form */}
-            <form onSubmit={addTodo} className="flex gap-2">
-              <input
-                type="text"
-                value={newTaskText}
-                onChange={(e) => setNewTaskText(e.target.value)}
-                placeholder="Add new task..."
-                className={`flex-1 px-3 py-2 rounded-xl text-xs border focus:outline-none ${
-                  "bg-card border-border text-foreground placeholder-muted-foreground focus:border-foreground"
-                }`}
-              />
-              <button
-                type="submit"
-                className={`px-4 py-2 rounded-xl font-bold transition-all text-xs ${
-                  "bg-primary text-primary-foreground hover:bg-accent"
-                }`}
-              >
-                Add
-              </button>
-            </form>
-
-            <div className="flex-1 overflow-y-auto stable-scrollbar space-y-2 pr-1">
-              {state.todos.filter(t => (t.groupId || "current") === activeGroupId).length === 0 ? (
-                <div className={`text-center py-12 text-xs font-mono ${"text-muted-foreground"}`}>
-                  NO TASKS IN THIS GROUP. ADD ONE ABOVE.
-                </div>
-              ) : (
-                state.todos
-                  .filter(t => (t.groupId || "current") === activeGroupId)
-                  .map((todo) => {
-                    const hasDueDate = Boolean(todo.dueDate);
-                    const hasSubtasks = Boolean(todo.subtasks && todo.subtasks.length > 0);
-                    const hasMetadata = hasDueDate || hasSubtasks;
-
-                    const isSelected = state.selectedTodoId === todo.id || selectedTaskDetail?.id === todo.id;
-                    return (
-                      <div
-                        key={todo.id}
-                        onClick={() => updateState({ selectedTodoId: todo.id, sessionName: todo.text })}
-                        className={`p-2.5 rounded-xl border flex items-center justify-between gap-2 transition-all cursor-pointer ${
-                          isSelected
-                            ? "bg-secondary border-border text-foreground font-medium"
-                            : todo.completed
-                            ? "bg-background/40 border-border opacity-50 text-muted-foreground"
-                            : "bg-card/60 border-border hover:border-border text-foreground"
-                        }`}
-                      >
-                        <div className="flex items-start gap-2.5 flex-1 min-w-0">
-                          <button onClick={(e) => { e.stopPropagation(); toggleTodo(todo.id); }} className="flex-shrink-0 mt-0.5">
-                            {todo.completed ? (
-                              <CheckSquare2 className="w-4 h-4 text-foreground shrink-0" />
-                            ) : (
-                              <Square className="w-4 h-4 text-muted-foreground hover:text-muted-foreground shrink-0" />
-                            )}
-                          </button>
-                          
-                          <div className="flex flex-col flex-1 min-w-0 gap-0.5">
-                            <span
-                              onClick={() => setSelectedTaskDetail(todo)}
-                              className={`text-xs font-bold truncate cursor-pointer hover:underline ${
-                                todo.completed ? "line-through opacity-70" : "text-foreground"
-                              }`}
-                            >
-                              {todo.text}
-                            </span>
-
-                            {hasMetadata && (
-                              <div className="flex items-center gap-3 text-[10px] font-mono text-muted-foreground flex-wrap">
-                                {hasDueDate && (
-                                  <div className="flex items-center gap-1 text-orange-500 font-medium">
-                                    <Calendar className="w-3 h-3" />
-                                    <span>{formatTaskDueDate(todo.dueDate, todo.dueTime)}</span>
-                                  </div>
-                                )}
-                                {hasSubtasks && (
-                                  <div className="flex items-center gap-1 text-muted-foreground">
-                                    <ListChecks className="w-3 h-3" />
-                                    <span>{todo.subtasks!.filter(s => s.completed).length}/{todo.subtasks!.length}</span>
-                                  </div>
-                                )}
-</div>
-        )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 flex-shrink-0">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              focusOnTask(todo);
-                            }}
-                            className="p-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-secondary"
-                            title="Focus on this task"
-                          >
-                            <Target className="w-3.5 h-3.5" />
-                          </button>
-
-                          <button onClick={() => setSelectedTaskDetail(todo)} className={`p-1 ${"text-muted-foreground hover:text-foreground"}`}>
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })
-              )}
             </div>
           </div>
         )}
@@ -2013,22 +1087,22 @@ export function Popup() {
                 <div className="w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 bg-secondary border-border text-foreground">
                   <CheckCircle className="w-4 h-4" />
                 </div>
-                <span className="text-lg font-extrabold font-mono">{finishedTasksTodayCount}</span>
-                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">TASKS TODAY</span>
+                <span className="text-lg font-extrabold font-mono">{state.sessions.length}</span>
+                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">FOCUS SESSIONS</span>
               </div>
 
               <div className={`p-3 rounded-xl border flex flex-col items-center text-center ${
                 "bg-card border-border"
               }`}>
                 <div className="w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 bg-secondary border-border text-foreground">
-                  <ListTodo className="w-4 h-4" />
+                  <Clock className="w-4 h-4" />
                 </div>
-                <span className="text-lg font-extrabold font-mono">{pendingTasksCount}</span>
-                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">PENDING TASKS</span>
+                <span className="text-lg font-extrabold font-mono">{weekTotalMinutes}</span>
+                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">MINUTES THIS WEEK</span>
               </div>
             </div>
 
-            {/* Longest Streak & Completion Rate */}
+            {/* Longest Streak & Focus Sessions */}
             <div className="grid grid-cols-2 gap-2">
               <div className={`p-3 rounded-xl border flex items-start gap-3 ${
                 "bg-card border-border"
@@ -2053,14 +1127,13 @@ export function Popup() {
                 "bg-card border-border"
               }`}>
                 <div className="w-8 h-8 rounded-lg bg-secondary border border-border text-foreground flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Target className="w-4 h-4 text-foreground" />
+                  <CheckCircle className="w-4 h-4 text-foreground" />
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold font-sans mb-1">Completion Rate</span>
-                  <span className="text-lg font-extrabold font-mono">{taskDoneRatePercent}%</span>
+                  <span className="text-xs font-bold font-sans mb-1">Focus Sessions</span>
+                  <span className="text-lg font-extrabold font-mono">{state.sessions.length}</span>
                   <div className="flex items-center gap-1 text-[10px] font-mono">
-                    <TaskDone className="w-3 h-3 text-muted-foreground" />
-                    <span className={"text-muted-foreground"}>Tasks Finished</span>
+                    <span className={"text-muted-foreground"}>Sessions logged</span>
                   </div>
                 </div>
               </div>
@@ -2421,7 +1494,7 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
               <span className="text-xs font-bold text-foreground uppercase tracking-wider">Data</span>
               <button
                 onClick={() => {
-                  if (window.confirm("Are you sure you want to reset all extension data to defaults? This will clear all tasks, sessions, and stats.")) {
+                  if (window.confirm("Are you sure you want to reset all extension data to defaults? This will clear all sessions and stats.")) {
                     resetAllData();
                   }
                 }}

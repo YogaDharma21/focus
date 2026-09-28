@@ -223,7 +223,7 @@ export function SettingsPage() {
                     </div>
 
                     <div className="bg-card/60 border border-border rounded-xl p-3.5 text-muted-foreground leading-relaxed">
-                        Focus is a minimalist, monochrome productivity suite designed to keep you in flow state. Features a count-up flow timer, task management with subtasks, productivity analytics, and ambient audio.
+                        Focus is a minimalist, monochrome productivity suite designed to keep you in flow state. Features a count-up flow timer, productivity analytics, and ambient audio.
                     </div>
 
                     <a

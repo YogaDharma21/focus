@@ -6,7 +6,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-**Focus Mobile** is the React Native / Expo companion application for the Focus productivity suite. Currently in active development, it provides focus tracking, task management, dynamic flow break calculations, ambient audio playback, and productivity stats for iOS and Android.
+**Focus Mobile** is the React Native / Expo companion application for the Focus productivity suite. Currently in active development, it provides focus tracking, dynamic flow break calculations, ambient audio playback, and productivity stats for iOS and Android.
 
 ---
 
@@ -17,9 +17,6 @@
 
 ### Focus Session
 ![Focus Mode](./assets/images/screenshot-focus.jpeg)
-
-### Task Management
-![Task Management](./assets/images/screenshot-tasks.jpeg)
 
 ### Stats & Analytics
 ![Stats & Analytics](./assets/images/screenshot-stats.jpeg)
@@ -32,10 +29,9 @@
 
 - **Focus & Flow Timer** — Count-up flow timer for deep focus sessions.
 - **Dynamic Flow Break Math** — Elapsed Flow session duration is dynamically divided by 5 to calculate break time.
-- **Focus on Task Redirection** — One-tap redirection from task list or detail view straight into an active focus session linked to the task.
 - **Deep Focus Mode Overlay** — Immersive full-screen focus view with Log Distraction and Complete Session controls.
 - **Sound Player** — Native audio player for local ambient focus sounds with backdrop tap-to-close behavior.
-- **Stats Dashboard** — Comprehensive stats with Day Progress percentage & remaining time, 3-card metrics row, and streak / completion rate metrics.
+- **Stats Dashboard** — Comprehensive stats with Day Progress percentage & remaining time, focus metrics row, and streak metrics.
 - **Squircle Design System** — Modern squircle (rounded square) border radiuses for buttons and cards across light and dark themes.
 
 ---

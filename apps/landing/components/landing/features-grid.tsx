@@ -1,6 +1,6 @@
 "use client"
 
-import { Timer, Shield, CheckSquare, Music, BarChart3 } from "lucide-react"
+import { Timer, Shield, History, Music, BarChart3 } from "lucide-react"
 
 export function FeaturesGrid() {
   const features = [
@@ -21,12 +21,12 @@ export function FeaturesGrid() {
       badge: "Browser Extension",
     },
     {
-      icon: CheckSquare,
-      title: "Session-Linked Tasks",
-      subtitle: "Connect your to-dos to your timers",
+      icon: History,
+      title: "Session History & Stats",
+      subtitle: "Automatic logging with streaks and trends",
       description:
-        "Group tasks into custom categories, set estimates, and track subtasks. Finishing a timer session auto-marks your active task as completed.",
-      badge: "Task Sync",
+        "Every focus session is logged automatically. Build streaks, review daily focus trends, and see your peak focus hours at a glance.",
+      badge: "Auto Logging",
     },
     {
       icon: Music,
@@ -41,7 +41,7 @@ export function FeaturesGrid() {
       title: "Analytics & Streaks",
       subtitle: "Track your progress over time",
       description:
-        "Visualize your daily focus minutes, task completion rates, current streak metrics, and peak focus hours.",
+        "Visualize your daily focus minutes, current streak metrics, and peak focus hours.",
       badge: "Analytics",
     },
   ]

@@ -8,20 +8,14 @@ import {
   normalizeSite,
 } from "./shield";
 
-export type ViewType = "FOCUS" | "TODO" | "JOURNAL" | "SHIELD" | "SETTINGS";
-
-export interface Group {
-  id: string;
-  name: string;
-  type: "system" | "custom";
-}
+export type ViewType = "FOCUS" | "JOURNAL" | "SHIELD" | "SETTINGS";
 
 export interface Session {
   id: string;
   date: string;
   duration: number;
   mode: "STOPWATCH";
-  taskTitle?: string;
+  title?: string;
 }
 
 export interface Distraction {
@@ -30,31 +24,6 @@ export interface Distraction {
   category: string;
   website?: string;
   app?: string;
-}
-
-export interface Subtask {
-  id: string;
-  text: string;
-  completed: boolean;
-}
-
-export interface TodoItem {
-  id: string;
-  text: string;
-  description?: string;
-  completed: boolean;
-  category?: string;
-  priority?: "low" | "medium" | "high" | "urgent";
-  tags?: string[];
-  deadline?: string;
-  dueDate?: string;
-  subtasks?: Subtask[];
-  notes?: string;
-  recurring?: "none" | "daily" | "weekly" | "monthly";
-  reminders?: string[];
-  link?: string;
-  groupId?: string;
-  completedAt?: string;
 }
 
 export interface DesktopState {
@@ -98,8 +67,6 @@ export interface DesktopState {
   isActive: boolean;
   sessionStartTime: string | null;
   sessionName: string;
-  selectedTodoId: string | null;
-  selectedSubtaskId: string | null;
   autoStartBreak: boolean;
   autoStartFlow: boolean;
 
@@ -109,26 +76,8 @@ export interface DesktopState {
   setIsActive: (active: boolean) => void;
   setSessionStartTime: (time: string | null) => void;
   setSessionName: (name: string) => void;
-  setSelectedTodoId: (id: string | null) => void;
-  setSelectedSubtaskId: (id: string | null) => void;
   setAutoStartBreak: (enabled: boolean) => void;
   setAutoStartFlow: (enabled: boolean) => void;
-
-  // Tasks & Groups
-  todos: TodoItem[];
-  addTodo: (todo: TodoItem) => void;
-  toggleTodo: (id: string) => void;
-  updateTodo: (id: string, updates: Partial<TodoItem>) => void;
-  deleteTodo: (id: string) => void;
-  groups: Group[];
-  addGroup: (name: string) => void;
-  deleteGroup: (id: string) => void;
-
-  // Subtasks
-  addSubtask: (todoId: string, text: string) => void;
-  toggleSubtask: (todoId: string, subtaskId: string) => void;
-  deleteSubtask: (todoId: string, subtaskId: string) => void;
-  updateSubtask: (todoId: string, subtaskId: string, text: string) => void;
 
   // Sessions
   sessions: Session[];
@@ -233,8 +182,6 @@ export const useDesktopStore = create<DesktopState>()(
       isActive: false,
       sessionStartTime: null,
       sessionName: "",
-      selectedTodoId: null,
-      selectedSubtaskId: null,
 
       setTimeLeft: (timeOrFn) =>
         set((state) => ({
@@ -252,116 +199,6 @@ export const useDesktopStore = create<DesktopState>()(
       autoStartFlow: true,
       setAutoStartFlow: (enabled) => set({ autoStartFlow: enabled }),
       setSessionName: (name) => set({ sessionName: name }),
-      setSelectedTodoId: (id) => set({ selectedTodoId: id }),
-      setSelectedSubtaskId: (id) => set({ selectedSubtaskId: id }),
-
-      // Todos & Groups
-      todos: [
-        {
-          id: "demo-task-1",
-          text: "Set up Focus Desktop environment",
-          description: "Initialize Electron and React desktop application.",
-          completed: true,
-          priority: "high",
-          category: "Development",
-          groupId: "finished",
-          completedAt: new Date().toISOString(),
-        },
-        {
-          id: "demo-task-2",
-          text: "Deep Focus Session",
-          description: "Complete 1 focus cycle using Focus Desktop.",
-          completed: false,
-          priority: "urgent",
-          category: "Productivity",
-          groupId: "current",
-          subtasks: [
-            { id: "sub-1", text: "Configure focus timer", completed: true },
-            { id: "sub-2", text: "Start ambient music stream", completed: false }
-          ]
-        }
-      ],
-      addTodo: (todo) => set((state) => ({ todos: [...state.todos, todo] })),
-      toggleTodo: (id) =>
-        set((state) => ({
-          todos: state.todos.map((t) =>
-            t.id === id
-              ? {
-                  ...t,
-                  completed: !t.completed,
-                  completedAt: !t.completed ? new Date().toISOString() : undefined,
-                  groupId: !t.completed ? "finished" : "current",
-                }
-              : t
-          ),
-        })),
-      updateTodo: (id, updates) =>
-        set((state) => ({
-          todos: state.todos.map((t) => (t.id === id ? { ...t, ...updates } : t)),
-        })),
-      deleteTodo: (id) =>
-        set((state) => ({
-          todos: state.todos.filter((t) => t.id !== id),
-        })),
-
-      groups: [
-        { id: "current", name: "Current Tasks", type: "system" },
-        { id: "finished", name: "Finished", type: "system" },
-      ],
-      addGroup: (name) =>
-        set((state) => ({
-          groups: [...(state.groups || []), { id: crypto.randomUUID(), name, type: "custom" }],
-        })),
-      deleteGroup: (id) =>
-        set((state) => ({
-          groups: (state.groups || []).filter((g) => g.id !== id),
-        })),
-
-      // Subtasks
-      addSubtask: (todoId, text) =>
-        set((state) => ({
-          todos: state.todos.map((t) =>
-            t.id === todoId
-              ? {
-                  ...t,
-                  subtasks: [...(t.subtasks || []), { id: crypto.randomUUID(), text, completed: false }],
-                }
-              : t
-          ),
-        })),
-      toggleSubtask: (todoId, subtaskId) =>
-        set((state) => ({
-          todos: state.todos.map((t) =>
-            t.id === todoId
-              ? {
-                  ...t,
-                  subtasks: t.subtasks?.map((s) => (s.id === subtaskId ? { ...s, completed: !s.completed } : s)),
-                }
-              : t
-          ),
-        })),
-      deleteSubtask: (todoId, subtaskId) =>
-        set((state) => ({
-          todos: state.todos.map((t) =>
-            t.id === todoId
-              ? {
-                  ...t,
-                  subtasks: t.subtasks?.filter((s) => s.id !== subtaskId),
-                }
-              : t
-          ),
-        })),
-      updateSubtask: (todoId, subtaskId, text) =>
-        set((state) => ({
-          todos: state.todos.map((t) =>
-            t.id === todoId
-              ? {
-                  ...t,
-                  subtasks: t.subtasks?.map((s) => (s.id === subtaskId ? { ...s, text } : s)),
-                }
-              : t
-          ),
-        })),
 
       // Sessions
       sessions: [
@@ -370,7 +207,7 @@ export const useDesktopStore = create<DesktopState>()(
           date: new Date().toISOString(),
           duration: 1500,
           mode: "STOPWATCH",
-          taskTitle: "Set up Focus Desktop environment"
+          title: "Set up Focus Desktop environment"
         }
       ],
       addSession: (session) => set((state) => ({ sessions: [...(state.sessions || []), session] })),
@@ -497,7 +334,7 @@ export const useDesktopStore = create<DesktopState>()(
         })),
     }),
     {
-      name: "focus-desktop-storage-v1",
+      name: "focus-desktop-storage-v2",
       version: 1,
       migrate: (persistedState: unknown) => {
         const persisted = (persistedState ?? {}) as Record<string, unknown>;

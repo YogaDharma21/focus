@@ -21,9 +21,6 @@ export const DeepFocusOverlay: React.FC = () => {
     setIsActive,
     addDistraction,
     addSession,
-    todos,
-    updateTodo,
-    selectedTodoId,
     sessionName,
     isMusicPlaying,
     setIsMusicPlaying,
@@ -58,8 +55,6 @@ export const DeepFocusOverlay: React.FC = () => {
   const s = seconds % 60;
   const timeString = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 
-  const activeTask = todos.find(t => t.id === selectedTodoId);
-
   const handleCompleteSession = () => {
     setIsActive(false);
     playCompletionSound();
@@ -73,7 +68,7 @@ export const DeepFocusOverlay: React.FC = () => {
       return;
     }
 
-    const title = activeTask?.text || sessionName || 'Focus Session';
+    const title = sessionName.trim() || 'Focus Session';
 
     const durationWorked = Math.max(1, flowTimeElapsed);
     const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
@@ -83,16 +78,8 @@ export const DeepFocusOverlay: React.FC = () => {
       date: new Date().toISOString(),
       duration: durationWorked,
       mode: 'STOPWATCH',
-      taskTitle: title
+      title
     });
-
-    if (activeTask) {
-      updateTodo(activeTask.id, {
-        completed: true,
-        completedAt: new Date().toISOString(),
-        groupId: 'finished'
-      });
-    }
 
     const breakMins = Math.floor(calculatedBreakSeconds / 60);
     const breakSecs = calculatedBreakSeconds % 60;
@@ -199,9 +186,9 @@ export const DeepFocusOverlay: React.FC = () => {
           {timeString}
         </h1>
 
-        {(activeTask?.text || sessionName) && (
+        {sessionName.trim() && (
           <div className="text-sm md:text-base font-semibold text-muted-foreground text-center max-w-md px-4 truncate">
-            {activeTask?.text || sessionName}
+            {sessionName.trim()}
           </div>
         )}
 

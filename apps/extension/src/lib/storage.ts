@@ -11,12 +11,6 @@ export const DEFAULT_STATE: AppStateData = {
   isActive: false,
   sessionStartTime: null,
   sessionName: "",
-  selectedTodoId: null,
-  todos: [],
-  groups: [
-    { id: "current", name: "Current Tasks", type: "system" },
-    { id: "finished", name: "Finished", type: "system" }
-  ],
   sessions: [],
   distractions: [],
   shield: {
@@ -34,7 +28,6 @@ export const DEFAULT_STATE: AppStateData = {
   },
   stats: {
     todayMinutes: 0,
-    completedTasksCount: 0,
     streakDays: 0,
     longestStreak: 0,
     weeklyMinutes: {
@@ -190,6 +183,25 @@ export function getCachedState(): AppStateData | null {
 }
 
 function migrateState(fresh: AppStateData): AppStateData {
+  // Drop stale task fields from previous versions so stored state
+  // keeps timer/shield data but sheds todos, groups, and task links.
+  const legacy = fresh as unknown as Record<string, unknown>;
+  delete legacy.todos;
+  delete legacy.groups;
+  delete legacy.selectedTodoId;
+  const stats = legacy.stats as Record<string, unknown> | undefined;
+  if (stats && typeof stats === "object") {
+    delete stats.completedTasksCount;
+  }
+  if (Array.isArray(legacy.sessions)) {
+    legacy.sessions = (legacy.sessions as Array<Record<string, unknown>>).map((s) => {
+      if (s && typeof s === "object" && "todoId" in s) {
+        const { todoId: _dropped, ...rest } = s;
+        return rest;
+      }
+      return s;
+    });
+  }
   if (fresh.shield && !('allowedSites' in fresh.shield)) {
     fresh.shield = Object.assign({}, fresh.shield, { allowedSites: [] });
   }

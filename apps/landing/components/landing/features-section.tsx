@@ -10,16 +10,13 @@ import {
   ShieldOff,
   Music,
   BarChart3,
-  CheckSquare,
   ChevronDown,
   Zap,
   RotateCcw,
-  Target,
   Focus,
-  CheckCircle,
   TrendingUp,
   Flame,
-  ListTodo,
+  History,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { useEffect, useRef, useState } from "react"
@@ -65,16 +62,16 @@ const features = [
     ],
   },
   {
-    id: "session-tasks",
-    label: "Tasks",
-    title: "Session-Linked Tasks",
+    id: "session-history",
+    label: "History",
+    title: "Session History & Stats",
     description:
-      "Group tasks into categories, set estimates, and track subtasks. Finishing a timer session auto-marks your active task as completed.",
-    badge: "Task Sync",
+      "Every focus session is logged automatically. Build streaks, review daily focus trends, and see your peak focus hours at a glance.",
+    badge: "Auto Logging",
     highlights: [
-      { icon: ListTodo, label: "Custom task categories" },
-      { icon: CheckSquare, label: "Subtask tracking" },
-      { icon: CheckCircle, label: "Auto-complete on session end" },
+      { icon: History, label: "Automatic session logging" },
+      { icon: Flame, label: "Streaks & consistency metrics" },
+      { icon: TrendingUp, label: "Daily focus trends & peak hours" },
     ],
   },
   {
@@ -82,7 +79,7 @@ const features = [
     label: "Analytics",
     title: "Stats & Streak Tracking",
     description:
-      "Visualize daily focus minutes, task completion rates, current streak metrics, and peak focus hours with comprehensive analytics dashboards.",
+      "Visualize daily focus minutes, current streak metrics, and peak focus hours with comprehensive analytics dashboards.",
     badge: "Analytics",
     highlights: [
       { icon: BarChart3, label: "Daily focus minute tracking" },
@@ -159,8 +156,8 @@ function TimerIllustration() {
         </div>
         <div className="mt-4 flex justify-center">
           <div className="flex items-center gap-2 bg-neutral-900/90 border border-neutral-800 rounded-[10px] px-4 py-2">
-            <ListTodo className="size-3.5 text-muted-foreground" />
-            <span className="text-xs font-medium text-foreground">welcome</span>
+            <Timer className="size-3.5 text-muted-foreground" />
+            <span className="text-xs font-medium text-foreground">Deep work</span>
           </div>
         </div>
         <div className="mt-4 flex justify-center">
@@ -258,38 +255,37 @@ function LofiIllustration() {
   )
 }
 
-function TasksIllustration() {
-  const tasks = [
-    { text: "Design landing page", done: true },
-    { text: "Write documentation", done: true },
-    { text: "Implement timer feature", done: false },
-    { text: "Add lofi player", done: false },
+function SessionHistoryIllustration() {
+  const sessions = [
+    { text: "Deep work — 50m", meta: "Today 09:12" },
+    { text: "Reading — 25m", meta: "Today 08:30" },
+    { text: "Deep work — 45m", meta: "Yesterday" },
+    { text: "Review — 30m", meta: "Yesterday" },
   ]
   return (
     <div className="bg-card border-border/50 relative flex aspect-square rounded-3xl border p-6 md:col-span-3">
       <div className="m-auto w-full max-w-[280px] space-y-2">
-        {tasks.map((task, i) => (
+        {sessions.map((session, i) => (
           <div
             key={i}
             className="flex items-center gap-3 p-3 rounded-xl bg-neutral-900/60 border border-neutral-800/60"
           >
-            {task.done ? (
-              <CheckCircle className="size-4 text-primary shrink-0" />
-            ) : (
-              <div className="w-4 h-4 rounded border border-zinc-700 shrink-0" />
-            )}
-            <span className={`text-xs font-medium ${task.done ? "text-muted-foreground line-through" : "text-foreground"}`}>
-              {task.text}
+            <History className="size-4 text-primary shrink-0" />
+            <span className="text-xs font-medium text-foreground">
+              {session.text}
+            </span>
+            <span className="ml-auto text-[10px] text-muted-foreground">
+              {session.meta}
             </span>
           </div>
         ))}
         <div className="pt-2 flex items-center gap-2">
-          <div className="flex-1 h-8 rounded-lg bg-neutral-900 border border-neutral-800 flex items-center px-3">
-            <span className="text-[10px] text-muted-foreground">Add a task...</span>
+          <div className="flex-1 py-2 rounded-lg bg-neutral-900 border border-neutral-800 text-center">
+            <span className="text-[10px] font-bold text-muted-foreground">7-day streak</span>
           </div>
-          <Button size="icon-xs" variant="secondary">
-            <Target className="size-3" />
-          </Button>
+          <div className="flex-1 py-2 rounded-lg bg-neutral-900 border border-neutral-800 text-center">
+            <span className="text-[10px] font-bold text-muted-foreground">12h this week</span>
+          </div>
         </div>
       </div>
     </div>
@@ -340,7 +336,7 @@ const illustrations: Record<FeatureId, React.ComponentType> = {
   "smart-timer": TimerIllustration,
   "focus-shield": ShieldIllustration,
   "lofi-player": LofiIllustration,
-  "session-tasks": TasksIllustration,
+  "session-history": SessionHistoryIllustration,
   analytics: AnalyticsIllustration,
 }
 

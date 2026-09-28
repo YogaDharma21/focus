@@ -130,7 +130,7 @@ const jsonLd = {
         "Smart Flow break calculator (1/5th session length)",
         "Focus Shield website distraction blocker",
         "Curated ambient lofi music player",
-        "Session-linked task management",
+        "Session history with automatic logging",
         "Productivity analytics and streak tracking",
         "Cross-platform support across Web, Desktop, Mobile, and Browser Extension",
       ],
@@ -172,7 +172,7 @@ const jsonLd = {
           "acceptedAnswer": {
             "@type": "Answer",
             "text":
-              "Yes! Focus Desktop (Electron) and Focus Mobile (Expo / React Native) store session data, audio files, and task entries locally. Your data persists offline and automatically synchronizes when internet connectivity is available.",
+              "Yes! Focus Desktop (Electron) and Focus Mobile (Expo / React Native) store session data, audio files, and history entries locally. Your data persists offline and automatically synchronizes when internet connectivity is available.",
           },
         },
         {
