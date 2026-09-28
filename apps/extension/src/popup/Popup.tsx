@@ -1201,12 +1201,12 @@ export function Popup() {
                     }
                   })}
                   className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
-                    state.timerSettings?.autoStartBreak ? "bg-primary" : "bg-secondary"
+                    state.timerSettings?.autoStartBreak ? "bg-primary" : "bg-[#3f3f46]"
                   }`}
                 >
                   <div
                     className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                      state.timerSettings?.autoStartBreak ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
+                      state.timerSettings?.autoStartBreak ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
                     }`}
                   />
                 </div>
@@ -1227,12 +1227,12 @@ export function Popup() {
                     }
                   })}
                   className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
-                    state.timerSettings?.autoStartTimer ? "bg-primary" : "bg-secondary"
+                    state.timerSettings?.autoStartTimer ? "bg-primary" : "bg-[#3f3f46]"
                   }`}
                 >
                   <div
                     className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                      state.timerSettings?.autoStartTimer ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
+                      state.timerSettings?.autoStartTimer ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
                     }`}
                   />
                 </div>
@@ -1286,12 +1286,12 @@ export function Popup() {
                 <div
                   onClick={toggleSoundEnabled}
                   className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
-                    soundEnabled ? "bg-primary" : "bg-secondary"
+                    soundEnabled ? "bg-primary" : "bg-[#3f3f46]"
                   }`}
                 >
                   <div
                     className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
+soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
                     }`}
                   />
                 </div>
@@ -1312,12 +1312,12 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
                   <div
                     onClick={soundEnabled ? toggleMusicEnabled : undefined}
                     className={`relative w-11 h-6 rounded-full transition-colors flex items-center ${
-                      musicEnabled && soundEnabled ? "bg-primary cursor-pointer" : "bg-secondary"
+                      musicEnabled && soundEnabled ? "bg-primary cursor-pointer" : "bg-[#3f3f46]"
                     } ${!soundEnabled ? "cursor-not-allowed" : "cursor-pointer"}`}
                   >
                     <div
                       className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                        musicEnabled && soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
+                        musicEnabled && soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
                       }`}
                     />
                   </div>
@@ -1333,12 +1333,12 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
                       <div
                         onClick={toggleAutoPauseOnExternalAudio}
                         className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center shrink-0 ${
-                          autoPauseOnExternalAudio ? "bg-primary" : "bg-secondary"
+                          autoPauseOnExternalAudio ? "bg-primary" : "bg-[#3f3f46]"
                         }`}
                       >
                         <div
                           className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                            autoPauseOnExternalAudio ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
+                            autoPauseOnExternalAudio ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
                           }`}
                         />
                       </div>
@@ -1392,12 +1392,12 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
                   <div
                     onClick={soundEnabled ? toggleSoundEffectEnabled : undefined}
                     className={`relative w-11 h-6 rounded-full transition-colors flex items-center ${
-                      soundEffectEnabled && soundEnabled ? "bg-primary cursor-pointer" : "bg-secondary"
+                      soundEffectEnabled && soundEnabled ? "bg-primary cursor-pointer" : "bg-[#3f3f46]"
                     } ${!soundEnabled ? "cursor-not-allowed" : "cursor-pointer"}`}
                   >
                     <div
                       className={`absolute w-5 h-5 rounded-full transition-all duration-200 ${
-                        soundEffectEnabled && soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
+                        soundEffectEnabled && soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
                       }`}
                     />
                   </div>
