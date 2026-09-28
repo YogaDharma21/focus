@@ -128,6 +128,8 @@ export function SettingsPage() {
     resetAllData,
   } = useAppStore();
 
+  const miniPlayerVisible = soundEnabled && musicEnabled;
+
   const handleConfirmResetData = () => {
     Alert.alert(
       'Reset All Data',
@@ -144,7 +146,12 @@ export function SettingsPage() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      contentContainerStyle={[
+        styles.container,
+        { paddingBottom: miniPlayerVisible ? 160 : 100 },
+      ]}
+    >
       <View style={styles.header}>
         <Settings size={24} color={colors.text} />
         <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
