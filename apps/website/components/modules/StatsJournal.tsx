@@ -7,11 +7,8 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import {
     Activity,
-    CheckCircle2,
-    List,
     Clock,
     Flame,
-    Target,
     BarChart3,
     TrendingUp,
 } from "lucide-react";
@@ -32,13 +29,12 @@ const getCategoryColor = (category: string) => {
 };
 
 export function StatsJournal() {
-    const { sessions, sessionStartTime, isActive, todos, distractions } =
+    const { sessions, sessionStartTime, isActive, distractions } =
         useAppStore(
             useShallow((s) => ({
                 sessions: s.sessions,
                 sessionStartTime: s.sessionStartTime,
                 isActive: s.isActive,
-                todos: s.todos,
                 distractions: s.distractions,
             }))
         );
@@ -85,24 +81,6 @@ export function StatsJournal() {
     const totalSeconds = historicalSeconds + liveElapsed;
     const focusMinutes = Math.floor(totalSeconds / 60);
     const focusHours = (totalSeconds / 3600).toFixed(1);
-
-    const { tasksCompletedToday, tasksPending, completionRate } = useMemo(() => {
-        const completedToday = todos.filter(
-            (t) =>
-                t.completed &&
-                t.completedAt &&
-                t.completedAt.startsWith(todayStr),
-        ).length;
-        const pending = todos.filter((t) => !t.completed).length;
-        const rate = todos.length > 0
-            ? Math.round((todos.filter((t) => t.completed).length / todos.length) * 100)
-            : 0;
-        return {
-            tasksCompletedToday: completedToday,
-            tasksPending: pending,
-            completionRate: rate,
-        };
-    }, [todos, todayStr]);
 
     // Calculate streaks
     const { currentStreak, bestStreak } = useMemo(() => {
@@ -216,7 +194,7 @@ export function StatsJournal() {
                 </p>
             </Card>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 gap-4">
                 <Card
                     className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border border-primary/10 shadow-sm rounded-[var(--radius)] cursor-pointer hover:bg-primary/10 transition-colors"
                     onClick={() => setShowHours(!showHours)}
@@ -231,32 +209,10 @@ export function StatsJournal() {
                         {showHours ? "Hours Today" : "Minutes Today"}
                     </span>
                 </Card>
-
-                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border border-primary/10 shadow-sm rounded-[var(--radius)]">
-                    <div className="p-2 bg-primary/10 border border-primary/20 rounded-[var(--radius)] text-primary mb-1">
-                        <CheckCircle2 className="w-5 h-5" />
-                    </div>
-                    <div className="text-2xl font-bold">
-                        {tasksCompletedToday}
-                    </div>
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                        Tasks Today
-                    </span>
-                </Card>
-
-                <Card className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border border-primary/10 shadow-sm rounded-[var(--radius)]">
-                    <div className="p-2 bg-primary/10 border border-primary/20 rounded-[var(--radius)] text-primary mb-1">
-                        <List className="w-5 h-5" />
-                    </div>
-                    <div className="text-2xl font-bold">{tasksPending}</div>
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                        Pending Tasks
-                    </span>
-                </Card>
             </div>
 
             {/* Statistics Grid */}
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4">
                 {/* Longest Streak */}
                 <Card className="p-4 bg-card border border-border/50 shadow-sm flex flex-col gap-3 rounded-[var(--radius)]">
                     <div className="flex items-center gap-3">
@@ -273,25 +229,6 @@ export function StatsJournal() {
                         <div className="flex items-center justify-between">
                             <span className="text-xs text-muted-foreground">Best</span>
                             <span className="text-base font-bold">{bestStreak} Days</span>
-                        </div>
-                    </div>
-                </Card>
-
-                {/* Completion Rate */}
-                <Card className="p-4 bg-card border border-border/50 shadow-sm flex flex-col gap-3 rounded-[var(--radius)]">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-[var(--radius)] bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 shadow-sm">
-                            <Target className="w-4 h-4" />
-                        </div>
-                        <h3 className="text-sm font-bold tracking-tight text-foreground">Completion Rate</h3>
-                    </div>
-                    <div className="flex flex-col gap-1 pt-1">
-                        <div className="text-2xl font-bold">
-                            {completionRate}%
-                        </div>
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                            <CheckCircle2 className="w-3.5 h-3.5 text-muted-foreground" />
-                            Tasks Finished
                         </div>
                     </div>
                 </Card>

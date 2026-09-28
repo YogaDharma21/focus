@@ -3,7 +3,7 @@
 [![Version](https://img.shields.io/badge/Version-v0.0.1-blue?style=for-the-badge)](https://github.com/YogaDharma21/focus)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
-**Focus** is a modern, minimalist productivity suite designed to keep you in flow state. This monorepo houses the full ecosystem — from the Next.js web application with customizable timers, task management, and ambient media, to the mobile application, browser extension, backend services, CLI tools, and desktop client.
+**Focus** is a modern, minimalist productivity suite designed to keep you in flow state. This monorepo houses the full ecosystem — from the Next.js web application with customizable timers, session history, and ambient media, to the mobile application, browser extension, backend services, CLI tools, and desktop client.
 
 ---
 
@@ -12,9 +12,8 @@
 - **Focus & Flow Timer** — Continuous Flow (Stopwatch) timer with smart break calculation.
 - **Smart Flow Break Calculation** — Automatically calculates break duration as 1/5th of your Flow session length (e.g. 10 mins flow -> 2 mins break).
 - **Deep Focus Mode** — Distraction-free immersive view with session controls and keyboard shortcuts (`Esc` / `F`).
-- **Focus Session Tasks** — Link sessions directly to tasks, with automatic task session completion and auto-finish logic.
-- **Task Management** — Organize tasks into custom groups, subtasks, estimated sessions, priority levels, and recurring schedules.
-- **Stats & Analytics** — Track daily focus minutes, task completion rates, streak metrics, distraction logs, and progress trends.
+- **Session History** — Sessions are logged automatically with duration.
+- **Stats & Analytics** — Track daily focus minutes, session counts, streak metrics, distraction logs, and progress trends.
 - **Ambient Sound Player** — Background sound player supporting focus tracks and custom playlists.
 - **Custom Backgrounds** — Dynamic themes including dark gradients, mountain scenes, cozy cafes, and anime rooms.
 
@@ -28,9 +27,6 @@
 ### Focus Session
 ![Main Dashboard](./apps/website/public/screenshots/screenshot-main.png)
 
-### Task Management
-![Task Management](./apps/website/public/screenshots/screenshot-tasks.png)
-
 ### Stats & Analytics
 ![Stats & Journal](./apps/website/public/screenshots/screenshot-stats.png)
 
@@ -41,9 +37,6 @@
 
 ### Focus Session
 ![Mobile Focus](./apps/mobile/assets/images/screenshot-focus.jpeg)
-
-### Task Management
-![Mobile Tasks](./apps/mobile/assets/images/screenshot-tasks.jpeg)
 
 ### Stats & Analytics
 ![Mobile Stats](./apps/mobile/assets/images/screenshot-stats.jpeg)
@@ -56,9 +49,6 @@
 ### Focus Session
 ![Timer](./apps/desktop/public/Screenshot-timer.png)
 
-### Task Management
-![Tasks](./apps/desktop/public/Screenshot-tasks.png)
-
 ### Stats & Analytics
 ![Stats](./apps/desktop/public/Screenshot-stats.png)
 
@@ -69,9 +59,6 @@
 
 ### Focus Session
 ![Timer](./apps/extension/public/Screenshot-timer.png)
-
-### Task Management
-![Tasks](./apps/extension/public/Screenshot-tasks.png)
 
 ### Focus Shield (Site Blocking)
 ![Block](./apps/extension/public/Screenshot-block.png)

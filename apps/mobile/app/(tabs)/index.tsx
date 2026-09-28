@@ -23,6 +23,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 16,
-    paddingBottom: 80,
+    paddingBottom: 112,
   },
 });

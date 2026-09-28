@@ -1,20 +1,20 @@
 import { Tabs } from 'expo-router';
-import React, { useState } from 'react';
+import React from 'react';
 import { View, StyleSheet } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useTheme } from '@/context/ThemeContext';
 import { Header } from '@/components/Header';
+import { FloatingTabBar } from '@/components/FloatingTabBar';
 import { MediaPlayer } from '@/components/modules/MediaPlayer';
 import { DeepFocusOverlay } from '@/components/modules/DeepFocusOverlay';
 import { DynamicIslandTimer } from '@/components/modules/DynamicIslandTimer';
-import { Clock, ListCheck, BarChart2, Settings } from 'lucide-react-native';
+import { Clock, BarChart2, Settings } from 'lucide-react-native';
 
 import { useAppStore } from '@/lib/store';
 import { playCompletionSound } from '@/lib/sound';
 
 export default function TabLayout() {
-  const insets = useSafeAreaInsets();
   const { colors, themeMode } = useTheme();
 
   const {
@@ -79,8 +79,6 @@ export default function TabLayout() {
     };
   }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive, setDeepFocusMode, autoStartFlow]);
 
-  const bottomInset = Math.max(insets.bottom, 0);
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
@@ -89,22 +87,10 @@ export default function TabLayout() {
 
       <View style={styles.content}>
         <Tabs
+          tabBar={(props: BottomTabBarProps) => <FloatingTabBar {...props} />}
           screenOptions={{
             headerShown: false,
             sceneStyle: { backgroundColor: 'transparent' },
-            tabBarStyle: {
-              backgroundColor: colors.background,
-              borderTopColor: colors.border,
-              height: 56 + bottomInset,
-              paddingBottom: 6 + bottomInset,
-              paddingTop: 6,
-            },
-            tabBarActiveTintColor: colors.tint,
-            tabBarInactiveTintColor: colors.tabIconDefault,
-            tabBarLabelStyle: {
-              fontSize: 11,
-              fontWeight: '600',
-            },
           }}
         >
           <Tabs.Screen
@@ -112,13 +98,6 @@ export default function TabLayout() {
             options={{
               title: 'Timer',
               tabBarIcon: ({ color }) => <Clock size={22} color={color} />,
-            }}
-          />
-          <Tabs.Screen
-            name="tasks"
-            options={{
-              title: 'Tasks',
-              tabBarIcon: ({ color }) => <ListCheck size={22} color={color} />,
             }}
           />
           <Tabs.Screen

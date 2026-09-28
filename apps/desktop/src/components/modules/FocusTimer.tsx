@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useState } from 'react';
 import { playCompletionSound } from '../../lib/sound';
-import { 
-  Play, Pause, RotateCcw, AlertTriangle, Focus, CheckCircle2, 
-  ChevronDown, Check, CheckSquare2, Square, Clock, Coffee, ListTodo, Edit3, X, FileText
+import {
+  Play, Pause, RotateCcw, AlertTriangle, Focus, CheckCircle2,
+  Clock, Coffee
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
@@ -20,42 +20,15 @@ export const FocusTimer: React.FC = () => {
     timerState,
     isActive,
     setIsActive,
-    todos,
-    addTodo,
-    selectedTodoId,
-    setSelectedTodoId,
-    toggleTodo,
-    updateTodo,
-    toggleSubtask,
     addSession,
     addDistraction,
-    distractions,
     soundEffectEnabled,
-    sessionName,
-    setSessionName,
     setDeepFocusMode,
     autoStartBreak,
     autoStartFlow,
   } = useDesktopStore();
 
-  const [showTaskDropdown, setShowTaskDropdown] = useState(false);
   const [showDistractionMenu, setShowDistractionMenu] = useState(false);
-
-  const taskSelectorRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (taskSelectorRef.current && !taskSelectorRef.current.contains(e.target as Node)) {
-        setShowTaskDropdown(false);
-      }
-    };
-    if (showTaskDropdown) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [showTaskDropdown]);
 
   const toggleTimer = () => {
     const nextActive = !isActive;
@@ -78,9 +51,6 @@ export const FocusTimer: React.FC = () => {
       return;
     }
 
-    const currentTask = todos.find(t => t.id === selectedTodoId);
-    const title = currentTask?.text || sessionName || 'Focus Session';
-
     const durationWorked = Math.max(1, flowTimeElapsed);
     const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
 
@@ -89,16 +59,7 @@ export const FocusTimer: React.FC = () => {
       date: new Date().toISOString(),
       duration: durationWorked,
       mode: 'STOPWATCH',
-      taskTitle: title
     });
-
-    if (currentTask) {
-      updateTodo(currentTask.id, {
-        completed: true,
-        completedAt: new Date().toISOString(),
-        groupId: 'finished'
-      });
-    }
 
     const breakMins = Math.floor(calculatedBreakSeconds / 60);
     const breakSecs = calculatedBreakSeconds % 60;
@@ -131,28 +92,8 @@ export const FocusTimer: React.FC = () => {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handleCustomFocusSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && sessionName.trim()) {
-      e.preventDefault();
-      const newTaskId = crypto.randomUUID();
-      addTodo({
-        id: newTaskId,
-        text: sessionName.trim(),
-        completed: false,
-        priority: 'medium',
-        groupId: 'current',
-        subtasks: []
-      });
-
-      setSelectedTodoId(newTaskId);
-      setSessionName("");
-    }
-  };
-
   const activeSeconds = timerState === "BREAK" ? timeLeft : flowTimeElapsed;
   const progressPercent = Math.min(100, (flowTimeElapsed / 3600) * 100);
-
-  const activeTask = todos.find((t) => t.id === selectedTodoId);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-full max-w-2xl mx-auto w-full select-none space-y-6">
@@ -174,175 +115,6 @@ export const FocusTimer: React.FC = () => {
         <h1 className="text-[100px] md:text-[120px] font-extrabold tracking-tighter text-foreground leading-none font-sans select-none">
           {formatDisplayTime(activeSeconds)}
         </h1>
-      </div>
-
-      <div className="w-full max-w-sm relative space-y-2" ref={taskSelectorRef}>
-        {/* Task Selection Dropdown Popover */}
-        {showTaskDropdown && (
-          <div className="absolute bottom-full left-0 right-0 mb-2 z-50 p-2.5 rounded-lg border border-border bg-card text-foreground shadow-2xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 flex flex-col gap-1">
-            <div className="flex items-center justify-between px-2 pt-0.5 pb-1">
-              <span className="text-[10px] font-mono font-bold uppercase text-muted-foreground opacity-70 tracking-wider">
-                FOCUS TOPIC
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowTaskDropdown(false)}
-                className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors cursor-pointer"
-                title="Close task selector"
-              >
-                <X className="w-3.5 h-3.5" />
-              </button>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setSelectedTodoId(null);
-                setSessionName("");
-                setShowTaskDropdown(false);
-              }}
-              className={cn(
-                "w-full p-2.5 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all cursor-pointer",
-                !activeTask
-                  ? "bg-secondary text-foreground font-semibold"
-                  : "hover:bg-secondary/60 text-muted-foreground hover:text-foreground"
-              )}
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <Edit3 className="w-4 h-4 text-foreground shrink-0" />
-                <div className="flex flex-col">
-                  <span className="font-semibold text-xs leading-tight">Custom Focus</span>
-                  <span className="text-[10px] font-mono text-muted-foreground">Type custom goal</span>
-                </div>
-              </div>
-              {!activeTask && <Check className="w-4 h-4 text-foreground shrink-0" />}
-            </button>
-
-            <div className="px-2 pt-2 pb-1 text-[10px] font-mono font-bold uppercase text-muted-foreground opacity-70 tracking-wider">
-              MY TASKS
-            </div>
-
-            <div className="max-h-40 overflow-y-auto space-y-1 pr-0.5">
-              {todos.filter((t) => !t.completed).length === 0 ? (
-                <div className="px-3 py-2 text-xs text-muted-foreground italic text-center">
-                  No pending tasks
-                </div>
-              ) : (
-                todos.filter((t) => !t.completed).map((todo) => {
-                  const isSelected = selectedTodoId === todo.id;
-                  return (
-                    <button
-                      key={todo.id}
-                      type="button"
-                      onClick={() => {
-                        setSelectedTodoId(todo.id);
-                        setSessionName(todo.text);
-                        setShowTaskDropdown(false);
-                      }}
-                      className={cn(
-                        "w-full px-3 py-2 rounded-xl text-xs font-medium text-left flex items-center justify-between transition-all cursor-pointer",
-                        isSelected
-                          ? "bg-secondary text-foreground font-semibold"
-                          : "hover:bg-secondary/60 text-muted-foreground hover:text-foreground"
-                      )}
-                    >
-                      <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
-                        <ListTodo className="w-4 h-4 text-foreground shrink-0" />
-                        <span className="truncate">{todo.text}</span>
-                      </div>
-                      {isSelected && <Check className="w-4 h-4 text-foreground shrink-0" />}
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </div>
-        )}
-
-        {activeTask ? (
-          <button
-            type="button"
-            onClick={() => setShowTaskDropdown(!showTaskDropdown)}
-            className={cn(
-              "w-full px-4 py-2.5 rounded-lg border transition-all flex items-center justify-between gap-2 shadow-sm cursor-pointer group relative",
-              "bg-card text-foreground",
-              showTaskDropdown ? "border-foreground" : "border-border hover:border-muted-foreground"
-            )}
-            title="Click to select another task or custom focus"
-          >
-            <div className="flex items-center justify-center gap-2 min-w-0 flex-1 mx-auto">
-              <ListTodo className="w-4 h-4 text-foreground shrink-0" />
-              <span className="font-semibold text-sm tracking-tight truncate max-w-[220px] text-foreground">
-                {activeTask.text}
-              </span>
-              <ChevronDown className="w-3.5 h-3.5 opacity-60 transition-transform duration-200 text-foreground shrink-0 group-hover:opacity-100" />
-            </div>
-          </button>
-        ) : (
-          <div
-            className={cn(
-              "w-full flex items-center rounded-lg border bg-card transition-colors shadow-sm px-3 py-1.5 relative",
-              showTaskDropdown ? "border-foreground" : "border-border focus-within:border-foreground"
-            )}
-          >
-            <input
-              type="text"
-              value={sessionName}
-              onChange={(e) => setSessionName(e.target.value)}
-              onKeyDown={handleCustomFocusSubmit}
-              placeholder="Session Goal (Press Enter)..."
-              className="flex-1 min-w-0 bg-transparent text-sm text-center font-medium text-foreground placeholder-muted-foreground focus:outline-none pl-6 pr-1 py-1"
-            />
-            <button
-              type="button"
-              onClick={() => setShowTaskDropdown(!showTaskDropdown)}
-              className="shrink-0 p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-              title="Select from your tasks"
-            >
-              <ListTodo className="w-4 h-4 text-foreground" />
-            </button>
-          </div>
-        )}
-
-        {activeTask && activeTask.subtasks && activeTask.subtasks.length > 0 && (
-          <div className="w-full bg-card border border-border rounded-lg p-3 space-y-2 text-xs shadow-md mt-3 animate-in fade-in duration-200">
-            <div className="flex items-center justify-between px-1">
-              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-                Subtasks ({activeTask.subtasks.filter(s => s.completed).length}/{activeTask.subtasks.length})
-              </span>
-            </div>
-            <div className="space-y-1.5 max-h-36 overflow-y-auto pr-1">
-              {activeTask.subtasks.map((sub) => (
-                <button
-                  key={sub.id}
-                  onClick={() => toggleSubtask(activeTask.id, sub.id)}
-                  className="w-full flex items-center gap-2.5 p-2 rounded-xl bg-secondary/60 border border-border/60 hover:bg-secondary/80 transition-colors text-left text-xs cursor-pointer"
-                >
-                  {sub.completed ? (
-                    <CheckSquare2 className="w-3.5 h-3.5 shrink-0 text-foreground" />
-                  ) : (
-                    <Square className="w-3.5 h-3.5 shrink-0 text-muted-foreground" />
-                  )}
-                  <span className={`truncate ${sub.completed ? "line-through text-muted-foreground" : "text-foreground"}`}>
-                    {sub.text}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {activeTask && activeTask.notes && activeTask.notes.trim().length > 0 && (
-          <div className="w-full bg-card border border-border rounded-lg p-3 space-y-1.5 text-xs shadow-md mt-3 animate-in fade-in duration-200">
-            <div className="flex items-center gap-1.5 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
-              <FileText className="w-3.5 h-3.5 text-muted-foreground" />
-              <span>Task Notes</span>
-            </div>
-            <p className="text-foreground whitespace-pre-wrap leading-relaxed text-xs">
-              {activeTask.notes}
-            </p>
-          </div>
-        )}
       </div>
 
       <div className="w-full max-w-sm h-1.5 bg-muted/80 rounded-full overflow-hidden my-2">

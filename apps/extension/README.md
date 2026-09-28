@@ -6,7 +6,7 @@
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
 [![Status](https://img.shields.io/badge/Status-In_Development-orange?style=for-the-badge)]()
 
-**Focus Extension** is a monochrome-themed Chrome extension that brings the core Focus experience directly into your browser. It provides Flow timers, task management, site blocking, and session analytics — all from a compact popup UI.
+**Focus Extension** is a monochrome-themed Chrome extension that brings the core Focus experience directly into your browser. It provides Flow timers, session history, site blocking, and session analytics — all from a compact popup UI.
 
 > This extension is part of the [Focus](../../README.md) monorepo and is currently **in active development**.
 
@@ -19,9 +19,6 @@
 
 ### Focus Session
 ![Timer](./public/Screenshot-timer.png)
-
-### Task Management
-![Tasks](./public/Screenshot-tasks.png)
 
 ### Focus Shield (Site Blocking)
 ![Block](./public/Screenshot-block.png)
@@ -37,14 +34,11 @@
 
 ### Timer
 - **Flow mode** — open-ended sessions that count up, with smart break calculation (1/5 of flow duration).
-- Session naming and task linking for focused work tracking.
 - Badge countdown — live timer displayed on the extension icon.
 
-### Task Management
-- Create, complete, and delete tasks with priority levels (low, medium, high, urgent).
-- Organize tasks into custom groups.
-- Subtasks and due dates.
-- Task detail view with inline editing.
+### Session History
+- Every focus session is logged automatically with duration.
+- Session history with duration and mode.
 
 ### Focus Shield (Site Blocking)
 - Add distracting sites to a blocklist.
@@ -53,7 +47,7 @@
 - Real-time tab monitoring — blocks on navigation and tab switch.
 
 ### Stats and Analytics
-- Today's focus minutes and completed task count.
+- Today's focus minutes and session count.
 - Current and longest streak tracking.
 - Weekly minutes breakdown by day.
 - Session history with duration and mode.
@@ -95,7 +89,7 @@ apps/extension/
 
 ### How It Works
 
-1. **Popup** (`popup.html` + `Popup.tsx`) — The main interface users interact with. Contains tabbed navigation for timer, tasks, shield, and stats. All state is persisted to `chrome.storage.local`.
+1. **Popup** (`popup.html` + `Popup.tsx`) — The main interface users interact with. Contains tabbed navigation for timer, shield, and stats. All state is persisted to `chrome.storage.local`.
 
 2. **Background Service Worker** (`background.ts`) — Runs independently of the popup. Handles the timer countdown/countup, session transitions, badge updates, desktop notifications, and enforces site blocking by monitoring tab events.
 
@@ -160,7 +154,7 @@ The extension requests the following permissions (defined in `manifest.json`):
 
 | Permission | Purpose |
 |------------|---------|
-| `storage` | Persist timer state, tasks, settings, and session data |
+| `storage` | Persist timer state, settings, and session data |
 | `tabs` | Monitor and redirect blocked tabs during focus sessions |
 | `notifications` | Desktop notifications when sessions complete |
 | `alarms` | Scheduling support for timer operations |

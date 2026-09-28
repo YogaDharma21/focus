@@ -1,5 +1,5 @@
 import React from 'react';
-import { Timer, CheckSquare, BarChart3, Shield, Settings } from 'lucide-react';
+import { Timer, BarChart3, Shield, Settings } from 'lucide-react';
 import { useDesktopStore, ViewType } from '../../lib/store';
 import { cn } from '../../lib/utils';
 
@@ -10,7 +10,6 @@ export const SidebarNav: React.FC = () => {
 
   const navItems: { id: ViewType; label: string; icon: React.FC<{ className?: string }>; dot?: boolean }[] = [
     { id: "FOCUS", label: "Timer", icon: Timer },
-    { id: "TODO", label: "Tasks", icon: CheckSquare },
     { id: "JOURNAL", label: "Stats", icon: BarChart3 },
     { id: "SHIELD", label: "Shield", icon: Shield, dot: shieldEnforcing },
     { id: "SETTINGS", label: "Settings", icon: Settings },

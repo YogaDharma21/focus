@@ -20,7 +20,8 @@ export const ShieldOverlayRoot: React.FC = () => {
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem('focus-desktop-storage-v1');
+      const raw = localStorage.getItem('focus-desktop-storage-v2')
+        ?? localStorage.getItem('focus-desktop-storage-v1');
       const theme = raw ? JSON.parse(raw)?.state?.theme : 'dark';
       document.documentElement.classList.toggle('dark', theme !== 'light');
     } catch {

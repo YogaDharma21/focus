@@ -1,14 +1,13 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Play, Pause, RotateCcw, Volume2, VolumeX, CheckCircle, Calculator, Headphones } from "lucide-react"
+import { Play, Pause, RotateCcw, Volume2, VolumeX, Calculator, Headphones } from "lucide-react"
 
 export function InteractiveTimer() {
   const [isRunning, setIsRunning] = useState<boolean>(false)
   const [flowSeconds, setFlowSeconds] = useState<number>(0)
   const [isMusicPlaying, setIsMusicPlaying] = useState<boolean>(false)
   const [volume, setVolume] = useState<number>(0.5) // Default volume at 50%
-  const [selectedTask, setSelectedTask] = useState<string>("Landing Page Design")
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // Initialize and update volume
@@ -65,13 +64,6 @@ export function InteractiveTimer() {
     }
   }
 
-  const tasks = [
-    "Landing Page Design",
-    "Focus Shield Integration",
-    "Cross-Platform Monorepo Sync",
-    "Lofi Player",
-  ]
-
   return (
     <section id="interactive-demo" className="py-20 relative">
       {/* Audio Element for Lofi Beats */}
@@ -93,29 +85,6 @@ export function InteractiveTimer() {
 
         {/* Demo Card */}
         <div className="max-w-2xl mx-auto bg-card border border-border rounded-2xl p-6 sm:p-8">
-          {/* User-friendly Task Selection */}
-          <div className="mb-6 flex flex-col items-center">
-            <span className="text-xs font-medium text-muted-foreground mb-2">
-              What are you working on?
-            </span>
-            <div className="flex flex-wrap items-center justify-center gap-1.5">
-              {tasks.map((task) => (
-                <button
-                  key={task}
-                  onClick={() => setSelectedTask(task)}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                    selectedTask === task
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {selectedTask === task && <CheckCircle className="inline size-3 mr-1" />}
-                  {task}
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Timer Display (No Circle) */}
           <div className="flex flex-col items-center justify-center my-6">
             <div className="text-[4rem] sm:text-[5.5rem] md:text-[7rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow select-none font-mono">

@@ -128,6 +128,8 @@ export function SettingsPage() {
     resetAllData,
   } = useAppStore();
 
+  const miniPlayerVisible = soundEnabled && musicEnabled;
+
   const handleConfirmResetData = () => {
     Alert.alert(
       'Reset All Data',
@@ -144,7 +146,12 @@ export function SettingsPage() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView
+      contentContainerStyle={[
+        styles.container,
+        { paddingBottom: miniPlayerVisible ? 160 : 100 },
+      ]}
+    >
       <View style={styles.header}>
         <Settings size={24} color={colors.text} />
         <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
@@ -321,7 +328,7 @@ export function SettingsPage() {
 
           <View style={[styles.aboutCard, { backgroundColor: colors.muted, borderColor: colors.border }]}>
             <Text style={[styles.aboutDescription, { color: colors.mutedText }]}>
-              A minimalist productivity suite designed to keep you in flow state. Features a flow timer, task management with subtasks, productivity analytics, and ambient audio.
+              A minimalist productivity suite designed to keep you in flow state. Features a flow timer, productivity analytics, and ambient audio.
             </Text>
           </View>
 

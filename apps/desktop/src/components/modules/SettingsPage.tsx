@@ -29,9 +29,8 @@ export const SettingsPage: React.FC = () => {
     setAutoStartBreak,
     autoStartFlow,
     setAutoStartFlow,
-    todos,
     sessions,
-    groups
+    distractions,
   } = useDesktopStore();
 
   const [showResetModal, setShowResetModal] = useState(false);
@@ -85,7 +84,7 @@ export const SettingsPage: React.FC = () => {
 
   const handleExportData = () => {
     try {
-      const fullState = localStorage.getItem('focus-desktop-storage-v1');
+      const fullState = localStorage.getItem('focus-desktop-storage-v2');
       if (!fullState) {
         showFeedback('No stored data found to export.', 'error');
         return;
@@ -118,7 +117,7 @@ export const SettingsPage: React.FC = () => {
         const content = event.target?.result as string;
         const parsed = JSON.parse(content);
         const stateToSave = parsed.state ? parsed : { state: parsed, version: 1 };
-        localStorage.setItem('focus-desktop-storage-v1', JSON.stringify(stateToSave));
+        localStorage.setItem('focus-desktop-storage-v2', JSON.stringify(stateToSave));
         showFeedback('Data restored successfully. Reloading workspace...');
         setTimeout(() => {
           window.location.reload();
@@ -134,6 +133,7 @@ export const SettingsPage: React.FC = () => {
 
   const handleResetConfirmed = () => {
     if (resetConfirmText.toLowerCase() !== 'reset') return;
+    localStorage.removeItem('focus-desktop-storage-v2');
     localStorage.removeItem('focus-desktop-storage-v1');
     setShowResetModal(false);
     window.location.reload();
@@ -516,18 +516,18 @@ export const SettingsPage: React.FC = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
             <div className="p-3.5 rounded-2xl bg-secondary/70 border border-border text-center">
               <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Focus Sessions</span>
               <span className="text-lg font-bold font-mono text-foreground">{sessions?.length || 0}</span>
             </div>
             <div className="p-3.5 rounded-2xl bg-secondary/70 border border-border text-center">
-              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Active Tasks</span>
-              <span className="text-lg font-bold font-mono text-foreground">{todos?.length || 0}</span>
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Focus Minutes</span>
+              <span className="text-lg font-bold font-mono text-foreground">{Math.round((sessions || []).reduce((acc, s) => acc + s.duration, 0) / 60)}</span>
             </div>
             <div className="p-3.5 rounded-2xl bg-secondary/70 border border-border text-center">
-              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Task Folders</span>
-              <span className="text-lg font-bold font-mono text-foreground">{groups?.length || 0}</span>
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider block mb-1">Distractions</span>
+              <span className="text-lg font-bold font-mono text-foreground">{distractions?.length || 0}</span>
             </div>
           </div>
 
@@ -539,7 +539,7 @@ export const SettingsPage: React.FC = () => {
                   <h3 className="text-xs font-bold text-foreground">Export Backup</h3>
                 </div>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Download a full JSON archive containing all tasks, completed sessions, and custom preferences.
+                  Download a full JSON archive containing all completed sessions, distraction logs, and custom preferences.
                 </p>
               </div>
               <button
@@ -577,7 +577,7 @@ export const SettingsPage: React.FC = () => {
               <h3 className="text-xs font-bold text-rose-300 uppercase tracking-wider">Danger Zone</h3>
             </div>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
-              Permanently purge all tasks, distraction logs, focus history, and custom settings. This operation is irreversible.
+              Permanently purge all distraction logs, focus history, and custom settings. This operation is irreversible.
             </p>
             <div className="pt-2">
               <button
@@ -620,7 +620,7 @@ export const SettingsPage: React.FC = () => {
             </div>
 
 <p className="text-xs text-foreground leading-relaxed bg-secondary/60 p-4 rounded-xl border border-border">
-              Focus Desktop is engineered for deep flow state work. Featuring open-ended Flow timers with intelligent break sequencing, hierarchical task management, daily streak analytics, and embedded Lo-Fi audio stream support.
+              Focus Desktop is engineered for deep flow state work. Featuring open-ended Flow timers with intelligent break sequencing, daily streak analytics, and embedded Lo-Fi audio stream support.
             </p>
 
             <div className="pt-3 border-t border-border flex flex-col sm:flex-row gap-3">
@@ -661,7 +661,7 @@ export const SettingsPage: React.FC = () => {
             </div>
 
             <p className="text-xs text-foreground leading-relaxed bg-secondary/60 p-3.5 rounded-xl border border-border">
-              All tasks, subtasks, focus logs, and custom presets will be permanently cleared from local storage.
+              All focus logs, distraction logs, and custom presets will be permanently cleared from local storage.
             </p>
 
             <div className="space-y-2">
