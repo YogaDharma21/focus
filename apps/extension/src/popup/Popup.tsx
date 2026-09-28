@@ -403,7 +403,6 @@ export function Popup() {
 
   // Stats Calculations
   const dynamicWeeklyMinutes = getWeeklyMinutesFromSessions(state.sessions);
-  const weekTotalMinutes = Object.values(dynamicWeeklyMinutes).reduce((a, b) => a + b, 0);
   const dynamicTodayMinutes = getTodayMinutesFromSessions(state.sessions);
   const dynamicStreaks = calculateStreaksFromSessions(state.sessions);
   const maxWeeklyMins = Math.max(120, ...Object.values(dynamicWeeklyMinutes));
@@ -1067,8 +1066,8 @@ export function Popup() {
               );
             })()}
 
-            {/* Top 3 Metric Cards */}
-            <div className="grid grid-cols-3 gap-2">
+            {/* Top Metric Card */}
+            <div className="grid grid-cols-1 gap-2">
               <div className={`p-3 rounded-xl border flex flex-col items-center text-center ${
                 "bg-card border-border"
               }`}>
@@ -1080,30 +1079,10 @@ export function Popup() {
                 <span className="text-lg font-extrabold font-mono">{dynamicTodayMinutes}</span>
                 <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">MINUTES TODAY</span>
               </div>
-
-              <div className={`p-3 rounded-xl border flex flex-col items-center text-center ${
-                "bg-card border-border"
-              }`}>
-                <div className="w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 bg-secondary border-border text-foreground">
-                  <CheckCircle className="w-4 h-4" />
-                </div>
-                <span className="text-lg font-extrabold font-mono">{state.sessions.length}</span>
-                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">FOCUS SESSIONS</span>
-              </div>
-
-              <div className={`p-3 rounded-xl border flex flex-col items-center text-center ${
-                "bg-card border-border"
-              }`}>
-                <div className="w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 bg-secondary border-border text-foreground">
-                  <Clock className="w-4 h-4" />
-                </div>
-                <span className="text-lg font-extrabold font-mono">{weekTotalMinutes}</span>
-                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">MINUTES THIS WEEK</span>
-              </div>
             </div>
 
-            {/* Longest Streak & Focus Sessions */}
-            <div className="grid grid-cols-2 gap-2">
+            {/* Longest Streak */}
+            <div className="grid grid-cols-1 gap-2">
               <div className={`p-3 rounded-xl border flex items-start gap-3 ${
                 "bg-card border-border"
               }`}>
@@ -1119,21 +1098,6 @@ export function Popup() {
                   <div className="text-[11px] font-mono">
                     <span className={"text-muted-foreground"}>Best</span>
                     <span className="font-bold ml-2">{dynamicStreaks.best} Days</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className={`p-3 rounded-xl border flex items-start gap-3 ${
-                "bg-card border-border"
-              }`}>
-                <div className="w-8 h-8 rounded-lg bg-secondary border border-border text-foreground flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <CheckCircle className="w-4 h-4 text-foreground" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold font-sans mb-1">Focus Sessions</span>
-                  <span className="text-lg font-extrabold font-mono">{state.sessions.length}</span>
-                  <div className="flex items-center gap-1 text-[10px] font-mono">
-                    <span className={"text-muted-foreground"}>Sessions logged</span>
                   </div>
                 </div>
               </div>
