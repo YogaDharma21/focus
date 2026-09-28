@@ -1178,18 +1178,16 @@ export function Popup() {
         {activeTab === "settings" && (
           <div className="flex flex-col gap-3 h-full overflow-y-auto stable-scrollbar">
             {/* Timer Settings */}
-            <div className={`p-3 rounded-xl border flex flex-col gap-2.5 ${
+            <div className={`p-4 rounded-[16px] border flex flex-col gap-3 ${
               "bg-card border-border"
             }`}>
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-secondary border border-border text-foreground flex items-center justify-center">
-                  <TimerIcon className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-[10px] font-mono uppercase tracking-wider font-bold">Timer</span>
+                <TimerIcon className="w-[18px] h-[18px] text-foreground" />
+                <span className="text-base font-bold text-foreground">Timer</span>
               </div>
 
               <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
-                "bg-background/60 border-border"
+                "bg-secondary border-border"
               }`}>
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-foreground">Auto-start Break</span>
@@ -1215,7 +1213,7 @@ export function Popup() {
               </div>
 
               <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
-                "bg-background/60 border-border"
+                "bg-secondary border-border"
               }`}>
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-foreground">Auto-start Flow Timer</span>
@@ -1242,14 +1240,12 @@ export function Popup() {
             </div>
 
             {/* Appearance Section */}
-            <div className={`p-3 rounded-xl border flex flex-col gap-2.5 ${
+            <div className={`p-4 rounded-[16px] border flex flex-col gap-3 ${
               "bg-card border-border"
             }`}>
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-secondary border border-border text-foreground flex items-center justify-center">
-                  <Paintbrush className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-[10px] font-mono uppercase tracking-wider font-bold">Appearance</span>
+                <Paintbrush className="w-[18px] h-[18px] text-foreground" />
+                <span className="text-base font-bold text-foreground">Appearance</span>
               </div>
               <div className="flex items-center gap-2">
                 {(["light", "dark"] as ThemeMode[]).map((mode) => {
@@ -1261,7 +1257,7 @@ export function Popup() {
                       className={`flex-1 px-3 py-2.5 rounded-xl text-xs font-bold transition-all border ${
                         isActive
                           ? "bg-primary text-primary-foreground border-primary"
-                          : "bg-background/60 text-muted-foreground border-border hover:bg-secondary hover:text-foreground"
+                          : "bg-secondary text-muted-foreground border-border hover:bg-secondary hover:text-foreground"
                       }`}
                     >
                       {mode === "light" ? "Light" : "Dark"}
@@ -1272,18 +1268,16 @@ export function Popup() {
             </div>
 
             {/* Sound Section */}
-            <div className={`p-3 rounded-xl border flex flex-col gap-2.5 ${
+            <div className={`p-4 rounded-[16px] border flex flex-col gap-3 ${
               "bg-card border-border"
             }`}>
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-secondary border border-border text-foreground flex items-center justify-center">
-                  <Volume2 className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-[10px] font-mono uppercase tracking-wider font-bold">Sound</span>
+                <Volume2 className="w-[18px] h-[18px] text-foreground" />
+                <span className="text-base font-bold text-foreground">Sound</span>
               </div>
 
               <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
-                "bg-background/60 border-border"
+                "bg-secondary border-border"
               }`}>
                 <div className="flex flex-col">
                   <span className="text-xs font-bold text-foreground">Sound</span>
@@ -1308,7 +1302,7 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
 
                 <div className={`flex items-center justify-between rounded-xl px-4 py-3 border transition-all ${
                   soundEnabled
-                    ? "bg-background/60 border-border"
+                    ? "bg-secondary border-border"
                     : "bg-card/30 border-border/50 opacity-50"
                 }`}>
                   <div className="flex flex-col">
@@ -1331,7 +1325,7 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
 
                 {soundEnabled && musicEnabled && (
                   <>
-                    <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-background/60 border-border">
+                    <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-secondary border-border">
                       <div className="flex flex-col">
                         <span className="text-xs font-bold text-foreground">Auto-Pause on Audio</span>
                         <span className="text-[10px] text-muted-foreground">Pause music when other tabs play audio</span>
@@ -1351,7 +1345,7 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
                     </div>
 
                     {autoPauseOnExternalAudio && (
-                      <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-background/60 border-border">
+                      <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-secondary border-border">
                         <div className="flex flex-col w-full gap-2">
                           <div className="flex items-center justify-between">
                             <div className="flex flex-col">
@@ -1388,7 +1382,7 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
 
                 <div className={`flex items-center justify-between rounded-xl px-4 py-3 border transition-all ${
                   soundEnabled
-                    ? "bg-background/60 border-border"
+                    ? "bg-secondary border-border"
                     : "bg-card/30 border-border/50 opacity-50"
                 }`}>
                   <div className="flex flex-col">
@@ -1410,7 +1404,7 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
                 </div>
 
                 {soundEnabled && soundEffectEnabled && (
-                  <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-background/60 border-border">
+                  <div className="flex items-center justify-between rounded-xl px-4 py-3 border bg-secondary border-border">
                     <div className="flex flex-col w-full gap-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-foreground">Sound Effects Volume</span>
@@ -1445,14 +1439,12 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
             </div>
 
             {/* Data Section */}
-            <div className={`p-3 rounded-xl border flex flex-col gap-2.5 ${
+            <div className={`p-4 rounded-[16px] border flex flex-col gap-3 ${
               "bg-card border-border"
             }`}>
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-secondary border border-border text-foreground flex items-center justify-center">
-                  <Database className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-[10px] font-mono uppercase tracking-wider font-bold">Data</span>
+                <Database className="w-[18px] h-[18px] text-red-500" />
+                <span className="text-base font-bold text-red-500">Data</span>
               </div>
               <button
                 onClick={() => {
@@ -1460,35 +1452,33 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-muted-foreground"
                     resetAllData();
                   }
                 }}
-                className="w-full py-2.5 rounded-xl font-bold text-xs border border-red-900/50 bg-red-950/20 text-red-500 hover:bg-red-950/50 hover:text-red-400 transition-all"
+                className="w-full py-2.5 rounded-xl font-bold text-xs border border-red-500 bg-red-500 text-white hover:bg-red-600 transition-all"
               >
                 Reset All Extension Data
               </button>
             </div>
 
             {/* About Section */}
-            <div className={`p-3 rounded-xl border flex flex-col gap-2.5 ${
+            <div className={`p-4 rounded-[16px] border flex flex-col gap-3 ${
               "bg-card border-border"
             }`}>
               <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-lg bg-secondary border border-border text-foreground flex items-center justify-center">
-                  <Info className="w-3.5 h-3.5" />
-                </div>
-                <span className="text-[10px] font-mono uppercase tracking-wider font-bold">About</span>
+                <Info className="w-[18px] h-[18px] text-foreground" />
+                <span className="text-base font-bold text-foreground">About</span>
               </div>
               <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between bg-background/60 border border-border rounded-xl px-4 py-3">
+                <div className="flex items-center justify-between bg-secondary border border-border rounded-xl px-4 py-3">
                   <span className="font-medium text-white">Version</span>
                   <span className="font-mono text-muted-foreground">v0.0.1</span>
                 </div>
 
-                <div className="bg-background/60 border border-border rounded-xl p-3.5 text-muted-foreground leading-relaxed">
+                <div className="bg-secondary border border-border rounded-xl p-3.5 text-muted-foreground leading-relaxed">
                   Focus is a minimalist, monochrome productivity extension designed for distraction-free deep work and site blocking.
                 </div>
 
                 <button
                   onClick={openGithubLink}
-                  className="w-full py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-between border border-border bg-background/60 hover:bg-secondary text-white transition-all cursor-pointer"
+                  className="w-full py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-between border border-border bg-secondary hover:bg-secondary text-white transition-all cursor-pointer"
                 >
                   <div className="flex items-center gap-2">
                     <Github className="w-4 h-4" />

@@ -44,12 +44,10 @@ export function SettingsPage() {
             </div>
 
             {/* Appearance Section */}
-            <Card className="p-4 bg-card border border-border/50 shadow-sm flex flex-col gap-3 rounded-[var(--radius)]">
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-[var(--radius)] bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 shadow-sm">
-                        <Palette className="w-4 h-4" />
-                    </div>
-                    <h3 className="text-sm font-bold tracking-tight text-foreground">Appearance</h3>
+            <Card className="p-4 bg-card border border-border flex flex-col gap-3 rounded-[16px]">
+                <div className="flex items-center gap-2">
+                    <Palette className="w-[18px] h-[18px] text-foreground" />
+                    <h3 className="text-base font-bold text-foreground">Appearance</h3>
                 </div>
                 <div className="flex items-center gap-2">
                     {(["light", "dark"] as const).map((mode) => {
@@ -59,10 +57,10 @@ export function SettingsPage() {
                                 key={mode}
                                 onClick={() => setTheme(mode)}
                                 className={cn(
-                                    "flex-1 px-3 py-2.5 rounded-[var(--radius)] text-xs font-bold transition-all border cursor-pointer",
+                                    "flex-1 px-3 py-2.5 rounded-[10px] text-xs font-bold transition-all border cursor-pointer",
                                     isActive
                                         ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                                        : "bg-background/60 text-muted-foreground border-border/50 hover:bg-secondary hover:text-foreground"
+                                        : "bg-secondary text-muted-foreground border-border hover:bg-secondary hover:text-foreground"
                                 )}
                             >
                                 {mode === "light" ? "Light" : "Dark"}
@@ -73,15 +71,13 @@ export function SettingsPage() {
             </Card>
 
             {/* Timer Section */}
-            <Card className="p-4 bg-card border border-border/50 shadow-sm flex flex-col gap-3 rounded-[var(--radius)]">
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-[var(--radius)] bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 shadow-sm">
-                        <Timer className="w-4 h-4" />
-                    </div>
-                    <h3 className="text-sm font-bold tracking-tight text-foreground">Timer</h3>
+            <Card className="p-4 bg-card border border-border flex flex-col gap-3 rounded-[16px]">
+                <div className="flex items-center gap-2">
+                    <Timer className="w-[18px] h-[18px] text-foreground" />
+                    <h3 className="text-base font-bold text-foreground">Timer</h3>
                 </div>
 
-                <div className="flex items-center justify-between rounded-[var(--radius)] px-4 py-3 border bg-background/60 border-border/50">
+                <div className="flex items-center justify-between rounded-[10px] px-4 py-3 border bg-secondary border-border">
                     <div className="flex flex-col">
                         <span className="text-xs font-bold text-foreground">Auto-start Break</span>
                         <span className="text-[10px] text-muted-foreground">Start break countdown automatically</span>
@@ -92,7 +88,7 @@ export function SettingsPage() {
                     />
                 </div>
 
-                <div className="flex items-center justify-between rounded-[var(--radius)] px-4 py-3 border bg-background/60 border-border/50">
+                <div className="flex items-center justify-between rounded-[10px] px-4 py-3 border bg-secondary border-border">
                     <div className="flex flex-col">
                         <span className="text-xs font-bold text-foreground">Auto-start Flow Timer</span>
                         <span className="text-[10px] text-muted-foreground">Start next flow session when break ends</span>
@@ -105,16 +101,14 @@ export function SettingsPage() {
             </Card>
 
             {/* Sound Section */}
-            <Card className="p-4 bg-card border border-border/50 shadow-sm flex flex-col gap-3 rounded-[var(--radius)]">
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-[var(--radius)] bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 shadow-sm">
-                        <Volume2 className="w-4 h-4" />
-                    </div>
-                    <h3 className="text-sm font-bold tracking-tight text-foreground">Sound</h3>
+            <Card className="p-4 bg-card border border-border flex flex-col gap-3 rounded-[16px]">
+                <div className="flex items-center gap-2">
+                    <Volume2 className="w-[18px] h-[18px] text-foreground" />
+                    <h3 className="text-base font-bold text-foreground">Sound</h3>
                 </div>
 
                 {/* Master Sound Toggle */}
-                <div className="flex items-center justify-between rounded-[var(--radius)] px-4 py-3 border bg-background/60 border-border/50">
+                <div className="flex items-center justify-between rounded-[10px] px-4 py-3 border bg-secondary border-border">
                     <div className="flex flex-col">
                         <span className="text-xs font-bold text-foreground">Sound</span>
                         <span className="text-[10px] text-muted-foreground">Enable or disable all sound</span>
@@ -129,7 +123,7 @@ export function SettingsPage() {
                 <div className={cn("flex flex-col gap-2 transition-opacity", !soundEnabled && "opacity-50")}>
                     <span className="px-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Music</span>
 
-                    <div className="flex items-center justify-between rounded-[var(--radius)] px-4 py-3 border bg-background/60 border-border/50">
+                    <div className="flex items-center justify-between rounded-[10px] px-4 py-3 border bg-secondary border-border">
                         <div className="flex flex-col">
                             <span className="text-xs font-bold text-foreground">Music</span>
                             <span className="text-[10px] text-muted-foreground">Enable or disable background music</span>
@@ -142,7 +136,7 @@ export function SettingsPage() {
                     </div>
 
                     {soundEnabled && musicEnabled && (
-                        <div className="flex items-center justify-between rounded-[var(--radius)] px-4 py-3 border bg-background/60 border-border/50">
+                        <div className="flex items-center justify-between rounded-[10px] px-4 py-3 border bg-secondary border-border">
                             <div className="flex flex-col w-full gap-2">
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs font-bold text-foreground">Music Volume</span>
@@ -166,7 +160,7 @@ export function SettingsPage() {
                 <div className={cn("flex flex-col gap-2 pt-1 border-t border-border/80 transition-opacity", !soundEnabled && "opacity-50")}>
                     <span className="px-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Sound Effects</span>
 
-                    <div className="flex items-center justify-between rounded-[var(--radius)] px-4 py-3 border bg-background/60 border-border/50">
+                    <div className="flex items-center justify-between rounded-[10px] px-4 py-3 border bg-secondary border-border">
                         <div className="flex flex-col">
                             <span className="text-xs font-bold text-foreground">Sound Effects</span>
                             <span className="text-[10px] text-muted-foreground">Enable or disable timer sound effects</span>
@@ -179,7 +173,7 @@ export function SettingsPage() {
                     </div>
 
                     {soundEnabled && soundEffectEnabled && (
-                        <div className="flex items-center justify-between rounded-[var(--radius)] px-4 py-3 border bg-background/60 border-border/50">
+                        <div className="flex items-center justify-between rounded-[10px] px-4 py-3 border bg-secondary border-border">
                             <div className="flex flex-col w-full gap-2">
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs font-bold text-foreground">Sound Effects Volume</span>
@@ -202,7 +196,7 @@ export function SettingsPage() {
                         onClick={playTestSoundEffect}
                         disabled={!soundEnabled || !soundEffectEnabled}
                         className={cn(
-                            "w-full py-2.5 rounded-[var(--radius)] font-bold text-xs border transition-all flex items-center justify-center gap-2",
+                            "w-full py-2.5 rounded-[10px] font-bold text-xs border transition-all flex items-center justify-center gap-2",
                             soundEnabled && soundEffectEnabled
                                 ? "border-border bg-secondary text-foreground hover:bg-accent cursor-pointer"
                                 : "border-border/50 bg-card/30 text-muted-foreground cursor-not-allowed opacity-50"
@@ -215,12 +209,10 @@ export function SettingsPage() {
             </Card>
 
             {/* Data Section */}
-            <Card className="p-4 bg-card border border-border/50 shadow-sm flex flex-col gap-3 rounded-[var(--radius)]">
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-[var(--radius)] bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 shadow-sm">
-                        <Database className="w-4 h-4" />
-                    </div>
-                    <h3 className="text-sm font-bold tracking-tight text-foreground">Data</h3>
+            <Card className="p-4 bg-card border border-border flex flex-col gap-3 rounded-[16px]">
+                <div className="flex items-center gap-2">
+                    <Database className="w-[18px] h-[18px] text-red-500" />
+                    <h3 className="text-base font-bold text-red-500">Data</h3>
                 </div>
                 <button
                     onClick={() => {
@@ -228,27 +220,25 @@ export function SettingsPage() {
                             resetAllData();
                         }
                     }}
-                    className="w-full py-2.5 rounded-[var(--radius)] font-bold text-xs border border-red-900/50 bg-red-950/20 text-red-500 hover:bg-red-950/50 hover:text-red-400 transition-all cursor-pointer"
+                    className="w-full py-2.5 rounded-[10px] font-bold text-xs border border-red-500 bg-red-500 text-white hover:bg-red-600 transition-all cursor-pointer"
                 >
                     Reset All Data
                 </button>
             </Card>
 
             {/* About Section */}
-            <Card className="p-4 bg-card border border-border/50 shadow-sm flex flex-col gap-3 rounded-[var(--radius)]">
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-[var(--radius)] bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 shadow-sm">
-                        <Info className="w-4 h-4" />
-                    </div>
-                    <h3 className="text-sm font-bold tracking-tight text-foreground">About</h3>
+            <Card className="p-4 bg-card border border-border flex flex-col gap-3 rounded-[16px]">
+                <div className="flex items-center gap-2">
+                    <Info className="w-[18px] h-[18px] text-foreground" />
+                    <h3 className="text-base font-bold text-foreground">About</h3>
                 </div>
                 <div className="space-y-2 text-xs">
-                    <div className="flex items-center justify-between bg-background/60 border border-border/50 rounded-[var(--radius)] px-4 py-3">
+                    <div className="flex items-center justify-between bg-secondary border border-border rounded-[10px] px-4 py-3">
                         <span className="font-medium text-foreground">Version</span>
                         <span className="font-mono text-muted-foreground">v0.0.1</span>
                     </div>
 
-                    <div className="bg-background/60 border border-border/50 rounded-[var(--radius)] p-3.5 text-muted-foreground leading-relaxed">
+                    <div className="bg-secondary border border-border rounded-[10px] p-3.5 text-muted-foreground leading-relaxed">
                         Focus is a minimalist, monochrome productivity suite designed to keep you in flow state. Features a count-up flow timer, productivity analytics, and ambient audio.
                     </div>
 
@@ -256,7 +246,7 @@ export function SettingsPage() {
                         href="https://github.com/YogaDharma21/focus"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full py-2.5 px-3 rounded-[var(--radius)] font-bold text-xs flex items-center justify-between border border-border/50 bg-background/60 hover:bg-secondary text-foreground transition-all cursor-pointer"
+                        className="w-full py-2.5 px-3 rounded-[10px] font-bold text-xs flex items-center justify-between border border-border bg-secondary hover:bg-secondary text-foreground transition-all cursor-pointer"
                     >
                         <div className="flex items-center gap-2">
                             <Github className="w-4 h-4" />
