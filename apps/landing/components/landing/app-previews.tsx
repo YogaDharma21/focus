@@ -8,8 +8,6 @@ import {
   Pause,
   RotateCcw,
   CheckCircle,
-  ListTodo,
-  CheckSquare,
   BarChart2,
   Settings,
   Shield,
@@ -153,34 +151,11 @@ export function WebTimerPreview() {
           25:00
         </div>
 
-        {/* Task Selector */}
+        {/* Session Goal */}
         <div className="mt-5 mb-4">
           <div className="flex items-center gap-2 bg-neutral-900/90 border border-neutral-800 rounded-[10px] px-4 py-2.5 text-white">
-            <ListTodo className="size-4 text-muted-foreground" />
-            <span className="text-sm font-medium">welcome</span>
-          </div>
-        </div>
-
-        {/* Subtasks */}
-        <div className="w-full max-w-xs bg-card border border-border/40 rounded-[10px] p-3 mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
-              <ListTodo className="size-3" />
-              <span>welcome</span>
-            </div>
-            <span className="text-[10px] text-muted-foreground">Clear</span>
-          </div>
-          <div className="space-y-1.5">
-            <div className="flex items-center gap-2 text-xs text-foreground">
-              <div className="w-3.5 h-3.5 rounded border border-zinc-700 flex items-center justify-center">
-                <CheckCircle className="size-2.5 text-muted-foreground" />
-              </div>
-              <span>hello</span>
-            </div>
-            <div className="flex items-center gap-2 text-xs text-foreground">
-              <div className="w-3.5 h-3.5 rounded border border-zinc-700" />
-              <span>hi</span>
-            </div>
+            <Timer className="size-4 text-muted-foreground" />
+            <span className="text-sm font-medium">Deep work session</span>
           </div>
         </div>
 
@@ -197,9 +172,8 @@ export function WebTimerPreview() {
       <div className="flex items-center justify-center gap-2 px-4 py-3 border-t border-zinc-800/50">
         {[
           { icon: Timer, label: "Timer", active: true },
-          { icon: CheckSquare, label: "Tasks" },
-          { icon: Shield, label: "Shield" },
           { icon: BarChart2, label: "Stats" },
+          { icon: Shield, label: "Shield" },
         ].map(({ icon: Icon, label, active }) => (
           <div
             key={label}
@@ -241,8 +215,8 @@ export function DesktopTimerPreview() {
         <div className="w-14 border-r border-zinc-800 p-1.5 flex flex-col gap-1">
           {[
             { icon: Timer, active: true },
-            { icon: CheckSquare },
             { icon: BarChart2 },
+            { icon: Shield },
             { icon: Settings },
           ].map(({ icon: Icon, active }, i) => (
             <div
@@ -284,10 +258,10 @@ export function DesktopTimerPreview() {
             25:00
           </div>
 
-          {/* Task Selector */}
+          {/* Session Goal */}
           <div className="flex items-center gap-2 bg-neutral-900/90 border border-neutral-800 rounded-lg px-3 py-2 mt-4 mb-3">
-            <ListTodo className="size-3.5 text-muted-foreground" />
-            <span className="text-xs font-medium text-white">welcome</span>
+            <Timer className="size-3.5 text-muted-foreground" />
+            <span className="text-xs font-medium text-white">Deep work session</span>
           </div>
 
           {/* Progress */}
@@ -336,9 +310,8 @@ export function MobileTimerPreview() {
       <div className="flex items-center gap-1 px-3 py-1.5">
         {[
           { icon: Timer, label: "Timer", active: true },
-          { icon: CheckSquare, label: "Tasks" },
-          { icon: Shield, label: "Shield" },
           { icon: BarChart2, label: "Stats" },
+          { icon: Shield, label: "Shield" },
         ].map(({ icon: Icon, label, active }) => (
           <div
             key={label}
@@ -382,27 +355,10 @@ export function MobileTimerPreview() {
           PAUSED
         </div>
 
-        {/* Task Selector */}
+        {/* Session Goal */}
         <div className="w-full flex items-center gap-2 bg-neutral-900/90 border border-neutral-800 rounded-[10px] px-3 py-2 mb-3">
-          <span className="text-[11px] font-bold text-white flex-1 text-center">welcome</span>
-        </div>
-
-        {/* Subtasks */}
-        <div className="w-full bg-neutral-900/90 border border-neutral-800 rounded-[10px] p-2.5 mb-3">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[9px] font-bold text-white">welcome</span>
-            <span className="text-[8px] text-zinc-500">Clear</span>
-          </div>
-          <div className="space-y-1">
-            <div className="flex items-center gap-1.5 text-[9px] text-white">
-              <CheckCircle className="size-2 text-zinc-400" />
-              <span>hello</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-[9px] text-white">
-              <div className="w-2 h-2 rounded border border-zinc-600" />
-              <span>hi</span>
-            </div>
-          </div>
+          <Timer className="size-3 text-muted-foreground" />
+          <span className="text-[11px] font-bold text-white flex-1 text-center">Deep work session</span>
         </div>
 
         {/* Controls */}
@@ -429,9 +385,8 @@ export function MobileTimerPreview() {
       <div className="flex items-center justify-around px-3 py-2 border-t border-zinc-800/50 mt-1">
         {[
           { icon: Timer, active: true },
-          { icon: CheckSquare },
-          { icon: Shield },
           { icon: BarChart2 },
+          { icon: Shield },
         ].map(({ icon: Icon, active }, i) => (
           <div
             key={i}
@@ -470,10 +425,9 @@ export function ExtensionTimerPreview() {
       <div className="flex items-center gap-1 px-3 py-2 bg-neutral-900/60">
         {[
           { icon: Timer, label: "Timer", active: true },
-          { icon: CheckSquare, label: "Tasks", badge: "3" },
-          { icon: Shield, label: "Shield" },
           { icon: BarChart2, label: "Stats" },
-        ].map(({ icon: Icon, label, active, badge }) => (
+          { icon: Shield, label: "Shield" },
+        ].map(({ icon: Icon, label, active }) => (
           <div
             key={label}
             className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[9px] font-bold min-h-[26px] ${
@@ -484,11 +438,6 @@ export function ExtensionTimerPreview() {
           >
             <Icon className="size-2.5" />
             <span>{label}</span>
-            {badge && !active && (
-              <span className="w-3 h-3 rounded-full bg-neutral-700 text-white text-[6px] font-mono flex items-center justify-center">
-                {badge}
-              </span>
-            )}
           </div>
         ))}
       </div>
@@ -524,10 +473,10 @@ export function ExtensionTimerPreview() {
           PAUSED
         </div>
 
-        {/* Task Selector */}
+        {/* Session Goal */}
         <div className="w-full max-w-[220px] flex items-center gap-2 bg-neutral-900/90 border border-neutral-800 rounded-lg px-3 py-2 mb-3">
-          <ListTodo className="size-3 text-muted-foreground" />
-          <span className="text-[11px] font-medium text-white text-center flex-1">welcome</span>
+          <Timer className="size-3 text-muted-foreground" />
+          <span className="text-[11px] font-medium text-white text-center flex-1">Deep work session</span>
         </div>
 
         {/* Controls */}

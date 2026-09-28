@@ -9,8 +9,6 @@ import {
   BarChart2,
   Flame,
   Activity,
-  ListFilter,
-  Target,
   TrendingUp,
 } from 'lucide-react-native';
 
@@ -18,7 +16,7 @@ const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
 
 export function StatsJournal() {
   const { colors } = useTheme();
-  const { sessions, distractions, todos } = useAppStore();
+  const { sessions, distractions } = useAppStore();
 
   const [dayProgressPercent, setDayProgressPercent] = useState(0);
   const [remainingTimeStr, setRemainingTimeStr] = useState('');
@@ -61,25 +59,6 @@ export function StatsJournal() {
       })
       .reduce((acc, s) => acc + s.duration, 0) / 60
   );
-
-  const tasksTodayFinished = todos.filter(
-    (t) => {
-      if (!t.completed) return false;
-      if (!t.completedAt) return true;
-      const d = new Date(t.completedAt);
-      return (
-        d.getFullYear() === now.getFullYear() &&
-        d.getMonth() === now.getMonth() &&
-        d.getDate() === now.getDate()
-      );
-    }
-  ).length;
-
-  const pendingTasksCount = todos.filter((t) => !t.completed).length;
-
-  const totalTasksCount = todos.length;
-  const completedTasksCount = todos.filter((t) => t.completed).length;
-  const completionRate = totalTasksCount > 0 ? Math.round((completedTasksCount / totalTasksCount) * 100) : 0;
 
   // Streak Calculation
   const calculateStreak = (sessionList: Session[]) => {
@@ -193,7 +172,7 @@ export function StatsJournal() {
         <Text style={[styles.subtext, { color: colors.mutedText }]}>{remainingTimeStr}</Text>
       </View>
 
-      {/* 2. 3-Grid Cards Row */}
+      {/* 2. Metrics Row */}
       <View style={styles.grid3Row}>
         {/* Minutes Today */}
         <View style={[styles.grid3Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -204,26 +183,17 @@ export function StatsJournal() {
           <Text style={[styles.grid3Label, { color: colors.mutedText }]}>MINUTES TODAY</Text>
         </View>
 
-        {/* Tasks Today */}
+        {/* Focus Sessions */}
         <View style={[styles.grid3Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <View style={[styles.iconBadgeSquare, { backgroundColor: colors.border }]}>
             <CheckCircle2 size={15} color={colors.text} />
           </View>
-          <Text style={[styles.largeNumValue, { color: colors.text }]}>{tasksTodayFinished}</Text>
-          <Text style={[styles.grid3Label, { color: colors.mutedText }]}>TASKS TODAY</Text>
-        </View>
-
-        {/* Pending Tasks */}
-        <View style={[styles.grid3Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={[styles.iconBadgeSquare, { backgroundColor: colors.border }]}>
-            <ListFilter size={15} color={colors.text} />
-          </View>
-          <Text style={[styles.largeNumValue, { color: colors.text }]}>{pendingTasksCount}</Text>
-          <Text style={[styles.grid3Label, { color: colors.mutedText }]}>PENDING TASKS</Text>
+          <Text style={[styles.largeNumValue, { color: colors.text }]}>{sessions.length}</Text>
+          <Text style={[styles.grid3Label, { color: colors.mutedText }]}>FOCUS SESSIONS</Text>
         </View>
       </View>
 
-      {/* 3. 2-Grid Cards Row */}
+      {/* 3. Streak Card */}
       <View style={styles.grid2Row}>
         {/* Longest Streak Card */}
         <View style={[styles.grid2Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -243,23 +213,6 @@ export function StatsJournal() {
               <Text style={[styles.streakLabel, { color: colors.mutedText }]}>Best</Text>
               <Text style={[styles.streakValue, { color: colors.text }]}>{streak.best} Days</Text>
             </View>
-          </View>
-        </View>
-
-        {/* Completion Rate Card */}
-        <View style={[styles.grid2Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={styles.iconTitleRow}>
-            <View style={[styles.iconBadgeSmallSquare, { backgroundColor: colors.border }]}>
-              <Target size={15} color={colors.text} />
-            </View>
-            <Text style={[styles.cardTitleSmall, { color: colors.text }]}>Completion Rate</Text>
-          </View>
-
-          <Text style={[styles.bigPercentText, { color: colors.text }]}>{completionRate}%</Text>
-
-          <View style={styles.iconSubtextRow}>
-            <CheckCircle2 size={13} color={colors.mutedText} />
-            <Text style={[styles.subtext, { color: colors.mutedText }]}>Tasks Finished</Text>
           </View>
         </View>
       </View>

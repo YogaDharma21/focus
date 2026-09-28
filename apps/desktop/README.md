@@ -7,7 +7,7 @@
 [![Vite](https://img.shields.io/badge/Vite-6.1-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Status](https://img.shields.io/badge/Status-In_Development-orange?style=for-the-badge)]()
 
-**Focus Desktop** is a modern, cross-platform Electron application for the Focus productivity suite. Built with Vite, React 19, TypeScript, and Tailwind CSS, it offers a desktop-native focus environment complete with a frameless custom window, compact floating timer capsule, customizable themes, task management, ambient sound player, and detailed session stats.
+**Focus Desktop** is a modern, cross-platform Electron application for the Focus productivity suite. Built with Vite, React 19, TypeScript, and Tailwind CSS, it offers a desktop-native focus environment complete with a frameless custom window, compact floating timer capsule, customizable themes, session history, ambient sound player, and detailed session stats.
 
 > This desktop client is part of the [Focus](../../README.md) monorepo and is currently **in active development**.
 
@@ -20,9 +20,6 @@
 
 ### Focus Session
 ![Timer](./public/Screenshot-timer.png)
-
-### Task Management
-![Tasks](./public/Screenshot-tasks.png)
 
 ### Stats & Analytics
 ![Stats](./public/Screenshot-stats.png)
@@ -38,18 +35,16 @@
 - **Deep Focus Mode** — Immersive, distraction-free overlay with keyboard shortcuts (`Esc` / `F`).
 - **Floating Timer Capsule** — Compact floating widget view for monitoring session progress outside the main app window.
 
-### Task Management
-- Create, manage, and complete tasks with priority levels (Low, Medium, High, Urgent).
-- Organize tasks into custom groups/projects.
-- Subtasks, due dates, and recurring task settings.
-- Direct linkage between focus sessions and active tasks.
+### Session Goals
+- Label each focus session with a custom goal typed directly into the timer.
+- Every session is logged automatically with duration and title.
 
 ### Ambient Sound Player & Custom Backgrounds
 - Built-in ambient background sounds and focus tracks.
 - Dynamic theme selection including dark gradients, cozy cafes, mountain landscapes, and animated aesthetic scenes.
 
 ### Stats & Analytics
-- Live breakdown of total focus minutes, task completion count, and streak metrics.
+- Live breakdown of total focus minutes, session counts, and streak metrics.
 - Detailed session logs and distraction tracking with timestamped logs.
 
 ### Native Desktop Experience
@@ -72,7 +67,7 @@ apps/desktop/
 ├── src/
 │   ├── components/
 │   │   ├── layout/            # TitleBar, SidebarNav, FloatingTimerCapsule, GlobalTimerEngine
-│   │   └── modules/           # FocusTimer, TodoList, StatsJournal, DeepFocusOverlay
+│   │   └── modules/           # FocusTimer, StatsJournal, DeepFocusOverlay
 │   ├── lib/                   # Store, utilities, and helper modules
 │   ├── App.tsx                # Main view router & overlay container
 │   ├── main.tsx               # React application entry point

@@ -31,8 +31,6 @@ export function DeepFocusOverlay() {
     sessionName,
     addSession,
     addDistraction,
-    selectedTodoId,
-    todos,
     isMusicPlaying,
     setIsMusicPlaying,
     soundEnabled,
@@ -131,8 +129,7 @@ export function DeepFocusOverlay() {
           <Text style={[styles.timerText, { color: colors.text }]}>{formatTime(timeLeft)}</Text>
 
           {(() => {
-            const selectedTodo = todos.find((t) => t.id === selectedTodoId);
-            const displayTitle = selectedTodo ? selectedTodo.text : sessionName;
+            const displayTitle = sessionName;
             return displayTitle ? (
               <Text style={[styles.sessionText, { color: colors.mutedText }]}>{displayTitle}</Text>
             ) : null;

@@ -8,7 +8,7 @@ import { Header } from '@/components/Header';
 import { MediaPlayer } from '@/components/modules/MediaPlayer';
 import { DeepFocusOverlay } from '@/components/modules/DeepFocusOverlay';
 import { DynamicIslandTimer } from '@/components/modules/DynamicIslandTimer';
-import { Clock, ListCheck, BarChart2, Settings } from 'lucide-react-native';
+import { Clock, BarChart2, Settings } from 'lucide-react-native';
 
 import { useAppStore } from '@/lib/store';
 import { playCompletionSound } from '@/lib/sound';
@@ -112,13 +112,6 @@ export default function TabLayout() {
             options={{
               title: 'Timer',
               tabBarIcon: ({ color }) => <Clock size={22} color={color} />,
-            }}
-          />
-          <Tabs.Screen
-            name="tasks"
-            options={{
-              title: 'Tasks',
-              tabBarIcon: ({ color }) => <ListCheck size={22} color={color} />,
             }}
           />
           <Tabs.Screen

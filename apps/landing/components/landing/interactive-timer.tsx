@@ -1,14 +1,14 @@
 "use client"
 
 import { useState, useEffect, useRef } from "react"
-import { Play, Pause, RotateCcw, Volume2, VolumeX, CheckCircle, Calculator, Headphones } from "lucide-react"
+import { Play, Pause, RotateCcw, Volume2, VolumeX, Calculator, Headphones } from "lucide-react"
 
 export function InteractiveTimer() {
   const [isRunning, setIsRunning] = useState<boolean>(false)
   const [flowSeconds, setFlowSeconds] = useState<number>(0)
   const [isMusicPlaying, setIsMusicPlaying] = useState<boolean>(false)
   const [volume, setVolume] = useState<number>(0.5) // Default volume at 50%
-  const [selectedTask, setSelectedTask] = useState<string>("Landing Page Design")
+  const [sessionGoal, setSessionGoal] = useState<string>("Deep work session")
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // Initialize and update volume
@@ -65,13 +65,6 @@ export function InteractiveTimer() {
     }
   }
 
-  const tasks = [
-    "Landing Page Design",
-    "Focus Shield Integration",
-    "Cross-Platform Monorepo Sync",
-    "Lofi Player",
-  ]
-
   return (
     <section id="interactive-demo" className="py-20 relative">
       {/* Audio Element for Lofi Beats */}
@@ -93,27 +86,20 @@ export function InteractiveTimer() {
 
         {/* Demo Card */}
         <div className="max-w-2xl mx-auto bg-card border border-border rounded-2xl p-6 sm:p-8">
-          {/* User-friendly Task Selection */}
+          {/* Session Goal Input */}
           <div className="mb-6 flex flex-col items-center">
-            <span className="text-xs font-medium text-muted-foreground mb-2">
+            <label htmlFor="session-goal" className="text-xs font-medium text-muted-foreground mb-2">
               What are you working on?
-            </span>
-            <div className="flex flex-wrap items-center justify-center gap-1.5">
-              {tasks.map((task) => (
-                <button
-                  key={task}
-                  onClick={() => setSelectedTask(task)}
-                  className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
-                    selectedTask === task
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  {selectedTask === task && <CheckCircle className="inline size-3 mr-1" />}
-                  {task}
-                </button>
-              ))}
-            </div>
+            </label>
+            <input
+              id="session-goal"
+              type="text"
+              value={sessionGoal}
+              onChange={(e) => setSessionGoal(e.target.value)}
+              placeholder="Deep work session"
+              maxLength={80}
+              className="w-full max-w-xs px-3 py-2 rounded-lg text-xs font-medium bg-muted text-foreground border border-border text-center placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            />
           </div>
 
           {/* Timer Display (No Circle) */}

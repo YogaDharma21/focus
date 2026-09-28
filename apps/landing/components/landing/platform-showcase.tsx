@@ -16,7 +16,7 @@ const apps = [
     url: "https://app.focustrackers.my.id",
     tagline: "Full-featured web application available in your browser.",
     description:
-      "The web version brings together customizable Flow timers, deep focus full-screen mode, lofi music player, and task tracking directly in your browser.",
+      "The web version brings together customizable Flow timers, deep focus full-screen mode, lofi music player, and session history directly in your browser.",
     features: [
       "Flow timer mode with smart break calculator (1/5th session length)",
       "Deep Focus full-screen mode with hotkeys (Esc / F)",
@@ -31,7 +31,7 @@ const apps = [
     icon: Monitor,
     tagline: "Native desktop performance with system tray controls.",
     description:
-      "Keep your focus workflow on your desktop with system tray integrations, global hotkeys, offline audio playback, and quick task capture.",
+      "Keep your focus workflow on your desktop with system tray integrations, global hotkeys, offline audio playback, and quick session capture.",
     features: [
       "System tray / Menu bar quick timer menu",
       "Global keyboard shortcuts to start/pause sessions",
@@ -47,10 +47,10 @@ const apps = [
     icon: Smartphone,
     tagline: "On-the-go focus tracking for iOS & Android.",
     description:
-      "Stay productive wherever you are. Focus Mobile delivers a smooth React Native experience with haptic timer controls and mobile task management.",
+      "Stay productive wherever you are. Focus Mobile delivers a smooth React Native experience with haptic timer controls and pocket stats.",
     features: [
       "Native haptic feedback on timer controls",
-      "Mobile-optimized task lists & quick add",
+      "Mobile-optimized session history & quick add",
       "Pocket stats and streak counts",
       "Dark mode & OLED themes",
       "Background timer notifications",
@@ -67,7 +67,7 @@ const apps = [
     features: [
       "Focus Shield site blocker (custom blocklists)",
       "Distraction shield screen when visiting blocked domains",
-      "Instant popup menu with timer & task controls",
+      "Instant popup menu with timer & shield controls",
       "Tab limit manager",
       "Chrome MV3 background service worker integration",
     ],

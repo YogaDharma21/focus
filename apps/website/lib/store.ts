@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
-export type ViewType = "FOCUS" | "TODO" | "JOURNAL" | "SETTINGS";
+export type ViewType = "FOCUS" | "JOURNAL" | "SETTINGS";
 
 interface AppState {
     currentView: ViewType;
@@ -43,19 +43,6 @@ interface AppState {
     setAutoStartFlow: (enabled: boolean) => void;
     sessionName: string;
     setSessionName: (name: string) => void;
-    selectedTodoId: string | null;
-    setSelectedTodoId: (id: string | null) => void;
-    selectedSubtaskId: string | null;
-    setSelectedSubtaskId: (id: string | null) => void;
-
-    todos: TodoItem[];
-    addTodo: (todo: TodoItem) => void;
-    toggleTodo: (id: string) => void;
-    updateTodo: (id: string, updates: Partial<TodoItem>) => void;
-    deleteTodo: (id: string) => void;
-    groups: Group[];
-    addGroup: (name: string) => void;
-    deleteGroup: (id: string) => void;
 
     sessions: Session[];
     distractions: Distraction[];
@@ -68,20 +55,7 @@ interface AppState {
     addSession: (session: Session) => void;
     addDistraction: (category: string) => void;
 
-
-
-    addSubtask: (todoId: string, text: string) => void;
-    toggleSubtask: (todoId: string, subtaskId: string) => void;
-    deleteSubtask: (todoId: string, subtaskId: string) => void;
-    updateSubtask: (todoId: string, subtaskId: string, text: string) => void;
-
     resetAllData: () => void;
-}
-
-export interface Group {
-    id: string;
-    name: string;
-    type: "system" | "custom";
 }
 
 export interface Session {
@@ -95,21 +69,6 @@ export interface Distraction {
     id: string;
     timestamp: string;
     category: string;
-}
-
-export interface TodoItem {
-    id: string;
-    text: string;
-    completed: boolean;
-    category?: string;
-    priority?: "low" | "medium" | "high" | "urgent";
-    deadline?: string;
-    dueDate?: string;
-    subtasks?: { id: string; text: string; completed: boolean }[];
-    link?: string;
-    groupId?: string;
-    completedAt?: string;
-    notes?: string;
 }
 
 export const useAppStore = create<AppState>()(
@@ -165,57 +124,6 @@ export const useAppStore = create<AppState>()(
             setAutoStartFlow: (enabled) => set({ autoStartFlow: enabled }),
             sessionName: "",
             setSessionName: (name) => set({ sessionName: name }),
-            selectedTodoId: null,
-            setSelectedTodoId: (id) => set({ selectedTodoId: id }),
-            selectedSubtaskId: null,
-            setSelectedSubtaskId: (id) => set({ selectedSubtaskId: id }),
-
-            todos: [],
-            addTodo: (todo) =>
-                set((state) => ({ todos: [...state.todos, todo] })),
-            toggleTodo: (id) =>
-                set((state) => ({
-                    todos: state.todos.map((t) =>
-                        t.id === id
-                            ? {
-                                  ...t,
-                                  completed: !t.completed,
-                                  completedAt: !t.completed
-                                      ? new Date().toISOString()
-                                      : undefined,
-                                  groupId: !t.completed
-                                      ? "finished"
-                                      : "current",
-                              }
-                            : t,
-                    ),
-                })),
-            updateTodo: (id, updates) =>
-                set((state) => ({
-                    todos: state.todos.map((t) =>
-                        t.id === id ? { ...t, ...updates } : t,
-                    ),
-                })),
-            deleteTodo: (id) =>
-                set((state) => ({
-                    todos: state.todos.filter((t) => t.id !== id),
-                })),
-
-            groups: [
-                { id: "current", name: "Current Tasks", type: "system" },
-                { id: "finished", name: "Finished", type: "system" },
-            ],
-            addGroup: (name) =>
-                set((state) => ({
-                    groups: [
-                        ...(state.groups || []),
-                        { id: crypto.randomUUID(), name, type: "custom" },
-                    ],
-                })),
-            deleteGroup: (id) =>
-                set((state) => ({
-                    groups: (state.groups || []).filter((g) => g.id !== id),
-                })),
 
             sessions: [],
             distractions: [],
@@ -237,68 +145,6 @@ export const useAppStore = create<AppState>()(
                         timestamp: new Date().toISOString(),
                         category,
                     }],
-                })),
-
-            addSubtask: (todoId, text) =>
-                set((state) => ({
-                    todos: state.todos.map((t) =>
-                        t.id === todoId
-                            ? {
-                                  ...t,
-                                  subtasks: [
-                                      ...(t.subtasks || []),
-                                      {
-                                          id: crypto.randomUUID(),
-                                          text,
-                                          completed: false,
-                                      },
-                                  ],
-                              }
-                            : t,
-                    ),
-                })),
-            toggleSubtask: (todoId, subtaskId) =>
-                set((state) => ({
-                    todos: state.todos.map((t) =>
-                        t.id === todoId
-                            ? {
-                                  ...t,
-                                  subtasks: t.subtasks?.map((s) =>
-                                      s.id === subtaskId
-                                          ? { ...s, completed: !s.completed }
-                                          : s,
-                                  ),
-                              }
-                            : t,
-                    ),
-                })),
-            deleteSubtask: (todoId, subtaskId) =>
-                set((state) => ({
-                    todos: state.todos.map((t) =>
-                        t.id === todoId
-                            ? {
-                                  ...t,
-                                  subtasks: t.subtasks?.filter(
-                                      (s) => s.id !== subtaskId,
-                                  ),
-                              }
-                            : t,
-                    ),
-                })),
-            updateSubtask: (todoId, subtaskId, text) =>
-                set((state) => ({
-                    todos: state.todos.map((t) =>
-                        t.id === todoId
-                            ? {
-                                  ...t,
-                                  subtasks: t.subtasks?.map((s) =>
-                                      s.id === subtaskId
-                                          ? { ...s, text }
-                                          : s
-                                  ),
-                              }
-                            : t,
-                    ),
                 })),
 
             resetAllData: () => {
@@ -324,13 +170,6 @@ export const useAppStore = create<AppState>()(
                     autoStartBreak: true,
                     autoStartFlow: true,
                     sessionName: "",
-                    selectedTodoId: null,
-                    selectedSubtaskId: null,
-                    todos: [],
-                    groups: [
-                        { id: "current", name: "Current Tasks", type: "system" },
-                        { id: "finished", name: "Finished", type: "system" },
-                    ],
                     sessions: [],
                     distractions: [],
                     deepFocusMode: false,
