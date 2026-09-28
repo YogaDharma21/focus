@@ -12,7 +12,6 @@ export function DeepFocusOverlay() {
     const {
         timeLeft,
         isActive,
-        sessionName,
         setIsActive,
         setDeepFocusMode,
         setTimeLeft,
@@ -31,7 +30,6 @@ export function DeepFocusOverlay() {
         useShallow((s) => ({
             timeLeft: s.timeLeft,
             isActive: s.isActive,
-            sessionName: s.sessionName,
             setIsActive: s.setIsActive,
             setDeepFocusMode: s.setDeepFocusMode,
             setTimeLeft: s.setTimeLeft,
@@ -271,14 +269,6 @@ export function DeepFocusOverlay() {
                 <div className="text-[4rem] sm:text-[6rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground select-none">
                     {formatTime(timeLeft)}
                 </div>
-
-                {sessionName && (
-                    <div className="flex flex-col items-center gap-1">
-                        <div className="text-lg sm:text-xl font-semibold text-muted-foreground text-center max-w-md px-4 truncate">
-                            {sessionName}
-                        </div>
-                    </div>
-                )}
 
                 <div className="flex items-center gap-4 mt-8">
                     <DistractionCounter />

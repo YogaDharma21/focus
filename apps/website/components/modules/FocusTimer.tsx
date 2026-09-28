@@ -17,8 +17,6 @@ export function FocusTimer() {
         setIsActive,
         setTimerState,
         setSessionStartTime,
-        sessionName,
-        setSessionName,
         addSession,
         setDeepFocusMode,
         soundEffectVolume,
@@ -34,8 +32,6 @@ export function FocusTimer() {
             setIsActive: s.setIsActive,
             setTimerState: s.setTimerState,
             setSessionStartTime: s.setSessionStartTime,
-            sessionName: s.sessionName,
-            setSessionName: s.setSessionName,
             addSession: s.addSession,
             setDeepFocusMode: s.setDeepFocusMode,
             soundEffectVolume: s.soundEffectVolume,
@@ -188,21 +184,6 @@ export function FocusTimer() {
 
                 <div className="text-[3.5rem] sm:text-[5rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow">
                     {formatTime(timeLeft)}
-                </div>
-
-                <div className="flex flex-col items-center gap-2 w-full max-w-sm">
-                    <div className="relative flex items-center w-full max-w-sm">
-                        <input
-                            type="text"
-                            value={sessionName}
-                            onChange={(e) => setSessionName(e.target.value)}
-                            placeholder="Session Goal..."
-                            className={cn(
-                                "w-full px-4 py-2.5 rounded-[var(--radius)] text-sm text-center font-medium border transition-colors focus:outline-none shadow-sm",
-                                "bg-card border-border text-foreground placeholder:text-muted-foreground focus:border-border/80",
-                            )}
-                        />
-                    </div>
                 </div>
             </div>
 

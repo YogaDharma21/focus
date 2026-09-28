@@ -7,7 +7,6 @@ export interface Session {
   date: string;
   duration: number; // in seconds
   mode: TimerMode;
-  sessionName?: string;
 }
 
 export interface Distraction {
@@ -37,7 +36,6 @@ export interface AppStateData {
   timeLeft: number; // seconds
   isActive: boolean;
   sessionStartTime: string | null;
-  sessionName: string;
   
   timerSettings?: TimerSettings;
 

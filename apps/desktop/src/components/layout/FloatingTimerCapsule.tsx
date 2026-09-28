@@ -22,8 +22,6 @@ export const FloatingTimerCapsule: React.FC = () => {
     setIsActive,
     addDistraction,
     addSession,
-    sessionName,
-    setSessionName,
     setDeepFocusMode,
     autoStartBreak,
     autoStartFlow,
@@ -55,8 +53,6 @@ export const FloatingTimerCapsule: React.FC = () => {
       return;
     }
 
-    const title = sessionName.trim() || 'Focus Session';
-
     const durationWorked = Math.max(1, flowTimeElapsed);
     const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
 
@@ -65,7 +61,6 @@ export const FloatingTimerCapsule: React.FC = () => {
       date: new Date().toISOString(),
       duration: durationWorked,
       mode: 'STOPWATCH',
-      title
     });
 
     const breakMins = Math.floor(calculatedBreakSeconds / 60);
@@ -133,7 +128,7 @@ export const FloatingTimerCapsule: React.FC = () => {
       {/* Expanded card - matches extension layout */}
       {isExpanded && (
         <div className="w-[360px] bg-card border border-border rounded-2xl p-3.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 relative mt-1.5">
-          {/* Top Row: Time + Session name */}
+          {/* Top Row: Time */}
           <div className="flex items-center justify-between gap-2 mb-3">
             <div className="flex items-center gap-2 shrink-0">
               <span className="flex items-center">
@@ -144,16 +139,6 @@ export const FloatingTimerCapsule: React.FC = () => {
               </span>
               {isActive && <span className="w-2 h-2 rounded-full bg-foreground animate-pulse" />}
             </div>
-
-            {/* Session name input */}
-            <input
-              type="text"
-              value={sessionName}
-              onChange={(e) => setSessionName(e.target.value)}
-              placeholder="Session goal..."
-              className="px-2.5 py-1 rounded-lg text-xs font-medium border bg-secondary border-border text-secondary-foreground placeholder-muted-foreground focus:outline-none focus:border-foreground max-w-[180px] truncate"
-              title="Session goal"
-            />
           </div>
 
           {/* Bottom Row: Control Buttons */}

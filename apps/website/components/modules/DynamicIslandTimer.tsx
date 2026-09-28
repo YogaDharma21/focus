@@ -11,8 +11,6 @@ export function DynamicIslandTimer() {
     const {
         timeLeft,
         isActive,
-        sessionName,
-        setSessionName,
         setIsActive,
         setTimeLeft,
         setTimerState,
@@ -27,8 +25,6 @@ export function DynamicIslandTimer() {
         useShallow((s) => ({
             timeLeft: s.timeLeft,
             isActive: s.isActive,
-            sessionName: s.sessionName,
-            setSessionName: s.setSessionName,
             setIsActive: s.setIsActive,
             setTimeLeft: s.setTimeLeft,
             setTimerState: s.setTimerState,
@@ -159,8 +155,8 @@ export function DynamicIslandTimer() {
                 >
                     <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
 
-                    {/* Top Row: Time + Session Name */}
-                    <div className="flex items-center justify-between gap-2">
+                    {/* Top Row: Time */}
+                    <div className="flex items-center gap-2">
                         <div className="flex items-center gap-2 shrink-0">
                             <Clock className="w-4 h-4 text-foreground shrink-0" />
                             <span className="text-2xl font-black font-mono tracking-tight tabular-nums text-foreground">
@@ -168,14 +164,6 @@ export function DynamicIslandTimer() {
                             </span>
                             {isActive && <span className="w-2 h-2 rounded-full bg-foreground animate-pulse" />}
                         </div>
-
-                        <input
-                            type="text"
-                            value={sessionName}
-                            onChange={(e) => setSessionName(e.target.value)}
-                            placeholder="Session Goal..."
-                            className="px-2.5 py-1 rounded-lg text-xs font-medium border bg-secondary border-border text-secondary-foreground placeholder:text-muted-foreground focus:outline-none max-w-[180px] sm:max-w-[200px] truncate"
-                        />
                     </div>
 
                     {/* Control Action Buttons Row matching Image 1 */}

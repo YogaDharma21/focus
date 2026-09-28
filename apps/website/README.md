@@ -31,8 +31,7 @@
 - **Focus & Flow Timer** — Continuous Flow (Stopwatch) timer with smart break calculation.
 - **Smart Flow Break Time** — Automatically calculates break duration as 1/5th of your Flow session length.
 - **Deep Focus Mode** — Distraction-free immersive view with session controls and keyboard shortcuts (`Esc` / `F`).
-- **Session Goals** — Type a custom focus goal directly into the timer to label each session.
-- **Session History & Stats** — Every session is logged automatically with duration and title.
+- **Session History & Stats** — Every session is logged automatically with duration.
 - **Stats & Productivity Analytics** — Track daily focus minutes, session counts, streak metrics, and weekly trends.
 - **Ambient Media Player** — Background music player supporting YouTube playlists, Spotify embeds, and local focus tracks.
 - **Custom Backgrounds** — Dynamic backgrounds including dark gradients, mountain scenes, cozy cafes, and anime rooms.

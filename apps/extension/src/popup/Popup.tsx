@@ -284,8 +284,7 @@ export function Popup() {
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
       duration: durationLogged,
-      mode: state.timerMode,
-      sessionName: state.sessionName || "Focus Session"
+      mode: state.timerMode
     };
 
     const newSessionList = [newSession, ...state.sessions];
@@ -504,7 +503,7 @@ export function Popup() {
         <div className={`absolute top-14 left-3 right-3 z-40 p-3.5 rounded-2xl border shadow-2xl animate-in fade-in zoom-in-95 duration-150 ${
           "bg-card border-border text-foreground shadow-background/80"
         }`}>
-          {/* Top Row: Time + Session Name */}
+          {/* Top Row: Time */}
           <div className="flex items-center justify-between gap-2 mb-3">
             <div className="flex items-center gap-2 shrink-0">
               <span className="flex items-center">
@@ -515,15 +514,6 @@ export function Popup() {
               </span>
               {state.isActive && <span className="w-2 h-2 rounded-full bg-foreground animate-pulse" />}
             </div>
-
-            {state.sessionName ? (
-              <span
-                className="px-2.5 py-1 rounded-lg text-xs font-bold font-sans border bg-secondary border-border text-secondary-foreground max-w-[220px] truncate"
-                title={state.sessionName}
-              >
-                {state.sessionName}
-              </span>
-            ) : null}
           </div>
 
           {/* Control Action Buttons Row */}
@@ -819,19 +809,6 @@ export function Popup() {
               <span className="text-7xl font-black font-mono tracking-tighter leading-none">
                 {timeFormatted}
               </span>
-            </div>
-
-            {/* Focus Session Goal */}
-            <div className="w-full max-w-[280px] mb-2 relative">
-              <div className="w-full flex items-center rounded-lg border bg-card border-border focus-within:border-foreground px-2 py-1 transition-colors">
-                <input
-                  type="text"
-                  value={state.sessionName}
-                  onChange={(e) => updateState({ sessionName: e.target.value })}
-                  placeholder="Session Goal..."
-                  className="flex-1 min-w-0 bg-transparent text-xs text-center font-medium text-foreground placeholder-muted-foreground focus:outline-none px-1 py-1"
-                />
-              </div>
             </div>
 
             {/* Control Buttons Grid */}

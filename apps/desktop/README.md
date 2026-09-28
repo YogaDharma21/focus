@@ -34,10 +34,7 @@
 - **Flow Mode** — Open-ended stopwatch tracking with automatic break calculation (1/5th of flow duration).
 - **Deep Focus Mode** — Immersive, distraction-free overlay with keyboard shortcuts (`Esc` / `F`).
 - **Floating Timer Capsule** — Compact floating widget view for monitoring session progress outside the main app window.
-
-### Session Goals
-- Label each focus session with a custom goal typed directly into the timer.
-- Every session is logged automatically with duration and title.
+- **Session History** — Every session is logged automatically with duration.
 
 ### Ambient Sound Player & Custom Backgrounds
 - Built-in ambient background sounds and focus tracks.

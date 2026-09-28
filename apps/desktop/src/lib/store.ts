@@ -15,7 +15,6 @@ export interface Session {
   date: string;
   duration: number;
   mode: "STOPWATCH";
-  title?: string;
 }
 
 export interface Distraction {
@@ -66,7 +65,6 @@ export interface DesktopState {
   flowTimeElapsed: number;
   isActive: boolean;
   sessionStartTime: string | null;
-  sessionName: string;
   autoStartBreak: boolean;
   autoStartFlow: boolean;
 
@@ -75,7 +73,6 @@ export interface DesktopState {
   setTimerState: (state: "FLOW" | "BREAK") => void;
   setIsActive: (active: boolean) => void;
   setSessionStartTime: (time: string | null) => void;
-  setSessionName: (name: string) => void;
   setAutoStartBreak: (enabled: boolean) => void;
   setAutoStartFlow: (enabled: boolean) => void;
 
@@ -181,7 +178,6 @@ export const useDesktopStore = create<DesktopState>()(
       flowTimeElapsed: 0,
       isActive: false,
       sessionStartTime: null,
-      sessionName: "",
 
       setTimeLeft: (timeOrFn) =>
         set((state) => ({
@@ -198,7 +194,6 @@ export const useDesktopStore = create<DesktopState>()(
       setAutoStartBreak: (enabled) => set({ autoStartBreak: enabled }),
       autoStartFlow: true,
       setAutoStartFlow: (enabled) => set({ autoStartFlow: enabled }),
-      setSessionName: (name) => set({ sessionName: name }),
 
       // Sessions
       sessions: [
@@ -207,7 +202,6 @@ export const useDesktopStore = create<DesktopState>()(
           date: new Date().toISOString(),
           duration: 1500,
           mode: "STOPWATCH",
-          title: "Set up Focus Desktop environment"
         }
       ],
       addSession: (session) => set((state) => ({ sessions: [...(state.sessions || []), session] })),

@@ -23,8 +23,6 @@ export const FocusTimer: React.FC = () => {
     addSession,
     addDistraction,
     soundEffectEnabled,
-    sessionName,
-    setSessionName,
     setDeepFocusMode,
     autoStartBreak,
     autoStartFlow,
@@ -53,8 +51,6 @@ export const FocusTimer: React.FC = () => {
       return;
     }
 
-    const title = sessionName.trim() || 'Focus Session';
-
     const durationWorked = Math.max(1, flowTimeElapsed);
     const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
 
@@ -63,7 +59,6 @@ export const FocusTimer: React.FC = () => {
       date: new Date().toISOString(),
       duration: durationWorked,
       mode: 'STOPWATCH',
-      title
     });
 
     const breakMins = Math.floor(calculatedBreakSeconds / 60);
@@ -97,13 +92,6 @@ export const FocusTimer: React.FC = () => {
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  const handleCustomFocusSubmit = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      (e.target as HTMLInputElement).blur();
-    }
-  };
-
   const activeSeconds = timerState === "BREAK" ? timeLeft : flowTimeElapsed;
   const progressPercent = Math.min(100, (flowTimeElapsed / 3600) * 100);
 
@@ -127,19 +115,6 @@ export const FocusTimer: React.FC = () => {
         <h1 className="text-[100px] md:text-[120px] font-extrabold tracking-tighter text-foreground leading-none font-sans select-none">
           {formatDisplayTime(activeSeconds)}
         </h1>
-      </div>
-
-      <div className="w-full max-w-sm relative space-y-2">
-        <div className="w-full flex items-center rounded-lg border bg-card transition-colors shadow-sm px-3 py-1.5 relative border-border focus-within:border-foreground">
-          <input
-            type="text"
-            value={sessionName}
-            onChange={(e) => setSessionName(e.target.value)}
-            onKeyDown={handleCustomFocusSubmit}
-            placeholder="Session Goal (Press Enter)..."
-            className="flex-1 min-w-0 bg-transparent text-sm text-center font-medium text-foreground placeholder-muted-foreground focus:outline-none px-1 py-1"
-          />
-        </div>
       </div>
 
       <div className="w-full max-w-sm h-1.5 bg-muted/80 rounded-full overflow-hidden my-2">

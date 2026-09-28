@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  TextInput,
   StyleSheet,
   Modal,
   Animated,
@@ -102,8 +101,6 @@ export function FocusTimer() {
     isActive,
     setIsActive,
     setTimerState,
-    sessionName,
-    setSessionName,
     addSession,
     addDistraction,
     setDeepFocusMode,
@@ -111,8 +108,6 @@ export function FocusTimer() {
   } = useAppStore();
 
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
-
-  const [isSessionFocused, setIsSessionFocused] = useState(false);
 
   const toggleTimer = () => {
     const nextActive = !isActive;
@@ -192,32 +187,6 @@ export function FocusTimer() {
         <Text style={[styles.timeDisplay, { color: colors.text }]}>
           {formatTime(timeLeft)}
         </Text>
-
-        {/* Session Goal */}
-        <View
-          style={[
-            styles.sessionGoalContainer,
-            {
-              backgroundColor: colors.muted,
-              borderColor: isSessionFocused ? colors.text : colors.border,
-            },
-          ]}
-        >
-          <TextInput
-            style={[
-              styles.sessionGoalInput,
-              { color: colors.text },
-            ]}
-            placeholder="Session Goal (Press Enter)..."
-            placeholderTextColor={colors.mutedText}
-            value={sessionName}
-            onChangeText={setSessionName}
-            onFocus={() => setIsSessionFocused(true)}
-            onBlur={() => setIsSessionFocused(false)}
-            onSubmitEditing={() => setIsSessionFocused(false)}
-            returnKeyType="done"
-          />
-        </View>
 
         {/* Controls Bar */}
         <View style={styles.controlsRow}>
@@ -357,24 +326,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-  },
-  sessionGoalContainer: {
-    width: '100%',
-    height: 46,
-    borderRadius: Radius.base,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingLeft: 14,
-    paddingRight: 8,
-    marginBottom: 10,
-  },
-  sessionGoalInput: {
-    flex: 1,
-    height: '100%',
-    fontSize: 13,
-    fontWeight: '500',
-    textAlign: 'center',
   },
   controlsRow: {
     flexDirection: 'row',
