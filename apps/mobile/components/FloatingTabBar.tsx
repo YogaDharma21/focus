@@ -5,12 +5,18 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/context/ThemeContext';
 
+export const FLOATING_TAB_BAR_HEIGHT = 60;
+export const FLOATING_TAB_BAR_BOTTOM_GAP = 12;
+
 export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
 
   return (
-    <View style={[styles.wrapper, { bottom: Math.max(insets.bottom, 0) + 12 }]} pointerEvents="box-none">
+    <View
+      style={[styles.wrapper, { bottom: Math.max(insets.bottom, 0) + FLOATING_TAB_BAR_BOTTOM_GAP }]}
+      pointerEvents="box-none"
+    >
       <View
         style={[
           styles.pill,
