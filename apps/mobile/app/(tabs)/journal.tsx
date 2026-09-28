@@ -20,6 +20,6 @@ export default function JournalScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingBottom: 70,
+    paddingBottom: 104,
   },
 });
