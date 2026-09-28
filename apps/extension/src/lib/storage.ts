@@ -1,6 +1,26 @@
 import { AppStateData } from "../types";
 
 const STORAGE_KEY = "focus_extension_state_v6";
+const THEME_MIRROR_KEY = "focus_extension_theme";
+
+function rememberTheme(mode: unknown) {
+  if (mode !== "dark" && mode !== "light") return;
+  try {
+    localStorage.setItem(THEME_MIRROR_KEY, mode);
+  } catch {}
+  try {
+    if (typeof document !== "undefined" && document.documentElement) {
+      const isDark = mode === "dark";
+      document.documentElement.classList.toggle("dark", isDark);
+      document.documentElement.classList.toggle("light", !isDark);
+      document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+      if (document.body) {
+        document.body.classList.toggle("dark", isDark);
+        document.body.classList.toggle("light", !isDark);
+      }
+    }
+  } catch {}
+}
 
 export const DEFAULT_STATE: AppStateData = {
   themeMode: "dark",
@@ -173,6 +193,7 @@ if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
   chrome.storage.local.get([STORAGE_KEY], (result) => {
     if (result && result[STORAGE_KEY]) {
       cachedState = migrateState({ ...DEFAULT_STATE, ...result[STORAGE_KEY] });
+      rememberTheme(cachedState.themeMode);
     }
   });
 }
@@ -181,6 +202,7 @@ if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.onChanged)
   chrome.storage.onChanged.addListener((changes, areaName) => {
     if (areaName === "local" && changes[STORAGE_KEY] && changes[STORAGE_KEY].newValue) {
       cachedState = migrateState({ ...DEFAULT_STATE, ...changes[STORAGE_KEY].newValue });
+      rememberTheme(cachedState.themeMode);
     }
   });
 }
@@ -218,9 +240,11 @@ export async function getStoredState(): Promise<AppStateData> {
         if (result[STORAGE_KEY]) {
           const fresh = migrateState({ ...DEFAULT_STATE, ...result[STORAGE_KEY] });
           cachedState = fresh;
+          rememberTheme(fresh.themeMode);
           resolve(fresh);
         } else {
           cachedState = DEFAULT_STATE;
+          rememberTheme(DEFAULT_STATE.themeMode);
           resolve(DEFAULT_STATE);
         }
       });
@@ -232,12 +256,14 @@ export async function getStoredState(): Promise<AppStateData> {
     if (raw) {
       const fresh = migrateState({ ...DEFAULT_STATE, ...JSON.parse(raw) });
       cachedState = fresh;
+      rememberTheme(fresh.themeMode);
       return fresh;
     }
   } catch (e) {
     console.error("Failed reading localStorage", e);
   }
   cachedState = DEFAULT_STATE;
+  rememberTheme(DEFAULT_STATE.themeMode);
   return DEFAULT_STATE;
 }
 
@@ -245,6 +271,10 @@ export async function saveStoredState(state: Partial<AppStateData>): Promise<App
   const current = cachedState || (await getStoredState());
   const nextState = { ...current, ...state };
   cachedState = nextState;
+  // Mirror the theme synchronously so the blocking pre-paint script in
+  // popup.html / blocked.html can apply it without waiting for
+  // chrome.storage.local (async) on the next open.
+  rememberTheme(nextState.themeMode);
 
   if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
     return new Promise((resolve) => {
@@ -268,6 +298,7 @@ export function subscribeToStateChanges(callback: (newState: AppStateData) => vo
       if (areaName === "local" && changes[STORAGE_KEY] && changes[STORAGE_KEY].newValue) {
         const fresh = migrateState({ ...DEFAULT_STATE, ...changes[STORAGE_KEY].newValue });
         cachedState = fresh;
+        rememberTheme(fresh.themeMode);
         callback(fresh);
       }
     };
