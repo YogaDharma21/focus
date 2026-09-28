@@ -4,6 +4,15 @@ import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
 import { playTestCompletionSound } from '../../lib/sound';
 
+// ─── Auto-Pause Timing (fixed constants) ────────────────────────────────────
+// External audio must be continuously active for this long before the music
+// pauses, so brief blips are ignored. Likewise, silence must persist this
+// long before the music resumes, so gaps don't cause pause/resume flapping.
+const EXTERNAL_AUDIO_MIN_DURATION_MS = 3000;
+const RESUME_MIN_SILENCE_MS = 3000;
+// Fade transition used for auto-pause/resume. Fixed; no longer user-configurable.
+const AUTO_PAUSE_FADE_DURATION = 2;
+
 export const MediaPlayer: React.FC = () => {
   const {
     mediaPlayerOpen,
@@ -25,6 +34,9 @@ export const MediaPlayer: React.FC = () => {
   const autoPauseArmedRef = useRef(false);
   const externalActiveRef = useRef(false);
   const savedTimeRef = useRef(0);
+  const externalSinceRef = useRef(0);
+  const silenceSinceRef = useRef(0);
+  const audioDelayTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearFade = () => {
     if (fadeIntervalRef.current !== null) {
@@ -33,7 +45,16 @@ export const MediaPlayer: React.FC = () => {
     }
   };
 
-  useEffect(() => () => clearFade(), []);
+  const clearAudioDelay = () => {
+    if (audioDelayTimerRef.current !== null) {
+      clearTimeout(audioDelayTimerRef.current);
+      audioDelayTimerRef.current = null;
+    }
+    externalSinceRef.current = 0;
+    silenceSinceRef.current = 0;
+  };
+
+  useEffect(() => () => { clearFade(); clearAudioDelay(); }, []);
 
   useEffect(() => {
     if (audioRef.current && fadeIntervalRef.current === null) {
@@ -104,27 +125,69 @@ export const MediaPlayer: React.FC = () => {
     });
   };
 
+  const scheduleDelayedAudioCheck = (delayMs: number) => {
+    if (audioDelayTimerRef.current !== null) {
+      clearTimeout(audioDelayTimerRef.current);
+    }
+    audioDelayTimerRef.current = setTimeout(() => {
+      audioDelayTimerRef.current = null;
+      handleExternalAudio(externalActiveRef.current);
+    }, Math.max(0, delayMs));
+  };
+
   const handleExternalAudio = (playing: boolean) => {
     externalActiveRef.current = playing;
     const audio = audioRef.current;
     if (!audio) return;
     const state = useDesktopStore.getState();
     if (!state.autoPauseOnExternalAudio) {
+      clearAudioDelay();
       if (!playing && autoPausedRef.current && state.isMusicPlaying) {
         autoPausedRef.current = false;
-        fadeInAndPlay(audio, state.volume ?? 0.8, state.autoPauseFadeDuration ?? 2, savedTimeRef.current);
+        fadeInAndPlay(audio, state.volume ?? 0.8, AUTO_PAUSE_FADE_DURATION, savedTimeRef.current);
       }
       return;
     }
-    const fadeDuration = state.autoPauseFadeDuration ?? 2;
+    const now = Date.now();
     if (playing) {
-      if (state.isMusicPlaying && !audio.paused && !autoPausedRef.current) {
-        autoPausedRef.current = true;
-        fadeOutThenPause(audio, fadeDuration);
+      // External audio present: drop any pending silence tracking.
+      silenceSinceRef.current = 0;
+      if (autoPausedRef.current) {
+        // Already auto-paused: skip.
+        externalSinceRef.current = 0;
+        return;
       }
+      if (!state.isMusicPlaying || audio.paused) {
+        externalSinceRef.current = 0;
+        return;
+      }
+      // Require sustained external audio before pausing so sub-3s blips are ignored.
+      if (!externalSinceRef.current) externalSinceRef.current = now;
+      const elapsed = now - externalSinceRef.current;
+      if (elapsed < EXTERNAL_AUDIO_MIN_DURATION_MS) {
+        scheduleDelayedAudioCheck(EXTERNAL_AUDIO_MIN_DURATION_MS - elapsed);
+        return;
+      }
+      externalSinceRef.current = 0;
+      autoPausedRef.current = true;
+      fadeOutThenPause(audio, AUTO_PAUSE_FADE_DURATION);
     } else if (autoPausedRef.current && state.isMusicPlaying) {
+      // No external audio: drop any pending audible tracking so a blip that
+      // ended early never pauses.
+      externalSinceRef.current = 0;
+      // Require sustained silence before resuming.
+      if (!silenceSinceRef.current) silenceSinceRef.current = now;
+      const silentFor = now - silenceSinceRef.current;
+      if (silentFor < RESUME_MIN_SILENCE_MS) {
+        scheduleDelayedAudioCheck(RESUME_MIN_SILENCE_MS - silentFor);
+        return;
+      }
+      silenceSinceRef.current = 0;
       autoPausedRef.current = false;
-      fadeInAndPlay(audio, state.volume ?? 0.8, fadeDuration, savedTimeRef.current);
+      fadeInAndPlay(audio, state.volume ?? 0.8, AUTO_PAUSE_FADE_DURATION, savedTimeRef.current);
+    } else {
+      externalSinceRef.current = 0;
+      silenceSinceRef.current = 0;
     }
   };
 
@@ -158,6 +221,7 @@ export const MediaPlayer: React.FC = () => {
       });
     } else {
       clearFade();
+      clearAudioDelay();
       autoPausedRef.current = false;
       audio.pause();
     }
@@ -175,12 +239,13 @@ export const MediaPlayer: React.FC = () => {
     if (!audio) return;
     const state = useDesktopStore.getState();
     if (!state.isMusicPlaying) return;
+    clearAudioDelay();
     if (autoPauseOnExternalAudio && externalActiveRef.current && !audio.paused && !autoPausedRef.current) {
       autoPausedRef.current = true;
-      fadeOutThenPause(audio, state.autoPauseFadeDuration ?? 2);
+      fadeOutThenPause(audio, AUTO_PAUSE_FADE_DURATION);
     } else if (!autoPauseOnExternalAudio && autoPausedRef.current) {
       autoPausedRef.current = false;
-      fadeInAndPlay(audio, state.volume ?? 0.8, state.autoPauseFadeDuration ?? 2, savedTimeRef.current);
+      fadeInAndPlay(audio, state.volume ?? 0.8, AUTO_PAUSE_FADE_DURATION, savedTimeRef.current);
     }
   }, [autoPauseOnExternalAudio]);
 
