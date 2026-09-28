@@ -5,7 +5,6 @@ import { useTheme } from '@/context/ThemeContext';
 import { Fonts } from '@/constants/theme';
 import {
   Clock,
-  CheckCircle2,
   BarChart2,
   Flame,
   Activity,
@@ -181,15 +180,6 @@ export function StatsJournal() {
           </View>
           <Text style={[styles.largeNumValue, { color: colors.text }]}>{minutesToday}</Text>
           <Text style={[styles.grid3Label, { color: colors.mutedText }]}>MINUTES TODAY</Text>
-        </View>
-
-        {/* Focus Sessions */}
-        <View style={[styles.grid3Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={[styles.iconBadgeSquare, { backgroundColor: colors.border }]}>
-            <CheckCircle2 size={15} color={colors.text} />
-          </View>
-          <Text style={[styles.largeNumValue, { color: colors.text }]}>{sessions.length}</Text>
-          <Text style={[styles.grid3Label, { color: colors.mutedText }]}>FOCUS SESSIONS</Text>
         </View>
       </View>
 
