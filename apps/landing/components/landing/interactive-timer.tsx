@@ -8,7 +8,6 @@ export function InteractiveTimer() {
   const [flowSeconds, setFlowSeconds] = useState<number>(0)
   const [isMusicPlaying, setIsMusicPlaying] = useState<boolean>(false)
   const [volume, setVolume] = useState<number>(0.5) // Default volume at 50%
-  const [sessionGoal, setSessionGoal] = useState<string>("Deep work session")
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   // Initialize and update volume
@@ -86,22 +85,6 @@ export function InteractiveTimer() {
 
         {/* Demo Card */}
         <div className="max-w-2xl mx-auto bg-card border border-border rounded-2xl p-6 sm:p-8">
-          {/* Session Goal Input */}
-          <div className="mb-6 flex flex-col items-center">
-            <label htmlFor="session-goal" className="text-xs font-medium text-muted-foreground mb-2">
-              What are you working on?
-            </label>
-            <input
-              id="session-goal"
-              type="text"
-              value={sessionGoal}
-              onChange={(e) => setSessionGoal(e.target.value)}
-              placeholder="Deep work session"
-              maxLength={80}
-              className="w-full max-w-xs px-3 py-2 rounded-lg text-xs font-medium bg-muted text-foreground border border-border text-center placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-          </div>
-
           {/* Timer Display (No Circle) */}
           <div className="flex flex-col items-center justify-center my-6">
             <div className="text-[4rem] sm:text-[5.5rem] md:text-[7rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow select-none font-mono">

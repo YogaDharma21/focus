@@ -151,14 +151,6 @@ export function WebTimerPreview() {
           25:00
         </div>
 
-        {/* Session Goal */}
-        <div className="mt-5 mb-4">
-          <div className="flex items-center gap-2 bg-neutral-900/90 border border-neutral-800 rounded-[10px] px-4 py-2.5 text-white">
-            <Timer className="size-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Deep work session</span>
-          </div>
-        </div>
-
         {/* Progress Bar */}
         <div className="w-full max-w-xs h-1.5 bg-zinc-800/80 rounded-full mb-5">
           <div className="bg-zinc-200 h-full rounded-full w-1/3" />
@@ -258,12 +250,6 @@ export function DesktopTimerPreview() {
             25:00
           </div>
 
-          {/* Session Goal */}
-          <div className="flex items-center gap-2 bg-neutral-900/90 border border-neutral-800 rounded-lg px-3 py-2 mt-4 mb-3">
-            <Timer className="size-3.5 text-muted-foreground" />
-            <span className="text-xs font-medium text-white">Deep work session</span>
-          </div>
-
           {/* Progress */}
           <div className="w-full max-w-[200px] h-1.5 bg-zinc-800/80 rounded-full mb-4">
             <div className="bg-zinc-200 h-full rounded-full w-1/4" />
@@ -353,12 +339,6 @@ export function MobileTimerPreview() {
         {/* Status */}
         <div className="px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800 text-[9px] font-bold text-zinc-300 mb-3">
           PAUSED
-        </div>
-
-        {/* Session Goal */}
-        <div className="w-full flex items-center gap-2 bg-neutral-900/90 border border-neutral-800 rounded-[10px] px-3 py-2 mb-3">
-          <Timer className="size-3 text-muted-foreground" />
-          <span className="text-[11px] font-bold text-white flex-1 text-center">Deep work session</span>
         </div>
 
         {/* Controls */}
@@ -471,12 +451,6 @@ export function ExtensionTimerPreview() {
         {/* Status */}
         <div className="px-2.5 py-0.5 rounded-full bg-neutral-900 border border-neutral-800 text-[9px] font-bold text-neutral-300 mb-3">
           PAUSED
-        </div>
-
-        {/* Session Goal */}
-        <div className="w-full max-w-[220px] flex items-center gap-2 bg-neutral-900/90 border border-neutral-800 rounded-lg px-3 py-2 mb-3">
-          <Timer className="size-3 text-muted-foreground" />
-          <span className="text-[11px] font-medium text-white text-center flex-1">Deep work session</span>
         </div>
 
         {/* Controls */}

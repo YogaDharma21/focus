@@ -34,11 +34,10 @@
 
 ### Timer
 - **Flow mode** — open-ended sessions that count up, with smart break calculation (1/5 of flow duration).
-- Session naming for focused work tracking.
 - Badge countdown — live timer displayed on the extension icon.
 
 ### Session History
-- Every focus session is logged automatically with duration and title.
+- Every focus session is logged automatically with duration.
 - Session history with duration and mode.
 
 ### Focus Shield (Site Blocking)

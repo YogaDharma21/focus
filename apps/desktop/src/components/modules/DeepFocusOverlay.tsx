@@ -21,7 +21,6 @@ export const DeepFocusOverlay: React.FC = () => {
     setIsActive,
     addDistraction,
     addSession,
-    sessionName,
     isMusicPlaying,
     setIsMusicPlaying,
     volume,
@@ -68,8 +67,6 @@ export const DeepFocusOverlay: React.FC = () => {
       return;
     }
 
-    const title = sessionName.trim() || 'Focus Session';
-
     const durationWorked = Math.max(1, flowTimeElapsed);
     const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
 
@@ -78,7 +75,6 @@ export const DeepFocusOverlay: React.FC = () => {
       date: new Date().toISOString(),
       duration: durationWorked,
       mode: 'STOPWATCH',
-      title
     });
 
     const breakMins = Math.floor(calculatedBreakSeconds / 60);
@@ -185,12 +181,6 @@ export const DeepFocusOverlay: React.FC = () => {
         <h1 className="text-[120px] md:text-[150px] font-extrabold tracking-tight text-foreground leading-none font-sans select-none">
           {timeString}
         </h1>
-
-        {sessionName.trim() && (
-          <div className="text-sm md:text-base font-semibold text-muted-foreground text-center max-w-md px-4 truncate">
-            {sessionName.trim()}
-          </div>
-        )}
 
         <div className="flex items-center gap-6 relative">
           <div className="relative">

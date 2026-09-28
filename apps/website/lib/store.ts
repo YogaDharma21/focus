@@ -41,8 +41,6 @@ interface AppState {
     setSessionStartTime: (time: string | null) => void;
     setAutoStartBreak: (enabled: boolean) => void;
     setAutoStartFlow: (enabled: boolean) => void;
-    sessionName: string;
-    setSessionName: (name: string) => void;
 
     sessions: Session[];
     distractions: Distraction[];
@@ -122,8 +120,6 @@ export const useAppStore = create<AppState>()(
             setAutoStartBreak: (enabled) => set({ autoStartBreak: enabled }),
             autoStartFlow: true,
             setAutoStartFlow: (enabled) => set({ autoStartFlow: enabled }),
-            sessionName: "",
-            setSessionName: (name) => set({ sessionName: name }),
 
             sessions: [],
             distractions: [],
@@ -169,7 +165,6 @@ export const useAppStore = create<AppState>()(
                     sessionStartTime: null,
                     autoStartBreak: true,
                     autoStartFlow: true,
-                    sessionName: "",
                     sessions: [],
                     distractions: [],
                     deepFocusMode: false,

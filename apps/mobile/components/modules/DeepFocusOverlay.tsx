@@ -28,7 +28,6 @@ export function DeepFocusOverlay() {
     setTimerState,
     isActive,
     setIsActive,
-    sessionName,
     addSession,
     addDistraction,
     isMusicPlaying,
@@ -127,13 +126,6 @@ export function DeepFocusOverlay() {
 
         <View style={styles.content}>
           <Text style={[styles.timerText, { color: colors.text }]}>{formatTime(timeLeft)}</Text>
-
-          {(() => {
-            const displayTitle = sessionName;
-            return displayTitle ? (
-              <Text style={[styles.sessionText, { color: colors.mutedText }]}>{displayTitle}</Text>
-            ) : null;
-          })()}
 
           {/* Deep Focus Controls Row */}
           <View style={styles.controlsRow}>
