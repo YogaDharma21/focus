@@ -73,8 +73,6 @@ class ShieldAccessibilityService : AccessibilityService() {
   }
 
   private fun handleUrlBlock(pkg: String, domain: String, now: Long) {
-    val prefs = getSharedPreferences(ShieldService.PREFS, Context.MODE_PRIVATE)
-    if (now < prefs.getLong(ShieldService.KEY_URL_SNOOZE, 0L)) return
     try {
       performGlobalAction(GLOBAL_ACTION_HOME)
     } catch (_: Exception) {
