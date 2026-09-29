@@ -55,10 +55,15 @@ export default function TabLayout() {
     let interval: any = null;
 
     if (isActive) {
+      // Wall-clock delta so backgrounded time is caught up on return instead of frozen.
+      let lastTick = Date.now();
       interval = setInterval(() => {
+        const now = Date.now();
+        const delta = Math.max(1, Math.round((now - lastTick) / 1000));
+        lastTick = now;
         setTimeLeft((prev) => {
           if (timerState === 'BREAK') {
-            const next = prev - 1;
+            const next = prev - delta;
             if (next <= 0) {
               void playCompletionSound();
               setTimerState('FLOW');
@@ -71,7 +76,7 @@ export default function TabLayout() {
             }
             return next;
           }
-          return prev + 1;
+          return prev + delta;
         });
       }, 1000);
     }

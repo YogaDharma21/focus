@@ -38,6 +38,7 @@ export function DeepFocusOverlay() {
     musicVolume,
     setMusicVolume,
     autoStartBreak,
+    autoStartFlow,
     shield,
   } = useAppStore();
 
@@ -56,6 +57,14 @@ export function DeepFocusOverlay() {
   const handleCompleteSession = () => {
     playCompletionSound();
     setIsActive(false);
+
+    if (timerState === 'BREAK') {
+      setTimeLeft(0);
+      setTimerState('FLOW');
+      setIsActive(autoStartFlow ?? true);
+      setDeepFocusMode(autoStartFlow ?? true);
+      return;
+    }
 
     const flowDuration = timeLeft;
     if (flowDuration > 0) {
