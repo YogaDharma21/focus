@@ -27,8 +27,7 @@
         "android.permission.FOREGROUND_SERVICE",
         "android.permission.FOREGROUND_SERVICE_SPECIAL_USE",
         "android.permission.POST_NOTIFICATIONS",
-        "android.permission.KILL_BACKGROUND_PROCESSES",
-        "android.permission.QUERY_ALL_PACKAGES"
+        "android.permission.KILL_BACKGROUND_PROCESSES"
       ]
     },
     "web": {
@@ -37,6 +36,7 @@
     },
     "plugins": [
       "expo-router",
+      "./plugins/shield-queries.js",
       [
         "expo-splash-screen",
         {
