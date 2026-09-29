@@ -1,6 +1,6 @@
 import { Linking } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
-import { isBlockingRequired, isSiteBlocked } from './shield';
+import { isBlockingRequired, isSiteBlocked, normalizeSite } from './shield';
 import { useAppStore } from './store';
 
 function isHttpUrl(url: string): boolean {
@@ -23,7 +23,7 @@ export function isUrlShieldBlocked(url: string): boolean {
  */
 export async function openShieldCheckedUrl(url: string): Promise<{ blocked: boolean }> {
   if (isUrlShieldBlocked(url)) {
-    useAppStore.getState().addDistraction('Shield Blocked Site');
+    useAppStore.getState().addDistraction(normalizeSite(url) || 'Blocked Site');
     return { blocked: true };
   }
   try {
