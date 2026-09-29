@@ -12,7 +12,6 @@ import { DynamicIslandTimer } from '@/components/modules/DynamicIslandTimer';
 import { Clock, BarChart2, Shield, Settings } from 'lucide-react-native';
 
 import { useAppStore } from '@/lib/store';
-import { isBlockingRequired } from '@/lib/shield';
 import { drainShieldViolations, syncShieldService } from '@/lib/shieldService';
 import { playCompletionSound } from '@/lib/sound';
 
@@ -90,13 +89,6 @@ export default function TabLayout() {
     const sub = AppState.addEventListener('change', (nextState) => {
       if (nextState === 'active') {
         drainShieldViolations();
-        syncShieldService();
-        return;
-      }
-      if (nextState !== 'background') return;
-      const { shield, isActive: active, timerState: state, addDistraction } = useAppStore.getState();
-      if (isBlockingRequired(shield.enabled, active, state)) {
-        addDistraction('Left app during Flow');
       }
       syncShieldService();
     });

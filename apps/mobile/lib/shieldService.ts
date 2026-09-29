@@ -128,7 +128,7 @@ export function drainShieldViolations(): number {
   const { addDistraction } = useAppStore.getState();
   for (const v of violations) {
     if (v.kind === 'site') {
-      addDistraction(v.match ? `Shield Blocked Site: ${v.match}` : 'Shield Blocked Site');
+      addDistraction(v.match || 'Blocked Site');
     } else {
       const target = v.match || v.packageName;
       addDistraction(target ? `Shield Blocked App: ${target}` : 'Shield Blocked App');
