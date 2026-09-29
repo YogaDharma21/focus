@@ -14,7 +14,7 @@ import {
 } from '@/lib/shieldService';
 import { getInstalledApps, type InstalledShieldApp } from 'focus-shield';
 import { getApplicationIconAsync } from 'expo-intent-launcher';
-import { Shield, ShieldCheck, ShieldAlert, Plus, X, Globe, Smartphone, Lock, Info, Check, Search } from 'lucide-react-native';
+import { Shield, ShieldCheck, ShieldAlert, Plus, X, Globe, Smartphone, Lock, Check, Search } from 'lucide-react-native';
 
 type ThemeColors = {
   text: string;
@@ -620,18 +620,6 @@ export function ShieldPage() {
           </Text>
         </View>
       ) : null}
-
-      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={styles.sectionHeader}>
-          <Info size={18} color={colors.text} />
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Limits in Expo Go</Text>
-        </View>
-        <Text style={[styles.noteText, { color: colors.mutedText }]}>
-          In-app links are always guarded. Other apps are blocked by the service above (dev build +
-          grants required). Browser address bars are covered when Block sites in browsers is on and
-          accessibility access is granted.
-        </Text>
-      </View>
 
       <Modal visible={pickerOpen} animationType="slide" onRequestClose={() => setPickerOpen(false)}>
         <View style={[styles.pickerContainer, { backgroundColor: colors.background }]}>
