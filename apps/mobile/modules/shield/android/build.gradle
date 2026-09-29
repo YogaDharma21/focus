@@ -1,6 +1,9 @@
 apply plugin: 'com.android.library'
-apply plugin: 'org.jetbrains.kotlin.android'
 apply plugin: 'expo-module-gradle-plugin'
 
 group = 'com.yogacode.focus.shield'
 version = '0.0.1'
+
+android {
+  namespace 'com.yogacode.focus.shield'
+}
