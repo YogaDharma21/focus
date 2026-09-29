@@ -4,7 +4,9 @@ import android.app.ActivityManager
 import android.app.AppOpsManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Build
+import android.os.PowerManager
 import android.os.Process
 import android.provider.Settings
 import androidx.core.content.ContextCompat
@@ -89,6 +91,38 @@ class FocusShieldModule : Module() {
         }
       } catch (_: Exception) {
       }
+      return@Function out
+    }
+
+    Function("isIgnoringBatteryOptimizations") {
+      val context = appContext.reactContext ?: return@Function false
+      val power = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+      return@Function power.isIgnoringBatteryOptimizations(context.packageName)
+    }
+
+    Function("getInstalledApps") {
+      val context = appContext.reactContext ?: return@Function emptyList<Map<String, String>>()
+      val pm = context.packageManager
+      val main = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)
+      val resolved = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        pm.queryIntentActivities(main, PackageManager.ResolveInfoFlags.of(0))
+      } else {
+        @Suppress("DEPRECATION")
+        pm.queryIntentActivities(main, 0)
+      }
+      val out = ArrayList<Map<String, String>>()
+      val seen = HashSet<String>()
+      for (info in resolved) {
+        val pkg = info.activityInfo?.packageName ?: continue
+        if (pkg == context.packageName || !seen.add(pkg)) continue
+        val label = try {
+          info.loadLabel(pm).toString()
+        } catch (_: Exception) {
+          pkg
+        }
+        out.add(mapOf("packageName" to pkg, "label" to label))
+      }
+      out.sortBy { (it["label"] ?: "").lowercase() }
       return@Function out
     }
   }
