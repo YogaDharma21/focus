@@ -7,6 +7,7 @@ import {
   drainViolations,
   hasUsageAccess,
   isFocusShieldAvailable,
+  isIgnoringBatteryOptimizations,
   isServiceRunning,
   startShield,
   stopShield,
@@ -29,6 +30,7 @@ export interface NativeShieldStatus {
   hasUsageAccess: boolean;
   canDrawOverlays: boolean;
   serviceRunning: boolean;
+  ignoringBatteryOptimizations: boolean;
 }
 
 export function getNativeShieldStatus(): NativeShieldStatus {
@@ -39,6 +41,7 @@ export function getNativeShieldStatus(): NativeShieldStatus {
     hasUsageAccess: supported && hasUsageAccess(),
     canDrawOverlays: supported && canDrawOverlays(),
     serviceRunning: supported && isServiceRunning(),
+    ignoringBatteryOptimizations: supported && isIgnoringBatteryOptimizations(),
   };
 }
 
@@ -57,6 +60,18 @@ export async function openOverlaySettings(): Promise<void> {
     await IntentLauncher.startActivityAsync(IntentLauncher.ActivityAction.MANAGE_OVERLAY_PERMISSION, {
       data: `package:${Application.applicationId ?? ''}`,
     });
+  } catch {
+    // Settings screen unavailable.
+  }
+}
+
+export async function openBatteryOptimizationSettings(): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  try {
+    await IntentLauncher.startActivityAsync(
+      IntentLauncher.ActivityAction.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS,
+      { data: `package:${Application.applicationId ?? ''}` },
+    );
   } catch {
     // Settings screen unavailable.
   }

@@ -38,7 +38,8 @@ class ShieldService : Service() {
     const val CHANNEL_ID = "focus_shield_channel"
     const val NOTIF_ID = 1001
     const val POLL_MS = 5000L
-    const val OVERLAY_COOLDOWN_MS = 60000L
+    const val CLEAR_POLLS_TO_HIDE = 2
+    const val VIOLATION_COOLDOWN_MS = 60000L
     const val SNOOZE_MS = 10 * 60 * 1000L
     const val KILL_DELAY_MS = 600L
     const val MAX_VIOLATIONS = 50
@@ -49,7 +50,8 @@ class ShieldService : Service() {
   private var mainHandler: Handler? = null
   private var overlay: View? = null
   private var overlayPackage: String? = null
-  private val lastOverlayAt = mutableMapOf<String, Long>()
+  private var clearStreak = 0
+  private val lastViolationAt = mutableMapOf<String, Long>()
   private val snoozedUntil = mutableMapOf<String, Long>()
 
   private val poller = object : Runnable {
@@ -154,26 +156,25 @@ class ShieldService : Service() {
 
   private fun pollOnce() {
     val current = foregroundPackage()
-    // Unknown foreground: never stick an overlay, drop it.
-    if (current == null || current == packageName) {
-      postHideOverlay()
+    if (current != null && current != packageName && blockedSet().contains(current)) {
+      clearStreak = 0
+      val now = System.currentTimeMillis()
+      if (now < (snoozedUntil[current] ?: 0L)) {
+        postHideOverlay()
+        return
+      }
+      if (now - (lastViolationAt[current] ?: 0L) >= VIOLATION_COOLDOWN_MS) {
+        lastViolationAt[current] = now
+        recordViolation(current, now)
+      }
+      if (overlayPackage == current) return
+      val pkg = current
+      mainHandler?.post { showOverlayNow(pkg) }
       return
     }
-    if (!blockedSet().contains(current)) {
-      postHideOverlay()
-      return
-    }
-    val now = System.currentTimeMillis()
-    if (now < (snoozedUntil[current] ?: 0L)) {
-      postHideOverlay()
-      return
-    }
-    recordViolation(current, now)
-    if (overlayPackage == current) return
-    if (now - (lastOverlayAt[current] ?: 0L) < OVERLAY_COOLDOWN_MS) return
-    lastOverlayAt[current] = now
-    val pkg = current
-    mainHandler?.post { showOverlayNow(pkg) }
+    // Transient blips must not drop the overlay: require consecutive clear polls.
+    clearStreak++
+    if (clearStreak >= CLEAR_POLLS_TO_HIDE) postHideOverlay()
   }
 
   private fun postHideOverlay() {
