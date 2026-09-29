@@ -1,6 +1,8 @@
 import { requireOptionalNativeModule } from 'expo-modules-core';
 
 export interface NativeShieldViolation {
+  kind: string;
+  match: string;
   packageName: string;
   /** Epoch millis as string. */
   timestamp: string;
@@ -16,7 +18,9 @@ type FocusShieldNativeModule = {
   canDrawOverlays(): boolean;
   isServiceRunning(): boolean;
   isIgnoringBatteryOptimizations(): boolean;
-  startShield(blockedApps: string[]): boolean;
+  isAccessibilityEnabled(): boolean;
+  areNotificationsEnabled(): boolean;
+  startShield(blockedApps: string[], urlBlocking: boolean, blockedSites: string[], allowedSites: string[]): boolean;
   stopShield(): boolean;
   getPendingViolations(): NativeShieldViolation[];
   getInstalledApps(): InstalledShieldApp[];
@@ -52,9 +56,14 @@ export function isServiceRunning(): boolean {
   }
 }
 
-export function startShield(blockedApps: string[]): boolean {
+export function startShield(
+  blockedApps: string[],
+  urlBlocking: boolean,
+  blockedSites: string[],
+  allowedSites: string[],
+): boolean {
   try {
-    return native?.startShield(blockedApps) ?? false;
+    return native?.startShield(blockedApps, urlBlocking, blockedSites, allowedSites) ?? false;
   } catch {
     return false;
   }
@@ -89,5 +98,21 @@ export function getInstalledApps(): InstalledShieldApp[] {
     return native?.getInstalledApps() ?? [];
   } catch {
     return [];
+  }
+}
+
+export function isAccessibilityEnabled(): boolean {
+  try {
+    return native?.isAccessibilityEnabled() ?? false;
+  } catch {
+    return false;
+  }
+}
+
+export function areNotificationsEnabled(): boolean {
+  try {
+    return native?.areNotificationsEnabled() ?? false;
+  } catch {
+    return false;
   }
 }

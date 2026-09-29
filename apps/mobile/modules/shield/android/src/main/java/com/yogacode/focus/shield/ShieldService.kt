@@ -34,7 +34,15 @@ class ShieldService : Service() {
     const val PREFS = "focus_shield"
     const val KEY_BLOCKED = "blockedApps"
     const val KEY_VIOLATIONS = "violations"
+    const val KEY_ACTIVE = "shieldActive"
+    const val KEY_URL_BLOCKING = "urlBlocking"
+    const val KEY_BLOCKED_SITES = "blockedSites"
+    const val KEY_ALLOWED_SITES = "allowedSites"
     const val ACTION_STOP = "com.yogacode.focus.shield.STOP"
+    const val ACTION_SHOW_URL = "com.yogacode.focus.shield.SHOW_URL"
+    const val EXTRA_TITLE = "title"
+    const val EXTRA_SUBTITLE = "subtitle"
+    const val KEY_URL_SNOOZE = "urlSnoozeUntil"
     const val CHANNEL_ID = "focus_shield_channel"
     const val NOTIF_ID = 1001
     const val POLL_MS = 5000L
@@ -80,6 +88,12 @@ class ShieldService : Service() {
     if (intent?.action == ACTION_STOP) {
       stopSelf()
       return START_NOT_STICKY
+    }
+    if (intent?.action == ACTION_SHOW_URL) {
+      val title = intent.getStringExtra(EXTRA_TITLE) ?: "Blocked by Focus"
+      val subtitle = intent.getStringExtra(EXTRA_SUBTITLE)
+        ?: "Stay in Flow — this site is on your block list."
+      mainHandler?.post { showOverlayNow("url", title, subtitle, null, null, KEY_URL_SNOOZE) }
     }
     return START_STICKY
   }
@@ -169,7 +183,17 @@ class ShieldService : Service() {
       }
       if (overlayPackage == current) return
       val pkg = current
-      mainHandler?.post { showOverlayNow(pkg) }
+      val label = appLabel(pkg)
+      mainHandler?.post {
+        showOverlayNow(
+          pkg,
+          "$label blocked",
+          "Stay in Flow — $label is on your block list.",
+          pkg,
+          pkg,
+          pkg,
+        )
+      }
       return
     }
     // Transient blips must not drop the overlay: require consecutive clear polls.
@@ -189,18 +213,30 @@ class ShieldService : Service() {
     } catch (_: Exception) {
       JSONArray()
     }
-    arr.put(JSONObject().put("packageName", packageName).put("timestamp", now.toString()))
+    arr.put(
+      JSONObject()
+        .put("kind", "app")
+        .put("match", packageName)
+        .put("packageName", packageName)
+        .put("timestamp", now.toString()),
+    )
     while (arr.length() > MAX_VIOLATIONS) arr.remove(0)
     prefs.edit().putString(KEY_VIOLATIONS, arr.toString()).apply()
   }
 
-  private fun showOverlayNow(packageName: String) {
+  private fun showOverlayNow(
+    key: String,
+    titleText: String,
+    subtitleText: String,
+    iconPackage: String?,
+    killPackage: String?,
+    snoozeKey: String?,
+  ) {
     if (!Settings.canDrawOverlays(this)) return
     removeOverlayNow()
     val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-    val label = appLabel(packageName)
     val icon = try {
-      packageManager.getApplicationIcon(packageName)
+      iconPackage?.let { packageManager.getApplicationIcon(it) }
     } catch (_: Exception) {
       null
     }
@@ -236,14 +272,14 @@ class ShieldService : Service() {
       })
     }
     val title = TextView(this).apply {
-      text = "$label blocked"
+      text = titleText
       textSize = 22f
       setTypeface(typeface, Typeface.BOLD)
       setTextColor(0xFFFAFAFA.toInt())
       gravity = Gravity.CENTER
     }
     val subtitle = TextView(this).apply {
-      text = "Stay in Flow — $label is on your block list and has been closed."
+      text = subtitleText
       textSize = 13f
       setTextColor(0xFFA1A1AA.toInt())
       gravity = Gravity.CENTER
@@ -265,13 +301,15 @@ class ShieldService : Service() {
         launch?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         if (launch != null) startActivity(launch)
         // Closest to "close" Android allows: kill the blocked process once backgrounded.
-        handler?.postDelayed({
-          try {
-            val am = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-            am.killBackgroundProcesses(packageName)
-          } catch (_: Exception) {
-          }
-        }, KILL_DELAY_MS)
+        if (killPackage != null) {
+          handler?.postDelayed({
+            try {
+              val am = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+              am.killBackgroundProcesses(killPackage)
+            } catch (_: Exception) {
+            }
+          }, KILL_DELAY_MS)
+        }
       }
     }
     val snoozeBtn = Button(this).apply {
@@ -285,7 +323,12 @@ class ShieldService : Service() {
       }
       setPadding(dp(16), dp(14), dp(16), dp(14))
       setOnClickListener {
-        snoozedUntil[packageName] = System.currentTimeMillis() + SNOOZE_MS
+        if (snoozeKey == KEY_URL_SNOOZE) {
+          getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
+            .putLong(KEY_URL_SNOOZE, System.currentTimeMillis() + SNOOZE_MS).apply()
+        } else if (snoozeKey != null) {
+          snoozedUntil[snoozeKey] = System.currentTimeMillis() + SNOOZE_MS
+        }
         removeOverlayNow()
       }
     }
@@ -324,7 +367,7 @@ class ShieldService : Service() {
       return
     }
     overlay = dim
-    overlayPackage = packageName
+    overlayPackage = key
   }
 
   private fun removeOverlayNow() {

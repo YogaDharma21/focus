@@ -3,9 +3,11 @@ import Constants from 'expo-constants';
 import * as Application from 'expo-application';
 import * as IntentLauncher from 'expo-intent-launcher';
 import {
+  areNotificationsEnabled,
   canDrawOverlays,
   drainViolations,
   hasUsageAccess,
+  isAccessibilityEnabled,
   isFocusShieldAvailable,
   isIgnoringBatteryOptimizations,
   isServiceRunning,
@@ -31,6 +33,8 @@ export interface NativeShieldStatus {
   canDrawOverlays: boolean;
   serviceRunning: boolean;
   ignoringBatteryOptimizations: boolean;
+  accessibilityEnabled: boolean;
+  notificationsEnabled: boolean;
 }
 
 export function getNativeShieldStatus(): NativeShieldStatus {
@@ -42,6 +46,8 @@ export function getNativeShieldStatus(): NativeShieldStatus {
     canDrawOverlays: supported && canDrawOverlays(),
     serviceRunning: supported && isServiceRunning(),
     ignoringBatteryOptimizations: supported && isIgnoringBatteryOptimizations(),
+    accessibilityEnabled: supported && isAccessibilityEnabled(),
+    notificationsEnabled: supported ? areNotificationsEnabled() : true,
   };
 }
 
@@ -77,6 +83,27 @@ export async function openBatteryOptimizationSettings(): Promise<void> {
   }
 }
 
+export async function openAccessibilitySettings(): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  try {
+    await IntentLauncher.startActivityAsync(IntentLauncher.ActivityAction.ACCESSIBILITY_SETTINGS);
+  } catch {
+    // Settings screen unavailable.
+  }
+}
+
+export async function openAppDetailsSettings(): Promise<void> {
+  if (Platform.OS !== 'android') return;
+  try {
+    await IntentLauncher.startActivityAsync(
+      IntentLauncher.ActivityAction.APPLICATION_DETAILS_SETTINGS,
+      { data: `package:${Application.applicationId ?? ''}` },
+    );
+  } catch {
+    // Settings screen unavailable.
+  }
+}
+
 /**
  * Start or stop the native foreground blocking service to match current state.
  * No-op in Expo Go or without the required special-access grants.
@@ -87,7 +114,7 @@ export function syncShieldService(): void {
   const shouldRun =
     isBlockingRequired(shield.enabled, isActive, timerState) && hasUsageAccess() && canDrawOverlays();
   if (shouldRun) {
-    startShield(shield.blockedApps);
+    startShield(shield.blockedApps, shield.urlBlocking, shield.blockedSites, shield.allowedSites);
   } else if (isServiceRunning()) {
     stopShield();
   }
@@ -100,8 +127,12 @@ export function drainShieldViolations(): number {
   if (violations.length === 0) return 0;
   const { addDistraction } = useAppStore.getState();
   for (const v of violations) {
-    const label = v.packageName ? `Shield Blocked App: ${v.packageName}` : 'Shield Blocked App';
-    addDistraction(label);
+    if (v.kind === 'site') {
+      addDistraction(v.match ? `Shield Blocked Site: ${v.match}` : 'Shield Blocked Site');
+    } else {
+      const target = v.match || v.packageName;
+      addDistraction(target ? `Shield Blocked App: ${target}` : 'Shield Blocked App');
+    }
   }
   return violations.length;
 }

@@ -59,10 +59,21 @@ class FocusShieldModule : Module() {
       }
     }
 
-    Function("startShield") { blockedApps: List<String> ->
+    Function("startShield") {
+      blockedApps: List<String>,
+      urlBlocking: Boolean,
+      blockedSites: List<String>,
+      allowedSites: List<String>,
+      ->
       val context = appContext.reactContext ?: return@Function false
       if (!hasUsageAccess() || !Settings.canDrawOverlays(context)) return@Function false
-      prefs?.edit()?.putStringSet(ShieldService.KEY_BLOCKED, blockedApps.toSet())?.apply()
+      prefs?.edit()
+        ?.putStringSet(ShieldService.KEY_BLOCKED, blockedApps.toSet())
+        ?.putBoolean(ShieldService.KEY_ACTIVE, true)
+        ?.putBoolean(ShieldService.KEY_URL_BLOCKING, urlBlocking)
+        ?.putStringSet(ShieldService.KEY_BLOCKED_SITES, blockedSites.toSet())
+        ?.putStringSet(ShieldService.KEY_ALLOWED_SITES, allowedSites.toSet())
+        ?.apply()
       val intent = Intent(context, ShieldService::class.java)
       ContextCompat.startForegroundService(context, intent)
       return@Function true
@@ -70,7 +81,31 @@ class FocusShieldModule : Module() {
 
     Function("stopShield") {
       val context = appContext.reactContext ?: return@Function false
+      prefs?.edit()?.putBoolean(ShieldService.KEY_ACTIVE, false)?.apply()
       context.stopService(Intent(context, ShieldService::class.java))
+      return@Function true
+    }
+
+    Function("isAccessibilityEnabled") {
+      val context = appContext.reactContext ?: return@Function false
+      val expected = android.content.ComponentName(
+        context.packageName,
+        ShieldAccessibilityService::class.java.name,
+      ).flattenToString()
+      val enabled = android.provider.Settings.Secure.getString(
+        context.contentResolver,
+        android.provider.Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+      ) ?: return@Function false
+      return@Function enabled.split(":").any { it.equals(expected, ignoreCase = true) }
+    }
+
+    Function("areNotificationsEnabled") {
+      val context = appContext.reactContext ?: return@Function false
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        val manager = context.getSystemService(Context.NOTIFICATION_SERVICE)
+          as android.app.NotificationManager
+        return@Function manager.areNotificationsEnabled()
+      }
       return@Function true
     }
 
@@ -84,8 +119,10 @@ class FocusShieldModule : Module() {
           val obj = arr.optJSONObject(i) ?: continue
           out.add(
             mapOf(
-              "packageName" to (obj.optString("packageName", "")),
-              "timestamp" to (obj.optString("timestamp", "0")),
+              "kind" to obj.optString("kind", "app").ifEmpty { "app" },
+              "match" to obj.optString("match", obj.optString("packageName", "")),
+              "packageName" to obj.optString("packageName", ""),
+              "timestamp" to obj.optString("timestamp", "0"),
             ),
           )
         }

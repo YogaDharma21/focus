@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="shield_accessibility_description">Focus Shield uses accessibility access to detect blocked websites in your browser address bar during Flow sessions, so it can return you to your focus session. No screen content leaves your device.</string>
+</resources>
