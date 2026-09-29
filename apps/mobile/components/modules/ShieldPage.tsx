@@ -342,7 +342,7 @@ export function ShieldPage() {
               styles.input,
               { backgroundColor: colors.muted, borderColor: colors.border, color: colors.text },
             ]}
-            placeholder={listTab === 'blocked' ? 'Block domain (e.g. twitter.com)...' : 'Allow domain (e.g. music.youtube.com)...'}
+            placeholder={listTab === 'blocked' ? 'Block domain (twitter.com)...' : 'Allow domain (music.youtube.com)...'}
             placeholderTextColor={colors.mutedText}
             value={siteInput}
             onChangeText={setSiteInput}
