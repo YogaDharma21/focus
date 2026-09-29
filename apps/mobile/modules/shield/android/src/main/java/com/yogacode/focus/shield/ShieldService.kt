@@ -242,7 +242,7 @@ class ShieldService : Service() {
     }
 
     val dim = FrameLayout(this).apply {
-      setBackgroundColor(0xE609090B.toInt())
+      setBackgroundColor(0xFF000000.toInt())
     }
     val card = LinearLayout(this).apply {
       orientation = LinearLayout.VERTICAL
