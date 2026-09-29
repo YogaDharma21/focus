@@ -403,7 +403,7 @@ export function ShieldPage() {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Apps</Text>
         </View>
         <Text style={[styles.noteText, { color: colors.mutedText }]}>
-          Enforced by the on-device blocking service in dev builds; stored only while running in Expo Go.
+          These apps are blocked while a Flow session is active.
         </Text>
 
         <TouchableOpacity
@@ -462,23 +462,6 @@ export function ShieldPage() {
 
           <View style={styles.statusList}>
             <View style={styles.statusRow}>
-              <Text style={[styles.statusLabel, { color: colors.mutedText }]}>Build</Text>
-              <Text style={[styles.statusValue, { color: colors.text }]}>
-                {nativeStatus?.expoGo ? 'Expo Go (JS only)' : 'Dev / production build'}
-              </Text>
-            </View>
-            <View style={styles.statusRow}>
-              <Text style={[styles.statusLabel, { color: colors.mutedText }]}>Native module</Text>
-              <Text
-                style={[
-                  styles.statusValue,
-                  { color: nativeStatus?.supported ? '#22c55e' : colors.mutedText },
-                ]}
-              >
-                {nativeStatus?.supported ? 'Available' : 'Missing'}
-              </Text>
-            </View>
-            <View style={styles.statusRow}>
               <Text style={[styles.statusLabel, { color: colors.mutedText }]}>Usage access</Text>
               <Text
                 style={[
@@ -498,17 +481,6 @@ export function ShieldPage() {
                 ]}
               >
                 {nativeStatus?.canDrawOverlays ? 'Granted' : 'Not granted'}
-              </Text>
-            </View>
-            <View style={styles.statusRow}>
-              <Text style={[styles.statusLabel, { color: colors.mutedText }]}>Service</Text>
-              <Text
-                style={[
-                  styles.statusValue,
-                  { color: nativeStatus?.serviceRunning ? '#22c55e' : colors.mutedText },
-                ]}
-              >
-                {nativeStatus?.serviceRunning ? 'Running' : 'Stopped'}
               </Text>
             </View>
             <View style={styles.statusRow}>
