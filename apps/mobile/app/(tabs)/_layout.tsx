@@ -13,6 +13,7 @@ import { Clock, BarChart2, Shield, Settings } from 'lucide-react-native';
 
 import { useAppStore } from '@/lib/store';
 import { isBlockingRequired } from '@/lib/shield';
+import { drainShieldViolations, syncShieldService } from '@/lib/shieldService';
 import { playCompletionSound } from '@/lib/sound';
 
 export default function TabLayout() {
@@ -82,13 +83,32 @@ export default function TabLayout() {
 
   React.useEffect(() => {
     const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        drainShieldViolations();
+        syncShieldService();
+        return;
+      }
       if (nextState !== 'background') return;
       const { shield, isActive: active, timerState: state, addDistraction } = useAppStore.getState();
       if (isBlockingRequired(shield.enabled, active, state)) {
         addDistraction('Left app during Flow');
       }
+      syncShieldService();
     });
     return () => sub.remove();
+  }, []);
+
+  React.useEffect(() => {
+    syncShieldService();
+    return useAppStore.subscribe((state, prev) => {
+      if (
+        state.shield !== prev.shield ||
+        state.isActive !== prev.isActive ||
+        state.timerState !== prev.timerState
+      ) {
+        syncShieldService();
+      }
+    });
   }, []);
 
   return (

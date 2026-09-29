@@ -1,0 +1,13 @@
+{
+  "name": "focus-shield",
+  "version": "0.0.1",
+  "description": "Native app-blocking shield for Focus (Android foreground service + overlay, iOS stub)",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "dependencies": {
+    "expo-modules-core": "~3.0.30"
+  },
+  "peerDependencies": {
+    "expo": "*"
+  }
+}

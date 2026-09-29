@@ -1,9 +1,15 @@
-import React, { useState } from 'react';
-import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, AppState, Platform } from 'react-native';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
 import { isBlockingRequired } from '@/lib/shield';
-import { Shield, ShieldCheck, ShieldAlert, Plus, X, Globe, Smartphone, Info } from 'lucide-react-native';
+import {
+  getNativeShieldStatus,
+  openOverlaySettings,
+  openUsageAccessSettings,
+  type NativeShieldStatus,
+} from '@/lib/shieldService';
+import { Shield, ShieldCheck, ShieldAlert, Plus, X, Globe, Smartphone, Lock, Info } from 'lucide-react-native';
 
 export function ShieldPage() {
   const { colors } = useTheme();
@@ -25,9 +31,20 @@ export function ShieldPage() {
   const [listTab, setListTab] = useState<'blocked' | 'allowed'>('blocked');
   const [siteInput, setSiteInput] = useState('');
   const [appInput, setAppInput] = useState('');
+  const [nativeStatus, setNativeStatus] = useState<NativeShieldStatus | null>(null);
 
   const enforcing = isBlockingRequired(shield.enabled, isActive, timerState);
   const miniPlayerVisible = soundEnabled && musicEnabled;
+
+  const refreshNativeStatus = () => setNativeStatus(getNativeShieldStatus());
+
+  useEffect(() => {
+    refreshNativeStatus();
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next === 'active') refreshNativeStatus();
+    });
+    return () => sub.remove();
+  }, []);
 
   const handleAddSite = () => {
     const value = siteInput.trim();
@@ -187,7 +204,7 @@ export function ShieldPage() {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Apps</Text>
         </View>
         <Text style={[styles.noteText, { color: colors.mutedText }]}>
-          Stored only in Expo Go. Real app blocking needs an Android dev build (Phase 1).
+          Enforced by the on-device blocking service in dev builds; stored only while running in Expo Go.
         </Text>
 
         <View style={styles.inputRow}>
@@ -232,14 +249,99 @@ export function ShieldPage() {
         )}
       </View>
 
+      {Platform.OS === 'android' ? (
+        <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.sectionHeader}>
+            <Lock size={18} color={colors.text} />
+            <Text style={[styles.sectionTitle, { color: colors.text }]}>Device blocking</Text>
+          </View>
+          <Text style={[styles.noteText, { color: colors.mutedText }]}>
+            {nativeStatus?.expoGo
+              ? 'Expo Go cannot run the blocking service. Cloud-build the dev client to enable it.'
+              : 'A foreground service watches the active app during Flow and shows a blocking overlay over listed apps.'}
+          </Text>
+
+          <View style={styles.statusList}>
+            <View style={styles.statusRow}>
+              <Text style={[styles.statusLabel, { color: colors.mutedText }]}>Build</Text>
+              <Text style={[styles.statusValue, { color: colors.text }]}>
+                {nativeStatus?.expoGo ? 'Expo Go (JS only)' : 'Dev / production build'}
+              </Text>
+            </View>
+            <View style={styles.statusRow}>
+              <Text style={[styles.statusLabel, { color: colors.mutedText }]}>Native module</Text>
+              <Text
+                style={[
+                  styles.statusValue,
+                  { color: nativeStatus?.supported ? '#22c55e' : colors.mutedText },
+                ]}
+              >
+                {nativeStatus?.supported ? 'Available' : 'Missing'}
+              </Text>
+            </View>
+            <View style={styles.statusRow}>
+              <Text style={[styles.statusLabel, { color: colors.mutedText }]}>Usage access</Text>
+              <Text
+                style={[
+                  styles.statusValue,
+                  { color: nativeStatus?.hasUsageAccess ? '#22c55e' : colors.mutedText },
+                ]}
+              >
+                {nativeStatus?.hasUsageAccess ? 'Granted' : 'Not granted'}
+              </Text>
+            </View>
+            <View style={styles.statusRow}>
+              <Text style={[styles.statusLabel, { color: colors.mutedText }]}>Overlay permission</Text>
+              <Text
+                style={[
+                  styles.statusValue,
+                  { color: nativeStatus?.canDrawOverlays ? '#22c55e' : colors.mutedText },
+                ]}
+              >
+                {nativeStatus?.canDrawOverlays ? 'Granted' : 'Not granted'}
+              </Text>
+            </View>
+            <View style={styles.statusRow}>
+              <Text style={[styles.statusLabel, { color: colors.mutedText }]}>Service</Text>
+              <Text
+                style={[
+                  styles.statusValue,
+                  { color: nativeStatus?.serviceRunning ? '#22c55e' : colors.mutedText },
+                ]}
+              >
+                {nativeStatus?.serviceRunning ? 'Running' : 'Stopped'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.permRow}>
+            <TouchableOpacity
+              style={[styles.permBtn, { backgroundColor: colors.muted, borderColor: colors.border }]}
+              onPress={() => void openUsageAccessSettings().finally(refreshNativeStatus)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.permBtnText, { color: colors.text }]}>Usage access</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.permBtn, { backgroundColor: colors.muted, borderColor: colors.border }]}
+              onPress={() => void openOverlaySettings().finally(refreshNativeStatus)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.permBtnText, { color: colors.text }]}>Overlay permission</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      ) : null}
+
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.sectionHeader}>
           <Info size={18} color={colors.text} />
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Limits in Expo Go</Text>
         </View>
         <Text style={[styles.noteText, { color: colors.mutedText }]}>
-          Shield guards links opened inside Focus and nudges you when you leave during Flow. It cannot block Chrome
-          or other apps from Expo Go - that needs native permissions and a cloud-built dev client.
+          Shield guards links opened inside Focus and nudges you when you leave during Flow. Blocking other apps
+          needs the dev build (`eas build --platform android --profile shield-dev`) plus usage-access and overlay
+          grants above.
         </Text>
       </View>
     </ScrollView>
@@ -398,5 +500,36 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     marginBottom: 12,
+  },
+  statusList: {
+    gap: 8,
+    marginBottom: 12,
+  },
+  statusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  statusLabel: {
+    fontSize: 12,
+  },
+  statusValue: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  permRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  permBtn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+  },
+  permBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });
