@@ -72,6 +72,7 @@ interface AppState {
 
   shield: ShieldConfig;
   setShieldEnabled: (enabled: boolean) => void;
+  setUrlBlocking: (enabled: boolean) => void;
   addBlockedSite: (site: string) => void;
   removeBlockedSite: (site: string) => void;
   addAllowedSite: (site: string) => void;
@@ -170,6 +171,8 @@ export const useAppStore = create<AppState>()(
       shield: { ...DEFAULT_SHIELD_CONFIG },
       setShieldEnabled: (enabled) =>
         set((state) => ({ shield: { ...state.shield, enabled } })),
+      setUrlBlocking: (enabled) =>
+        set((state) => ({ shield: { ...state.shield, urlBlocking: enabled } })),
       addBlockedSite: (site) =>
         set((state) => {
           const clean = normalizeSite(site);
@@ -234,12 +237,15 @@ export const useAppStore = create<AppState>()(
     {
       name: 'focus-mobile-storage-v1',
       storage: createJSONStorage(() => safeStorage),
-      version: 1,
-      migrate: (persisted: unknown, version: number) => {
+      version: 2,
+      migrate: (persisted: unknown, _version: number) => {
         const state = (persisted ?? {}) as Record<string, unknown>;
-        if (version < 1 || !state.shield || typeof state.shield !== 'object') {
-          state.shield = { ...DEFAULT_SHIELD_CONFIG };
-        }
+        const storedShield =
+          state.shield && typeof state.shield === 'object'
+            ? (state.shield as Record<string, unknown>)
+            : {};
+        // Field-merge so new shield options backfill onto existing installs.
+        state.shield = { ...DEFAULT_SHIELD_CONFIG, ...storedShield };
         return state as unknown as AppState;
       },
     }

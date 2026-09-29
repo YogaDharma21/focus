@@ -3,6 +3,8 @@ export interface ShieldConfig {
   blockedSites: string[];
   allowedSites: string[];
   blockedApps: string[];
+  /** Enforce blocked sites inside browsers via the accessibility service (Android dev build). */
+  urlBlocking: boolean;
 }
 
 export const DEFAULT_BLOCKED_SITES: string[] = [
@@ -30,6 +32,7 @@ export const DEFAULT_SHIELD_CONFIG: ShieldConfig = {
   blockedSites: DEFAULT_BLOCKED_SITES,
   allowedSites: [],
   blockedApps: DEFAULT_BLOCKED_APPS,
+  urlBlocking: false,
 };
 
 /** Strip scheme, www prefix, path, and port from a user-entered domain. */

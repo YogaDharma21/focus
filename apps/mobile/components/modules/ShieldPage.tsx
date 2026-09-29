@@ -5,6 +5,8 @@ import { useTheme } from '@/context/ThemeContext';
 import { isBlockingRequired } from '@/lib/shield';
 import {
   getNativeShieldStatus,
+  openAccessibilitySettings,
+  openAppDetailsSettings,
   openBatteryOptimizationSettings,
   openOverlaySettings,
   openUsageAccessSettings,
@@ -82,6 +84,7 @@ export function ShieldPage() {
   const {
     shield,
     setShieldEnabled,
+    setUrlBlocking,
     addBlockedSite,
     removeBlockedSite,
     addAllowedSite,
@@ -104,6 +107,12 @@ export function ShieldPage() {
 
   const enforcing = isBlockingRequired(shield.enabled, isActive, timerState);
   const miniPlayerVisible = soundEnabled && musicEnabled;
+  const setupDoneCount = [
+    nativeStatus?.hasUsageAccess,
+    nativeStatus?.canDrawOverlays,
+    nativeStatus?.ignoringBatteryOptimizations,
+    nativeStatus?.accessibilityEnabled,
+  ].filter(Boolean).length;
 
   const refreshNativeStatus = () => setNativeStatus(getNativeShieldStatus());
 
@@ -279,6 +288,25 @@ export function ShieldPage() {
             ))}
           </View>
         )}
+
+        <TouchableOpacity
+          style={[styles.toggleRow, styles.urlToggleRow, { backgroundColor: colors.muted, borderColor: colors.border }]}
+          onPress={() => setUrlBlocking(!shield.urlBlocking)}
+          activeOpacity={0.7}
+        >
+          <View style={styles.toggleText}>
+            <Globe size={18} color={shield.urlBlocking ? colors.text : colors.mutedText} />
+            <View style={styles.toggleCopy}>
+              <Text style={[styles.toggleTitle, { color: colors.text }]}>Block sites in browsers</Text>
+              <Text style={[styles.toggleSubtitle, { color: colors.mutedText }]}>
+                Uses accessibility access to catch blocked domains in browser address bars.
+              </Text>
+            </View>
+          </View>
+          <View style={[styles.switch, { backgroundColor: shield.urlBlocking ? '#ffffff' : '#3f3f46' }]}>
+            <View style={[styles.thumb, { marginLeft: shield.urlBlocking ? 21 : 3 }]} />
+          </View>
+        </TouchableOpacity>
       </View>
 
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -363,7 +391,9 @@ export function ShieldPage() {
           <Text style={[styles.noteText, { color: colors.mutedText }]}>
             {nativeStatus?.expoGo
               ? 'Expo Go cannot run the blocking service. Cloud-build the dev client to enable it.'
-              : 'A foreground service watches the active app during Flow and shows a blocking overlay over listed apps.'}
+              : setupDoneCount === 4
+                ? 'Setup complete. The service enforces while a Flow session is active.'
+                : `Setup ${setupDoneCount}/4. Grant every item below before your first blocked session.`}
           </Text>
 
           <View style={styles.statusList}>
@@ -428,6 +458,28 @@ export function ShieldPage() {
                 {nativeStatus?.ignoringBatteryOptimizations ? 'Unrestricted' : 'Restricted'}
               </Text>
             </View>
+            <View style={styles.statusRow}>
+              <Text style={[styles.statusLabel, { color: colors.mutedText }]}>Accessibility</Text>
+              <Text
+                style={[
+                  styles.statusValue,
+                  { color: nativeStatus?.accessibilityEnabled ? '#22c55e' : colors.mutedText },
+                ]}
+              >
+                {nativeStatus?.accessibilityEnabled ? 'Enabled' : 'Disabled'}
+              </Text>
+            </View>
+            <View style={styles.statusRow}>
+              <Text style={[styles.statusLabel, { color: colors.mutedText }]}>Notifications</Text>
+              <Text
+                style={[
+                  styles.statusValue,
+                  { color: nativeStatus?.notificationsEnabled ? '#22c55e' : colors.mutedText },
+                ]}
+              >
+                {nativeStatus?.notificationsEnabled ? 'On' : 'Off'}
+              </Text>
+            </View>
           </View>
 
           <View style={styles.permRow}>
@@ -452,6 +504,20 @@ export function ShieldPage() {
             >
               <Text style={[styles.permBtnText, { color: colors.text }]}>Battery: no limits</Text>
             </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.permBtn, { backgroundColor: colors.muted, borderColor: colors.border }]}
+              onPress={() => void openAccessibilitySettings().finally(refreshNativeStatus)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.permBtnText, { color: colors.text }]}>Accessibility</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.permBtn, { backgroundColor: colors.muted, borderColor: colors.border }]}
+              onPress={() => void openAppDetailsSettings().finally(refreshNativeStatus)}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.permBtnText, { color: colors.text }]}>App settings</Text>
+            </TouchableOpacity>
           </View>
           <Text style={[styles.subNoteText, { color: colors.mutedText }]}>
             On Xiaomi/MIUI also enable Autostart for Focus in system settings, or the service is killed in
@@ -466,9 +532,9 @@ export function ShieldPage() {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Limits in Expo Go</Text>
         </View>
         <Text style={[styles.noteText, { color: colors.mutedText }]}>
-          In-app links are guarded and other apps are blocked by the service above (dev build +
-          grants required). Android lets no app intercept another app&apos;s browser tabs, so a website
-          is covered by blocking its app instead (e.g. the YouTube app covers youtube.com).
+          In-app links are always guarded. Other apps are blocked by the service above (dev build +
+          grants required). Browser address bars are covered when Block sites in browsers is on and
+          accessibility access is granted.
         </Text>
       </View>
 
@@ -587,6 +653,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
   },
+  urlToggleRow: {
+    marginTop: 12,
+  },
   toggleText: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -697,10 +766,12 @@ const styles = StyleSheet.create({
   },
   permRow: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 8,
   },
   permBtn: {
-    flex: 1,
+    flexGrow: 1,
+    flexBasis: '45%',
     paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 1,
