@@ -73,13 +73,10 @@ class ShieldAccessibilityService : AccessibilityService() {
   }
 
   private fun handleUrlBlock(pkg: String, domain: String, now: Long) {
-    try {
-      performGlobalAction(GLOBAL_ACTION_HOME)
-    } catch (_: Exception) {
-    }
     recordSiteViolation(domain, now)
     val intent = Intent(this, ShieldService::class.java).apply {
       action = ShieldService.ACTION_SHOW_URL
+      putExtra(ShieldService.EXTRA_PACKAGE, pkg)
       putExtra(ShieldService.EXTRA_TITLE, "$domain blocked")
       putExtra(ShieldService.EXTRA_SUBTITLE, "Stay in Flow — $domain is on your block list.")
     }
@@ -122,11 +119,13 @@ class ShieldAccessibilityService : AccessibilityService() {
     return if (name.length >= 4) name else null
   }
 
-  private fun textMatches(text: String, site: String): Boolean {
+  private fun textMatches(text: String, site: String, isUrlField: Boolean): Boolean {
     val clean = normalizeSite(site)
     if (clean.isEmpty()) return false
     if (text.contains(clean)) return true
-    // Keyword fallback only for URL-looking text, to avoid title false positives.
+    // Keyword fallback (e.g. "twitter" for twitter.com) only inside the URL bar.
+    // Page bodies match on full domains only, so share widgets can't false-positive.
+    if (!isUrlField) return false
     if (!text.contains(".") && !text.contains("/")) return false
     val keyword = siteKeyword(site) ?: return false
     return text.contains(keyword)
@@ -149,10 +148,11 @@ class ShieldAccessibilityService : AccessibilityService() {
         node.contentDescription?.let { rawText.append(it) }
         if (rawText.isNotEmpty()) {
           val text = rawText.toString().lowercase()
-          val isAllowed = allowed.any { textMatches(text, it) }
+          val isUrlField = node.className?.toString() == "android.widget.EditText"
+          val isAllowed = allowed.any { textMatches(text, it, isUrlField) }
           if (!isAllowed) {
             for (site in blocked) {
-              if (textMatches(text, site)) return normalizeSite(site)
+              if (textMatches(text, site, isUrlField)) return normalizeSite(site)
             }
           }
         }
