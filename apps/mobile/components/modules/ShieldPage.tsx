@@ -615,7 +615,8 @@ export function ShieldPage() {
           </View>
           <Text style={[styles.subNoteText, { color: colors.mutedText }]}>
             On Xiaomi/MIUI also enable Autostart for Focus in system settings, or the service is killed in
-            background.
+            background. If the accessibility toggle is greyed out (Restricted setting), open App info
+            for Focus, tap the menu, allow restricted settings, then come back here.
           </Text>
         </View>
       ) : null}
