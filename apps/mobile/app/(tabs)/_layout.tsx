@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, AppState } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useTheme } from '@/context/ThemeContext';
@@ -9,9 +9,10 @@ import { FloatingTabBar } from '@/components/FloatingTabBar';
 import { MediaPlayer } from '@/components/modules/MediaPlayer';
 import { DeepFocusOverlay } from '@/components/modules/DeepFocusOverlay';
 import { DynamicIslandTimer } from '@/components/modules/DynamicIslandTimer';
-import { Clock, BarChart2, Settings } from 'lucide-react-native';
+import { Clock, BarChart2, Shield, Settings } from 'lucide-react-native';
 
 import { useAppStore } from '@/lib/store';
+import { isBlockingRequired } from '@/lib/shield';
 import { playCompletionSound } from '@/lib/sound';
 
 export default function TabLayout() {
@@ -79,6 +80,17 @@ export default function TabLayout() {
     };
   }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive, setDeepFocusMode, autoStartFlow]);
 
+  React.useEffect(() => {
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState !== 'background') return;
+      const { shield, isActive: active, timerState: state, addDistraction } = useAppStore.getState();
+      if (isBlockingRequired(shield.enabled, active, state)) {
+        addDistraction('Left app during Flow');
+      }
+    });
+    return () => sub.remove();
+  }, []);
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
@@ -105,6 +117,13 @@ export default function TabLayout() {
             options={{
               title: 'Stats',
               tabBarIcon: ({ color }) => <BarChart2 size={22} color={color} />,
+            }}
+          />
+          <Tabs.Screen
+            name="shield"
+            options={{
+              title: 'Shield',
+              tabBarIcon: ({ color }) => <Shield size={22} color={color} />,
             }}
           />
           <Tabs.Screen

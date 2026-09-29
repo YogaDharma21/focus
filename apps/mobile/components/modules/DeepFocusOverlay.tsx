@@ -6,7 +6,8 @@ import { useTheme } from '@/context/ThemeContext';
 import { Radius } from '@/constants/theme';
 import { playCompletionSound } from '@/lib/sound';
 import { VolumeSlider } from '@/components/ui/VolumeSlider';
-import { Play, Pause, X, AlertTriangle, CheckCircle2, Plus, Music, RotateCcw } from 'lucide-react-native';
+import { Play, Pause, X, AlertTriangle, CheckCircle2, Plus, Music, RotateCcw, ShieldCheck } from 'lucide-react-native';
+import { isBlockingRequired } from '@/lib/shield';
 
 const DISTRACTION_CATEGORIES = [
   'Social Media',
@@ -37,10 +38,12 @@ export function DeepFocusOverlay() {
     musicVolume,
     setMusicVolume,
     autoStartBreak,
+    shield,
   } = useAppStore();
 
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
   const [musicModalOpen, setMusicModalOpen] = useState(false);
+  const shieldEnforcing = isBlockingRequired(shield.enabled, isActive, timerState);
 
   if (!deepFocusMode) return null;
 
@@ -126,6 +129,12 @@ export function DeepFocusOverlay() {
 
         <View style={styles.content}>
           <Text style={[styles.timerText, { color: colors.text }]}>{formatTime(timeLeft)}</Text>
+          {shieldEnforcing ? (
+            <View style={[styles.shieldPill, { backgroundColor: colors.card, borderColor: '#22c55e' }]}>
+              <ShieldCheck size={12} color="#22c55e" />
+              <Text style={[styles.shieldPillText, { color: colors.mutedText }]}>Shield enforcing</Text>
+            </View>
+          ) : null}
 
           {/* Deep Focus Controls Row */}
           <View style={styles.controlsRow}>
@@ -306,6 +315,22 @@ const styles = StyleSheet.create({
     fontSize: 72,
     fontWeight: '800',
     letterSpacing: -3,
+  },
+  shieldPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 999,
+    borderWidth: 1,
+    marginTop: 8,
+  },
+  shieldPillText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.6,
+    textTransform: 'uppercase',
   },
   sessionText: {
     fontSize: 16,
