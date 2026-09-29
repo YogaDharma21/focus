@@ -16,6 +16,87 @@ import { getInstalledApps, type InstalledShieldApp } from 'focus-shield';
 import { getApplicationIconAsync } from 'expo-intent-launcher';
 import { Shield, ShieldCheck, ShieldAlert, Plus, X, Globe, Smartphone, Lock, Info, Check, Search } from 'lucide-react-native';
 
+type ThemeColors = {
+  text: string;
+  mutedText: string;
+  muted: string;
+  border: string;
+  primary: string;
+  primaryText: string;
+};
+
+const appIconCache = new Map<string, string | null>();
+
+function ShieldAppIcon({
+  packageName,
+  label,
+  colors,
+  size = 36,
+}: {
+  packageName: string;
+  label: string;
+  colors: ThemeColors;
+  size?: number;
+}) {
+  const [iconUri, setIconUri] = useState<string | null>(() => appIconCache.get(packageName) ?? null);
+
+  useEffect(() => {
+    if (appIconCache.has(packageName)) {
+      setIconUri(appIconCache.get(packageName) ?? null);
+      return;
+    }
+    let cancelled = false;
+    getApplicationIconAsync(packageName)
+      .then((uri) => {
+        appIconCache.set(packageName, uri || null);
+        if (!cancelled && uri) setIconUri(uri);
+      })
+      .catch(() => {
+        appIconCache.set(packageName, null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [packageName]);
+
+  if (iconUri) {
+    return <Image source={{ uri: iconUri }} style={{ width: size, height: size, borderRadius: size / 4 }} />;
+  }
+  return (
+    <View
+      style={[
+        styles.appIconFallback,
+        { backgroundColor: colors.border, width: size, height: size, borderRadius: size / 4 },
+      ]}
+    >
+      <Text style={[styles.appIconFallbackText, { color: colors.mutedText }]}>
+        {(label || packageName).charAt(0).toUpperCase()}
+      </Text>
+    </View>
+  );
+}
+
+function SiteIcon({ domain, colors }: { domain: string; colors: ThemeColors }) {
+  const [failed, setFailed] = useState(false);
+
+  if (!failed) {
+    return (
+      <Image
+        source={{ uri: `https://www.google.com/s2/favicons?domain=${domain}&sz=64` }}
+        style={styles.siteIcon}
+        onError={() => setFailed(true)}
+      />
+    );
+  }
+  return (
+    <View style={[styles.siteIcon, styles.siteIconFallback, { backgroundColor: colors.border }]}>
+      <Text style={[styles.appIconFallbackText, { color: colors.mutedText }]}>
+        {domain.charAt(0).toUpperCase()}
+      </Text>
+    </View>
+  );
+}
+
 function InstalledAppRow({
   app,
   blocked,
@@ -25,37 +106,15 @@ function InstalledAppRow({
   app: InstalledShieldApp;
   blocked: boolean;
   onToggle: () => void;
-  colors: { text: string; mutedText: string; muted: string; border: string; primary: string; primaryText: string };
+  colors: ThemeColors;
 }) {
-  const [iconUri, setIconUri] = useState<string | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    getApplicationIconAsync(app.packageName)
-      .then((uri) => {
-        if (!cancelled && uri) setIconUri(uri);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [app.packageName]);
-
   return (
     <TouchableOpacity
       style={[styles.appRow, { backgroundColor: colors.muted, borderColor: colors.border }]}
       onPress={onToggle}
       activeOpacity={0.7}
     >
-      {iconUri ? (
-        <Image source={{ uri: iconUri }} style={styles.appIcon} />
-      ) : (
-        <View style={[styles.appIconFallback, { backgroundColor: colors.border }]}>
-          <Text style={[styles.appIconFallbackText, { color: colors.mutedText }]}>
-            {(app.label || app.packageName).charAt(0).toUpperCase()}
-          </Text>
-        </View>
-      )}
+      <ShieldAppIcon packageName={app.packageName} label={app.label} colors={colors} />
       <View style={styles.appRowText}>
         <Text style={[styles.appRowLabel, { color: colors.text }]} numberOfLines={1}>
           {app.label}
@@ -76,6 +135,30 @@ function InstalledAppRow({
         {blocked ? <Check size={14} color={colors.primaryText} /> : null}
       </View>
     </TouchableOpacity>
+  );
+}
+
+function BlockedAppRow({
+  packageName,
+  label,
+  colors,
+  onRemove,
+}: {
+  packageName: string;
+  label: string;
+  colors: ThemeColors;
+  onRemove: () => void;
+}) {
+  return (
+    <View style={[styles.listRow, styles.listRowWithIcon, { backgroundColor: colors.muted, borderColor: colors.border }]}>
+      <ShieldAppIcon packageName={packageName} label={label} colors={colors} size={32} />
+      <Text style={[styles.listText, { color: colors.text }]} numberOfLines={1}>
+        {label}
+      </Text>
+      <TouchableOpacity onPress={onRemove} hitSlop={8}>
+        <X size={16} color={colors.mutedText} />
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -104,6 +187,7 @@ export function ShieldPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [installedApps, setInstalledApps] = useState<InstalledShieldApp[]>([]);
   const [appSearch, setAppSearch] = useState('');
+  const [installedLabels, setInstalledLabels] = useState<Record<string, string>>({});
 
   const enforcing = isBlockingRequired(shield.enabled, isActive, timerState);
   const miniPlayerVisible = soundEnabled && musicEnabled;
@@ -118,6 +202,15 @@ export function ShieldPage() {
 
   useEffect(() => {
     refreshNativeStatus();
+    if (Platform.OS === 'android') {
+      try {
+        const labels: Record<string, string> = {};
+        for (const app of getInstalledApps()) labels[app.packageName] = app.label;
+        setInstalledLabels(labels);
+      } catch {
+        // Installed list unavailable (e.g. Expo Go): fall back to package names.
+      }
+    }
     const sub = AppState.addEventListener('change', (next) => {
       if (next === 'active') refreshNativeStatus();
     });
@@ -275,9 +368,12 @@ export function ShieldPage() {
             {sites.map((site) => (
               <View
                 key={site}
-                style={[styles.listRow, { backgroundColor: colors.muted, borderColor: colors.border }]}
+                style={[styles.listRow, styles.listRowWithIcon, { backgroundColor: colors.muted, borderColor: colors.border }]}
               >
-                <Text style={[styles.listText, { color: colors.text }]}>{site}</Text>
+                <SiteIcon domain={site} colors={colors} />
+                <Text style={[styles.listText, { color: colors.text }]} numberOfLines={1}>
+                  {site}
+                </Text>
                 <TouchableOpacity
                   onPress={() => (listTab === 'blocked' ? removeBlockedSite(site) : removeAllowedSite(site))}
                   hitSlop={8}
@@ -346,15 +442,13 @@ export function ShieldPage() {
         ) : (
           <View style={styles.list}>
             {shield.blockedApps.map((app) => (
-              <View
+              <BlockedAppRow
                 key={app}
-                style={[styles.listRow, { backgroundColor: colors.muted, borderColor: colors.border }]}
-              >
-                <Text style={[styles.listText, { color: colors.text }]}>{app}</Text>
-                <TouchableOpacity onPress={() => removeBlockedApp(app)} hitSlop={8}>
-                  <X size={16} color={colors.mutedText} />
-                </TouchableOpacity>
-              </View>
+                packageName={app}
+                label={installedLabels[app] ?? app}
+                colors={colors}
+                onRemove={() => removeBlockedApp(app)}
+              />
             ))}
           </View>
         )}
@@ -733,6 +827,19 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
   },
+  listRowWithIcon: {
+    justifyContent: 'flex-start',
+    gap: 10,
+  },
+  siteIcon: {
+    width: 28,
+    height: 28,
+    borderRadius: 6,
+  },
+  siteIconFallback: {
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   listText: {
     fontSize: 13,
     fontWeight: '500',
@@ -809,11 +916,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     borderWidth: 1,
     marginBottom: 8,
-  },
-  appIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
   },
   appIconFallback: {
     width: 36,
