@@ -339,9 +339,9 @@ export function ShieldPage() {
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Limits in Expo Go</Text>
         </View>
         <Text style={[styles.noteText, { color: colors.mutedText }]}>
-          Shield guards links opened inside Focus and nudges you when you leave during Flow. Blocking other apps
-          needs the dev build (`eas build --platform android --profile shield-dev`) plus usage-access and overlay
-          grants above.
+          In-app links are guarded and other apps are blocked by the service above (dev build +
+          grants required). Android lets no app intercept another app&apos;s browser tabs, so a website
+          is covered by blocking its app instead (e.g. the YouTube app covers youtube.com).
         </Text>
       </View>
     </ScrollView>

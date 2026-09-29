@@ -1,5 +1,6 @@
 package com.yogacode.focus.shield
 
+import android.app.ActivityManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -9,16 +10,20 @@ import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
 import android.graphics.PixelFormat
+import android.graphics.Typeface
+import android.graphics.drawable.GradientDrawable
 import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.IBinder
+import android.os.Looper
 import android.provider.Settings
 import android.view.Gravity
 import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import org.json.JSONArray
@@ -35,11 +40,13 @@ class ShieldService : Service() {
     const val POLL_MS = 5000L
     const val OVERLAY_COOLDOWN_MS = 60000L
     const val SNOOZE_MS = 10 * 60 * 1000L
+    const val KILL_DELAY_MS = 600L
     const val MAX_VIOLATIONS = 50
   }
 
   private var worker: HandlerThread? = null
   private var handler: Handler? = null
+  private var mainHandler: Handler? = null
   private var overlay: View? = null
   private var overlayPackage: String? = null
   private val lastOverlayAt = mutableMapOf<String, Long>()
@@ -61,6 +68,7 @@ class ShieldService : Service() {
     super.onCreate()
     ensureChannel()
     startForegroundWithType()
+    mainHandler = Handler(Looper.getMainLooper())
     worker = HandlerThread("FocusShield").also { it.start() }
     handler = Handler(worker!!.looper)
     handler?.post(poller)
@@ -79,8 +87,23 @@ class ShieldService : Service() {
     worker?.quitSafely()
     worker = null
     handler = null
-    hideOverlay()
+    try {
+      mainHandler?.post { removeOverlayNow() }
+    } catch (_: Exception) {
+    }
+    mainHandler = null
     super.onDestroy()
+  }
+
+  private fun dp(v: Int): Int = (v * resources.displayMetrics.density).toInt()
+
+  private fun appLabel(pkg: String): String {
+    return try {
+      val info = packageManager.getApplicationInfo(pkg, 0)
+      packageManager.getApplicationLabel(info).toString()
+    } catch (_: Exception) {
+      pkg
+    }
   }
 
   private fun ensureChannel() {
@@ -131,25 +154,31 @@ class ShieldService : Service() {
 
   private fun pollOnce() {
     val current = foregroundPackage()
+    // Unknown foreground: never stick an overlay, drop it.
     if (current == null || current == packageName) {
-      if (current == packageName) hideOverlay()
+      postHideOverlay()
       return
     }
-    val blocked = blockedSet()
-    if (!blocked.contains(current)) {
-      hideOverlay()
+    if (!blockedSet().contains(current)) {
+      postHideOverlay()
       return
     }
     val now = System.currentTimeMillis()
     if (now < (snoozedUntil[current] ?: 0L)) {
-      hideOverlay()
+      postHideOverlay()
       return
     }
     recordViolation(current, now)
     if (overlayPackage == current) return
     if (now - (lastOverlayAt[current] ?: 0L) < OVERLAY_COOLDOWN_MS) return
     lastOverlayAt[current] = now
-    showOverlay(current)
+    val pkg = current
+    mainHandler?.post { showOverlayNow(pkg) }
+  }
+
+  private fun postHideOverlay() {
+    if (overlay == null) return
+    mainHandler?.post { removeOverlayNow() }
   }
 
   private fun recordViolation(packageName: String, now: Long) {
@@ -164,59 +193,121 @@ class ShieldService : Service() {
     prefs.edit().putString(KEY_VIOLATIONS, arr.toString()).apply()
   }
 
-  private fun showOverlay(packageName: String) {
+  private fun showOverlayNow(packageName: String) {
     if (!Settings.canDrawOverlays(this)) return
-    hideOverlay()
+    removeOverlayNow()
     val wm = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+    val label = appLabel(packageName)
+    val icon = try {
+      packageManager.getApplicationIcon(packageName)
+    } catch (_: Exception) {
+      null
+    }
 
-    val container = FrameLayout(this).apply {
+    val dim = FrameLayout(this).apply {
       setBackgroundColor(0xE609090B.toInt())
     }
-    val box = LinearLayout(this).apply {
+    val card = LinearLayout(this).apply {
       orientation = LinearLayout.VERTICAL
+      gravity = Gravity.CENTER_HORIZONTAL
+      setPadding(dp(24), dp(28), dp(24), dp(24))
+      background = GradientDrawable().apply {
+        setColor(0xFF18181B.toInt())
+        cornerRadius = dp(28).toFloat()
+        setStroke(dp(1), 0xFF27272A.toInt())
+      }
+    }
+    val eyebrow = TextView(this).apply {
+      text = "FOCUS SHIELD"
+      textSize = 10f
+      setTypeface(typeface, Typeface.BOLD)
+      setTextColor(0xFFA1A1AA.toInt())
       gravity = Gravity.CENTER
-      setPadding(48, 48, 48, 48)
+      setPadding(0, 0, 0, dp(12))
+    }
+    card.addView(eyebrow)
+    if (icon != null) {
+      val iconView = ImageView(this).apply {
+        setImageDrawable(icon)
+      }
+      card.addView(iconView, LinearLayout.LayoutParams(dp(64), dp(64)).apply {
+        bottomMargin = dp(16)
+      })
     }
     val title = TextView(this).apply {
-      text = "Blocked by Focus"
-      textSize = 24f
+      text = "$label blocked"
+      textSize = 22f
+      setTypeface(typeface, Typeface.BOLD)
       setTextColor(0xFFFAFAFA.toInt())
       gravity = Gravity.CENTER
     }
     val subtitle = TextView(this).apply {
-      text = "$packageName is on your block list.\nReturn to your Flow session."
-      textSize = 14f
+      text = "Stay in Flow — $label is on your block list and has been closed."
+      textSize = 13f
       setTextColor(0xFFA1A1AA.toInt())
       gravity = Gravity.CENTER
-      setPadding(0, 16, 0, 32)
+      setPadding(0, dp(8), 0, dp(24))
     }
     val openBtn = Button(this).apply {
       text = "Return to Focus"
+      textSize = 14f
+      setTypeface(typeface, Typeface.BOLD)
+      setTextColor(0xFF18181B.toInt())
+      background = GradientDrawable().apply {
+        setColor(0xFFFAFAFA.toInt())
+        cornerRadius = dp(14).toFloat()
+      }
+      setPadding(dp(16), dp(14), dp(16), dp(14))
       setOnClickListener {
-        val launch = packageManager.getLaunchIntentForPackage(packageName)
+        removeOverlayNow()
+        val launch = packageManager.getLaunchIntentForPackage(this@ShieldService.packageName)
         launch?.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         if (launch != null) startActivity(launch)
-        hideOverlay()
+        // Closest to "close" Android allows: kill the blocked process once backgrounded.
+        handler?.postDelayed({
+          try {
+            val am = getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            am.killBackgroundProcesses(packageName)
+          } catch (_: Exception) {
+          }
+        }, KILL_DELAY_MS)
       }
     }
     val snoozeBtn = Button(this).apply {
       text = "Snooze 10 min"
+      textSize = 14f
+      setTextColor(0xFFFAFAFA.toInt())
+      background = GradientDrawable().apply {
+        setColor(0x00000000)
+        cornerRadius = dp(14).toFloat()
+        setStroke(dp(1), 0xFF3F3F46.toInt())
+      }
+      setPadding(dp(16), dp(14), dp(16), dp(14))
       setOnClickListener {
         snoozedUntil[packageName] = System.currentTimeMillis() + SNOOZE_MS
-        hideOverlay()
+        removeOverlayNow()
       }
     }
-    box.addView(title)
-    box.addView(subtitle)
-    box.addView(openBtn)
-    box.addView(snoozeBtn)
-    container.addView(
-      box,
+    card.addView(title)
+    card.addView(subtitle)
+    card.addView(openBtn, LinearLayout.LayoutParams(
+      LinearLayout.LayoutParams.MATCH_PARENT,
+      LinearLayout.LayoutParams.WRAP_CONTENT,
+    ).apply { bottomMargin = dp(10) })
+    card.addView(snoozeBtn, LinearLayout.LayoutParams(
+      LinearLayout.LayoutParams.MATCH_PARENT,
+      LinearLayout.LayoutParams.WRAP_CONTENT,
+    ))
+    dim.addView(
+      card,
       FrameLayout.LayoutParams(
         FrameLayout.LayoutParams.MATCH_PARENT,
         FrameLayout.LayoutParams.WRAP_CONTENT,
         Gravity.CENTER,
-      ),
+      ).apply {
+        leftMargin = dp(24)
+        rightMargin = dp(24)
+      },
     )
 
     val params = WindowManager.LayoutParams(
@@ -227,15 +318,15 @@ class ShieldService : Service() {
       PixelFormat.TRANSLUCENT,
     )
     try {
-      wm.addView(container, params)
+      wm.addView(dim, params)
     } catch (_: Exception) {
       return
     }
-    overlay = container
+    overlay = dim
     overlayPackage = packageName
   }
 
-  private fun hideOverlay() {
+  private fun removeOverlayNow() {
     val view = overlay ?: return
     overlay = null
     overlayPackage = null
