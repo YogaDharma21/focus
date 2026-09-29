@@ -42,6 +42,7 @@ class ShieldService : Service() {
     const val ACTION_SHOW_URL = "com.yogacode.focus.shield.SHOW_URL"
     const val EXTRA_TITLE = "title"
     const val EXTRA_SUBTITLE = "subtitle"
+    const val EXTRA_PACKAGE = "package"
     const val CHANNEL_ID = "focus_shield_channel"
     const val NOTIF_ID = 1001
     const val POLL_MS = 5000L
@@ -56,6 +57,7 @@ class ShieldService : Service() {
   private var mainHandler: Handler? = null
   private var overlay: View? = null
   private var overlayPackage: String? = null
+  private var urlBrowserPkg: String? = null
   private var clearStreak = 0
   private val lastViolationAt = mutableMapOf<String, Long>()
 
@@ -90,6 +92,7 @@ class ShieldService : Service() {
       val title = intent.getStringExtra(EXTRA_TITLE) ?: "Blocked by Focus"
       val subtitle = intent.getStringExtra(EXTRA_SUBTITLE)
         ?: "Stay in Flow — this site is on your block list."
+      urlBrowserPkg = intent.getStringExtra(EXTRA_PACKAGE)
       mainHandler?.post { showOverlayNow("url", title, subtitle, null, null) }
     }
     return START_STICKY
@@ -167,6 +170,12 @@ class ShieldService : Service() {
 
   private fun pollOnce() {
     val current = foregroundPackage()
+    if (overlayPackage == "url") {
+      // URL overlay persists while the user stays in the blocking browser;
+      // it clears once they leave it (e.g. hardware Home) or return to Focus.
+      if (current != null && current != urlBrowserPkg) postHideOverlay()
+      return
+    }
     if (current != null && current != packageName && blockedSet().contains(current)) {
       clearStreak = 0
       val now = System.currentTimeMillis()
@@ -365,6 +374,7 @@ class ShieldService : Service() {
     val view = overlay ?: return
     overlay = null
     overlayPackage = null
+    urlBrowserPkg = null
     try {
       (getSystemService(Context.WINDOW_SERVICE) as WindowManager).removeView(view)
     } catch (_: Exception) {
