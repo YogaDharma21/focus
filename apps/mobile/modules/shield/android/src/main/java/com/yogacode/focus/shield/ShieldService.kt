@@ -42,13 +42,11 @@ class ShieldService : Service() {
     const val ACTION_SHOW_URL = "com.yogacode.focus.shield.SHOW_URL"
     const val EXTRA_TITLE = "title"
     const val EXTRA_SUBTITLE = "subtitle"
-    const val KEY_URL_SNOOZE = "urlSnoozeUntil"
     const val CHANNEL_ID = "focus_shield_channel"
     const val NOTIF_ID = 1001
     const val POLL_MS = 5000L
     const val CLEAR_POLLS_TO_HIDE = 2
     const val VIOLATION_COOLDOWN_MS = 60000L
-    const val SNOOZE_MS = 10 * 60 * 1000L
     const val KILL_DELAY_MS = 600L
     const val MAX_VIOLATIONS = 50
   }
@@ -60,7 +58,6 @@ class ShieldService : Service() {
   private var overlayPackage: String? = null
   private var clearStreak = 0
   private val lastViolationAt = mutableMapOf<String, Long>()
-  private val snoozedUntil = mutableMapOf<String, Long>()
 
   private val poller = object : Runnable {
     override fun run() {
@@ -93,7 +90,7 @@ class ShieldService : Service() {
       val title = intent.getStringExtra(EXTRA_TITLE) ?: "Blocked by Focus"
       val subtitle = intent.getStringExtra(EXTRA_SUBTITLE)
         ?: "Stay in Flow — this site is on your block list."
-      mainHandler?.post { showOverlayNow("url", title, subtitle, null, null, KEY_URL_SNOOZE) }
+      mainHandler?.post { showOverlayNow("url", title, subtitle, null, null) }
     }
     return START_STICKY
   }
@@ -173,10 +170,6 @@ class ShieldService : Service() {
     if (current != null && current != packageName && blockedSet().contains(current)) {
       clearStreak = 0
       val now = System.currentTimeMillis()
-      if (now < (snoozedUntil[current] ?: 0L)) {
-        postHideOverlay()
-        return
-      }
       if (now - (lastViolationAt[current] ?: 0L) >= VIOLATION_COOLDOWN_MS) {
         lastViolationAt[current] = now
         recordViolation(current, now)
@@ -189,7 +182,6 @@ class ShieldService : Service() {
           pkg,
           "$label blocked",
           "Stay in Flow — $label is on your block list.",
-          pkg,
           pkg,
           pkg,
         )
@@ -230,7 +222,6 @@ class ShieldService : Service() {
     subtitleText: String,
     iconPackage: String?,
     killPackage: String?,
-    snoozeKey: String?,
   ) {
     if (!Settings.canDrawOverlays(this)) return
     removeOverlayNow()
@@ -312,8 +303,8 @@ class ShieldService : Service() {
         }
       }
     }
-    val snoozeBtn = Button(this).apply {
-      text = "Snooze 10 min"
+    val closeBtn = Button(this).apply {
+      text = "Close App"
       textSize = 14f
       setTextColor(0xFFFAFAFA.toInt())
       background = GradientDrawable().apply {
@@ -323,13 +314,13 @@ class ShieldService : Service() {
       }
       setPadding(dp(16), dp(14), dp(16), dp(14))
       setOnClickListener {
-        if (snoozeKey == KEY_URL_SNOOZE) {
-          getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-            .putLong(KEY_URL_SNOOZE, System.currentTimeMillis() + SNOOZE_MS).apply()
-        } else if (snoozeKey != null) {
-          snoozedUntil[snoozeKey] = System.currentTimeMillis() + SNOOZE_MS
-        }
         removeOverlayNow()
+        val home = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+        home.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        try {
+          startActivity(home)
+        } catch (_: Exception) {
+        }
       }
     }
     card.addView(title)
@@ -338,7 +329,7 @@ class ShieldService : Service() {
       LinearLayout.LayoutParams.MATCH_PARENT,
       LinearLayout.LayoutParams.WRAP_CONTENT,
     ).apply { bottomMargin = dp(10) })
-    card.addView(snoozeBtn, LinearLayout.LayoutParams(
+    card.addView(closeBtn, LinearLayout.LayoutParams(
       LinearLayout.LayoutParams.MATCH_PARENT,
       LinearLayout.LayoutParams.WRAP_CONTENT,
     ))
