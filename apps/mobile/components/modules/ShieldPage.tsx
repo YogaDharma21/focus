@@ -182,7 +182,6 @@ export function ShieldPage() {
 
   const [listTab, setListTab] = useState<'blocked' | 'allowed'>('blocked');
   const [siteInput, setSiteInput] = useState('');
-  const [appInput, setAppInput] = useState('');
   const [nativeStatus, setNativeStatus] = useState<NativeShieldStatus | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [installedApps, setInstalledApps] = useState<InstalledShieldApp[]>([]);
@@ -223,13 +222,6 @@ export function ShieldPage() {
     if (listTab === 'blocked') addBlockedSite(value);
     else addAllowedSite(value);
     setSiteInput('');
-  };
-
-  const handleAddApp = () => {
-    const value = appInput.trim();
-    if (!value) return;
-    addBlockedApp(value);
-    setAppInput('');
   };
 
   const sites = listTab === 'blocked' ? shield.blockedSites : shield.allowedSites;
@@ -414,48 +406,10 @@ export function ShieldPage() {
           Enforced by the on-device blocking service in dev builds; stored only while running in Expo Go.
         </Text>
 
-        <View style={styles.inputRow}>
-          <TextInput
-            style={[
-              styles.input,
-              { backgroundColor: colors.muted, borderColor: colors.border, color: colors.text },
-            ]}
-            placeholder="App package (e.g. com.instagram.android)..."
-            placeholderTextColor={colors.mutedText}
-            value={appInput}
-            onChangeText={setAppInput}
-            onSubmitEditing={handleAddApp}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-          <TouchableOpacity
-            style={[styles.addBtn, { backgroundColor: colors.primary }]}
-            onPress={handleAddApp}
-            activeOpacity={0.8}
-          >
-            <Plus size={18} color={colors.primaryText} />
-          </TouchableOpacity>
-        </View>
-
-        {shield.blockedApps.length === 0 ? (
-          <Text style={[styles.emptyText, { color: colors.mutedText }]}>No blocked apps yet.</Text>
-        ) : (
-          <View style={styles.list}>
-            {shield.blockedApps.map((app) => (
-              <BlockedAppRow
-                key={app}
-                packageName={app}
-                label={installedLabels[app] ?? app}
-                colors={colors}
-                onRemove={() => removeBlockedApp(app)}
-              />
-            ))}
-          </View>
-        )}
-
         <TouchableOpacity
           style={[
             styles.browseBtn,
+            styles.browseBtnTop,
             {
               backgroundColor: colors.muted,
               borderColor: colors.border,
@@ -474,6 +428,22 @@ export function ShieldPage() {
             Needs the dev build to read the installed app list.
           </Text>
         ) : null}
+
+        {shield.blockedApps.length === 0 ? (
+          <Text style={[styles.emptyText, { color: colors.mutedText }]}>No blocked apps yet.</Text>
+        ) : (
+          <View style={styles.list}>
+            {shield.blockedApps.map((app) => (
+              <BlockedAppRow
+                key={app}
+                packageName={app}
+                label={installedLabels[app] ?? app}
+                colors={colors}
+                onRemove={() => removeBlockedApp(app)}
+              />
+            ))}
+          </View>
+        )}
       </View>
 
       {Platform.OS === 'android' ? (
@@ -895,6 +865,9 @@ const styles = StyleSheet.create({
   browseBtnText: {
     fontSize: 13,
     fontWeight: '600',
+  },
+  browseBtnTop: {
+    marginBottom: 12,
   },
   appRow: {
     flexDirection: 'row',
