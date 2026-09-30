@@ -15,6 +15,8 @@ export interface ShieldBlockCardProps {
   onPauseTimer: () => void;
   onDisableShield: () => void;
   onDismiss: () => void;
+  /** Snooze a single item (row X). Falls back to onDismiss when omitted. */
+  onSnoozeOne?: (kind: "app" | "site", match: string) => void;
 }
 
 export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
@@ -26,7 +28,12 @@ export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
   onPauseTimer,
   onDisableShield,
   onDismiss,
+  onSnoozeOne,
 }) => {
+  const handleSnoozeOne = (kind: "app" | "site", match: string) => {
+    if (onSnoozeOne) onSnoozeOne(kind, match);
+    else onDismiss();
+  };
   return (
     <div className="max-w-md w-full bg-card border border-border rounded-2xl shadow-2xl p-6 space-y-5 animate-in zoom-in-95 duration-150 max-h-[85vh] overflow-y-auto">
       <div className="flex items-start justify-between">
@@ -98,6 +105,13 @@ export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
                 Close app
               </button>
             )}
+            <button
+              onClick={() => handleSnoozeOne(v.kind, v.match)}
+              className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              title={`Snooze ${v.match} for 10 minutes`}
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         ))}
       </div>
@@ -141,11 +155,16 @@ export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
 };
 
 interface ShieldBlockOverlayProps {
-  onDismiss: () => void;
+  /** Snooze all violations for 10 minutes ("Keep Focusing" / header X). */
+  onSnooze: () => void;
+  /** Snooze a single violation row for 10 minutes. */
+  onSnoozeOne: (kind: "app" | "site", match: string) => void;
+  /** Clear violations without snoozing (pause timer / disable shield). */
+  onClear: () => void;
 }
 
 /** In-app overlay (renders inside the main Focus window). */
-export const ShieldBlockOverlay: React.FC<ShieldBlockOverlayProps> = ({ onDismiss }) => {
+export const ShieldBlockOverlay: React.FC<ShieldBlockOverlayProps> = ({ onSnooze, onSnoozeOne, onClear }) => {
   const {
     shieldViolations,
     resolveShieldViolation,
@@ -181,12 +200,14 @@ export const ShieldBlockOverlay: React.FC<ShieldBlockOverlayProps> = ({ onDismis
 
   const handlePauseTimer = () => {
     setIsActive(false);
-    onDismiss();
+    // No snooze: resuming the timer re-triggers the overlay while the
+    // offender is still present.
+    onClear();
   };
 
   const handleDisableShield = () => {
     setShieldEnabled(false);
-    onDismiss();
+    onClear();
   };
 
   return (
@@ -199,7 +220,8 @@ export const ShieldBlockOverlay: React.FC<ShieldBlockOverlayProps> = ({ onDismis
         terminateError={terminateError}
         onPauseTimer={handlePauseTimer}
         onDisableShield={handleDisableShield}
-        onDismiss={onDismiss}
+        onDismiss={onSnooze}
+        onSnoozeOne={onSnoozeOne}
       />
     </div>
   );
