@@ -315,7 +315,7 @@ export const ShieldPage: React.FC = () => {
               ))}
               <div className="pt-3 space-y-2">
                 <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
-                  Running now — click + to block
+                  Choose from your apps — click + to block
                 </p>
                 <RunningAppsPicker
                   blockedApps={shield.blockedApps}

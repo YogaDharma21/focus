@@ -35,6 +35,20 @@ export interface RunningAppsResult {
   error?: string;
 }
 
+export interface InstalledAppInfo {
+  /** Friendly name from the Start Menu shortcut or uninstall entry. */
+  displayName: string;
+  /** Exe image name used by the blocked-apps list, e.g. "spotify.exe". */
+  image: string;
+  source: "start-menu" | "registry";
+}
+
+export interface InstalledAppsResult {
+  success: boolean;
+  apps: InstalledAppInfo[];
+  error?: string;
+}
+
 export interface AppIconResult {
   success: boolean;
   icon: string;
@@ -56,6 +70,7 @@ export interface ElectronAPI {
   onExternalAudioState: (callback: (state: ExternalAudioState) => void) => () => void;
   terminateBlockedProcess: (imageName: string) => Promise<{ success: boolean; error?: string }>;
   listRunningApps: () => Promise<RunningAppsResult>;
+  listInstalledApps: (refresh?: boolean) => Promise<InstalledAppsResult>;
   getAppIcon: (imageName: string) => Promise<AppIconResult>;
   onShieldViolation: (callback: (violation: ShieldViolation) => void) => () => void;
   sendShieldOverlayAction: (action: ShieldOverlayAction, keys?: string[]) => void;
@@ -122,6 +137,10 @@ export const electron = {
   },
   listRunningApps: async (): Promise<RunningAppsResult> => {
     if (window.electron) return window.electron.listRunningApps();
+    return { success: false, apps: [], error: "Not running inside Electron." };
+  },
+  listInstalledApps: async (refresh?: boolean): Promise<InstalledAppsResult> => {
+    if (window.electron) return window.electron.listInstalledApps(refresh);
     return { success: false, apps: [], error: "Not running inside Electron." };
   },
   getAppIcon: async (imageName: string): Promise<AppIconResult> => {
