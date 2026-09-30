@@ -192,6 +192,9 @@ export const ShieldBlockOverlay: React.FC<ShieldBlockOverlayProps> = ({ onSnooze
     const result = await electron.terminateBlockedProcess(process ?? match);
     setTerminating(null);
     if (result.success) {
+      // Short main-side quiet period so a lingering process doesn't instantly
+      // re-pop the card. Not a snooze: detections resume after ~30s if alive.
+      electron.sendShieldOverlayAction('terminate-cooldown', [`${kind}:${match}`]);
       resolveShieldViolation(kind, match);
     } else {
       setTerminateError(result.error ?? "Could not close the app.");

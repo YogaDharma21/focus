@@ -50,6 +50,7 @@ export const ShieldOverlayRoot: React.FC = () => {
     setTerminating(null);
     if (result.success) {
       terminatedAt.current.set(`${kind}:${match}`, Date.now());
+      electron.sendShieldOverlayAction('terminate-cooldown', [`${kind}:${match}`]);
       setViolations((prev) => prev.filter((v) => !(v.kind === kind && v.match === match)));
     } else {
       setTerminateError(result.error ?? "Could not close the app.");
