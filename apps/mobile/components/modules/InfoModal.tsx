@@ -1,7 +1,8 @@
 import React from 'react';
-import { View, Text, Modal, TouchableOpacity, StyleSheet, Linking } from 'react-native';
+import { View, Text, Modal, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 import { X, Code2, ExternalLink } from 'lucide-react-native';
+import { openShieldCheckedUrl } from '@/lib/links';
 
 interface InfoModalProps {
   visible: boolean;
@@ -14,7 +15,7 @@ export function InfoModal({ visible, onClose }: InfoModalProps) {
   const { colors } = useTheme();
 
   const handleOpenGithub = () => {
-    Linking.openURL(GITHUB_REPO_URL).catch(() => {});
+    void openShieldCheckedUrl(GITHUB_REPO_URL);
   };
 
   return (

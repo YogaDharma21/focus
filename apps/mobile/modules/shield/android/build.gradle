@@ -1,0 +1,13 @@
+apply plugin: 'com.android.library'
+apply plugin: 'expo-module-gradle-plugin'
+
+group = 'com.yogacode.focus.shield'
+version = '0.0.1'
+
+android {
+  namespace 'com.yogacode.focus.shield'
+  defaultConfig {
+    versionCode 1
+    versionName '0.0.1'
+  }
+}

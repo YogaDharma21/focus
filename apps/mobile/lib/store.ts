@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeStorage } from './storage';
+import { DEFAULT_SHIELD_CONFIG, normalizeAppName, normalizeSite, type ShieldConfig } from './shield';
 
-export type ViewType = 'FOCUS' | 'JOURNAL' | 'SETTINGS';
+export type ViewType = 'FOCUS' | 'JOURNAL' | 'SHIELD' | 'SETTINGS';
 
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
 
@@ -68,6 +69,16 @@ interface AppState {
 
   deepFocusMode: boolean;
   setDeepFocusMode: (mode: boolean) => void;
+
+  shield: ShieldConfig;
+  setShieldEnabled: (enabled: boolean) => void;
+  setUrlBlocking: (enabled: boolean) => void;
+  addBlockedSite: (site: string) => void;
+  removeBlockedSite: (site: string) => void;
+  addAllowedSite: (site: string) => void;
+  removeAllowedSite: (site: string) => void;
+  addBlockedApp: (app: string) => void;
+  removeBlockedApp: (app: string) => void;
 
   addSession: (session: Session) => void;
   addDistraction: (category: string) => void;
@@ -157,6 +168,42 @@ export const useAppStore = create<AppState>()(
       deepFocusMode: false,
       setDeepFocusMode: (mode) => set({ deepFocusMode: mode }),
 
+      shield: { ...DEFAULT_SHIELD_CONFIG },
+      setShieldEnabled: (enabled) =>
+        set((state) => ({ shield: { ...state.shield, enabled } })),
+      setUrlBlocking: (enabled) =>
+        set((state) => ({ shield: { ...state.shield, urlBlocking: enabled } })),
+      addBlockedSite: (site) =>
+        set((state) => {
+          const clean = normalizeSite(site);
+          if (!clean || state.shield.blockedSites.includes(clean)) return state;
+          return { shield: { ...state.shield, blockedSites: [...state.shield.blockedSites, clean] } };
+        }),
+      removeBlockedSite: (site) =>
+        set((state) => ({
+          shield: { ...state.shield, blockedSites: state.shield.blockedSites.filter((s) => s !== site) },
+        })),
+      addAllowedSite: (site) =>
+        set((state) => {
+          const clean = normalizeSite(site);
+          if (!clean || state.shield.allowedSites.includes(clean)) return state;
+          return { shield: { ...state.shield, allowedSites: [...state.shield.allowedSites, clean] } };
+        }),
+      removeAllowedSite: (site) =>
+        set((state) => ({
+          shield: { ...state.shield, allowedSites: state.shield.allowedSites.filter((s) => s !== site) },
+        })),
+      addBlockedApp: (app) =>
+        set((state) => {
+          const clean = normalizeAppName(app);
+          if (!clean || state.shield.blockedApps.includes(clean)) return state;
+          return { shield: { ...state.shield, blockedApps: [...state.shield.blockedApps, clean] } };
+        }),
+      removeBlockedApp: (app) =>
+        set((state) => ({
+          shield: { ...state.shield, blockedApps: state.shield.blockedApps.filter((a) => a !== app) },
+        })),
+
       addSession: (session) =>
         set((state) => ({
           sessions: [...(state.sessions || []), session],
@@ -190,6 +237,17 @@ export const useAppStore = create<AppState>()(
     {
       name: 'focus-mobile-storage-v1',
       storage: createJSONStorage(() => safeStorage),
+      version: 2,
+      migrate: (persisted: unknown, _version: number) => {
+        const state = (persisted ?? {}) as Record<string, unknown>;
+        const storedShield =
+          state.shield && typeof state.shield === 'object'
+            ? (state.shield as Record<string, unknown>)
+            : {};
+        // Field-merge so new shield options backfill onto existing installs.
+        state.shield = { ...DEFAULT_SHIELD_CONFIG, ...storedShield };
+        return state as unknown as AppState;
+      },
     }
   )
 );
