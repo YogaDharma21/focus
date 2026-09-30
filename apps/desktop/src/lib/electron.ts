@@ -18,6 +18,29 @@ export interface ExternalAudioState {
   playing: boolean;
 }
 
+export interface RunningAppInfo {
+  /** Exe image name used by the blocked-apps list, e.g. "discord.exe". */
+  image: string;
+  /** Friendly name without extension, e.g. "Discord". */
+  displayName: string;
+  /** Foreground window title, when known. */
+  title: string;
+  /** Real exe icon as a data URL, or "" when unavailable. */
+  icon: string;
+}
+
+export interface RunningAppsResult {
+  success: boolean;
+  apps: RunningAppInfo[];
+  error?: string;
+}
+
+export interface AppIconResult {
+  success: boolean;
+  icon: string;
+  error?: string;
+}
+
 export interface ElectronAPI {
   minimizeWindow: () => void;
   maximizeWindow: () => void;
@@ -32,6 +55,8 @@ export interface ElectronAPI {
   getExternalAudioState: () => Promise<ExternalAudioState>;
   onExternalAudioState: (callback: (state: ExternalAudioState) => void) => () => void;
   terminateBlockedProcess: (imageName: string) => Promise<{ success: boolean; error?: string }>;
+  listRunningApps: () => Promise<RunningAppsResult>;
+  getAppIcon: (imageName: string) => Promise<AppIconResult>;
   onShieldViolation: (callback: (violation: ShieldViolation) => void) => () => void;
   sendShieldOverlayAction: (action: ShieldOverlayAction, keys?: string[]) => void;
   onShieldOverlayAction: (callback: (action: ShieldOverlayAction) => void) => () => void;
@@ -94,6 +119,14 @@ export const electron = {
   terminateBlockedProcess: async (imageName: string) => {
     if (window.electron) return window.electron.terminateBlockedProcess(imageName);
     return { success: false, error: "Not running inside Electron." };
+  },
+  listRunningApps: async (): Promise<RunningAppsResult> => {
+    if (window.electron) return window.electron.listRunningApps();
+    return { success: false, apps: [], error: "Not running inside Electron." };
+  },
+  getAppIcon: async (imageName: string): Promise<AppIconResult> => {
+    if (window.electron) return window.electron.getAppIcon(imageName);
+    return { success: false, icon: "", error: "Not running inside Electron." };
   },
   onShieldViolation: (callback: (violation: ShieldViolation) => void) => {
     if (window.electron) return window.electron.onShieldViolation(callback);

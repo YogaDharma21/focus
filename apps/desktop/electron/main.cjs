@@ -219,6 +219,26 @@ function setupIPC() {
         return terminateBlockedProcess(imageName);
     });
 
+    ipcMain.handle("shield:list-running-apps", async () => {
+        try {
+            const apps = await listRunningAppsForPicker();
+            return { success: true, apps };
+        } catch (err) {
+            console.error("Shield list-running-apps failed:", err);
+            return { success: false, error: String((err && err.message) || err), apps: [] };
+        }
+    });
+
+    ipcMain.handle("shield:get-app-icon", async (_event, imageName) => {
+        try {
+            const icon = await getAppIconForImage(imageName);
+            return { success: true, icon };
+        } catch (err) {
+            console.error("Shield get-app-icon failed:", err);
+            return { success: false, error: String((err && err.message) || err), icon: "" };
+        }
+    });
+
     ipcMain.handle("audio:get-external-state", () => {
         return { supported: externalAudioSupported, playing: externalAudioPlaying };
     });
@@ -445,6 +465,131 @@ function shouldNotify(key) {
     if (now - last < SHIELD_NOTIFY_COOLDOWN_MS) return false;
     shieldLastNotified.set(key, now);
     return true;
+}
+
+// --- Running-app picker + app icons ------------------------------------------
+// Powers the "select from running apps" picker in the Shield page and the
+// real exe icons shown next to blocked apps. Only processes with a visible
+// window are listed, which keeps the picker relevant and icon extraction
+// cheap (typically a dozen entries instead of hundreds of background
+// processes). Icons are resolved with Electron's app.getFileIcon and cached
+// by exe path.
+
+const SHIELD_PICKER_SCRIPT =
+    "Get-Process | Where-Object { $_.MainWindowTitle -and $_.MainWindowTitle.Trim() -ne '' } | ForEach-Object { try { $exePath = $_.Path } catch { $exePath = '' }; if (-not $exePath) { $exePath = '' }; \"$($_.ProcessName)`t$($_.Id)`t$($exePath)`t$($_.MainWindowTitle)\" }";
+
+const shieldAppIconCache = new Map();
+
+async function getFileIconDataUrl(exePath) {
+    if (!exePath) return "";
+    const key = String(exePath).toLowerCase();
+    if (shieldAppIconCache.has(key)) return shieldAppIconCache.get(key);
+    try {
+        const img = await app.getFileIcon(exePath, { size: "normal" });
+        const url = img && !img.isEmpty() ? img.toDataURL() : "";
+        shieldAppIconCache.set(key, url);
+        if (shieldAppIconCache.size > 120) {
+            const oldest = shieldAppIconCache.keys().next().value;
+            shieldAppIconCache.delete(oldest);
+        }
+        return url;
+    } catch {
+        shieldAppIconCache.set(key, "");
+        return "";
+    }
+}
+
+function sanitizeImageName(imageName) {
+    return String(imageName || "")
+        .trim()
+        .toLowerCase()
+        .split(/[/\\]/)
+        .pop()
+        .replace(/[^a-z0-9._-]/g, "")
+        .slice(0, 80);
+}
+
+async function listWindowedProcessesRaw() {
+    if (process.platform !== "win32") return [];
+    const out = await execFileAsync("powershell", [
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        SHIELD_PICKER_SCRIPT,
+    ]);
+    const rows = [];
+    for (const line of out.split(/\r?\n/)) {
+        if (!line || line.indexOf("\t") === -1) continue;
+        const parts = line.split("\t");
+        if (parts.length < 4) continue;
+        const procName = (parts[0] || "").trim();
+        const exePath = (parts[2] || "").trim();
+        const title = parts.slice(3).join("\t").trim();
+        if (!procName || !title) continue;
+        rows.push({ procName, exePath, title });
+    }
+    return rows;
+}
+
+/**
+ * List user-visible apps for the Shield picker. Each entry carries the exe
+ * image name used by the blocked-apps list, a friendly display name, the
+ * foreground window title, and (on Windows) the real exe icon as a data URL.
+ */
+async function listRunningAppsForPicker() {
+    if (process.platform !== "win32") {
+        const out = await execFileAsync("ps", ["-ax", "-o", "comm="]);
+        const seen = new Set();
+        const apps = [];
+        for (const line of out.split(/\r?\n/)) {
+            const base = line.trim().split("/").pop();
+            if (!base || seen.has(base.toLowerCase())) continue;
+            seen.add(base.toLowerCase());
+            apps.push({
+                image: base,
+                displayName: base.replace(/\.exe$/i, ""),
+                title: "",
+                icon: "",
+            });
+            if (apps.length >= 100) break;
+        }
+        return apps;
+    }
+    const rows = await listWindowedProcessesRaw();
+    const seen = new Set();
+    const unique = [];
+    for (const row of rows) {
+        const image = `${row.procName}.exe`.toLowerCase();
+        if (seen.has(image)) continue;
+        seen.add(image);
+        unique.push(row);
+        if (unique.length >= 60) break;
+    }
+    return Promise.all(
+        unique.map(async (row) => ({
+            image: `${row.procName}.exe`.toLowerCase(),
+            displayName: row.procName,
+            title: row.title,
+            icon: await getFileIconDataUrl(row.exePath),
+        }))
+    );
+}
+
+/**
+ * Resolve the real exe icon for a blocked-app entry (e.g. "discord.exe").
+ * Matches against currently running windowed processes so the exact on-disk
+ * exe path is known. Returns "" when the app is not running or has no icon.
+ */
+async function getAppIconForImage(imageName) {
+    const safe = sanitizeImageName(imageName);
+    if (!safe || process.platform !== "win32") return "";
+    const rows = await listWindowedProcessesRaw();
+    const withExt = safe.includes(".") ? safe : `${safe}.exe`;
+    const hit = rows.find(
+        (row) => `${row.procName}.exe`.toLowerCase() === withExt
+    );
+    if (!hit || !hit.exePath) return "";
+    return getFileIconDataUrl(hit.exePath);
 }
 
 function reportShieldViolation(violation) {

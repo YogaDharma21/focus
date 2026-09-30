@@ -12,6 +12,8 @@ import {
 import { useDesktopStore } from '../../lib/store';
 import { isBlockingRequired } from '../../lib/shield';
 import { cn } from '../../lib/utils';
+import { BlockedAppIcon, SiteIcon } from './ShieldIcons';
+import { RunningAppsPicker } from './RunningAppsPicker';
 
 type ShieldListTab = "blocked" | "allowed" | "apps";
 
@@ -34,7 +36,7 @@ const TAB_CONFIG: { id: ShieldListTab; label: (counts: { blocked: number; allowe
   {
     id: "apps",
     label: (c) => `Blocked Apps (${c.apps})`,
-    placeholder: "Block app (e.g. discord.exe)...",
+    placeholder: "Type an app to block (or pick below)...",
     submitLabel: "Block",
   },
 ];
@@ -86,6 +88,12 @@ export const ShieldPage: React.FC = () => {
     } else {
       addBlockedApp(value);
     }
+    showFeedback(`Added ${value}.`);
+  };
+
+  const handleBlockRunningApp = (image: string) => {
+    addBlockedApp(image);
+    showFeedback(`Blocked ${image}.`);
   };
 
   return (
@@ -220,7 +228,10 @@ export const ShieldPage: React.FC = () => {
                   key={site}
                   className="px-4 py-2.5 rounded-xl border flex items-center justify-between bg-card/60 border-border"
                 >
-                  <span className="text-xs font-mono text-foreground">{site}</span>
+                  <span className="text-xs font-mono text-foreground flex items-center gap-2 min-w-0">
+                    <SiteIcon site={site} />
+                    <span className="truncate">{site}</span>
+                  </span>
                   <button
                     onClick={() => removeBlockedSite(site)}
                     className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-400 hover:bg-secondary transition-colors"
@@ -260,7 +271,10 @@ export const ShieldPage: React.FC = () => {
                   key={site}
                   className="px-4 py-2.5 rounded-xl border flex items-center justify-between bg-emerald-500/5 border-emerald-500/20"
                 >
-                  <span className="text-xs font-mono text-foreground">{site}</span>
+                  <span className="text-xs font-mono text-foreground flex items-center gap-2 min-w-0">
+                    <SiteIcon site={site} />
+                    <span className="truncate">{site}</span>
+                  </span>
                   <button
                     onClick={() => removeAllowedSite(site)}
                     className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-400 hover:bg-secondary transition-colors"
@@ -277,8 +291,8 @@ export const ShieldPage: React.FC = () => {
             <div className="space-y-1.5">
               {shield.blockedApps.length === 0 && (
                 <p className="text-[11px] text-muted-foreground px-1">
-                  No blocked apps yet — add process names (e.g. discord.exe) to get warned
-                  when they run during Flow sessions.
+                  No blocked apps yet — pick a running app below or type a process
+                  name (e.g. discord.exe).
                 </p>
               )}
               {shield.blockedApps.map((app) => (
@@ -286,9 +300,9 @@ export const ShieldPage: React.FC = () => {
                   key={app}
                   className="px-4 py-2.5 rounded-xl border flex items-center justify-between bg-card/60 border-border"
                 >
-                  <span className="text-xs font-mono text-foreground flex items-center gap-2">
-                    <AppWindow className="w-3.5 h-3.5 text-muted-foreground" />
-                    {app}
+                  <span className="text-xs font-mono text-foreground flex items-center gap-2 min-w-0">
+                    <BlockedAppIcon image={app} />
+                    <span className="truncate">{app}</span>
                   </span>
                   <button
                     onClick={() => removeBlockedApp(app)}
@@ -299,6 +313,15 @@ export const ShieldPage: React.FC = () => {
                   </button>
                 </div>
               ))}
+              <div className="pt-3 space-y-2">
+                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
+                  Running now — click + to block
+                </p>
+                <RunningAppsPicker
+                  blockedApps={shield.blockedApps}
+                  onBlock={handleBlockRunningApp}
+                />
+              </div>
               <div className="flex flex-wrap items-center gap-2 pt-2">
                 <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
                   Quick add:

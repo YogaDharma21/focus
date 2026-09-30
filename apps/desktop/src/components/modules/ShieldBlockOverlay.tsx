@@ -3,6 +3,7 @@ import { ShieldAlert, X, Pause, XCircle, Loader2 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
 import type { ShieldViolation } from '../../lib/shield';
+import { BlockedAppIcon, SiteIcon } from './ShieldIcons';
 
 export interface ShieldBlockCardProps {
   violations: ShieldViolation[];
@@ -66,15 +67,22 @@ export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
             key={`${v.kind}:${v.match}`}
             className="px-4 py-3 rounded-xl bg-secondary/60 border border-border flex items-center justify-between gap-3"
           >
-            <div className="min-w-0">
-              <p className="text-xs font-bold text-foreground truncate">
-                {v.kind === "app" ? (v.process ?? v.match) : v.match}
-              </p>
-              <p className="text-[10px] font-mono text-muted-foreground truncate">
-                {v.kind === "app"
-                  ? "Blocked app is running"
-                  : v.title ?? "Blocked site detected"}
-              </p>
+            <div className="min-w-0 flex items-center gap-2.5 flex-1">
+              {v.kind === "app" ? (
+                <BlockedAppIcon image={v.process ?? v.match} />
+              ) : (
+                <SiteIcon site={v.match} />
+              )}
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-foreground truncate">
+                  {v.kind === "app" ? (v.process ?? v.match) : v.match}
+                </p>
+                <p className="text-[10px] font-mono text-muted-foreground truncate">
+                  {v.kind === "app"
+                    ? "Blocked app is running"
+                    : v.title ?? "Blocked site detected"}
+                </p>
+              </div>
             </div>
             {v.kind === "app" && (
               <button

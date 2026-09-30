@@ -26,6 +26,8 @@ contextBridge.exposeInMainWorld('electron', {
     return () => ipcRenderer.removeListener('audio:external-state', handler);
   },
   terminateBlockedProcess: (imageName) => ipcRenderer.invoke('shield:terminate-process', imageName),
+  listRunningApps: () => ipcRenderer.invoke('shield:list-running-apps'),
+  getAppIcon: (imageName) => ipcRenderer.invoke('shield:get-app-icon', imageName),
   onShieldViolation: (callback) => {
     const handler = (_event, violation) => callback(violation);
     ipcRenderer.on('shield-violation', handler);
