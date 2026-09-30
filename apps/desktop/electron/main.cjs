@@ -239,6 +239,24 @@ function setupIPC() {
         }
     });
 
+    ipcMain.handle("shield:list-installed-apps", async (_event, refresh) => {
+        try {
+            const apps = await listInstalledApps(!!refresh);
+            // Keep exe paths main-side; the renderer only needs names.
+            return {
+                success: true,
+                apps: apps.map((a) => ({
+                    displayName: a.displayName,
+                    image: a.image,
+                    source: a.source,
+                })),
+            };
+        } catch (err) {
+            console.error("Shield list-installed-apps failed:", err);
+            return { success: false, error: String((err && err.message) || err), apps: [] };
+        }
+    });
+
     ipcMain.handle("audio:get-external-state", () => {
         return { supported: externalAudioSupported, playing: externalAudioPlaying };
     });
@@ -588,8 +606,99 @@ async function getAppIconForImage(imageName) {
     const hit = rows.find(
         (row) => `${row.procName}.exe`.toLowerCase() === withExt
     );
-    if (!hit || !hit.exePath) return "";
-    return getFileIconDataUrl(hit.exePath);
+    if (hit && hit.exePath) return getFileIconDataUrl(hit.exePath);
+    // Fallback: installed but not currently running.
+    try {
+        const installed = await listInstalledApps(false);
+        const found = installed.find((a) => a.image === withExt);
+        if (found && found.path) return getFileIconDataUrl(found.path);
+    } catch {
+        // Best effort: missing icon degrades to the generic app glyph.
+    }
+    return "";
+}
+
+// --- Installed-app discovery -------------------------------------------------
+// Lets the Shield picker offer every installed app — not just running ones —
+// so e.g. Spotify can be blocklisted without launching it first. Sources:
+// Start Menu shortcuts (friendly name + resolved exe target) supplemented by
+// registry uninstall entries whose DisplayIcon points at an exe. Blocking
+// itself is unchanged: detection polls the process list, so an installed app
+// is flagged the moment it launches.
+
+const SHIELD_INSTALLED_SCRIPT = [
+    "$shieldSeen = @{}",
+    "$shell = New-Object -ComObject WScript.Shell",
+    "$skipShortcut = '(?i)uninstall|unins|help|update|readme|manual|documentation|website|support|license|changelog|repair|remove'",
+    "$menus = @((Join-Path $env:ProgramData 'Microsoft\\Windows\\Start Menu\\Programs'), (Join-Path $env:AppData 'Microsoft\\Windows\\Start Menu\\Programs'))",
+    "foreach ($menu in $menus) {",
+    "  if (-not (Test-Path -LiteralPath $menu)) { continue }",
+    "  Get-ChildItem -LiteralPath $menu -Filter *.lnk -Recurse -ErrorAction SilentlyContinue | ForEach-Object {",
+    "    $lnkName = [System.IO.Path]::GetFileNameWithoutExtension($_.Name)",
+    "    if ($lnkName -match $skipShortcut) { return }",
+    "    try { $t = $shell.CreateShortcut($_.FullName).TargetPath } catch { return }",
+    "    if (-not $t) { return }",
+    "    $t = ([string]$t).Trim()",
+    "    if ($t -notmatch '(?i)\\.exe$') { return }",
+    "    $t = [System.Environment]::ExpandEnvironmentVariables($t)",
+    "    if (-not (Test-Path -LiteralPath $t -PathType Leaf)) { return }",
+    "    $img = [System.IO.Path]::GetFileName($t).ToLower()",
+    "    if (-not $shieldSeen.ContainsKey($img)) { $shieldSeen[$img] = $true; \"$lnkName`t$img`t$t`tstart-menu\" }",
+    "  }",
+    "}",
+    "$skipReg = '(?i)^(update for|security update|hotfix|kb\\d+)|redistributable|windows sdk|\\.net |visual c\\+\\+|driver|firmware'",
+    "$regKeys = @('HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*', 'HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*', 'HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*')",
+    "Get-ItemProperty $regKeys -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -and -not $_.SystemComponent -and -not $_.ParentKeyName -and $_.DisplayIcon } | ForEach-Object {",
+    "  $dn = ([string]$_.DisplayName).Trim()",
+    "  if ($dn -match $skipReg) { return }",
+    "  $ic = ([string]$_.DisplayIcon).Trim()",
+    "  $exe = ''",
+    "  if ($ic -match '\"([^\"]+\\.exe)\"?') { $exe = $Matches[1] }",
+    "  elseif ($ic -match '([^,]+\\.exe)') { $exe = $Matches[1] }",
+    "  if (-not $exe) { return }",
+    "  $exe = [System.Environment]::ExpandEnvironmentVariables($exe)",
+    "  if (-not (Test-Path -LiteralPath $exe -PathType Leaf)) { return }",
+    "  $img = [System.IO.Path]::GetFileName($exe).ToLower()",
+    "  if (-not $shieldSeen.ContainsKey($img)) { $shieldSeen[$img] = $true; \"$dn`t$img`t$exe`tregistry\" }",
+    "}",
+].join("\n");
+
+let shieldInstalledCache = null;
+let shieldInstalledAt = 0;
+const SHIELD_INSTALLED_TTL_MS = 5 * 60 * 1000;
+const SHIELD_INSTALLED_MAX = 300;
+
+async function listInstalledApps(refresh) {
+    if (process.platform !== "win32") return [];
+    const now = Date.now();
+    if (!refresh && shieldInstalledCache && now - shieldInstalledAt < SHIELD_INSTALLED_TTL_MS) {
+        return shieldInstalledCache;
+    }
+    const out = await execFileAsync("powershell", [
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        SHIELD_INSTALLED_SCRIPT,
+    ]);
+    const apps = [];
+    for (const line of out.split(/\r?\n/)) {
+        if (!line || line.indexOf("\t") === -1) continue;
+        const parts = line.split("\t");
+        if (parts.length < 4) continue;
+        const displayName = (parts[0] || "").trim().slice(0, 100);
+        const image = (parts[1] || "").trim().toLowerCase().slice(0, 80);
+        const exePath = (parts[2] || "").trim();
+        const source = (parts[parts.length - 1] || "").trim();
+        if (!displayName || !image || !exePath) continue;
+        if (!/^[\w.\-]+\.exe$/.test(image)) continue;
+        if (source !== "start-menu" && source !== "registry") continue;
+        apps.push({ displayName, image, path: exePath, source });
+        if (apps.length >= SHIELD_INSTALLED_MAX) break;
+    }
+    apps.sort((a, b) => a.displayName.localeCompare(b.displayName));
+    shieldInstalledCache = apps;
+    shieldInstalledAt = now;
+    return apps;
 }
 
 function reportShieldViolation(violation) {

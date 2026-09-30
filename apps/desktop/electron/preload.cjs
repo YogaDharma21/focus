@@ -27,6 +27,7 @@ contextBridge.exposeInMainWorld('electron', {
   },
   terminateBlockedProcess: (imageName) => ipcRenderer.invoke('shield:terminate-process', imageName),
   listRunningApps: () => ipcRenderer.invoke('shield:list-running-apps'),
+  listInstalledApps: (refresh) => ipcRenderer.invoke('shield:list-installed-apps', refresh),
   getAppIcon: (imageName) => ipcRenderer.invoke('shield:get-app-icon', imageName),
   onShieldViolation: (callback) => {
     const handler = (_event, violation) => callback(violation);
