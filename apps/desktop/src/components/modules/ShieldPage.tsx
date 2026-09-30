@@ -344,8 +344,8 @@ export const ShieldPage: React.FC = () => {
           <Info className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
           <p className="text-[11px] text-muted-foreground leading-relaxed">
             While a Flow session runs, Focus watches the OS process list for blocked apps
-            and visible window titles for blocked sites. Detections raise a block overlay
-            over the offending app window and are logged as distractions — apps are only
+            and visible window titles for blocked sites. Detections raise a fullscreen
+            block overlay and are logged as distractions — apps are only
             closed when you choose to terminate them. Dismissing the overlay snoozes that
             item for 10 minutes; pausing the timer does not. Allowed domains always bypass
             site blocking.

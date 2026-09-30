@@ -7,11 +7,10 @@ const TERMINATE_GRACE_MS = 15000;
 
 /**
  * Root component for the system-wide Shield overlay window
- * (`?overlay=shield`). The main process positions this window over the
- * offending app's window (browser showing a blocked site, or the blocked
- * app itself), so the warning appears on top of the distraction — not
- * inside the main Focus window. All timer/shield state mutations are
- * delegated to the main window through the main process.
+ * (`?overlay=shield`). Runs in its own fullscreen always-on-top window so
+ * the warning appears over the blocked app or site — not inside the main
+ * Focus window. All timer/shield state mutations are delegated to the main
+ * window through the main process.
  */
 export const ShieldOverlayRoot: React.FC = () => {
   const [violations, setViolations] = useState<ShieldViolation[]>([]);
