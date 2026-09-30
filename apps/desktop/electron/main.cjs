@@ -817,9 +817,12 @@ const SHIELD_BOUNDS_SCRIPT = [
     "using System.Runtime.InteropServices;",
     "public static class ShieldWin {",
     "  [DllImport(\"user32.dll\")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT r);",
+    "  [DllImport(\"user32.dll\")] public static extern IntPtr GetForegroundWindow();",
+    "  [DllImport(\"user32.dll\")] public static extern bool IsIconic(IntPtr hWnd);",
     "  public struct RECT { public int L; public int T; public int R; public int B; }",
     "}",
     '"@',
+    "$shieldFg = [ShieldWin]::GetForegroundWindow()",
     "Get-Process | Where-Object { $_.MainWindowHandle -ne 0 -and $_.MainWindowTitle } | ForEach-Object {",
     "  $b = ''",
     "  try {",
@@ -828,9 +831,12 @@ const SHIELD_BOUNDS_SCRIPT = [
     "      if ($r.R -gt $r.L -and $r.B -gt $r.T -and $r.L -gt -32000) { $b = \"$($r.L),$($r.T),$($r.R),$($r.B)\" }",
     "    }",
     "  } catch {}",
+    "  try { if ([ShieldWin]::IsIconic($_.MainWindowHandle)) { $b = '' } } catch {}",
     "  try { $p = $_.Path } catch { $p = '' }",
     "  if (-not $p) { $p = '' }",
-    "  \"$($_.ProcessName)`t$($p)`t$($b)`t$($_.MainWindowTitle)\"",
+    "  $isFg = ''",
+    "  try { if ($_.MainWindowHandle -eq $shieldFg) { $isFg = '1' } } catch {}",
+    "  \"$($_.ProcessName)`t$($p)`t$($b)`t$($isFg)`t$($_.MainWindowTitle)\"",
     "}",
 ].join("\n");
 
@@ -851,11 +857,12 @@ async function queryWindowBounds() {
     for (const line of out.split(/\r?\n/)) {
         if (!line || line.indexOf("\t") === -1) continue;
         const parts = line.split("\t");
-        if (parts.length < 4) continue;
+        if (parts.length < 5) continue;
         const procName = (parts[0] || "").trim();
         const exePath = (parts[1] || "").trim();
         const boundsRaw = (parts[2] || "").trim();
-        const title = parts.slice(3).join("\t").trim();
+        const isForeground = (parts[3] || "").trim() === "1";
+        const title = parts.slice(4).join("\t").trim();
         if (!procName || !title) continue;
         let bounds = null;
         const m = boundsRaw.match(/^(-?\d+),(-?\d+),(-?\d+),(-?\d+)$/);
@@ -864,9 +871,12 @@ async function queryWindowBounds() {
             const y = parseInt(m[2], 10);
             const width = parseInt(m[3], 10) - x;
             const height = parseInt(m[4], 10) - y;
-            if (width > 0 && height > 0) bounds = { x, y, width, height };
+            // Reject minimized/off-screen sentinels (e.g. -32000) that slip
+            // through; small negative offsets are real (maximized shadows,
+            // secondary monitors to the left).
+            if (width > 0 && height > 0 && x > -10000 && y > -10000) bounds = { x, y, width, height };
         }
-        rows.push({ procName, exePath, bounds, title });
+        rows.push({ procName, exePath, bounds, isForeground, title });
     }
     return rows;
 }
@@ -874,7 +884,46 @@ async function queryWindowBounds() {
 /** Find the on-screen window rect (physical pixels) for a violation. */
 async function findViolationBounds(violation) {
     const rows = await queryWindowBounds();
+    return findViolationBoundsInRows(violation, rows);
+}
+
+/**
+ * Pick the best window rect to cover. With several offenders open (e.g. a
+ * blocked site in the browser plus a blocked app), a single overlay can only
+ * cover one window — so cover the offender the user is actually looking at
+ * (the foreground window), then the triggering violation's window, then any
+ * visible offender window.
+ */
+async function findBestCoverBounds(violation) {
+    const rows = await queryWindowBounds();
     if (rows.length === 0) return null;
+    const foreground = rows.find((r) => r.isForeground && r.bounds);
+    if (foreground) {
+        const appHit = matchBlockedApp(`${foreground.procName}.exe`);
+        let siteHit = null;
+        try {
+            siteHit = titleMatchesBlockedSite(foreground.title);
+        } catch {
+            // Ignore match errors and fall through to the trigger window.
+        }
+        if (appHit || siteHit) return foreground.bounds;
+    }
+    const own = findViolationBoundsInRows(violation, rows);
+    if (own) return own;
+    for (const r of rows) {
+        if (!r.bounds) continue;
+        if (matchBlockedApp(`${r.procName}.exe`)) return r.bounds;
+        try {
+            if (titleMatchesBlockedSite(r.title)) return r.bounds;
+        } catch {
+            // Ignore match errors and keep scanning.
+        }
+    }
+    return null;
+}
+
+function findViolationBoundsInRows(violation, rows) {
+    if (!rows || rows.length === 0) return null;
     if (violation.kind === "app") {
         const target = String(violation.process ?? violation.match ?? "")
             .trim()
@@ -950,7 +999,7 @@ async function positionShieldWindow(violation, options) {
     }
     let bounds = null;
     try {
-        const physical = await findViolationBounds(violation);
+        const physical = await findBestCoverBounds(violation);
         if (physical) bounds = physicalToDipBounds(physical);
     } catch (err) {
         console.error("Shield overlay positioning failed:", err);
