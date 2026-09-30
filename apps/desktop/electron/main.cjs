@@ -274,8 +274,18 @@ function setupIPC() {
                 if (key) shieldSnoozedKeys.set(String(key), until);
             }
         }
+        if (action === "terminate-cooldown") {
+            // A blocked app was just terminated: keep both overlays quiet for
+            // a short while in case the process lingers. Not a snooze — if
+            // the app is still alive afterwards, detections resume.
+            const until = Date.now() + SHIELD_TERMINATE_COOLDOWN_MS;
+            for (const key of keys) {
+                if (key) shieldCooldownKeys.set(String(key), until);
+            }
+            return;
+        }
         if (mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.webContents.send("shield-overlay-action", action);
+            mainWindow.webContents.send("shield-overlay-action", { action, keys });
         }
         hideShieldOverlay();
     });
@@ -291,6 +301,10 @@ function setupIPC() {
 const SHIELD_POLL_INTERVAL_MS = 5000;
 const SHIELD_NOTIFY_COOLDOWN_MS = 60000;
 const SHIELD_SNOOZE_MS = 10 * 60 * 1000;
+// Quiet period after a successful "Close app" in case the process lingers.
+const SHIELD_TERMINATE_COOLDOWN_MS = 30 * 1000;
+// Grace after pause/disable so an in-flight poll can't resurrect the overlay.
+const SHIELD_SETTLE_MS = 2000;
 
 let shieldConfig = {
     enabled: false,
@@ -302,11 +316,23 @@ let shieldSession = { isActive: false, timerState: "FLOW" };
 let shieldPollTimer = null;
 const shieldLastNotified = new Map();
 const shieldSnoozedKeys = new Map();
+const shieldCooldownKeys = new Map();
+// Keys already delivered to a currently-visible overlay window. Repeat polls
+// skip these so the overlay isn't re-sent (and re-focused) every 5 seconds.
+const shieldVisibleKeys = new Set();
+let shieldCalmUntil = 0;
 
 function isShieldKeySnoozed(key) {
     const until = shieldSnoozedKeys.get(key) ?? 0;
     if (Date.now() < until) return true;
     shieldSnoozedKeys.delete(key);
+    return false;
+}
+
+function isShieldKeyCoolingDown(key) {
+    const until = shieldCooldownKeys.get(key) ?? 0;
+    if (Date.now() < until) return true;
+    shieldCooldownKeys.delete(key);
     return false;
 }
 
@@ -328,6 +354,10 @@ function updateShieldState(payload) {
         };
     }
     if (!isShieldBlockingRequired()) {
+        // Entering a non-enforcing state (pause/disable/break): brief calm
+        // so an in-flight poll that started before this sync can't pop the
+        // overlay back up after the user just dismissed it via pause.
+        shieldCalmUntil = Date.now() + SHIELD_SETTLE_MS;
         hideShieldOverlay();
     }
 }
@@ -703,7 +733,17 @@ async function listInstalledApps(refresh) {
 
 function reportShieldViolation(violation) {
     const key = `${violation.kind}:${violation.match}`;
+    // Re-checked here (not just at poll entry): a pause/disable that lands
+    // mid-poll must not resurrect the overlay after its awaits resolve.
+    if (!isShieldBlockingRequired()) return;
+    if (Date.now() < shieldCalmUntil) return;
     if (isShieldKeySnoozed(key)) return;
+    if (isShieldKeyCoolingDown(key)) return;
+    // Already on screen: skip re-sending so repeat polls don't duplicate or
+    // re-focus the overlay every 5 seconds.
+    if (shieldVisibleKeys.has(key) && shieldWindow && !shieldWindow.isDestroyed() && shieldWindow.isVisible()) {
+        return;
+    }
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send("shield-violation", violation);
     }
@@ -840,6 +880,7 @@ function createShieldWindow() {
         shieldWindow = null;
         shieldWindowReady = false;
         shieldPendingViolations = [];
+        shieldVisibleKeys.clear();
     });
 
     // Reveal only after the first paint so the window never flashes blank.
@@ -866,8 +907,15 @@ function flushShieldPending() {
     ) {
         return;
     }
+    // State may have changed while loading (e.g. user paused): never reveal
+    // stale detections.
+    if (!isShieldBlockingRequired()) {
+        shieldPendingViolations = [];
+        return;
+    }
     for (const v of shieldPendingViolations) {
         shieldWindow.webContents.send("shield-violation", v);
+        shieldVisibleKeys.add(`${v.kind}:${v.match}`);
     }
     shieldPendingViolations = [];
     revealShieldWindow();
@@ -882,6 +930,7 @@ function revealShieldWindow() {
 
 function showShieldOverlay(violation) {
     try {
+        if (!isShieldBlockingRequired()) return;
         const win = createShieldWindow();
         if (win.isDestroyed()) return;
         if (!shieldWindowReady) {
@@ -890,6 +939,7 @@ function showShieldOverlay(violation) {
             return;
         }
         win.webContents.send("shield-violation", violation);
+        shieldVisibleKeys.add(`${violation.kind}:${violation.match}`);
         revealShieldWindow();
     } catch (err) {
         console.error("Shield overlay show failed:", err);
@@ -897,6 +947,7 @@ function showShieldOverlay(violation) {
 }
 
 function hideShieldOverlay() {
+    shieldVisibleKeys.clear();
     try {
         if (shieldWindow && !shieldWindow.isDestroyed() && shieldWindow.isVisible()) {
             shieldWindow.hide();

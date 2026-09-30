@@ -127,7 +127,7 @@ export const App: React.FC = () => {
 
   // Actions triggered from the system-wide Shield overlay window.
   useEffect(() => {
-    return electron.onShieldOverlayAction((action) => {
+    return electron.onShieldOverlayAction((action, keys) => {
       const state = useDesktopStore.getState();
       if (action === 'pause-timer') {
         state.setIsActive(false);
@@ -138,10 +138,28 @@ export const App: React.FC = () => {
       } else if (action === 'dismiss') {
         // Dismiss originated in the overlay window: the main process already
         // snoozed these keys, so mirror the snooze locally without echoing
-        // back (avoids a redundant IPC round-trip).
-        const keys = state.shieldViolations.map((v) => `${v.kind}:${v.match}`);
-        snoozeShieldKeys(keys);
-        state.dismissShieldViolations();
+        // back (avoids a redundant IPC round-trip). Only the forwarded keys
+        // are snoozed/resolved — never the whole current list, so per-row
+        // snooze doesn't wipe unrelated violations.
+        const targets = keys.length > 0
+          ? keys
+          : state.shieldViolations.map((v) => `${v.kind}:${v.match}`);
+        snoozeShieldKeys(targets);
+        if (keys.length > 0) {
+          for (const key of keys) {
+            const sep = key.indexOf(":");
+            if (sep === -1) continue;
+            const kind = key.slice(0, sep) as ShieldViolation["kind"];
+            const match = key.slice(sep + 1);
+            if ((kind === "app" || kind === "site") && match) {
+              state.resolveShieldViolation(kind, match);
+            }
+          }
+        } else {
+          state.dismissShieldViolations();
+        }
+      } else if (action === 'terminate-cooldown') {
+        // Handled main-side (short quiet period, no snooze, overlay untouched).
       } else {
         state.dismissShieldViolations();
       }

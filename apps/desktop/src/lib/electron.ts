@@ -74,10 +74,10 @@ export interface ElectronAPI {
   getAppIcon: (imageName: string) => Promise<AppIconResult>;
   onShieldViolation: (callback: (violation: ShieldViolation) => void) => () => void;
   sendShieldOverlayAction: (action: ShieldOverlayAction, keys?: string[]) => void;
-  onShieldOverlayAction: (callback: (action: ShieldOverlayAction) => void) => () => void;
+  onShieldOverlayAction: (callback: (action: ShieldOverlayAction, keys: string[]) => void) => () => void;
 }
 
-export type ShieldOverlayAction = 'pause-timer' | 'disable-shield' | 'dismiss';
+export type ShieldOverlayAction = 'pause-timer' | 'disable-shield' | 'dismiss' | 'terminate-cooldown';
 
 declare global {
   interface Window {
@@ -154,7 +154,7 @@ export const electron = {
   sendShieldOverlayAction: (action: ShieldOverlayAction, keys?: string[]) => {
     if (window.electron) window.electron.sendShieldOverlayAction(action, keys);
   },
-  onShieldOverlayAction: (callback: (action: ShieldOverlayAction) => void) => {
+  onShieldOverlayAction: (callback: (action: ShieldOverlayAction, keys: string[]) => void) => {
     if (window.electron) return window.electron.onShieldOverlayAction(callback);
     return () => {};
   }
