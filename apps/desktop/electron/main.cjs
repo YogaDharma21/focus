@@ -7,6 +7,7 @@ const {
     Notification,
     globalShortcut,
     nativeImage,
+    screen,
 } = require("electron");
 const path = require("path");
 const fs = require("fs");
@@ -690,9 +691,17 @@ function createShieldWindow() {
     if (shieldWindow && !shieldWindow.isDestroyed()) return shieldWindow;
 
     shieldWindowReady = false;
+    // Reset cover tracking so the next violation is positioned fresh.
+    shieldCoverKey = null;
+    shieldCoverBoundsSig = "";
+    shieldCoverAt = 0;
 
+    // Not fullscreen: the window is sized to cover the offending app's
+    // window (see positionShieldWindow). Fullscreen-display cover is only
+    // the fallback when the offender's bounds cannot be resolved.
     shieldWindow = new BrowserWindow({
-        fullscreen: true,
+        width: 640,
+        height: 640,
         frame: false,
         transparent: true,
         backgroundColor: "#00000000",
@@ -711,7 +720,7 @@ function createShieldWindow() {
             webSecurity: true,
         },
     });
-    // Sit above fullscreen apps and the taskbar while visible.
+    // Sit above the covered app and the taskbar while visible.
     shieldWindow.setAlwaysOnTop(true, "screen-saver");
 
     const isDev =
@@ -758,15 +767,9 @@ function flushShieldPending() {
     for (const v of shieldPendingViolations) {
         shieldWindow.webContents.send("shield-violation", v);
     }
+    const last = shieldPendingViolations[shieldPendingViolations.length - 1];
     shieldPendingViolations = [];
-    revealShieldWindow();
-}
-
-function revealShieldWindow() {
-    if (!shieldWindow || shieldWindow.isDestroyed() || shieldWindow.isVisible()) return;
-    shieldWindow.show();
-    shieldWindow.moveTop();
-    shieldWindow.focus();
+    void positionShieldWindow(last, { reveal: true });
 }
 
 function showShieldOverlay(violation) {
@@ -778,20 +781,224 @@ function showShieldOverlay(violation) {
             shieldPendingViolations.push(violation);
             return;
         }
+        // Always deliver the violation so the overlay window can upsert it
+        // (refreshing which offender the card highlights).
         win.webContents.send("shield-violation", violation);
-        revealShieldWindow();
+        // Position over the offending window (revealing if hidden).
+        void positionShieldWindow(violation, { reveal: true });
     } catch (err) {
         console.error("Shield overlay show failed:", err);
     }
 }
 
 function hideShieldOverlay() {
+    shieldCoverKey = null;
+    shieldCoverBoundsSig = "";
+    shieldCoverAt = 0;
     try {
         if (shieldWindow && !shieldWindow.isDestroyed() && shieldWindow.isVisible()) {
             shieldWindow.hide();
         }
     } catch (err) {
         console.error("Shield overlay hide failed:", err);
+    }
+}
+
+// --- Per-window overlay positioning ------------------------------------------
+// Instead of a fullscreen takeover, the Shield overlay covers the offending
+// app's window: the browser window showing a blocked site, or the blocked
+// app's own window. Bounds come from Win32 GetWindowRect (physical pixels)
+// and are converted to DIP for Electron. When bounds cannot be resolved,
+// the overlay falls back to covering the primary display.
+
+const SHIELD_BOUNDS_SCRIPT = [
+    'Add-Type -TypeDefinition @"',
+    "using System;",
+    "using System.Runtime.InteropServices;",
+    "public static class ShieldWin {",
+    "  [DllImport(\"user32.dll\")] public static extern bool GetWindowRect(IntPtr hWnd, out RECT r);",
+    "  public struct RECT { public int L; public int T; public int R; public int B; }",
+    "}",
+    '"@',
+    "Get-Process | Where-Object { $_.MainWindowHandle -ne 0 -and $_.MainWindowTitle } | ForEach-Object {",
+    "  $b = ''",
+    "  try {",
+    "    $r = New-Object ShieldWin+RECT",
+    "    if ([ShieldWin]::GetWindowRect($_.MainWindowHandle, [ref]$r)) {",
+    "      if ($r.R -gt $r.L -and $r.B -gt $r.T -and $r.L -gt -32000) { $b = \"$($r.L),$($r.T),$($r.R),$($r.B)\" }",
+    "    }",
+    "  } catch {}",
+    "  try { $p = $_.Path } catch { $p = '' }",
+    "  if (-not $p) { $p = '' }",
+    "  \"$($_.ProcessName)`t$($p)`t$($b)`t$($_.MainWindowTitle)\"",
+    "}",
+].join("\n");
+
+let shieldCoverKey = null;
+let shieldCoverBoundsSig = "";
+let shieldCoverAt = 0;
+const SHIELD_REPOSITION_THROTTLE_MS = 10000;
+
+async function queryWindowBounds() {
+    if (process.platform !== "win32") return [];
+    const out = await execFileAsync("powershell", [
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        SHIELD_BOUNDS_SCRIPT,
+    ]);
+    const rows = [];
+    for (const line of out.split(/\r?\n/)) {
+        if (!line || line.indexOf("\t") === -1) continue;
+        const parts = line.split("\t");
+        if (parts.length < 4) continue;
+        const procName = (parts[0] || "").trim();
+        const exePath = (parts[1] || "").trim();
+        const boundsRaw = (parts[2] || "").trim();
+        const title = parts.slice(3).join("\t").trim();
+        if (!procName || !title) continue;
+        let bounds = null;
+        const m = boundsRaw.match(/^(-?\d+),(-?\d+),(-?\d+),(-?\d+)$/);
+        if (m) {
+            const x = parseInt(m[1], 10);
+            const y = parseInt(m[2], 10);
+            const width = parseInt(m[3], 10) - x;
+            const height = parseInt(m[4], 10) - y;
+            if (width > 0 && height > 0) bounds = { x, y, width, height };
+        }
+        rows.push({ procName, exePath, bounds, title });
+    }
+    return rows;
+}
+
+/** Find the on-screen window rect (physical pixels) for a violation. */
+async function findViolationBounds(violation) {
+    const rows = await queryWindowBounds();
+    if (rows.length === 0) return null;
+    if (violation.kind === "app") {
+        const target = String(violation.process ?? violation.match ?? "")
+            .trim()
+            .toLowerCase();
+        if (!target) return null;
+        const hit =
+            rows.find((r) => `${r.procName}.exe`.toLowerCase() === target && r.bounds) ??
+            rows.find((r) => `${r.procName}.exe`.toLowerCase() === target);
+        return (hit && hit.bounds) || null;
+    }
+    // Site violation: prefer the exact window title that triggered the
+    // detection (picks the right browser window among several), then fall
+    // back to any window whose title matches the blocked site.
+    if (violation.title) {
+        const hit =
+            rows.find((r) => r.title === violation.title && r.bounds) ??
+            rows.find((r) => r.title === violation.title);
+        if (hit && hit.bounds) return hit.bounds;
+    }
+    for (const r of rows) {
+        if (!r.bounds) continue;
+        try {
+            if (titleMatchesBlockedSite(r.title) === violation.match) return r.bounds;
+        } catch {
+            // Ignore match errors and keep scanning.
+        }
+    }
+    return null;
+}
+
+function physicalToDipBounds(b) {
+    try {
+        const topLeft = screen.screenToDipPoint({ x: b.x, y: b.y });
+        const bottomRight = screen.screenToDipPoint({
+            x: b.x + b.width,
+            y: b.y + b.height,
+        });
+        return {
+            x: Math.round(topLeft.x),
+            y: Math.round(topLeft.y),
+            width: Math.max(320, Math.round(bottomRight.x - topLeft.x)),
+            height: Math.max(240, Math.round(bottomRight.y - topLeft.y)),
+        };
+    } catch {
+        return {
+            x: b.x,
+            y: b.y,
+            width: Math.max(320, b.width),
+            height: Math.max(240, b.height),
+        };
+    }
+}
+
+/**
+ * Move the Shield overlay over the offending window. Reveals the window when
+ * hidden (stealing focus); when already visible, quietly repositions unless
+ * a different offender took over, which deserves focus.
+ */
+async function positionShieldWindow(violation, options) {
+    const reveal = !options || options.reveal !== false;
+    const win = shieldWindow;
+    if (!win || win.isDestroyed()) return;
+    const key = `${violation.kind}:${violation.match}`;
+    // Repeat polls re-report the same offender every 5s: skip the
+    // PowerShell bounds lookup when we just positioned this key and the
+    // window is already visible.
+    if (
+        key === shieldCoverKey &&
+        Date.now() - shieldCoverAt < SHIELD_REPOSITION_THROTTLE_MS &&
+        win.isVisible()
+    ) {
+        return;
+    }
+    let bounds = null;
+    try {
+        const physical = await findViolationBounds(violation);
+        if (physical) bounds = physicalToDipBounds(physical);
+    } catch (err) {
+        console.error("Shield overlay positioning failed:", err);
+    }
+    if (!bounds) {
+        // Fallback: cover the primary display (previous fullscreen behavior).
+        try {
+            const primary = screen.getPrimaryDisplay();
+            bounds = { ...primary.bounds };
+        } catch {
+            return;
+        }
+    }
+    const sig = `${bounds.x},${bounds.y},${bounds.width},${bounds.height}`;
+    const isNewOffender = shieldCoverKey !== key;
+    if (!isNewOffender && shieldCoverBoundsSig === sig) {
+        shieldCoverAt = Date.now();
+        if (reveal && !win.isVisible()) {
+            try {
+                win.show();
+                win.moveTop();
+                win.focus();
+            } catch {
+                // Best effort: window may have been destroyed mid-flight.
+            }
+        }
+        return;
+    }
+    shieldCoverKey = key;
+    shieldCoverBoundsSig = sig;
+    shieldCoverAt = Date.now();
+    try {
+        if (typeof win.isFullScreen === "function" && win.isFullScreen()) {
+            win.setFullScreen(false);
+        }
+        win.setBounds(bounds);
+        win.setAlwaysOnTop(true, "screen-saver");
+        if (!win.isVisible()) {
+            if (!reveal) return;
+            win.show();
+            win.moveTop();
+            win.focus();
+        } else if (isNewOffender) {
+            win.moveTop();
+            win.focus();
+        }
+    } catch (err) {
+        console.error("Shield overlay reveal failed:", err);
     }
 }
 

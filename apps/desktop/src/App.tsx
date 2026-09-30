@@ -27,11 +27,16 @@ export const App: React.FC = () => {
     shield,
     timerState,
     shieldViolations,
-    dismissShieldViolations,
   } = useDesktopStore();
 
   const shieldSnoozedUntil = useRef(new Map<string, number>());
-  const handleDismissShieldViolationsRef = useRef<() => void>(() => {});
+
+  const snoozeShieldKeys = (keys: string[]) => {
+    const now = Date.now();
+    for (const key of keys) {
+      shieldSnoozedUntil.current.set(key, now + SHIELD_SNOOZE_MS);
+    }
+  };
 
   useEffect(() => {
     // Register IPC listeners from electron main process
@@ -94,32 +99,55 @@ export const App: React.FC = () => {
     return electron.onShieldViolation(handleViolation);
   }, []);
 
-  const handleDismissShieldViolations = () => {
+  // Explicit dismiss ("Keep Focusing" / X): snooze so repeat polls stop
+  // re-showing the overlay for 10 minutes. Pause-timer and disable-shield
+  // intentionally do NOT snooze — resuming the timer (or re-enabling the
+  // shield) re-triggers the overlay on the next poll when the offender is
+  // still present.
+  const handleSnoozeShieldViolations = () => {
     const state = useDesktopStore.getState();
-    const now = Date.now();
-    const keys: string[] = [];
-    for (const v of state.shieldViolations) {
-      const key = `${v.kind}:${v.match}`;
-      keys.push(key);
-      shieldSnoozedUntil.current.set(key, now + SHIELD_SNOOZE_MS);
-    }
+    const keys = state.shieldViolations.map((v) => `${v.kind}:${v.match}`);
+    snoozeShieldKeys(keys);
     // Tell the main process so the system-wide overlay stops re-showing too.
-    // Guarded: the forwarded action echoes back here with an empty list.
     if (keys.length > 0) {
       electron.sendShieldOverlayAction('dismiss', keys);
     }
-    dismissShieldViolations();
+    state.dismissShieldViolations();
   };
-  handleDismissShieldViolationsRef.current = handleDismissShieldViolations;
+
+  const handleSnoozeOneShieldViolation = (kind: ShieldViolation["kind"], match: string) => {
+    const key = `${kind}:${match}`;
+    snoozeShieldKeys([key]);
+    electron.sendShieldOverlayAction('dismiss', [key]);
+    useDesktopStore.getState().resolveShieldViolation(kind, match);
+  };
+
+  const handleClearShieldViolations = () => {
+    useDesktopStore.getState().dismissShieldViolations();
+  };
 
   // Actions triggered from the system-wide Shield overlay window.
   useEffect(() => {
     return electron.onShieldOverlayAction((action) => {
       const state = useDesktopStore.getState();
-      if (action === 'pause-timer') state.setIsActive(false);
-      else if (action === 'disable-shield') state.setShieldEnabled(false);
-      handleDismissShieldViolationsRef.current();
+      if (action === 'pause-timer') {
+        state.setIsActive(false);
+        state.dismissShieldViolations();
+      } else if (action === 'disable-shield') {
+        state.setShieldEnabled(false);
+        state.dismissShieldViolations();
+      } else if (action === 'dismiss') {
+        // Dismiss originated in the overlay window: the main process already
+        // snoozed these keys, so mirror the snooze locally without echoing
+        // back (avoids a redundant IPC round-trip).
+        const keys = state.shieldViolations.map((v) => `${v.kind}:${v.match}`);
+        snoozeShieldKeys(keys);
+        state.dismissShieldViolations();
+      } else {
+        state.dismissShieldViolations();
+      }
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -154,9 +182,14 @@ export const App: React.FC = () => {
         </main>
       </div>
 
-      {/* Shield block overlay (dismiss snoozes detections for 10 minutes) */}
+      {/* Shield block overlay (explicit dismiss snoozes for 10 minutes;
+          pause/disable clear without snoozing so resume re-triggers) */}
       {shieldViolations.length > 0 && (
-        <ShieldBlockOverlay onDismiss={handleDismissShieldViolations} />
+        <ShieldBlockOverlay
+          onSnooze={handleSnoozeShieldViolations}
+          onSnoozeOne={handleSnoozeOneShieldViolation}
+          onClear={handleClearShieldViolations}
+        />
       )}
 
       {/* Persistent Audio Media Player */}
