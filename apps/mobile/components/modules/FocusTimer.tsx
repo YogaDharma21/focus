@@ -105,6 +105,7 @@ export function FocusTimer() {
     addDistraction,
     setDeepFocusMode,
     autoStartBreak,
+    autoStartFlow,
   } = useAppStore();
 
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
@@ -119,14 +120,6 @@ export function FocusTimer() {
 
   const resetTimer = () => {
     setIsActive(false);
-    if (timeLeft > 0) {
-      addSession({
-        id: Date.now().toString(),
-        date: new Date().toISOString(),
-        duration: timeLeft,
-        mode: 'STOPWATCH',
-      });
-    }
     setTimeLeft(0);
     setTimerState('FLOW');
   };
@@ -134,6 +127,14 @@ export function FocusTimer() {
   const handleCompleteSession = () => {
     playCompletionSound();
     setIsActive(false);
+
+    if (timerState === 'BREAK') {
+      setTimeLeft(0);
+      setTimerState('FLOW');
+      setIsActive(autoStartFlow ?? true);
+      setDeepFocusMode(autoStartFlow ?? true);
+      return;
+    }
 
     const flowDuration = timeLeft;
     if (flowDuration > 0) {

@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
+import { View, StyleSheet, AppState } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useTheme } from '@/context/ThemeContext';
@@ -9,9 +9,10 @@ import { FloatingTabBar } from '@/components/FloatingTabBar';
 import { MediaPlayer } from '@/components/modules/MediaPlayer';
 import { DeepFocusOverlay } from '@/components/modules/DeepFocusOverlay';
 import { DynamicIslandTimer } from '@/components/modules/DynamicIslandTimer';
-import { Clock, BarChart2, Settings } from 'lucide-react-native';
+import { Clock, BarChart2, Shield, Settings } from 'lucide-react-native';
 
 import { useAppStore } from '@/lib/store';
+import { drainShieldViolations, syncShieldService } from '@/lib/shieldService';
 import { playCompletionSound } from '@/lib/sound';
 
 export default function TabLayout() {
@@ -53,10 +54,15 @@ export default function TabLayout() {
     let interval: any = null;
 
     if (isActive) {
+      // Wall-clock delta so backgrounded time is caught up on return instead of frozen.
+      let lastTick = Date.now();
       interval = setInterval(() => {
+        const now = Date.now();
+        const delta = Math.max(1, Math.round((now - lastTick) / 1000));
+        lastTick = now;
         setTimeLeft((prev) => {
           if (timerState === 'BREAK') {
-            const next = prev - 1;
+            const next = prev - delta;
             if (next <= 0) {
               void playCompletionSound();
               setTimerState('FLOW');
@@ -69,7 +75,7 @@ export default function TabLayout() {
             }
             return next;
           }
-          return prev + 1;
+          return prev + delta;
         });
       }, 1000);
     }
@@ -78,6 +84,29 @@ export default function TabLayout() {
       if (interval) clearInterval(interval);
     };
   }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive, setDeepFocusMode, autoStartFlow]);
+
+  React.useEffect(() => {
+    const sub = AppState.addEventListener('change', (nextState) => {
+      if (nextState === 'active') {
+        drainShieldViolations();
+      }
+      syncShieldService();
+    });
+    return () => sub.remove();
+  }, []);
+
+  React.useEffect(() => {
+    syncShieldService();
+    return useAppStore.subscribe((state, prev) => {
+      if (
+        state.shield !== prev.shield ||
+        state.isActive !== prev.isActive ||
+        state.timerState !== prev.timerState
+      ) {
+        syncShieldService();
+      }
+    });
+  }, []);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -105,6 +134,13 @@ export default function TabLayout() {
             options={{
               title: 'Stats',
               tabBarIcon: ({ color }) => <BarChart2 size={22} color={color} />,
+            }}
+          />
+          <Tabs.Screen
+            name="shield"
+            options={{
+              title: 'Shield',
+              tabBarIcon: ({ color }) => <Shield size={22} color={color} />,
             }}
           />
           <Tabs.Screen
