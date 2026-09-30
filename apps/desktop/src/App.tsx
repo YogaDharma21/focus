@@ -8,7 +8,6 @@ import { SettingsPage } from './components/modules/SettingsPage';
 import { ShieldPage } from './components/modules/ShieldPage';
 import { ShieldBlockOverlay } from './components/modules/ShieldBlockOverlay';
 import { DeepFocusOverlay } from './components/modules/DeepFocusOverlay';
-import { FloatingTimerCapsule } from './components/layout/FloatingTimerCapsule';
 import { GlobalTimerEngine } from './components/layout/GlobalTimerEngine';
 import { useDesktopStore } from './lib/store';
 import { electron } from './lib/electron';
@@ -164,11 +163,8 @@ export const App: React.FC = () => {
       {/* Global Background Timer Ticker Engine */}
       <GlobalTimerEngine />
       
-      {/* Frameless Custom Window Titlebar */}
+      {/* Frameless Custom Window Titlebar (hosts the timer capsule center slot) */}
       <TitleBar />
-
-      {/* Floating Timer Capsule (visible on non-FOCUS views) */}
-      <FloatingTimerCapsule />
 
       {/* Main Workspace Body */}
       <div className="flex-1 flex overflow-hidden z-10 relative">
