@@ -52,6 +52,9 @@
             "electron/**/*",
             "public/**/*"
         ],
+        "asarUnpack": [
+            "electron/external-audio-watch.ps1"
+        ],
         "win": {
             "target": "nsis",
             "icon": "public/icon.png"

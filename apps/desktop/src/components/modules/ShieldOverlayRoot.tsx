@@ -33,11 +33,11 @@ export const ShieldOverlayRoot: React.FC = () => {
       const key = `${violation.kind}:${violation.match}`;
       const cooledDown = Date.now() - (terminatedAt.current.get(key) ?? 0) < TERMINATE_GRACE_MS;
       if (cooledDown) return;
+      // Upsert: re-reports move the offender to the end (latest), which is
+      // also the window the main process just positioned the overlay over.
       setViolations((prev) => {
-        if (prev.some((v) => v.kind === violation.kind && v.match === violation.match)) {
-          return prev;
-        }
-        return [...prev.slice(-9), violation];
+        const rest = prev.filter((v) => !(v.kind === violation.kind && v.match === violation.match));
+        return [...rest.slice(-9), violation];
       });
     });
   }, []);
@@ -50,6 +50,7 @@ export const ShieldOverlayRoot: React.FC = () => {
     setTerminating(null);
     if (result.success) {
       terminatedAt.current.set(`${kind}:${match}`, Date.now());
+      electron.sendShieldOverlayAction('terminate-cooldown', [`${kind}:${match}`]);
       setViolations((prev) => prev.filter((v) => !(v.kind === kind && v.match === match)));
     } else {
       setTerminateError(result.error ?? "Could not close the app.");
@@ -59,17 +60,25 @@ export const ShieldOverlayRoot: React.FC = () => {
   if (violations.length === 0) return null;
 
   const violationKeys = violations.map((v) => `${v.kind}:${v.match}`);
+  // Latest offender first — matches the window the overlay is covering.
+  const ordered = [...violations].reverse();
+
+  const handleSnoozeOne = (kind: "app" | "site", match: string) => {
+    setViolations((prev) => prev.filter((v) => !(v.kind === kind && v.match === match)));
+    electron.sendShieldOverlayAction('dismiss', [`${kind}:${match}`]);
+  };
 
   return (
     <div className="w-screen h-screen bg-black/80 backdrop-blur-sm flex items-center justify-center p-6 select-none font-sans">
       <ShieldBlockCard
-        violations={violations}
+        violations={ordered}
         onTerminate={handleTerminate}
         terminatingMatch={terminating}
         terminateError={terminateError}
         onPauseTimer={() => electron.sendShieldOverlayAction('pause-timer')}
         onDisableShield={() => electron.sendShieldOverlayAction('disable-shield')}
         onDismiss={() => electron.sendShieldOverlayAction('dismiss', violationKeys)}
+        onSnoozeOne={handleSnoozeOne}
       />
     </div>
   );

@@ -3,6 +3,7 @@ import { ShieldAlert, X, Pause, XCircle, Loader2 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
 import type { ShieldViolation } from '../../lib/shield';
+import { BlockedAppIcon, SiteIcon } from './ShieldIcons';
 
 export interface ShieldBlockCardProps {
   violations: ShieldViolation[];
@@ -14,6 +15,8 @@ export interface ShieldBlockCardProps {
   onPauseTimer: () => void;
   onDisableShield: () => void;
   onDismiss: () => void;
+  /** Snooze a single item (row X). Falls back to onDismiss when omitted. */
+  onSnoozeOne?: (kind: "app" | "site", match: string) => void;
 }
 
 export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
@@ -25,7 +28,12 @@ export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
   onPauseTimer,
   onDisableShield,
   onDismiss,
+  onSnoozeOne,
 }) => {
+  const handleSnoozeOne = (kind: "app" | "site", match: string) => {
+    if (onSnoozeOne) onSnoozeOne(kind, match);
+    else onDismiss();
+  };
   return (
     <div className="max-w-md w-full bg-card border border-border rounded-2xl shadow-2xl p-6 space-y-5 animate-in zoom-in-95 duration-150 max-h-[85vh] overflow-y-auto">
       <div className="flex items-start justify-between">
@@ -66,15 +74,22 @@ export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
             key={`${v.kind}:${v.match}`}
             className="px-4 py-3 rounded-xl bg-secondary/60 border border-border flex items-center justify-between gap-3"
           >
-            <div className="min-w-0">
-              <p className="text-xs font-bold text-foreground truncate">
-                {v.kind === "app" ? (v.process ?? v.match) : v.match}
-              </p>
-              <p className="text-[10px] font-mono text-muted-foreground truncate">
-                {v.kind === "app"
-                  ? "Blocked app is running"
-                  : v.title ?? "Blocked site detected"}
-              </p>
+            <div className="min-w-0 flex items-center gap-2.5 flex-1">
+              {v.kind === "app" ? (
+                <BlockedAppIcon image={v.process ?? v.match} />
+              ) : (
+                <SiteIcon site={v.match} />
+              )}
+              <div className="min-w-0">
+                <p className="text-xs font-bold text-foreground truncate">
+                  {v.kind === "app" ? (v.process ?? v.match) : v.match}
+                </p>
+                <p className="text-[10px] font-mono text-muted-foreground truncate">
+                  {v.kind === "app"
+                    ? "Blocked app is running"
+                    : v.title ?? "Blocked site detected"}
+                </p>
+              </div>
             </div>
             {v.kind === "app" && (
               <button
@@ -90,6 +105,13 @@ export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
                 Close app
               </button>
             )}
+            <button
+              onClick={() => handleSnoozeOne(v.kind, v.match)}
+              className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              title={`Snooze ${v.match} for 10 minutes`}
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         ))}
       </div>
@@ -133,11 +155,16 @@ export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
 };
 
 interface ShieldBlockOverlayProps {
-  onDismiss: () => void;
+  /** Snooze all violations for 10 minutes ("Keep Focusing" / header X). */
+  onSnooze: () => void;
+  /** Snooze a single violation row for 10 minutes. */
+  onSnoozeOne: (kind: "app" | "site", match: string) => void;
+  /** Clear violations without snoozing (pause timer / disable shield). */
+  onClear: () => void;
 }
 
 /** In-app overlay (renders inside the main Focus window). */
-export const ShieldBlockOverlay: React.FC<ShieldBlockOverlayProps> = ({ onDismiss }) => {
+export const ShieldBlockOverlay: React.FC<ShieldBlockOverlayProps> = ({ onSnooze, onSnoozeOne, onClear }) => {
   const {
     shieldViolations,
     resolveShieldViolation,
@@ -165,6 +192,9 @@ export const ShieldBlockOverlay: React.FC<ShieldBlockOverlayProps> = ({ onDismis
     const result = await electron.terminateBlockedProcess(process ?? match);
     setTerminating(null);
     if (result.success) {
+      // Short main-side quiet period so a lingering process doesn't instantly
+      // re-pop the card. Not a snooze: detections resume after ~30s if alive.
+      electron.sendShieldOverlayAction('terminate-cooldown', [`${kind}:${match}`]);
       resolveShieldViolation(kind, match);
     } else {
       setTerminateError(result.error ?? "Could not close the app.");
@@ -173,12 +203,14 @@ export const ShieldBlockOverlay: React.FC<ShieldBlockOverlayProps> = ({ onDismis
 
   const handlePauseTimer = () => {
     setIsActive(false);
-    onDismiss();
+    // No snooze: resuming the timer re-triggers the overlay while the
+    // offender is still present.
+    onClear();
   };
 
   const handleDisableShield = () => {
     setShieldEnabled(false);
-    onDismiss();
+    onClear();
   };
 
   return (
@@ -191,7 +223,8 @@ export const ShieldBlockOverlay: React.FC<ShieldBlockOverlayProps> = ({ onDismis
         terminateError={terminateError}
         onPauseTimer={handlePauseTimer}
         onDisableShield={handleDisableShield}
-        onDismiss={onDismiss}
+        onDismiss={onSnooze}
+        onSnoozeOne={onSnoozeOne}
       />
     </div>
   );

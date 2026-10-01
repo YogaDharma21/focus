@@ -330,7 +330,7 @@ export const MediaPlayer: React.FC = () => {
           onClick={() => setMediaPlayerOpen(true)}
           className="p-3 rounded-2xl bg-card border border-border text-foreground hover:text-foreground shadow-xl transition-all flex items-center gap-2 hover:scale-105"
         >
-          <Music className={`w-4 h-4 ${isMusicPlaying ? "text-emerald-400 animate-pulse" : "text-muted-foreground"}`} />
+          <Music className={`w-4 h-4 ${isMusicPlaying ? "text-foreground animate-pulse" : "text-muted-foreground"}`} />
           <span className="text-xs font-semibold">Lofi-Beats</span>
         </button>
       )}
