@@ -26,6 +26,9 @@ contextBridge.exposeInMainWorld('electron', {
     return () => ipcRenderer.removeListener('audio:external-state', handler);
   },
   terminateBlockedProcess: (imageName) => ipcRenderer.invoke('shield:terminate-process', imageName),
+  listRunningApps: () => ipcRenderer.invoke('shield:list-running-apps'),
+  listInstalledApps: (refresh) => ipcRenderer.invoke('shield:list-installed-apps', refresh),
+  getAppIcon: (imageName) => ipcRenderer.invoke('shield:get-app-icon', imageName),
   onShieldViolation: (callback) => {
     const handler = (_event, violation) => callback(violation);
     ipcRenderer.on('shield-violation', handler);
@@ -33,7 +36,13 @@ contextBridge.exposeInMainWorld('electron', {
   },
   sendShieldOverlayAction: (action, keys) => ipcRenderer.send('shield:overlay-action', { action, keys }),
   onShieldOverlayAction: (callback) => {
-    const handler = (_event, action) => callback(action);
+    const handler = (_event, payload) => {
+      if (payload && typeof payload === "object" && "action" in payload) {
+        callback(payload.action, payload.keys ?? []);
+      } else {
+        callback(payload, []);
+      }
+    };
     ipcRenderer.on('shield-overlay-action', handler);
     return () => ipcRenderer.removeListener('shield-overlay-action', handler);
   }

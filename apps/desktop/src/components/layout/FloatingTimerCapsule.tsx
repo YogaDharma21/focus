@@ -101,7 +101,7 @@ export const FloatingTimerCapsule: React.FC = () => {
   const timeString = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
 
   return (
-    <div ref={containerRef} className="fixed top-1 left-1/2 -translate-x-1/2 z-50 select-none no-drag flex flex-col items-center">
+    <div ref={containerRef} className="relative select-none no-drag flex flex-col items-center">
       {/* Collapsed pill - always visible */}
       <button
         onClick={() => setIsExpanded(!isExpanded)}
@@ -127,7 +127,7 @@ export const FloatingTimerCapsule: React.FC = () => {
 
       {/* Expanded card - matches extension layout */}
       {isExpanded && (
-        <div className="w-[360px] bg-card border border-border rounded-2xl p-3.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150 relative mt-1.5">
+        <div className="absolute top-full mt-1.5 left-1/2 -translate-x-1/2 z-50 w-[360px] bg-card border border-border rounded-2xl p-3.5 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
           {/* Top Row: Time */}
           <div className="flex items-center justify-between gap-2 mb-3">
             <div className="flex items-center gap-2 shrink-0">

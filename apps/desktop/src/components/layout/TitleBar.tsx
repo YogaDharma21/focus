@@ -2,6 +2,7 @@ import React from 'react';
 import { Minus, Square, Copy, X, Pin, Sparkles } from 'lucide-react';
 import { electron } from '../../lib/electron';
 import { useDesktopStore } from '../../lib/store';
+import { FloatingTimerCapsule } from './FloatingTimerCapsule';
 import iconUrl from '../../../public/icon.png';
 
 export const TitleBar: React.FC = () => {
@@ -27,6 +28,12 @@ export const TitleBar: React.FC = () => {
       <div className="flex items-center gap-2.5 no-drag">
         <img src={iconUrl} className="w-5 h-5 rounded-md object-contain shadow-sm" alt="Focus Desktop" />
         <span className="font-bold text-foreground tracking-tight text-xs">Focus Desktop</span>
+      </div>
+
+      {/* Center slot: timer capsule (visible on non-FOCUS views), optically
+          centered in the header and vertically aligned via items-center. */}
+      <div className="flex-1 flex justify-center no-drag min-w-0">
+        <FloatingTimerCapsule />
       </div>
 
       <div className="flex items-center gap-1 no-drag">

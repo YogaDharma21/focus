@@ -27,6 +27,7 @@ let shieldWindow = null;
 let shieldWindowReady = false;
 let shieldPendingViolations = [];
 let tray = null;
+let trayMinimizeHintShown = false;
 
 function createDummyTrayIcon() {
     // Create a 16x16 solid blue/cyan circle icon using nativeImage data URL
@@ -96,6 +97,23 @@ function createWindow() {
 
     mainWindow.once("ready-to-show", () => {
         mainWindow.show();
+    });
+
+    // The app lives in the tray: the X button hides the window instead of
+    // quitting. A real quit only happens via Tray > "Quit Focus", which sets
+    // app.isQuitting before closing.
+    mainWindow.on("close", (event) => {
+        if (!app.isQuitting) {
+            event.preventDefault();
+            mainWindow.hide();
+            if (!trayMinimizeHintShown && Notification.isSupported()) {
+                trayMinimizeHintShown = true;
+                new Notification({
+                    title: "Focus Desktop",
+                    body: "Minimized to tray — Focus keeps running in the background.",
+                }).show();
+            }
+        }
     });
 
     mainWindow.on("closed", () => {
@@ -219,6 +237,44 @@ function setupIPC() {
         return terminateBlockedProcess(imageName);
     });
 
+    ipcMain.handle("shield:list-running-apps", async () => {
+        try {
+            const apps = await listRunningAppsForPicker();
+            return { success: true, apps };
+        } catch (err) {
+            console.error("Shield list-running-apps failed:", err);
+            return { success: false, error: String((err && err.message) || err), apps: [] };
+        }
+    });
+
+    ipcMain.handle("shield:get-app-icon", async (_event, imageName) => {
+        try {
+            const icon = await getAppIconForImage(imageName);
+            return { success: true, icon };
+        } catch (err) {
+            console.error("Shield get-app-icon failed:", err);
+            return { success: false, error: String((err && err.message) || err), icon: "" };
+        }
+    });
+
+    ipcMain.handle("shield:list-installed-apps", async (_event, refresh) => {
+        try {
+            const apps = await listInstalledApps(!!refresh);
+            // Keep exe paths main-side; the renderer only needs names.
+            return {
+                success: true,
+                apps: apps.map((a) => ({
+                    displayName: a.displayName,
+                    image: a.image,
+                    source: a.source,
+                })),
+            };
+        } catch (err) {
+            console.error("Shield list-installed-apps failed:", err);
+            return { success: false, error: String((err && err.message) || err), apps: [] };
+        }
+    });
+
     ipcMain.handle("audio:get-external-state", () => {
         return { supported: externalAudioSupported, playing: externalAudioPlaying };
     });
@@ -236,8 +292,18 @@ function setupIPC() {
                 if (key) shieldSnoozedKeys.set(String(key), until);
             }
         }
+        if (action === "terminate-cooldown") {
+            // A blocked app was just terminated: keep both overlays quiet for
+            // a short while in case the process lingers. Not a snooze — if
+            // the app is still alive afterwards, detections resume.
+            const until = Date.now() + SHIELD_TERMINATE_COOLDOWN_MS;
+            for (const key of keys) {
+                if (key) shieldCooldownKeys.set(String(key), until);
+            }
+            return;
+        }
         if (mainWindow && !mainWindow.isDestroyed()) {
-            mainWindow.webContents.send("shield-overlay-action", action);
+            mainWindow.webContents.send("shield-overlay-action", { action, keys });
         }
         hideShieldOverlay();
     });
@@ -253,6 +319,10 @@ function setupIPC() {
 const SHIELD_POLL_INTERVAL_MS = 5000;
 const SHIELD_NOTIFY_COOLDOWN_MS = 60000;
 const SHIELD_SNOOZE_MS = 10 * 60 * 1000;
+// Quiet period after a successful "Close app" in case the process lingers.
+const SHIELD_TERMINATE_COOLDOWN_MS = 30 * 1000;
+// Grace after pause/disable so an in-flight poll can't resurrect the overlay.
+const SHIELD_SETTLE_MS = 2000;
 
 let shieldConfig = {
     enabled: false,
@@ -264,11 +334,23 @@ let shieldSession = { isActive: false, timerState: "FLOW" };
 let shieldPollTimer = null;
 const shieldLastNotified = new Map();
 const shieldSnoozedKeys = new Map();
+const shieldCooldownKeys = new Map();
+// Keys already delivered to a currently-visible overlay window. Repeat polls
+// skip these so the overlay isn't re-sent (and re-focused) every 5 seconds.
+const shieldVisibleKeys = new Set();
+let shieldCalmUntil = 0;
 
 function isShieldKeySnoozed(key) {
     const until = shieldSnoozedKeys.get(key) ?? 0;
     if (Date.now() < until) return true;
     shieldSnoozedKeys.delete(key);
+    return false;
+}
+
+function isShieldKeyCoolingDown(key) {
+    const until = shieldCooldownKeys.get(key) ?? 0;
+    if (Date.now() < until) return true;
+    shieldCooldownKeys.delete(key);
     return false;
 }
 
@@ -290,6 +372,10 @@ function updateShieldState(payload) {
         };
     }
     if (!isShieldBlockingRequired()) {
+        // Entering a non-enforcing state (pause/disable/break): brief calm
+        // so an in-flight poll that started before this sync can't pop the
+        // overlay back up after the user just dismissed it via pause.
+        shieldCalmUntil = Date.now() + SHIELD_SETTLE_MS;
         hideShieldOverlay();
     }
 }
@@ -447,9 +533,235 @@ function shouldNotify(key) {
     return true;
 }
 
+// --- Running-app picker + app icons ------------------------------------------
+// Powers the "select from running apps" picker in the Shield page and the
+// real exe icons shown next to blocked apps. Only processes with a visible
+// window are listed, which keeps the picker relevant and icon extraction
+// cheap (typically a dozen entries instead of hundreds of background
+// processes). Icons are resolved with Electron's app.getFileIcon and cached
+// by exe path.
+
+const SHIELD_PICKER_SCRIPT =
+    "Get-Process | Where-Object { $_.MainWindowTitle -and $_.MainWindowTitle.Trim() -ne '' } | ForEach-Object { try { $exePath = $_.Path } catch { $exePath = '' }; if (-not $exePath) { $exePath = '' }; \"$($_.ProcessName)`t$($_.Id)`t$($exePath)`t$($_.MainWindowTitle)\" }";
+
+const shieldAppIconCache = new Map();
+
+async function getFileIconDataUrl(exePath) {
+    if (!exePath) return "";
+    const key = String(exePath).toLowerCase();
+    if (shieldAppIconCache.has(key)) return shieldAppIconCache.get(key);
+    try {
+        const img = await app.getFileIcon(exePath, { size: "normal" });
+        const url = img && !img.isEmpty() ? img.toDataURL() : "";
+        shieldAppIconCache.set(key, url);
+        if (shieldAppIconCache.size > 120) {
+            const oldest = shieldAppIconCache.keys().next().value;
+            shieldAppIconCache.delete(oldest);
+        }
+        return url;
+    } catch {
+        shieldAppIconCache.set(key, "");
+        return "";
+    }
+}
+
+function sanitizeImageName(imageName) {
+    return String(imageName || "")
+        .trim()
+        .toLowerCase()
+        .split(/[/\\]/)
+        .pop()
+        .replace(/[^a-z0-9._-]/g, "")
+        .slice(0, 80);
+}
+
+async function listWindowedProcessesRaw() {
+    if (process.platform !== "win32") return [];
+    const out = await execFileAsync("powershell", [
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        SHIELD_PICKER_SCRIPT,
+    ]);
+    const rows = [];
+    for (const line of out.split(/\r?\n/)) {
+        if (!line || line.indexOf("\t") === -1) continue;
+        const parts = line.split("\t");
+        if (parts.length < 4) continue;
+        const procName = (parts[0] || "").trim();
+        const exePath = (parts[2] || "").trim();
+        const title = parts.slice(3).join("\t").trim();
+        if (!procName || !title) continue;
+        rows.push({ procName, exePath, title });
+    }
+    return rows;
+}
+
+/**
+ * List user-visible apps for the Shield picker. Each entry carries the exe
+ * image name used by the blocked-apps list, a friendly display name, the
+ * foreground window title, and (on Windows) the real exe icon as a data URL.
+ */
+async function listRunningAppsForPicker() {
+    if (process.platform !== "win32") {
+        const out = await execFileAsync("ps", ["-ax", "-o", "comm="]);
+        const seen = new Set();
+        const apps = [];
+        for (const line of out.split(/\r?\n/)) {
+            const base = line.trim().split("/").pop();
+            if (!base || seen.has(base.toLowerCase())) continue;
+            seen.add(base.toLowerCase());
+            apps.push({
+                image: base,
+                displayName: base.replace(/\.exe$/i, ""),
+                title: "",
+                icon: "",
+            });
+            if (apps.length >= 100) break;
+        }
+        return apps;
+    }
+    const rows = await listWindowedProcessesRaw();
+    const seen = new Set();
+    const unique = [];
+    for (const row of rows) {
+        const image = `${row.procName}.exe`.toLowerCase();
+        if (seen.has(image)) continue;
+        seen.add(image);
+        unique.push(row);
+        if (unique.length >= 60) break;
+    }
+    return Promise.all(
+        unique.map(async (row) => ({
+            image: `${row.procName}.exe`.toLowerCase(),
+            displayName: row.procName,
+            title: row.title,
+            icon: await getFileIconDataUrl(row.exePath),
+        }))
+    );
+}
+
+/**
+ * Resolve the real exe icon for a blocked-app entry (e.g. "discord.exe").
+ * Matches against currently running windowed processes so the exact on-disk
+ * exe path is known. Returns "" when the app is not running or has no icon.
+ */
+async function getAppIconForImage(imageName) {
+    const safe = sanitizeImageName(imageName);
+    if (!safe || process.platform !== "win32") return "";
+    const rows = await listWindowedProcessesRaw();
+    const withExt = safe.includes(".") ? safe : `${safe}.exe`;
+    const hit = rows.find(
+        (row) => `${row.procName}.exe`.toLowerCase() === withExt
+    );
+    if (hit && hit.exePath) return getFileIconDataUrl(hit.exePath);
+    // Fallback: installed but not currently running.
+    try {
+        const installed = await listInstalledApps(false);
+        const found = installed.find((a) => a.image === withExt);
+        if (found && found.path) return getFileIconDataUrl(found.path);
+    } catch {
+        // Best effort: missing icon degrades to the generic app glyph.
+    }
+    return "";
+}
+
+// --- Installed-app discovery -------------------------------------------------
+// Lets the Shield picker offer every installed app — not just running ones —
+// so e.g. Spotify can be blocklisted without launching it first. Sources:
+// Start Menu shortcuts (friendly name + resolved exe target) supplemented by
+// registry uninstall entries whose DisplayIcon points at an exe. Blocking
+// itself is unchanged: detection polls the process list, so an installed app
+// is flagged the moment it launches.
+
+const SHIELD_INSTALLED_SCRIPT = [
+    "$shieldSeen = @{}",
+    "$shell = New-Object -ComObject WScript.Shell",
+    "$skipShortcut = '(?i)uninstall|unins|help|update|readme|manual|documentation|website|support|license|changelog|repair|remove'",
+    "$menus = @((Join-Path $env:ProgramData 'Microsoft\\Windows\\Start Menu\\Programs'), (Join-Path $env:AppData 'Microsoft\\Windows\\Start Menu\\Programs'))",
+    "foreach ($menu in $menus) {",
+    "  if (-not (Test-Path -LiteralPath $menu)) { continue }",
+    "  Get-ChildItem -LiteralPath $menu -Filter *.lnk -Recurse -ErrorAction SilentlyContinue | ForEach-Object {",
+    "    $lnkName = [System.IO.Path]::GetFileNameWithoutExtension($_.Name)",
+    "    if ($lnkName -match $skipShortcut) { return }",
+    "    try { $t = $shell.CreateShortcut($_.FullName).TargetPath } catch { return }",
+    "    if (-not $t) { return }",
+    "    $t = ([string]$t).Trim()",
+    "    if ($t -notmatch '(?i)\\.exe$') { return }",
+    "    $t = [System.Environment]::ExpandEnvironmentVariables($t)",
+    "    if (-not (Test-Path -LiteralPath $t -PathType Leaf)) { return }",
+    "    $img = [System.IO.Path]::GetFileName($t).ToLower()",
+    "    if (-not $shieldSeen.ContainsKey($img)) { $shieldSeen[$img] = $true; \"$lnkName`t$img`t$t`tstart-menu\" }",
+    "  }",
+    "}",
+    "$skipReg = '(?i)^(update for|security update|hotfix|kb\\d+)|redistributable|windows sdk|\\.net |visual c\\+\\+|driver|firmware'",
+    "$regKeys = @('HKLM:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*', 'HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*', 'HKCU:\\SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\*')",
+    "Get-ItemProperty $regKeys -ErrorAction SilentlyContinue | Where-Object { $_.DisplayName -and -not $_.SystemComponent -and -not $_.ParentKeyName -and $_.DisplayIcon } | ForEach-Object {",
+    "  $dn = ([string]$_.DisplayName).Trim()",
+    "  if ($dn -match $skipReg) { return }",
+    "  $ic = ([string]$_.DisplayIcon).Trim()",
+    "  $exe = ''",
+    "  if ($ic -match '\"([^\"]+\\.exe)\"?') { $exe = $Matches[1] }",
+    "  elseif ($ic -match '([^,]+\\.exe)') { $exe = $Matches[1] }",
+    "  if (-not $exe) { return }",
+    "  $exe = [System.Environment]::ExpandEnvironmentVariables($exe)",
+    "  if (-not (Test-Path -LiteralPath $exe -PathType Leaf)) { return }",
+    "  $img = [System.IO.Path]::GetFileName($exe).ToLower()",
+    "  if (-not $shieldSeen.ContainsKey($img)) { $shieldSeen[$img] = $true; \"$dn`t$img`t$exe`tregistry\" }",
+    "}",
+].join("\n");
+
+let shieldInstalledCache = null;
+let shieldInstalledAt = 0;
+const SHIELD_INSTALLED_TTL_MS = 5 * 60 * 1000;
+const SHIELD_INSTALLED_MAX = 300;
+
+async function listInstalledApps(refresh) {
+    if (process.platform !== "win32") return [];
+    const now = Date.now();
+    if (!refresh && shieldInstalledCache && now - shieldInstalledAt < SHIELD_INSTALLED_TTL_MS) {
+        return shieldInstalledCache;
+    }
+    const out = await execFileAsync("powershell", [
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        SHIELD_INSTALLED_SCRIPT,
+    ]);
+    const apps = [];
+    for (const line of out.split(/\r?\n/)) {
+        if (!line || line.indexOf("\t") === -1) continue;
+        const parts = line.split("\t");
+        if (parts.length < 4) continue;
+        const displayName = (parts[0] || "").trim().slice(0, 100);
+        const image = (parts[1] || "").trim().toLowerCase().slice(0, 80);
+        const exePath = (parts[2] || "").trim();
+        const source = (parts[parts.length - 1] || "").trim();
+        if (!displayName || !image || !exePath) continue;
+        if (!/^[\w.\-]+\.exe$/.test(image)) continue;
+        if (source !== "start-menu" && source !== "registry") continue;
+        apps.push({ displayName, image, path: exePath, source });
+        if (apps.length >= SHIELD_INSTALLED_MAX) break;
+    }
+    apps.sort((a, b) => a.displayName.localeCompare(b.displayName));
+    shieldInstalledCache = apps;
+    shieldInstalledAt = now;
+    return apps;
+}
+
 function reportShieldViolation(violation) {
     const key = `${violation.kind}:${violation.match}`;
+    // Re-checked here (not just at poll entry): a pause/disable that lands
+    // mid-poll must not resurrect the overlay after its awaits resolve.
+    if (!isShieldBlockingRequired()) return;
+    if (Date.now() < shieldCalmUntil) return;
     if (isShieldKeySnoozed(key)) return;
+    if (isShieldKeyCoolingDown(key)) return;
+    // Already on screen: skip re-sending so repeat polls don't duplicate or
+    // re-focus the overlay every 5 seconds.
+    if (shieldVisibleKeys.has(key) && shieldWindow && !shieldWindow.isDestroyed() && shieldWindow.isVisible()) {
+        return;
+    }
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send("shield-violation", violation);
     }
@@ -546,6 +858,8 @@ function createShieldWindow() {
 
     shieldWindowReady = false;
 
+    // Fullscreen takeover: reliably covers the offending app or browser
+    // window regardless of monitor layout, DPI, or window state.
     shieldWindow = new BrowserWindow({
         fullscreen: true,
         frame: false,
@@ -584,6 +898,7 @@ function createShieldWindow() {
         shieldWindow = null;
         shieldWindowReady = false;
         shieldPendingViolations = [];
+        shieldVisibleKeys.clear();
     });
 
     // Reveal only after the first paint so the window never flashes blank.
@@ -610,8 +925,15 @@ function flushShieldPending() {
     ) {
         return;
     }
+    // State may have changed while loading (e.g. user paused): never reveal
+    // stale detections.
+    if (!isShieldBlockingRequired()) {
+        shieldPendingViolations = [];
+        return;
+    }
     for (const v of shieldPendingViolations) {
         shieldWindow.webContents.send("shield-violation", v);
+        shieldVisibleKeys.add(`${v.kind}:${v.match}`);
     }
     shieldPendingViolations = [];
     revealShieldWindow();
@@ -626,6 +948,7 @@ function revealShieldWindow() {
 
 function showShieldOverlay(violation) {
     try {
+        if (!isShieldBlockingRequired()) return;
         const win = createShieldWindow();
         if (win.isDestroyed()) return;
         if (!shieldWindowReady) {
@@ -634,6 +957,7 @@ function showShieldOverlay(violation) {
             return;
         }
         win.webContents.send("shield-violation", violation);
+        shieldVisibleKeys.add(`${violation.kind}:${violation.match}`);
         revealShieldWindow();
     } catch (err) {
         console.error("Shield overlay show failed:", err);
@@ -641,6 +965,7 @@ function showShieldOverlay(violation) {
 }
 
 function hideShieldOverlay() {
+    shieldVisibleKeys.clear();
     try {
         if (shieldWindow && !shieldWindow.isDestroyed() && shieldWindow.isVisible()) {
             shieldWindow.hide();
@@ -680,10 +1005,16 @@ function startExternalAudioMonitor() {
         return;
     }
     if (externalAudioProc) return;
-    const scriptPath = path.join(__dirname, "external-audio-watch.ps1");
-    // In packaged builds electron-builder copies electron/**/*, but guard
-    // anyway so a missing script degrades to "unsupported" instead of a crash.
+    // In packaged builds this file is unpacked from the asar archive (see
+    // asarUnpack in package.json) because PowerShell cannot execute a script
+    // from inside app.asar.
+    let scriptPath = path.join(__dirname, "external-audio-watch.ps1");
+    if (app.isPackaged) {
+        scriptPath = scriptPath.replace("app.asar", "app.asar.unpacked");
+    }
+    // Guard so a missing script degrades to "unsupported" instead of a crash.
     if (!fs.existsSync(scriptPath)) {
+        console.error("External audio monitor unavailable: missing", scriptPath);
         externalAudioSupported = false;
         return;
     }
