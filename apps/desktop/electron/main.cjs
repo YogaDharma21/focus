@@ -987,10 +987,16 @@ function startExternalAudioMonitor() {
         return;
     }
     if (externalAudioProc) return;
-    const scriptPath = path.join(__dirname, "external-audio-watch.ps1");
-    // In packaged builds electron-builder copies electron/**/*, but guard
-    // anyway so a missing script degrades to "unsupported" instead of a crash.
+    // In packaged builds this file is unpacked from the asar archive (see
+    // asarUnpack in package.json) because PowerShell cannot execute a script
+    // from inside app.asar.
+    let scriptPath = path.join(__dirname, "external-audio-watch.ps1");
+    if (app.isPackaged) {
+        scriptPath = scriptPath.replace("app.asar", "app.asar.unpacked");
+    }
+    // Guard so a missing script degrades to "unsupported" instead of a crash.
     if (!fs.existsSync(scriptPath)) {
+        console.error("External audio monitor unavailable: missing", scriptPath);
         externalAudioSupported = false;
         return;
     }
