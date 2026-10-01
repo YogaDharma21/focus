@@ -27,6 +27,7 @@ let shieldWindow = null;
 let shieldWindowReady = false;
 let shieldPendingViolations = [];
 let tray = null;
+let trayMinimizeHintShown = false;
 
 function createDummyTrayIcon() {
     // Create a 16x16 solid blue/cyan circle icon using nativeImage data URL
@@ -96,6 +97,23 @@ function createWindow() {
 
     mainWindow.once("ready-to-show", () => {
         mainWindow.show();
+    });
+
+    // The app lives in the tray: the X button hides the window instead of
+    // quitting. A real quit only happens via Tray > "Quit Focus", which sets
+    // app.isQuitting before closing.
+    mainWindow.on("close", (event) => {
+        if (!app.isQuitting) {
+            event.preventDefault();
+            mainWindow.hide();
+            if (!trayMinimizeHintShown && Notification.isSupported()) {
+                trayMinimizeHintShown = true;
+                new Notification({
+                    title: "Focus Desktop",
+                    body: "Minimized to tray — Focus keeps running in the background.",
+                }).show();
+            }
+        }
     });
 
     mainWindow.on("closed", () => {
