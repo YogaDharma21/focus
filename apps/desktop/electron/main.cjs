@@ -977,9 +977,11 @@ function hideShieldOverlay() {
 
 // --- External Audio Detection ------------------------------------------------
 // Mirrors the extension's auto-pause-on-external-audio behavior on desktop.
-// Windows has no chrome.tabs API, so a small PowerShell watcher polls the
-// system media-session manager (SMTC) and reports when another app starts or
-// stops media playback. The renderer's MediaPlayer listens for
+// Windows has no chrome.tabs API, so a PowerShell watcher monitors both
+// Windows System Media Transport Controls (SMTC) and Core Audio (WASAPI)
+// sessions across all active endpoints to detect when any external app
+// (e.g. YouTube in browser, VLC media player, games, desktop players) starts
+// or stops media playback. The renderer's MediaPlayer listens for
 // "audio:external-state" and fades the ambient music out/in accordingly.
 
 const EXTERNAL_AUDIO_POLL_MS = 1500;
@@ -1019,6 +1021,14 @@ function startExternalAudioMonitor() {
         return;
     }
     try {
+        const ownPids = [process.pid];
+        try {
+            if (mainWindow && !mainWindow.isDestroyed()) {
+                const renderPid = mainWindow.webContents.getOSProcessId();
+                if (renderPid) ownPids.push(renderPid);
+            }
+        } catch {}
+
         const child = spawn(
             "powershell",
             [
@@ -1032,6 +1042,10 @@ function startExternalAudioMonitor() {
                 String(EXTERNAL_AUDIO_POLL_MS),
                 "-ExcludeAppId",
                 APP_USER_MODEL_ID,
+                "-ExcludePid",
+                ownPids.join(","),
+                "-ExcludeExePath",
+                process.execPath,
             ],
             { windowsHide: true, stdio: ["ignore", "pipe", "ignore"] }
         );
