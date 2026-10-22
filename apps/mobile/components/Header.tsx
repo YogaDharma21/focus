@@ -1,18 +1,10 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Modal, Image } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { usePathname } from 'expo-router';
 import { useTheme } from '@/context/ThemeContext';
 import { useAppStore } from '@/lib/store';
-import { playCompletionSound } from '@/lib/sound';
-import {
-  Clock,
-  CheckCircle2,
-  AlertTriangle,
-  Play,
-  Pause,
-  Plus,
-} from 'lucide-react-native';
+import { SlidersHorizontal, Plus, AlertTriangle, X, Play, RotateCcw } from 'lucide-react-native';
 
 interface HeaderProps {
   onOpenBackgrounds?: () => void;
@@ -31,69 +23,34 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
   const pathname = usePathname();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
-  const { setDeepFocusMode } = useAppStore();
 
-  const [isExpanded, setIsExpanded] = useState(false);
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
+  const [quickActionModalOpen, setQuickActionModalOpen] = useState(false);
 
   const {
-    currentView,
     timeLeft,
     setTimeLeft,
     isActive,
     setIsActive,
     setTimerState,
-    addSession,
     addDistraction,
-    autoStartBreak,
+    setDeepFocusMode,
   } = useAppStore();
 
-  const isTimerScreen =
-    !pathname || pathname === '/' || pathname.endsWith('index') || currentView === 'FOCUS';
-
-
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  const getScreenTitle = () => {
+    if (!pathname || pathname === '/' || pathname.endsWith('index')) return 'Focus';
+    if (pathname.includes('journal')) return 'Stats';
+    if (pathname.includes('shield')) return 'Shield';
+    if (pathname.includes('settings')) return 'Settings';
+    return 'Focus';
   };
 
-  const toggleTimer = () => {
-    const nextActive = !isActive;
-    setIsActive(nextActive);
-    if (nextActive) {
-      setDeepFocusMode(true);
-    }
-  };
-
-  const handleCompleteSession = () => {
-    playCompletionSound();
-    setIsActive(false);
-
-    const flowDuration = timeLeft;
-    if (flowDuration > 0) {
-      addSession({
-        id: Date.now().toString(),
-        date: new Date().toISOString(),
-        duration: flowDuration,
-        mode: 'STOPWATCH',
-      });
-    }
-    const breakSeconds = Math.floor(flowDuration / 5);
-    if (breakSeconds > 0) {
-      setTimeLeft(breakSeconds);
-      setTimerState('BREAK');
-      setIsActive(autoStartBreak ?? true);
-    } else {
-      setTimeLeft(0);
-      setTimerState('FLOW');
-    }
-    setDeepFocusMode(false);
-  };
-
-  const renderModeIcon = (size: number, color: string) => {
-    return <Clock size={size} color={color} />;
+  const handleStartQuickSession = (minutes: number) => {
+    setTimeLeft(minutes * 60);
+    setTimerState('FLOW');
+    setIsActive(true);
+    setDeepFocusMode(true);
+    setQuickActionModalOpen(false);
   };
 
   return (
@@ -103,117 +60,107 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
           styles.container,
           {
             backgroundColor: colors.background,
-            borderColor: colors.border,
-            paddingTop: Math.max(insets.top + 8, 16),
+            paddingTop: Math.max(insets.top + 6, 16),
           },
         ]}
       >
-        <View style={styles.titleRow}>
-          <Image
-            source={require('@/assets/images/icon.png')}
-            style={styles.logoIcon}
-            resizeMode="contain"
-          />
-          <Text style={[styles.title, { color: colors.text }]}>Focus</Text>
-        </View>
+        {/* Screen Title matching reference screenshot typography */}
+        <Text style={[styles.title, { color: colors.text }]}>
+          {getScreenTitle()}
+        </Text>
 
-        {/* Center Pill - Only shown on non-timer tabs */}
-        {!isTimerScreen && (
+        {/* Top Right Action Icons matching reference */}
+        <View style={styles.actionsRow}>
           <TouchableOpacity
             style={[
-              styles.pill,
-              {
-                backgroundColor: colors.card,
-                borderColor: colors.border,
-              },
+              styles.iconCircleBtn,
+              { backgroundColor: colors.card, borderColor: colors.border },
             ]}
-            onPress={() => setIsExpanded(!isExpanded)}
-            activeOpacity={0.8}
+            onPress={() => setDistractionModalOpen(true)}
+            activeOpacity={0.7}
+            accessibilityLabel="Filter and options"
           >
-            {renderModeIcon(14, colors.text)}
-            <Text style={[styles.pillTime, { color: colors.text }]}>
-              {formatTime(timeLeft)}
-            </Text>
+            <SlidersHorizontal size={17} color={colors.text} />
           </TouchableOpacity>
-        )}
+
+          <TouchableOpacity
+            style={[
+              styles.iconCircleBtn,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+            onPress={() => setQuickActionModalOpen(true)}
+            activeOpacity={0.7}
+            accessibilityLabel="Add focus session"
+          >
+            <Plus size={20} color={colors.text} />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Expanded Floating Control Card Popover */}
-      {!isTimerScreen && isExpanded && (
-        <View
-          style={[
-            styles.controlCard,
-            {
-              backgroundColor: colors.card,
-              borderColor: colors.border,
-              top: Math.max(insets.top + 8, 16) + 46,
-            },
-          ]}
+      {/* Quick Action / Preset Modal */}
+      <Modal
+        visible={quickActionModalOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setQuickActionModalOpen(false)}
+      >
+        <TouchableOpacity
+          style={styles.modalBackdrop}
+          activeOpacity={1}
+          onPress={() => setQuickActionModalOpen(false)}
         >
-          {/* Card Top Row: Time */}
-          <View style={styles.cardHeader}>
-            <View style={styles.cardHeaderTitleRow}>
-              {renderModeIcon(18, colors.text)}
-              <Text style={[styles.cardTime, { color: colors.text }]}>
-                {formatTime(timeLeft)}
+          <TouchableOpacity
+            activeOpacity={1}
+            style={[
+              styles.modalBox,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+            onPress={() => {}}
+          >
+            <View style={styles.modalHeaderRow}>
+              <Text style={[styles.modalTitle, { color: colors.text }]}>
+                Quick Focus Session
               </Text>
-              {isActive && <View style={[styles.activeDot, { backgroundColor: colors.text }]} />}
+              <TouchableOpacity onPress={() => setQuickActionModalOpen(false)}>
+                <X size={20} color={colors.mutedText} />
+              </TouchableOpacity>
             </View>
-          </View>
 
-          {/* Action Buttons Row */}
-          <View style={styles.cardActionsRow}>
-            <TouchableOpacity
-              style={[
-                styles.actionPillBtn,
-                { backgroundColor: colors.muted, borderColor: colors.border, opacity: !isActive ? 0.5 : 1 },
-              ]}
-              onPress={handleCompleteSession}
-              disabled={!isActive}
-              activeOpacity={0.8}
-            >
-              <CheckCircle2 size={14} color={isActive ? colors.text : colors.mutedText} />
-              <Text style={[styles.actionBtnText, { color: isActive ? colors.text : colors.mutedText }]}>
-                Complete
-              </Text>
-            </TouchableOpacity>
+            <Text style={[styles.modalSub, { color: colors.mutedText }]}>
+              Pick a quick sprint or start a free-flowing session.
+            </Text>
 
-            <TouchableOpacity
-              style={[
-                styles.distractionBtn,
-                { backgroundColor: colors.muted, borderColor: colors.border, opacity: !isActive ? 0.5 : 1 },
-              ]}
-              onPress={() => setDistractionModalOpen(true)}
-              disabled={!isActive}
-              activeOpacity={0.8}
-            >
-              <AlertTriangle size={16} color={colors.mutedText} />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={[styles.actionPillBtn, { backgroundColor: colors.text }]}
-              onPress={toggleTimer}
-              activeOpacity={0.8}
-            >
-              {isActive ? (
-                <>
-                  <Pause size={16} color={colors.background} />
-                  <Text style={[styles.startBtnText, { color: colors.background }]}>
-                    Pause
-                  </Text>
-                </>
-              ) : (
-                <>
-                  <Play size={16} color={colors.background} fill={colors.background} style={{ marginLeft: 2 }} />
-                  <Text style={[styles.startBtnText, { color: colors.background }]}>
-                    Start
-                  </Text>
-                </>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
+            <View style={{ gap: 10, marginVertical: 14 }}>
+              {[
+                { title: 'Continuous Flow', desc: 'Stopwatch flow with auto-breaks', mins: 0 },
+                { title: 'Quick Sprint', desc: '15 minutes quick burst', mins: 15 },
+                { title: 'Deep Session', desc: '25 minutes focused work', mins: 25 },
+                { title: 'Hyper Focus', desc: '50 minutes sustained flow', mins: 50 },
+              ].map((item) => (
+                <TouchableOpacity
+                  key={item.title}
+                  style={[
+                    styles.presetRow,
+                    { backgroundColor: colors.muted, borderColor: colors.border },
+                  ]}
+                  onPress={() => handleStartQuickSession(item.mins)}
+                  activeOpacity={0.75}
+                >
+                  <View style={{ flex: 1 }}>
+                    <Text style={[styles.presetTitle, { color: colors.text }]}>
+                      {item.title}
+                    </Text>
+                    <Text style={[styles.presetDesc, { color: colors.mutedText }]}>
+                      {item.desc}
+                    </Text>
+                  </View>
+                  <Play size={16} color={colors.text} fill={colors.text} />
+                </TouchableOpacity>
+              ))}
+            </View>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      </Modal>
 
       {/* Distraction Logger Modal */}
       <Modal
@@ -235,13 +182,23 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
             ]}
             onPress={() => {}}
           >
-            <Text style={[styles.modalTitle, { color: colors.text }]}>
-              Log Distraction
-            </Text>
+            <View style={styles.modalHeaderRow}>
+              <View style={styles.modalIconTitle}>
+                <AlertTriangle size={18} color={colors.text} />
+                <Text style={[styles.modalTitle, { color: colors.text }]}>
+                  Log Distraction
+                </Text>
+              </View>
+              <TouchableOpacity onPress={() => setDistractionModalOpen(false)}>
+                <X size={20} color={colors.mutedText} />
+              </TouchableOpacity>
+            </View>
+
             <Text style={[styles.modalSub, { color: colors.mutedText }]}>
               What got you off track? Stay conscious of interruption patterns.
             </Text>
-            <View style={{ gap: 8, marginVertical: 12 }}>
+
+            <View style={{ gap: 8, marginVertical: 14 }}>
               {DISTRACTION_CATEGORIES.map((cat) => (
                 <TouchableOpacity
                   key={cat}
@@ -253,22 +210,15 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
                     addDistraction(cat);
                     setDistractionModalOpen(false);
                   }}
+                  activeOpacity={0.75}
                 >
-                  <Text style={{ color: colors.text, fontWeight: '500' }}>
+                  <Text style={[styles.distractionText, { color: colors.text }]}>
                     {cat}
                   </Text>
                   <Plus size={16} color={colors.mutedText} />
                 </TouchableOpacity>
               ))}
             </View>
-            <TouchableOpacity
-              style={[styles.closeModalBtn, { backgroundColor: colors.border }]}
-              onPress={() => setDistractionModalOpen(false)}
-            >
-              <Text style={{ color: colors.text, fontWeight: '600' }}>
-                Cancel
-              </Text>
-            </TouchableOpacity>
           </TouchableOpacity>
         </TouchableOpacity>
       </Modal>
@@ -278,169 +228,94 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
 
 const styles = StyleSheet.create({
   headerWrapper: {
-    zIndex: 100,
+    zIndex: 10,
   },
   container: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-  },
-  titleRow: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-  },
-  logoIcon: {
-    width: 24,
-    height: 24,
-    borderRadius: 6,
+    paddingHorizontal: 20,
+    paddingBottom: 14,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '700',
-    letterSpacing: -0.4,
-  },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 16,
-    borderWidth: 1,
-  },
-  pillTime: {
-    fontSize: 14,
+    fontSize: 32,
     fontWeight: '800',
-    letterSpacing: 0.2,
+    letterSpacing: -0.6,
   },
   actionsRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 10,
   },
-  iconBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 10,
-    borderWidth: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  controlCard: {
-    position: 'absolute',
-    left: 16,
-    right: 16,
-    maxWidth: 360,
-    alignSelf: 'center',
-    borderRadius: 18,
-    borderWidth: 1,
-    padding: 16,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 8,
-    zIndex: 1000,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  cardHeaderTitleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  cardTime: {
-    fontSize: 22,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  activeDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-  },
-  cardActionsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 8,
-  },
-  actionPillBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  distractionBtn: {
+  iconCircleBtn: {
     width: 42,
     height: 42,
-    borderRadius: 12,
+    borderRadius: 21,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  actionBtnText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-  startBtnText: {
-    fontSize: 14,
-    fontWeight: '700',
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
   },
   modalBox: {
     width: '100%',
-    maxWidth: 340,
-    borderRadius: 16,
+    maxWidth: 360,
+    borderRadius: 24,
     borderWidth: 1,
-    padding: 20,
+    padding: 22,
+  },
+  modalHeaderRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  modalIconTitle: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    marginBottom: 4,
   },
   modalSub: {
     fontSize: 13,
     lineHeight: 18,
   },
-  distractionItem: {
+  presetRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 16,
     borderWidth: 1,
   },
-  closeModalBtn: {
-    paddingVertical: 10,
-    borderRadius: 10,
+  presetTitle: {
+    fontSize: 15,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  presetDesc: {
+    fontSize: 12,
+  },
+  distractionItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginTop: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  distractionText: {
+    fontSize: 14,
+    fontWeight: '600',
   },
 });
-

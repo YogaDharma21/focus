@@ -60,81 +60,64 @@ function ShieldAppIcon({
   }, [packageName]);
 
   if (iconUri) {
-    return <Image source={{ uri: iconUri }} style={{ width: size, height: size, borderRadius: size / 4 }} />;
+    return (
+      <Image
+        source={{ uri: iconUri }}
+        style={{ width: size, height: size, borderRadius: 10 }}
+        resizeMode="cover"
+      />
+    );
   }
+
+  const initial = (label || packageName || '?').trim().charAt(0).toUpperCase();
   return (
     <View
-      style={[
-        styles.appIconFallback,
-        { backgroundColor: colors.border, width: size, height: size, borderRadius: size / 4 },
-      ]}
+      style={{
+        width: size,
+        height: size,
+        borderRadius: 10,
+        backgroundColor: colors.muted,
+        borderWidth: 1,
+        borderColor: colors.border,
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
     >
-      <Text style={[styles.appIconFallbackText, { color: colors.mutedText }]}>
-        {(label || packageName).charAt(0).toUpperCase()}
-      </Text>
+      <Text style={{ color: colors.text, fontWeight: '700', fontSize: size * 0.45 }}>{initial}</Text>
     </View>
   );
 }
 
 function SiteIcon({ domain, colors }: { domain: string; colors: ThemeColors }) {
   const [failed, setFailed] = useState(false);
+  const cleanDomain = domain.replace(/^https?:\/\//i, '').split('/')[0].trim();
+  const faviconUrl = `https://www.google.com/s2/favicons?domain=${cleanDomain}&sz=64`;
 
-  if (!failed) {
+  if (failed) {
+    const initial = cleanDomain.charAt(0).toUpperCase() || 'W';
     return (
-      <Image
-        source={{ uri: `https://www.google.com/s2/favicons?domain=${domain}&sz=64` }}
-        style={styles.siteIcon}
-        onError={() => setFailed(true)}
-      />
+      <View
+        style={{
+          width: 32,
+          height: 32,
+          borderRadius: 8,
+          backgroundColor: colors.muted,
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}
+      >
+        <Text style={{ color: colors.text, fontWeight: '700', fontSize: 13 }}>{initial}</Text>
+      </View>
     );
   }
-  return (
-    <View style={[styles.siteIcon, styles.siteIconFallback, { backgroundColor: colors.border }]}>
-      <Text style={[styles.appIconFallbackText, { color: colors.mutedText }]}>
-        {domain.charAt(0).toUpperCase()}
-      </Text>
-    </View>
-  );
-}
 
-function InstalledAppRow({
-  app,
-  blocked,
-  onToggle,
-  colors,
-}: {
-  app: InstalledShieldApp;
-  blocked: boolean;
-  onToggle: () => void;
-  colors: ThemeColors;
-}) {
   return (
-    <TouchableOpacity
-      style={[styles.appRow, { backgroundColor: colors.muted, borderColor: colors.border }]}
-      onPress={onToggle}
-      activeOpacity={0.7}
-    >
-      <ShieldAppIcon packageName={app.packageName} label={app.label} colors={colors} />
-      <View style={styles.appRowText}>
-        <Text style={[styles.appRowLabel, { color: colors.text }]} numberOfLines={1}>
-          {app.label}
-        </Text>
-        <Text style={[styles.appRowPkg, { color: colors.mutedText }]} numberOfLines={1}>
-          {app.packageName}
-        </Text>
-      </View>
-      <View
-        style={[
-          styles.appCheck,
-          {
-            backgroundColor: blocked ? colors.primary : 'transparent',
-            borderColor: blocked ? colors.primary : colors.mutedText,
-          },
-        ]}
-      >
-        {blocked ? <Check size={14} color={colors.primaryText} /> : null}
-      </View>
-    </TouchableOpacity>
+    <Image
+      source={{ uri: faviconUrl }}
+      style={{ width: 32, height: 32, borderRadius: 8 }}
+      onError={() => setFailed(true)}
+      resizeMode="cover"
+    />
   );
 }
 
@@ -150,15 +133,70 @@ function BlockedAppRow({
   onRemove: () => void;
 }) {
   return (
-    <View style={[styles.listRow, styles.listRowWithIcon, { backgroundColor: colors.muted, borderColor: colors.border }]}>
-      <ShieldAppIcon packageName={packageName} label={label} colors={colors} size={32} />
-      <Text style={[styles.listText, { color: colors.text }]} numberOfLines={1}>
-        {label}
-      </Text>
+    <View
+      style={[
+        styles.listRow,
+        styles.listRowWithIcon,
+        { backgroundColor: colors.muted, borderColor: colors.border },
+      ]}
+    >
+      <ShieldAppIcon packageName={packageName} label={label} colors={colors} size={36} />
+      <View style={styles.appRowMeta}>
+        <Text style={[styles.listText, { color: colors.text }]} numberOfLines={1}>
+          {label}
+        </Text>
+        <Text style={[styles.appPkgText, { color: colors.mutedText }]} numberOfLines={1}>
+          {packageName}
+        </Text>
+      </View>
       <TouchableOpacity onPress={onRemove} hitSlop={8}>
         <X size={16} color={colors.mutedText} />
       </TouchableOpacity>
     </View>
+  );
+}
+
+function InstalledAppRow({
+  app,
+  blocked,
+  colors,
+  onToggle,
+}: {
+  app: InstalledShieldApp;
+  blocked: boolean;
+  colors: ThemeColors;
+  onToggle: () => void;
+}) {
+  return (
+    <TouchableOpacity
+      style={[
+        styles.pickerAppRow,
+        { backgroundColor: colors.muted, borderColor: blocked ? colors.primary : colors.border },
+      ]}
+      onPress={onToggle}
+      activeOpacity={0.7}
+    >
+      <ShieldAppIcon packageName={app.packageName} label={app.label} colors={colors} size={36} />
+      <View style={styles.appRowMeta}>
+        <Text style={[styles.pickerAppName, { color: colors.text }]} numberOfLines={1}>
+          {app.label}
+        </Text>
+        <Text style={[styles.pickerAppPkg, { color: colors.mutedText }]} numberOfLines={1}>
+          {app.packageName}
+        </Text>
+      </View>
+      <View
+        style={[
+          styles.pickerCheck,
+          {
+            backgroundColor: blocked ? colors.primary : 'transparent',
+            borderColor: blocked ? colors.primary : colors.border,
+          },
+        ]}
+      >
+        {blocked ? <Check size={14} color={colors.primaryText} strokeWidth={3} /> : null}
+      </View>
+    </TouchableOpacity>
   );
 }
 
@@ -189,7 +227,6 @@ export function ShieldPage() {
   const [installedLabels, setInstalledLabels] = useState<Record<string, string>>({});
 
   const enforcing = isBlockingRequired(shield.enabled, isActive, timerState);
-  const miniPlayerVisible = soundEnabled && musicEnabled;
   const setupDoneCount = [
     nativeStatus?.hasUsageAccess,
     nativeStatus?.canDrawOverlays,
@@ -241,60 +278,60 @@ export function ShieldPage() {
   }, [installedApps, appSearch]);
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, { paddingBottom: miniPlayerVisible ? 160 : 100 }]}>
-      <View style={styles.header}>
-        <Shield size={24} color={colors.text} />
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Shield</Text>
-        <View
-          style={[
-            styles.statusPill,
-            {
-              backgroundColor: colors.muted,
-              borderColor: enforcing ? '#22c55e' : colors.border,
-            },
-          ]}
-        >
-          <View
-            style={[
-              styles.statusDot,
-              { backgroundColor: enforcing ? '#22c55e' : shield.enabled ? '#eab308' : colors.mutedText },
-            ]}
-          />
-          <Text style={[styles.statusText, { color: colors.mutedText }]}>
-            {enforcing ? 'Enforcing' : shield.enabled ? 'On' : 'Off'}
-          </Text>
-        </View>
-      </View>
-
+    <ScrollView
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* ── STATUS CARD (matching reference squircle card style) ── */}
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <TouchableOpacity
-          style={[styles.toggleRow, { backgroundColor: colors.muted, borderColor: colors.border }]}
-          onPress={() => setShieldEnabled(!shield.enabled)}
-          activeOpacity={0.7}
-        >
-          <View style={styles.toggleText}>
-            {shield.enabled ? (
-              <ShieldCheck size={20} color={colors.text} />
-            ) : (
-              <ShieldAlert size={20} color={colors.mutedText} />
-            )}
-            <View style={styles.toggleCopy}>
-              <Text style={[styles.toggleTitle, { color: colors.text }]}>
-                {shield.enabled ? 'Shield enabled' : 'Shield disabled'}
+        <View style={styles.statusCardHeader}>
+          <View style={styles.statusLeft}>
+            <View
+              style={[
+                styles.statusIconCircle,
+                { backgroundColor: enforcing ? '#22c55e20' : colors.muted },
+              ]}
+            >
+              {shield.enabled ? (
+                <ShieldCheck size={22} color={enforcing ? '#22c55e' : colors.text} />
+              ) : (
+                <ShieldAlert size={22} color={colors.mutedText} />
+              )}
+            </View>
+            <View>
+              <Text style={[styles.statusHeroTitle, { color: colors.text }]}>
+                {shield.enabled ? (enforcing ? 'Shield Enforcing' : 'Shield Armed') : 'Shield Inactive'}
               </Text>
-              <Text style={[styles.toggleSubtitle, { color: colors.mutedText }]}>
+              <Text style={[styles.statusHeroSub, { color: colors.mutedText }]}>
                 {enforcing
-                  ? 'Blocking in-app links during this Flow session.'
-                  : 'Enforces only while a Flow session is active.'}
+                  ? 'Zero distractions allowed right now'
+                  : 'Activates during active Flow sessions'}
               </Text>
             </View>
           </View>
-          <View style={[styles.switch, { backgroundColor: shield.enabled ? '#ffffff' : '#3f3f46' }]}>
-            <View style={[styles.thumb, { marginLeft: shield.enabled ? 21 : 3 }]} />
-          </View>
-        </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[
+              styles.switchTrack,
+              { backgroundColor: shield.enabled ? '#ffffff' : colors.muted },
+            ]}
+            onPress={() => setShieldEnabled(!shield.enabled)}
+            activeOpacity={0.8}
+          >
+            <View
+              style={[
+                styles.switchThumb,
+                {
+                  backgroundColor: shield.enabled ? '#0a0b0e' : colors.mutedText,
+                  transform: [{ translateX: shield.enabled ? 18 : 2 }],
+                },
+              ]}
+            />
+          </TouchableOpacity>
+        </View>
       </View>
 
+      {/* ── WEBSITES SECTION ── */}
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.sectionHeader}>
           <Globe size={18} color={colors.text} />
@@ -307,24 +344,38 @@ export function ShieldPage() {
               styles.tabBtn,
               {
                 backgroundColor: listTab === 'blocked' ? colors.muted : 'transparent',
-                borderColor: colors.border,
+                borderColor: listTab === 'blocked' ? colors.text : colors.border,
               },
             ]}
             onPress={() => setListTab('blocked')}
           >
-            <Text style={[styles.tabText, { color: colors.text }]}>Blocked ({shield.blockedSites.length})</Text>
+            <Text
+              style={[
+                styles.tabText,
+                { color: listTab === 'blocked' ? colors.text : colors.mutedText },
+              ]}
+            >
+              Blocked ({shield.blockedSites.length})
+            </Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[
               styles.tabBtn,
               {
                 backgroundColor: listTab === 'allowed' ? colors.muted : 'transparent',
-                borderColor: colors.border,
+                borderColor: listTab === 'allowed' ? colors.text : colors.border,
               },
             ]}
             onPress={() => setListTab('allowed')}
           >
-            <Text style={[styles.tabText, { color: colors.text }]}>Allowed ({shield.allowedSites.length})</Text>
+            <Text
+              style={[
+                styles.tabText,
+                { color: listTab === 'allowed' ? colors.text : colors.mutedText },
+              ]}
+            >
+              Allowed ({shield.allowedSites.length})
+            </Text>
           </TouchableOpacity>
         </View>
 
@@ -334,7 +385,7 @@ export function ShieldPage() {
               styles.input,
               { backgroundColor: colors.muted, borderColor: colors.border, color: colors.text },
             ]}
-            placeholder={listTab === 'blocked' ? 'Block domain (twitter.com)...' : 'Allow domain (music.youtube.com)...'}
+            placeholder={listTab === 'blocked' ? 'Block domain (twitter.com)...' : 'Allow domain...'}
             placeholderTextColor={colors.mutedText}
             value={siteInput}
             onChangeText={setSiteInput}
@@ -343,24 +394,28 @@ export function ShieldPage() {
             autoCorrect={false}
           />
           <TouchableOpacity
-            style={[styles.addBtn, { backgroundColor: colors.primary }]}
+            style={[styles.addBtn, { backgroundColor: colors.text }]}
             onPress={handleAddSite}
             activeOpacity={0.8}
           >
-            <Plus size={18} color={colors.primaryText} />
+            <Plus size={18} color={colors.background} />
           </TouchableOpacity>
         </View>
 
         {sites.length === 0 ? (
           <Text style={[styles.emptyText, { color: colors.mutedText }]}>
-            {listTab === 'blocked' ? 'No blocked sites yet.' : 'No allowed overrides. Allowed always wins over blocked.'}
+            {listTab === 'blocked' ? 'No blocked sites yet.' : 'No allowed overrides.'}
           </Text>
         ) : (
           <View style={styles.list}>
             {sites.map((site) => (
               <View
                 key={site}
-                style={[styles.listRow, styles.listRowWithIcon, { backgroundColor: colors.muted, borderColor: colors.border }]}
+                style={[
+                  styles.listRow,
+                  styles.listRowWithIcon,
+                  { backgroundColor: colors.muted, borderColor: colors.border },
+                ]}
               >
                 <SiteIcon domain={site} colors={colors} />
                 <Text style={[styles.listText, { color: colors.text }]} numberOfLines={1}>
@@ -387,16 +442,30 @@ export function ShieldPage() {
             <View style={styles.toggleCopy}>
               <Text style={[styles.toggleTitle, { color: colors.text }]}>Block sites in browsers</Text>
               <Text style={[styles.toggleSubtitle, { color: colors.mutedText }]}>
-                Uses accessibility access to catch blocked domains in browser address bars.
+                Catches blocked domains in browser address bars.
               </Text>
             </View>
           </View>
-          <View style={[styles.switch, { backgroundColor: shield.urlBlocking ? '#ffffff' : '#3f3f46' }]}>
-            <View style={[styles.thumb, { marginLeft: shield.urlBlocking ? 21 : 3 }]} />
+          <View
+            style={[
+              styles.switchTrack,
+              { backgroundColor: shield.urlBlocking ? '#ffffff' : colors.card },
+            ]}
+          >
+            <View
+              style={[
+                styles.switchThumb,
+                {
+                  backgroundColor: shield.urlBlocking ? '#0a0b0e' : colors.mutedText,
+                  transform: [{ translateX: shield.urlBlocking ? 18 : 2 }],
+                },
+              ]}
+            />
           </View>
         </TouchableOpacity>
       </View>
 
+      {/* ── APPS SECTION ── */}
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.sectionHeader}>
           <Smartphone size={18} color={colors.text} />
@@ -505,17 +574,6 @@ export function ShieldPage() {
                 {nativeStatus?.accessibilityEnabled ? 'Enabled' : 'Disabled'}
               </Text>
             </View>
-            <View style={styles.statusRow}>
-              <Text style={[styles.statusLabel, { color: colors.mutedText }]}>Notifications</Text>
-              <Text
-                style={[
-                  styles.statusValue,
-                  { color: nativeStatus?.notificationsEnabled ? '#22c55e' : colors.mutedText },
-                ]}
-              >
-                {nativeStatus?.notificationsEnabled ? 'On' : 'Off'}
-              </Text>
-            </View>
           </View>
 
           <View style={styles.permRow}>
@@ -531,14 +589,14 @@ export function ShieldPage() {
               onPress={() => void openOverlaySettings().finally(refreshNativeStatus)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.permBtnText, { color: colors.text }]}>Overlay permission</Text>
+              <Text style={[styles.permBtnText, { color: colors.text }]}>Overlay</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.permBtn, { backgroundColor: colors.muted, borderColor: colors.border }]}
               onPress={() => void openBatteryOptimizationSettings().finally(refreshNativeStatus)}
               activeOpacity={0.7}
             >
-              <Text style={[styles.permBtnText, { color: colors.text }]}>Battery: no limits</Text>
+              <Text style={[styles.permBtnText, { color: colors.text }]}>Battery</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={[styles.permBtn, { backgroundColor: colors.muted, borderColor: colors.border }]}
@@ -547,19 +605,7 @@ export function ShieldPage() {
             >
               <Text style={[styles.permBtnText, { color: colors.text }]}>Accessibility</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.permBtn, { backgroundColor: colors.muted, borderColor: colors.border }]}
-              onPress={() => void openAppDetailsSettings().finally(refreshNativeStatus)}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.permBtnText, { color: colors.text }]}>App settings</Text>
-            </TouchableOpacity>
           </View>
-          <Text style={[styles.subNoteText, { color: colors.mutedText }]}>
-            On Xiaomi/MIUI also enable Autostart for Focus in system settings, or the service is killed in
-            background. If the accessibility toggle is greyed out (Restricted setting), open App info
-            for Focus, tap the menu, allow restricted settings, then come back here.
-          </Text>
         </View>
       ) : null}
 
@@ -568,11 +614,11 @@ export function ShieldPage() {
           <View style={styles.pickerHeader}>
             <Text style={[styles.pickerTitle, { color: colors.text }]}>Installed apps</Text>
             <TouchableOpacity
-              style={[styles.pickerDoneBtn, { backgroundColor: colors.primary }]}
+              style={[styles.pickerDoneBtn, { backgroundColor: colors.text }]}
               onPress={() => setPickerOpen(false)}
               activeOpacity={0.8}
             >
-              <Text style={[styles.pickerDoneText, { color: colors.primaryText }]}>Done</Text>
+              <Text style={[styles.pickerDoneText, { color: colors.background }]}>Done</Text>
             </TouchableOpacity>
           </View>
           <View
@@ -619,72 +665,73 @@ export function ShieldPage() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    paddingBottom: 100,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 24,
-    marginTop: 10,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
-    flex: 1,
-  },
-  statusPill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 999,
-    borderWidth: 1,
-  },
-  statusDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  statusText: {
-    fontSize: 11,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-    letterSpacing: 0.6,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 160,
+    gap: 14,
   },
   section: {
-    borderRadius: 16,
+    borderRadius: 24,
     borderWidth: 1,
-    padding: 16,
-    marginBottom: 16,
+    padding: 18,
+    gap: 14,
+  },
+  statusCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  statusLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    flex: 1,
+  },
+  statusIconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  statusHeroTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+    letterSpacing: -0.2,
+  },
+  statusHeroSub: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 2,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 12,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
   },
+  noteText: {
+    fontSize: 12,
+    lineHeight: 16,
+  },
   toggleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 12,
-    borderRadius: 10,
+    padding: 14,
+    borderRadius: 16,
     borderWidth: 1,
   },
   urlToggleRow: {
-    marginTop: 12,
+    marginTop: 4,
   },
   toggleText: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
     flex: 1,
     marginRight: 10,
   },
@@ -692,34 +739,32 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   toggleTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
   },
   toggleSubtitle: {
     fontSize: 11,
     marginTop: 2,
   },
-  switch: {
-    width: 44,
+  switchTrack: {
+    width: 42,
     height: 24,
     borderRadius: 12,
     justifyContent: 'center',
   },
-  thumb: {
-    width: 18,
-    height: 18,
-    borderRadius: 9,
-    backgroundColor: '#09090b',
+  switchThumb: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
   },
   tabRow: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 12,
   },
   tabBtn: {
     flex: 1,
     paddingVertical: 10,
-    borderRadius: 10,
+    borderRadius: 14,
     borderWidth: 1,
     alignItems: 'center',
   },
@@ -730,19 +775,19 @@ const styles = StyleSheet.create({
   inputRow: {
     flexDirection: 'row',
     gap: 8,
-    marginBottom: 12,
   },
   input: {
     flex: 1,
     borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderRadius: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     fontSize: 14,
   },
   addBtn: {
-    width: 44,
-    borderRadius: 10,
+    width: 46,
+    height: 46,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -753,76 +798,29 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 10,
+    padding: 12,
+    borderRadius: 16,
     borderWidth: 1,
   },
   listRowWithIcon: {
-    justifyContent: 'flex-start',
-    gap: 10,
-  },
-  siteIcon: {
-    width: 28,
-    height: 28,
-    borderRadius: 6,
-  },
-  siteIconFallback: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    gap: 12,
   },
   listText: {
-    fontSize: 13,
-    fontWeight: '500',
     flex: 1,
-    marginRight: 8,
-  },
-  emptyText: {
-    fontSize: 12,
-    lineHeight: 18,
-  },
-  noteText: {
-    fontSize: 12,
-    lineHeight: 18,
-    marginBottom: 12,
-  },
-  statusList: {
-    gap: 8,
-    marginBottom: 12,
-  },
-  statusRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  statusLabel: {
-    fontSize: 12,
-  },
-  statusValue: {
-    fontSize: 12,
-    fontWeight: '700',
-  },
-  permRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  permBtn: {
-    flexGrow: 1,
-    flexBasis: '45%',
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-  },
-  permBtnText: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '600',
   },
-  subNoteText: {
+  appRowMeta: {
+    flex: 1,
+    gap: 2,
+  },
+  appPkgText: {
     fontSize: 11,
-    lineHeight: 16,
-    marginTop: 10,
+  },
+  emptyText: {
+    fontSize: 13,
+    fontStyle: 'italic',
+    paddingVertical: 8,
   },
   browseBtn: {
     flexDirection: 'row',
@@ -830,66 +828,59 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 16,
     borderWidth: 1,
-    marginTop: 12,
+  },
+  browseBtnTop: {
+    marginTop: 4,
   },
   browseBtnText: {
     fontSize: 13,
     fontWeight: '600',
   },
-  browseBtnTop: {
-    marginBottom: 12,
+  subNoteText: {
+    fontSize: 11,
+    lineHeight: 16,
   },
-  appRow: {
+  statusList: {
+    gap: 8,
+  },
+  statusRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    marginBottom: 8,
+    justifyContent: 'space-between',
   },
-  appIconFallback: {
-    width: 36,
-    height: 36,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+  statusLabel: {
+    fontSize: 13,
   },
-  appIconFallbackText: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  appRowText: {
-    flex: 1,
-  },
-  appRowLabel: {
+  statusValue: {
     fontSize: 13,
     fontWeight: '600',
   },
-  appRowPkg: {
-    fontSize: 11,
-    marginTop: 2,
+  permRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginTop: 6,
   },
-  appCheck: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    borderWidth: 1.5,
-    alignItems: 'center',
-    justifyContent: 'center',
+  permBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  permBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   pickerContainer: {
     flex: 1,
-    padding: 20,
-    paddingTop: 56,
+    paddingTop: 50,
+    paddingHorizontal: 20,
   },
   pickerHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 16,
   },
   pickerTitle: {
@@ -897,9 +888,9 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   pickerDoneBtn: {
-    paddingHorizontal: 18,
-    paddingVertical: 10,
-    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
   },
   pickerDoneText: {
     fontSize: 13,
@@ -908,18 +899,42 @@ const styles = StyleSheet.create({
   pickerSearchRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
+    gap: 10,
+    paddingHorizontal: 14,
     paddingVertical: 10,
-    marginBottom: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    marginBottom: 14,
   },
   pickerSearchInput: {
     flex: 1,
     fontSize: 14,
   },
   pickerList: {
+    gap: 8,
     paddingBottom: 40,
+  },
+  pickerAppRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  pickerAppName: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  pickerAppPkg: {
+    fontSize: 11,
+  },
+  pickerCheck: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.5,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

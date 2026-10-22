@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import { StyleSheet, ScrollView } from 'react-native';
 import { FocusTimer } from '@/components/modules/FocusTimer';
 import { useAppStore } from '@/lib/store';
 
@@ -8,10 +8,14 @@ export default function FocusScreen() {
 
   useEffect(() => {
     setView('FOCUS');
-  }, []);
+  }, [setView]);
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      contentContainerStyle={styles.container}
+      keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
+    >
       <FocusTimer />
     </ScrollView>
   );
@@ -21,8 +25,6 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 16,
-    paddingBottom: 112,
+    paddingBottom: 160,
   },
 });

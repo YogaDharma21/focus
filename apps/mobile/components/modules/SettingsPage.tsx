@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, Alert, StyleSheet, Animated } from 'react-native';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
-import { Settings, Palette, Volume2, Trash2, Info, ExternalLink, Timer } from 'lucide-react-native';
+import { Settings, Palette, Volume2, Trash2, Info, ExternalLink, Timer, SlidersHorizontal } from 'lucide-react-native';
 import { VolumeSlider } from '@/components/ui/VolumeSlider';
 import { playCompletionSound } from '@/lib/sound';
 import { openShieldCheckedUrl } from '@/lib/links';
@@ -31,12 +31,12 @@ function CustomToggleSwitch({ value, onToggle, disabled = false }: CustomToggleS
 
   const trackColor = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#3f3f46', '#ffffff'],
+    outputRange: ['#282a36', '#ffffff'],
   });
 
   const thumbColor = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#9ca3af', '#09090b'],
+    outputRange: ['#717488', '#0a0b0e'],
   });
 
   return (
@@ -110,7 +110,7 @@ function SettingToggleRow({
 
 export function SettingsPage() {
   const { colors, themeMode, setThemeMode } = useTheme();
-  
+
   const {
     soundEnabled,
     setSoundEnabled,
@@ -129,8 +129,6 @@ export function SettingsPage() {
     resetAllData,
   } = useAppStore();
 
-  const miniPlayerVisible = soundEnabled && musicEnabled;
-
   const handleConfirmResetData = () => {
     Alert.alert(
       'Reset All Data',
@@ -148,35 +146,28 @@ export function SettingsPage() {
 
   return (
     <ScrollView
-      contentContainerStyle={[
-        styles.container,
-        { paddingBottom: miniPlayerVisible ? 160 : 100 },
-      ]}
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
     >
-      <View style={styles.header}>
-        <Settings size={24} color={colors.text} />
-        <Text style={[styles.headerTitle, { color: colors.text }]}>Settings</Text>
-      </View>
-
       {/* Appearance Section */}
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.sectionHeader}>
           <Palette size={18} color={colors.text} />
           <Text style={[styles.sectionTitle, { color: colors.text }]}>Appearance</Text>
         </View>
-        
+
         <View style={styles.themeGrid}>
           <TouchableOpacity
             style={[
               styles.themeButton,
               {
-                backgroundColor: themeMode === 'light' ? colors.muted : colors.muted,
+                backgroundColor: themeMode === 'light' ? colors.text : colors.muted,
                 borderColor: themeMode === 'light' ? colors.text : colors.border,
               },
             ]}
             onPress={() => setThemeMode('light')}
           >
-            <Text style={[styles.themeButtonText, { color: themeMode === 'light' ? colors.text : colors.mutedText }]}>
+            <Text style={[styles.themeButtonText, { color: themeMode === 'light' ? colors.background : colors.mutedText }]}>
               Light
             </Text>
           </TouchableOpacity>
@@ -184,13 +175,13 @@ export function SettingsPage() {
             style={[
               styles.themeButton,
               {
-                backgroundColor: themeMode === 'dark' ? colors.muted : colors.muted,
+                backgroundColor: themeMode === 'dark' ? colors.text : colors.muted,
                 borderColor: themeMode === 'dark' ? colors.text : colors.border,
               },
             ]}
             onPress={() => setThemeMode('dark')}
           >
-            <Text style={[styles.themeButtonText, { color: themeMode === 'dark' ? colors.text : colors.mutedText }]}>
+            <Text style={[styles.themeButtonText, { color: themeMode === 'dark' ? colors.background : colors.mutedText }]}>
               Dark
             </Text>
           </TouchableOpacity>
@@ -225,7 +216,7 @@ export function SettingsPage() {
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.sectionHeader}>
           <Volume2 size={18} color={colors.text} />
-          <Text style={[styles.sectionTitle, { color: colors.text }]}>Sound</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Sound & Music</Text>
         </View>
 
         <SettingToggleRow
@@ -236,10 +227,9 @@ export function SettingsPage() {
           colors={colors}
         />
 
-        <Text style={[styles.subsectionTitle, { color: colors.mutedText }]}>Music</Text>
         <SettingToggleRow
           title="Music"
-          subtitle="Enable or disable background music"
+          subtitle="Enable or disable background ambient music"
           value={musicEnabled && soundEnabled}
           onToggle={() => setMusicEnabled(!musicEnabled)}
           disabled={!soundEnabled}
@@ -258,7 +248,6 @@ export function SettingsPage() {
           </View>
         )}
 
-        <Text style={[styles.subsectionTitle, styles.subsectionDivider, { color: colors.mutedText, borderTopColor: colors.border }]}>Sound Effects</Text>
         <SettingToggleRow
           title="Sound Effects"
           subtitle="Enable or disable timer sound effects"
@@ -349,75 +338,65 @@ export function SettingsPage() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    paddingBottom: 100,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 24,
-    marginTop: 10,
-  },
-  headerTitle: {
-    fontSize: 28,
-    fontWeight: '700',
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 160,
+    gap: 14,
   },
   section: {
-    borderRadius: 16,
+    borderRadius: 24,
     borderWidth: 1,
-    padding: 16,
-    marginBottom: 16,
+    padding: 18,
+    gap: 14,
   },
   sectionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: '700',
   },
-  settingGroup: {
-    marginBottom: 12,
+  themeGrid: {
+    flexDirection: 'row',
+    gap: 10,
   },
-  settingLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    marginBottom: 6,
-  },
-  settingInput: {
+  themeButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 16,
     borderWidth: 1,
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    alignItems: 'center',
+  },
+  themeButtonText: {
     fontSize: 14,
-    fontWeight: '500',
+    fontWeight: '700',
   },
   autoStartCard: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 12,
-    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 16,
     borderWidth: 1,
-    marginTop: 8,
   },
   autoStartTextContainer: {
     flex: 1,
     marginRight: 10,
+    gap: 2,
   },
   autoStartTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
-    marginBottom: 2,
   },
   autoStartSubtitle: {
-    fontSize: 11,
+    fontSize: 12,
   },
   switchTouchable: {
-    padding: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   switchTrack: {
     width: 44,
@@ -430,58 +409,21 @@ const styles = StyleSheet.create({
     height: 18,
     borderRadius: 9,
   },
-  themeGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-  },
-  themeButton: {
-    width: '48%',
-    paddingVertical: 12,
-    paddingHorizontal: 10,
-    borderRadius: 10,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  themeButtonText: {
-    fontSize: 14,
-    fontWeight: '600',
+  disabledControl: {
+    opacity: 0.5,
   },
   volumeGroup: {
-    marginBottom: 16,
-    marginTop: 8,
+    gap: 8,
+    paddingTop: 4,
   },
   volumeHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 6,
   },
-  subsectionTitle: {
-    fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 0.8,
-    textTransform: 'uppercase',
-    marginTop: 8,
-    marginBottom: 2,
-  },
-  subsectionDivider: {
-    borderTopWidth: 1,
-    paddingTop: 12,
-  },
-  disabledControl: {
-    opacity: 0.5,
-  },
-  volumeBarRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  volumeStepBtn: {
-    flex: 1,
-    height: 12,
-    borderRadius: 6,
-    borderWidth: 1,
+  settingLabel: {
+    fontSize: 13,
+    fontWeight: '600',
   },
   testSoundBtn: {
     flexDirection: 'row',
@@ -489,33 +431,34 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 8,
     paddingVertical: 12,
-    borderRadius: 10,
+    borderRadius: 16,
     borderWidth: 1,
   },
   testSoundText: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '600',
   },
   resetBtn: {
-    backgroundColor: '#ef4444',
+    backgroundColor: '#ef444415',
+    borderColor: '#ef444430',
+    borderWidth: 1,
     paddingVertical: 14,
-    borderRadius: 10,
+    borderRadius: 16,
     alignItems: 'center',
   },
   resetBtnText: {
-    color: '#ffffff',
-    fontSize: 15,
-    fontWeight: '600',
+    color: '#ef4444',
+    fontSize: 14,
+    fontWeight: '700',
   },
   aboutGroup: {
-    gap: 10,
+    gap: 8,
   },
   aboutRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 12,
-    borderRadius: 10,
+    padding: 14,
+    borderRadius: 16,
     borderWidth: 1,
   },
   aboutLabel: {
@@ -523,12 +466,11 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   aboutValue: {
-    fontSize: 12,
-    fontFamily: 'monospace',
+    fontSize: 13,
   },
   aboutCard: {
-    padding: 12,
-    borderRadius: 10,
+    padding: 14,
+    borderRadius: 16,
     borderWidth: 1,
   },
   aboutDescription: {
@@ -537,10 +479,10 @@ const styles = StyleSheet.create({
   },
   aboutLinkRow: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 12,
-    borderRadius: 10,
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 16,
     borderWidth: 1,
   },
   aboutLinkLabel: {
