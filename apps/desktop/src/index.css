@@ -3,46 +3,46 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --radius: 0.625rem;
+  --background: #f8f9fa;
+  --foreground: #111215;
+  --card: #ffffff;
+  --card-foreground: #111215;
+  --popover: #ffffff;
+  --popover-foreground: #111215;
+  --primary: #111215;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f3f7;
+  --secondary-foreground: #111215;
+  --muted: #eaedf2;
+  --muted-foreground: #6b7280;
+  --accent: #111215;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --border: #e2e5eb;
+  --input: #e2e5eb;
+  --ring: #6b7280;
+  --radius: 1.25rem;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
+  --background: #0a0b0e;
+  --foreground: #ffffff;
+  --card: #16171d;
+  --card-foreground: #ffffff;
+  --popover: #16171d;
+  --popover-foreground: #ffffff;
+  --primary: #ffffff;
+  --primary-foreground: #0a0b0e;
+  --secondary: #1c1e26;
+  --secondary-foreground: #ffffff;
+  --muted: #20222d;
+  --muted-foreground: #7b8094;
+  --accent: #20222d;
+  --accent-foreground: #ffffff;
+  --destructive: #ef4444;
+  --border: #232532;
+  --input: #232532;
+  --ring: #7b8094;
 }
 
 @theme {
@@ -64,13 +64,13 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 6px);
+  --radius-md: calc(var(--radius) - 3px);
   --radius-lg: var(--radius);
-  --radius-xl: var(--radius);
-  --radius-2xl: var(--radius);
-  --radius-3xl: var(--radius);
-  --radius-4xl: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
 }
 
 @layer utilities {
@@ -97,20 +97,4 @@
     border-color: var(--ring);
     box-shadow: 0 0 0 1px var(--ring);
   }
-}
-
-/* Custom Shadcn Scrollbars */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background: oklch(1 0 0 / 15%);
-  border-radius: 9999px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: oklch(1 0 0 / 25%);
 }
