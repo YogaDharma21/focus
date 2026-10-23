@@ -9,29 +9,29 @@ import { PermissionGate } from '@/components/modules/PermissionGate';
 import { getNativeShieldStatus, isNativeShieldSupported, type NativeShieldStatus } from '@/lib/shieldService';
 import { useAppStore } from '@/lib/store';
 
+function readShieldGate(): { gate: 'app' | 'gate'; status: NativeShieldStatus | null } {
+  if (!isNativeShieldSupported()) {
+    return { gate: 'app', status: null };
+  }
+  const next = getNativeShieldStatus();
+  const needAccessibility = useAppStore.getState().shield.urlBlocking;
+  const ok =
+    next.hasUsageAccess &&
+    next.canDrawOverlays &&
+    next.ignoringBatteryOptimizations &&
+    (!needAccessibility || next.accessibilityEnabled);
+  return { gate: ok ? 'app' : 'gate', status: next };
+}
+
 function RootLayoutContent() {
   const { themeMode } = useTheme();
-  const [gate, setGate] = React.useState<'checking' | 'gate' | 'app'>('checking');
-  const [status, setStatus] = React.useState<NativeShieldStatus | null>(null);
+  const [gate, setGate] = React.useState(() => readShieldGate());
 
   const refreshGate = React.useCallback(() => {
-    if (!isNativeShieldSupported()) {
-      setGate('app');
-      return;
-    }
-    const next = getNativeShieldStatus();
-    setStatus(next);
-    const needAccessibility = useAppStore.getState().shield.urlBlocking;
-    const ok =
-      next.hasUsageAccess &&
-      next.canDrawOverlays &&
-      next.ignoringBatteryOptimizations &&
-      (!needAccessibility || next.accessibilityEnabled);
-    setGate(ok ? 'app' : 'gate');
+    setGate(readShieldGate());
   }, []);
 
   React.useEffect(() => {
-    refreshGate();
     const sub = AppState.addEventListener('change', (nextState) => {
       if (nextState === 'active') refreshGate();
     });
@@ -44,16 +44,14 @@ function RootLayoutContent() {
     };
   }, [refreshGate]);
 
-  if (gate === 'checking') return null;
-
-  if (gate === 'gate' && status) {
+  if (gate.gate === 'gate' && gate.status) {
     return (
       <>
         <PermissionGate
-          status={status}
+          status={gate.status}
           urlBlocking={useAppStore.getState().shield.urlBlocking}
           onRefresh={refreshGate}
-          onContinue={() => setGate('app')}
+          onContinue={() => setGate((prev) => ({ ...prev, gate: 'app' }))}
           onSkipUrlBlocking={() => useAppStore.getState().setUrlBlocking(false)}
         />
         <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />

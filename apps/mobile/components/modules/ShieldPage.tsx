@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, AppState, Platform, Modal, Image } from 'react-native';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
@@ -12,7 +12,7 @@ import {
   openUsageAccessSettings,
   type NativeShieldStatus,
 } from '@/lib/shieldService';
-import { getInstalledApps, type InstalledShieldApp } from 'focus-shield';
+import { getInstalledApps, type InstalledShieldApp } from '@/modules/shield';
 import { getApplicationIconAsync } from 'expo-intent-launcher';
 import { Shield, ShieldCheck, ShieldAlert, Plus, X, Globe, Smartphone, Lock, Check, Search } from 'lucide-react-native';
 
@@ -41,10 +41,7 @@ function ShieldAppIcon({
   const [iconUri, setIconUri] = useState<string | null>(() => appIconCache.get(packageName) ?? null);
 
   useEffect(() => {
-    if (appIconCache.has(packageName)) {
-      setIconUri(appIconCache.get(packageName) ?? null);
-      return;
-    }
+    if (appIconCache.has(packageName)) return;
     let cancelled = false;
     getApplicationIconAsync(packageName)
       .then((uri) => {
@@ -220,11 +217,23 @@ export function ShieldPage() {
 
   const [listTab, setListTab] = useState<'blocked' | 'allowed'>('blocked');
   const [siteInput, setSiteInput] = useState('');
-  const [nativeStatus, setNativeStatus] = useState<NativeShieldStatus | null>(null);
+  const [nativeStatus, setNativeStatus] = useState<NativeShieldStatus | null>(() =>
+    getNativeShieldStatus(),
+  );
   const [pickerOpen, setPickerOpen] = useState(false);
   const [installedApps, setInstalledApps] = useState<InstalledShieldApp[]>([]);
   const [appSearch, setAppSearch] = useState('');
-  const [installedLabels, setInstalledLabels] = useState<Record<string, string>>({});
+  const [installedLabels, setInstalledLabels] = useState<Record<string, string>>(() => {
+    if (Platform.OS !== 'android') return {};
+    try {
+      const labels: Record<string, string> = {};
+      for (const app of getInstalledApps()) labels[app.packageName] = app.label;
+      return labels;
+    } catch {
+      // Installed list unavailable (e.g. Expo Go): fall back to package names.
+      return {};
+    }
+  });
 
   const enforcing = isBlockingRequired(shield.enabled, isActive, timerState);
   const setupDoneCount = [
@@ -234,24 +243,14 @@ export function ShieldPage() {
     nativeStatus?.accessibilityEnabled,
   ].filter(Boolean).length;
 
-  const refreshNativeStatus = () => setNativeStatus(getNativeShieldStatus());
+  const refreshNativeStatus = useCallback(() => setNativeStatus(getNativeShieldStatus()), []);
 
   useEffect(() => {
-    refreshNativeStatus();
-    if (Platform.OS === 'android') {
-      try {
-        const labels: Record<string, string> = {};
-        for (const app of getInstalledApps()) labels[app.packageName] = app.label;
-        setInstalledLabels(labels);
-      } catch {
-        // Installed list unavailable (e.g. Expo Go): fall back to package names.
-      }
-    }
     const sub = AppState.addEventListener('change', (next) => {
       if (next === 'active') refreshNativeStatus();
     });
     return () => sub.remove();
-  }, []);
+  }, [refreshNativeStatus]);
 
   const handleAddSite = () => {
     const value = siteInput.trim();
