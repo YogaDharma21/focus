@@ -1,11 +1,11 @@
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Pressable, StyleSheet } from 'react-native';
 import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/context/ThemeContext';
 
-export const FLOATING_TAB_BAR_HEIGHT = 60;
+export const FLOATING_TAB_BAR_HEIGHT = 64;
 export const FLOATING_TAB_BAR_BOTTOM_GAP = 12;
 
 export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
@@ -14,12 +14,15 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
 
   return (
     <View
-      style={[styles.wrapper, { bottom: Math.max(insets.bottom, 0) + FLOATING_TAB_BAR_BOTTOM_GAP }]}
+      style={[
+        styles.wrapper,
+        { bottom: Math.max(insets.bottom, 6) + FLOATING_TAB_BAR_BOTTOM_GAP },
+      ]}
       pointerEvents="box-none"
     >
       <View
         style={[
-          styles.pill,
+          styles.dockPill,
           {
             backgroundColor: colors.card,
             borderColor: colors.border,
@@ -28,7 +31,6 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
       >
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
-          const label = options.title ?? route.name;
           const isFocused = state.index === index;
 
           const onPress = () => {
@@ -52,6 +54,8 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
             });
           };
 
+          const iconColor = isFocused ? colors.tabIconSelected : colors.tabIconDefault;
+
           return (
             <Pressable
               key={route.key}
@@ -61,18 +65,16 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
               testID={options.tabBarButtonTestID}
               onPress={onPress}
               onLongPress={onLongPress}
-              style={[styles.tab, isFocused && { backgroundColor: colors.muted }]}
+              style={[
+                styles.tabItem,
+                isFocused && [styles.activeTabItem, { backgroundColor: colors.muted }],
+              ]}
             >
               {options.tabBarIcon?.({
                 focused: isFocused,
-                color: isFocused ? colors.tabIconSelected : colors.tabIconDefault,
-                size: 22,
+                color: iconColor,
+                size: 23,
               })}
-              {isFocused && (
-                <Text style={[styles.label, { color: colors.text }]} numberOfLines={1}>
-                  {label}
-                </Text>
-              )}
             </Pressable>
           );
         })}
@@ -84,38 +86,35 @@ export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarP
 const styles = StyleSheet.create({
   wrapper: {
     position: 'absolute',
-    left: 20,
-    right: 20,
+    left: 24,
+    right: 24,
     alignItems: 'center',
+    zIndex: 99,
   },
-  pill: {
+  dockPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    paddingHorizontal: 8,
+    justifyContent: 'space-between',
+    paddingHorizontal: 12,
     paddingVertical: 8,
-    borderRadius: 28,
+    borderRadius: 36,
     borderWidth: 1,
     maxWidth: 340,
     width: '100%',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.45,
+    shadowRadius: 18,
+    elevation: 10,
   },
-  tab: {
+  tabItem: {
     flex: 1,
-    flexDirection: 'row',
+    height: 48,
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderRadius: 20,
+    borderRadius: 24,
   },
-  label: {
-    fontSize: 12,
-    fontWeight: '700',
+  activeTabItem: {
+    // subtle highlighted container for selected icon
   },
 });

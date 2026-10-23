@@ -1,14 +1,17 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, Platform } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Platform, TouchableOpacity } from 'react-native';
 import { useAppStore, Session } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
 import { Fonts } from '@/constants/theme';
+import { ActivityDotGrid } from '@/components/ui/ActivityDotGrid';
+import { CircularProgress } from '@/components/ui/CircularProgress';
 import {
   Clock,
-  BarChart2,
   Flame,
   Activity,
   TrendingUp,
+  SlidersHorizontal,
+  BarChart2,
 } from 'lucide-react-native';
 
 const DAYS_OF_WEEK = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'] as const;
@@ -30,7 +33,7 @@ export function StatsJournal() {
       const secondsRemaining = 86400 - secondsElapsed;
       const hours = Math.floor(secondsRemaining / 3600);
       const mins = Math.floor((secondsRemaining % 3600) / 60);
-      setRemainingTimeStr(`${hours}h ${mins}m remaining today`);
+      setRemainingTimeStr(`${hours}h ${mins}m remaining`);
     };
 
     updateDayProgress();
@@ -117,7 +120,7 @@ export function StatsJournal() {
   }, {});
 
   // Weekly Focus Trend Calculation (Sunday to Saturday)
-  const currentDayIdx = now.getDay(); // 0 = Sun, 6 = Sat
+  const currentDayIdx = now.getDay();
   const sunday = new Date(now);
   sunday.setDate(now.getDate() - currentDayIdx);
   sunday.setHours(0, 0, 0, 0);
@@ -146,106 +149,148 @@ export function StatsJournal() {
     }
   });
 
+  const totalWeeklyMins = Object.values(weeklyMinutes).reduce((a, b) => a + b, 0);
   const maxWeeklyMins = Math.max(60, ...Object.values(weeklyMinutes));
 
   const monoFont = Fonts?.mono?.web || Platform.select({ ios: 'Menlo', android: 'monospace', default: 'monospace' });
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      {/* 1. Day Progress Card (Full Width) */}
-      <View style={[styles.fullCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={styles.cardHeaderBetween}>
-          <View style={styles.iconTitleRow}>
-            <View style={[styles.iconBadge, { backgroundColor: colors.border }]}>
-              <Clock size={15} color={colors.text} />
-            </View>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>Day Progress</Text>
-          </View>
-          <Text style={[styles.headerPercentText, { color: colors.text }]}>{dayProgressPercent}%</Text>
-        </View>
-
-        <View style={[styles.progressBarTrack, { backgroundColor: colors.border }]}>
-          <View style={[styles.progressBarFill, { backgroundColor: colors.text, width: `${dayProgressPercent}%` }]} />
-        </View>
-
-        <Text style={[styles.subtext, { color: colors.mutedText }]}>{remainingTimeStr}</Text>
-      </View>
-
-      {/* 2. Metrics Row */}
-      <View style={styles.grid3Row}>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      showsVerticalScrollIndicator={false}
+    >
+      {/* ── ROW 1: 2 STAT METRIC CARDS (matching Image 1 row 1) ── */}
+      <View style={styles.row2Cols}>
         {/* Minutes Today */}
-        <View style={[styles.grid3Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={[styles.iconBadgeSquare, { backgroundColor: colors.border }]}>
-            <Activity size={15} color={colors.text} />
+        <View style={[styles.halfCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.cardTopRow}>
+            <CircularProgress
+              size={48}
+              strokeWidth={3.5}
+              progress={Math.min(minutesToday / 120, 1) || 0.3}
+              label={minutesToday > 0 ? '✓' : '1'}
+              trackColor={colors.border}
+              progressColor={colors.text}
+              textColor={colors.text}
+            />
+            <SlidersHorizontal size={15} color={colors.mutedText} />
           </View>
-          <Text style={[styles.largeNumValue, { color: colors.text }]}>{minutesToday}</Text>
-          <Text style={[styles.grid3Label, { color: colors.mutedText }]}>MINUTES TODAY</Text>
+          <View style={styles.cardBottomCol}>
+            <View style={styles.bigStatRow}>
+              <Text style={[styles.bigStatNum, { color: colors.text }]}>
+                {minutesToday}
+              </Text>
+              <Text style={[styles.bigStatUnit, { color: colors.mutedText }]}>
+                min
+              </Text>
+            </View>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>
+              Focus today
+            </Text>
+            <Text style={[styles.cardSubtext, { color: colors.mutedText }]}>
+              {sessions.length} sessions logged
+            </Text>
+          </View>
+        </View>
+
+        {/* Current Streak */}
+        <View style={[styles.halfCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={styles.cardTopRow}>
+            <View style={[styles.iconCircle, { backgroundColor: colors.muted }]}>
+              <Flame size={18} color={colors.text} />
+            </View>
+            <SlidersHorizontal size={15} color={colors.mutedText} />
+          </View>
+          <View style={styles.cardBottomCol}>
+            <View style={styles.bigStatRow}>
+              <Text style={[styles.bigStatNum, { color: colors.text }]}>
+                {streak.current}
+              </Text>
+              <Text style={[styles.bigStatUnit, { color: colors.mutedText }]}>
+                days
+              </Text>
+            </View>
+            <Text style={[styles.cardTitle, { color: colors.text }]}>
+              Streak record
+            </Text>
+            <Text style={[styles.cardSubtext, { color: colors.mutedText }]}>
+              Best: {streak.best} days
+            </Text>
+          </View>
         </View>
       </View>
 
-      {/* 3. Streak Card */}
-      <View style={styles.grid2Row}>
-        {/* Longest Streak Card */}
-        <View style={[styles.grid2Card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={styles.iconTitleRow}>
-            <View style={[styles.iconBadgeSmallSquare, { backgroundColor: colors.border }]}>
-              <Flame size={15} color={colors.text} />
-            </View>
-            <Text style={[styles.cardTitleSmall, { color: colors.text }]}>Longest Streak</Text>
-          </View>
+      {/* ── ROW 2: FULL WIDTH CARD WITH 3-MONTH HEATMAP & DAY PROGRESS ── */}
+      <View style={[styles.fullCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <ActivityDotGrid sessions={sessions} />
 
-          <View style={styles.streakRowsContainer}>
-            <View style={styles.streakRow}>
-              <Text style={[styles.streakLabel, { color: colors.mutedText }]}>Current</Text>
-              <Text style={[styles.streakValue, { color: colors.text }]}>{streak.current} Days</Text>
-            </View>
-            <View style={styles.streakRow}>
-              <Text style={[styles.streakLabel, { color: colors.mutedText }]}>Best</Text>
-              <Text style={[styles.streakValue, { color: colors.text }]}>{streak.best} Days</Text>
-            </View>
-          </View>
-        </View>
-      </View>
+        <View style={[styles.cardDivider, { backgroundColor: colors.border }]} />
 
-      {/* 4. FOCUS TREND Card */}
-      <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={styles.sectionHeaderRow}>
-          <View style={[styles.iconBadgeSmallSquare, { backgroundColor: colors.border }]}>
-            <TrendingUp size={15} color={colors.text} />
+        {/* Day progress bottom bar */}
+        <View style={styles.dayProgressRow}>
+          <View style={styles.progressTextRow}>
+            <Text style={[styles.routineTitle, { color: colors.text }]}>
+              Day progress
+            </Text>
+            <Text style={[styles.percentBadge, { color: colors.text }]}>
+              {dayProgressPercent}%
+            </Text>
           </View>
-          <Text style={[styles.monoHeaderTitle, { color: colors.text, fontFamily: monoFont }]}>
-            FOCUS TREND
+          <View style={[styles.progressBarTrack, { backgroundColor: colors.border }]}>
+            <View style={[styles.progressBarFill, { backgroundColor: colors.text, width: `${dayProgressPercent}%` }]} />
+          </View>
+          <Text style={[styles.routineSubtext, { color: colors.mutedText }]}>
+            {remainingTimeStr}
           </Text>
         </View>
+      </View>
 
+      {/* ── ROW 3: WEEKLY FOCUS VOLUME CARD (matching 'Volume lifted 3.200 lbs') ── */}
+      <View style={[styles.fullCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={styles.volumeHeaderRow}>
+          <View>
+            <Text style={[styles.volumeTitle, { color: colors.text }]}>
+              Volume lifted
+            </Text>
+            <Text style={[styles.volumeSubtext, { color: colors.mutedText }]}>
+              Last 7 days · {totalWeeklyMins} mins total
+            </Text>
+          </View>
+          <View style={styles.bigStatRow}>
+            <Text style={[styles.volumeNum, { color: colors.text }]}>
+              {(totalWeeklyMins / 60).toFixed(1)}k
+            </Text>
+            <Text style={[styles.volumeUnit, { color: colors.mutedText }]}>
+              lbs
+            </Text>
+          </View>
+        </View>
+
+        {/* Weekly distribution bars */}
         <View style={styles.chartContainer}>
           {DAYS_OF_WEEK.map((day) => {
             const minsLogged = weeklyMinutes[day] || 0;
             const barHeight = minsLogged > 0
-              ? Math.min(44, Math.max(14, Math.round((minsLogged / maxWeeklyMins) * 44)))
-              : 4;
+              ? Math.min(48, Math.max(14, Math.round((minsLogged / maxWeeklyMins) * 48)))
+              : 5;
 
             return (
               <View key={day} style={styles.chartColumn}>
-                <Text
-                  style={[
-                    styles.chartValueText,
-                    {
-                      color: minsLogged > 0 ? colors.text : colors.mutedText,
-                      fontFamily: monoFont,
-                    },
-                  ]}
-                >
-                  {minsLogged}m
+                <Text style={[styles.chartValueText, { color: minsLogged > 0 ? colors.text : colors.mutedText }]}>
+                  {minsLogged > 0 ? `${minsLogged}m` : ''}
                 </Text>
-                <View style={styles.barWrapper}>
-                  {minsLogged > 0 ? (
-                    <View style={[styles.activeBar, { height: barHeight }]} />
-                  ) : (
-                    <View style={[styles.emptyBar, { backgroundColor: colors.border }]} />
-                  )}
+                <View style={[styles.barWrapper, { backgroundColor: colors.border }]}>
+                  <View
+                    style={[
+                      styles.chartBar,
+                      {
+                        height: barHeight,
+                        backgroundColor: minsLogged > 0 ? colors.text : colors.mutedText,
+                      },
+                    ]}
+                  />
                 </View>
-                <Text style={[styles.chartDayLabel, { color: colors.text, fontFamily: monoFont }]}>
+                <Text style={[styles.chartDayLabel, { color: colors.mutedText }]}>
                   {day}
                 </Text>
               </View>
@@ -254,37 +299,35 @@ export function StatsJournal() {
         </View>
       </View>
 
-      {/* 5. DISTRACTION ANALYSIS Card */}
-      <View style={[styles.sectionCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={styles.sectionHeaderRow}>
-          <View style={[styles.iconBadgeSmallSquare, { backgroundColor: colors.border }]}>
-            <BarChart2 size={15} color={colors.text} />
-          </View>
-          <Text style={[styles.monoHeaderTitle, { color: colors.text, fontFamily: monoFont }]}>
-            DISTRACTION ANALYSIS
+      {/* ── ROW 4: DISTRACTION ANALYSIS ── */}
+      <View style={[styles.fullCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={styles.distractionHeaderRow}>
+          <Text style={[styles.volumeTitle, { color: colors.text }]}>
+            Distraction analysis
+          </Text>
+          <Text style={[styles.volumeSubtext, { color: colors.mutedText }]}>
+            {totalDistractions} total logged
           </Text>
         </View>
 
         {totalDistractions === 0 ? (
-          <Text style={[styles.monoEmptyText, { color: colors.mutedText, fontFamily: monoFont }]}>
-            No distractions logged yet.
+          <Text style={[styles.emptyNotice, { color: colors.mutedText }]}>
+            No distractions recorded yet. Clean focus!
           </Text>
         ) : (
           <View style={styles.categoryList}>
             {Object.entries(distractionCategoryCounts).map(([cat, count]) => {
               const percent = Math.round((count / totalDistractions) * 100);
               return (
-                <View key={cat} style={styles.distractionItemContainer}>
-                  <View style={styles.distractionItemHeader}>
-                    <Text style={[styles.categoryName, { color: colors.text, fontFamily: monoFont }]}>
-                      {cat}
-                    </Text>
-                    <Text style={[styles.categoryCountText, { color: colors.mutedText, fontFamily: monoFont }]}>
+                <View key={cat} style={styles.distractionRow}>
+                  <View style={styles.distractionLabelRow}>
+                    <Text style={[styles.catName, { color: colors.text }]}>{cat}</Text>
+                    <Text style={[styles.catCount, { color: colors.mutedText }]}>
                       {count} ({percent}%)
                     </Text>
                   </View>
-                  <View style={[styles.distractionTrack, { backgroundColor: colors.border }]}>
-                    <View style={[styles.distractionFill, { width: `${percent}%` }]} />
+                  <View style={[styles.trackBg, { backgroundColor: colors.border }]}>
+                    <View style={[styles.fillBar, { backgroundColor: colors.text, width: `${percent}%` }]} />
                   </View>
                 </View>
               );
@@ -298,48 +341,89 @@ export function StatsJournal() {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 160,
     gap: 14,
-    paddingBottom: 30,
   },
-  fullCard: {
-    borderRadius: 16,
+  row2Cols: {
+    flexDirection: 'row',
+    gap: 12,
+    width: '100%',
+  },
+  halfCard: {
+    flex: 1,
+    minHeight: 140,
+    borderRadius: 24,
     borderWidth: 1,
     padding: 16,
-    gap: 14,
-  },
-  cardHeaderBetween: {
-    flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
   },
-  iconTitleRow: {
+  cardTopRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 8,
   },
-  iconBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    alignItems: 'center',
+  iconCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardBottomCol: {
+    gap: 2,
+    marginTop: 10,
   },
   cardTitle: {
     fontSize: 15,
     fontWeight: '700',
+    letterSpacing: -0.2,
   },
-  cardTitleSmall: {
-    fontSize: 13.5,
-    fontWeight: '700',
-    flex: 1,
+  cardSubtext: {
+    fontSize: 12,
+    fontWeight: '500',
   },
-  headerPercentText: {
-    fontSize: 16,
+  bigStatRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 4,
+    marginBottom: 4,
+  },
+  bigStatNum: {
+    fontSize: 34,
     fontWeight: '800',
+    letterSpacing: -1,
+  },
+  bigStatUnit: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  fullCard: {
+    width: '100%',
+    borderRadius: 26,
+    borderWidth: 1,
+    padding: 18,
+    gap: 16,
+  },
+  cardDivider: {
+    height: 1,
+    width: '100%',
+    opacity: 0.6,
+  },
+  dayProgressRow: {
+    gap: 8,
+  },
+  progressTextRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  percentBadge: {
+    fontSize: 14,
+    fontWeight: '700',
   },
   progressBarTrack: {
-    width: '100%',
     height: 6,
     borderRadius: 3,
     overflow: 'hidden',
@@ -348,198 +432,100 @@ const styles = StyleSheet.create({
     height: '100%',
     borderRadius: 3,
   },
-  subtext: {
+  routineTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+  },
+  routineSubtext: {
     fontSize: 12,
     fontWeight: '500',
   },
-  grid3Row: {
+  volumeHeaderRow: {
     flexDirection: 'row',
-    gap: 10,
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
   },
-  grid3Card: {
-    flex: 1,
-    borderRadius: 16,
-    borderWidth: 1,
-    paddingVertical: 16,
-    paddingHorizontal: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
+  volumeTitle: {
+    fontSize: 16,
+    fontWeight: '700',
   },
-  iconBadgeSquare: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
+  volumeSubtext: {
+    fontSize: 12,
+    fontWeight: '500',
+    marginTop: 2,
   },
-  iconBadgeSmallSquare: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  largeNumValue: {
+  volumeNum: {
     fontSize: 26,
     fontWeight: '800',
-    letterSpacing: -0.5,
   },
-  grid3Label: {
-    fontSize: 10,
-    fontWeight: '700',
-    textAlign: 'center',
-    letterSpacing: 0.2,
-  },
-  grid2Row: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  grid2Card: {
-    flex: 1,
-    borderRadius: 16,
-    borderWidth: 1,
-    paddingVertical: 14,
-    paddingHorizontal: 12,
-    justifyContent: 'space-between',
-    minHeight: 120,
-  },
-  streakRowsContainer: {
-    gap: 8,
-    marginTop: 10,
-  },
-  streakRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  streakLabel: {
+  volumeUnit: {
     fontSize: 13,
-    fontWeight: '500',
-  },
-  streakValue: {
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  bigPercentText: {
-    fontSize: 28,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-    marginVertical: 4,
-  },
-  iconSubtextRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 5,
-  },
-  sectionCard: {
-    borderRadius: 16,
-    borderWidth: 1,
-    padding: 16,
-  },
-  monoHeaderTitle: {
-    fontSize: 13.5,
-    fontWeight: '700',
-    letterSpacing: 0.8,
+    fontWeight: '600',
   },
   chartContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-end',
-    marginTop: 18,
-    marginBottom: 4,
     height: 90,
+    paddingTop: 10,
   },
   chartColumn: {
-    flex: 1,
     alignItems: 'center',
-    justifyContent: 'flex-end',
-    height: '100%',
+    flex: 1,
+    gap: 6,
   },
   chartValueText: {
-    fontSize: 10.5,
+    fontSize: 10,
     fontWeight: '600',
-    marginBottom: 6,
+    height: 14,
   },
   barWrapper: {
+    width: 14,
     height: 48,
-    width: '100%',
+    borderRadius: 7,
     justifyContent: 'flex-end',
-    alignItems: 'center',
-    marginBottom: 8,
+    overflow: 'hidden',
   },
-  emptyBar: {
-    width: '80%',
-    height: 4,
-    borderRadius: 2,
-  },
-  activeBar: {
-    width: '85%',
-    borderRadius: 6,
-    backgroundColor: '#ffffff',
+  chartBar: {
+    width: '100%',
+    borderRadius: 7,
   },
   chartDayLabel: {
-    fontSize: 12,
-    fontWeight: '700',
+    fontSize: 11,
+    fontWeight: '600',
   },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
+  distractionHeaderRow: {
+    gap: 2,
   },
-  redIconBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: 'rgba(225, 29, 72, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(225, 29, 72, 0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  indigoIconBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 8,
-    backgroundColor: 'rgba(99, 102, 241, 0.15)',
-    borderWidth: 1,
-    borderColor: 'rgba(99, 102, 241, 0.3)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  monoEmptyText: {
-    fontSize: 13.5,
-    marginTop: 14,
+  emptyNotice: {
+    fontSize: 13,
+    fontStyle: 'italic',
   },
   categoryList: {
-    gap: 10,
-    marginTop: 14,
+    gap: 12,
   },
-  distractionItemContainer: {
-    gap: 4,
+  distractionRow: {
+    gap: 6,
   },
-  distractionItemHeader: {
+  distractionLabelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
   },
-  categoryName: {
+  catName: {
     fontSize: 13,
     fontWeight: '600',
   },
-  categoryCountText: {
+  catCount: {
     fontSize: 12,
+    fontWeight: '500',
   },
-  distractionTrack: {
-    width: '100%',
+  trackBg: {
     height: 6,
     borderRadius: 3,
     overflow: 'hidden',
   },
-  distractionFill: {
+  fillBar: {
     height: '100%',
     borderRadius: 3,
-    backgroundColor: '#f43f5e',
   },
 });
-

@@ -1,6 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
 import {
   Timer as TimerIcon,
+  LayoutGrid,
+  Calendar,
+  SlidersHorizontal,
   Shield,
   BarChart3,
   Play,
@@ -610,38 +613,38 @@ export function Popup() {
       )}
 
       {/* Main Navigation Bar */}
-      <nav className={`flex items-center gap-1 px-3 py-2 z-10 ${
-        "bg-card/60"
-      }`}>
-        {[
-          { id: "timer", label: "Timer", icon: TimerIcon },
-          { id: "shield", label: "Shield", icon: Shield, activeIndicator: state.shield.enabled && state.isActive },
-          { id: "stats", label: "Stats", icon: BarChart3 }
-        ].map((tab) => {
-          const Icon = tab.icon;
-          const isActive = activeTab === tab.id;
-          return (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl transition-colors relative text-[11px] font-bold px-3 py-1.5 min-h-[30px] ${
-                isActive
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-secondary/60"
-              }`}
-            >
-              <div className="relative">
-                <Icon className="w-4 h-4" />
-                {tab.activeIndicator && (
-                  <span className={`absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full animate-ping ${
-                    "bg-foreground"
-                  }`} />
-                )}
-              </div>
-              <span>{tab.label}</span>
-            </button>
-          );
-        })}
+      <nav className="flex items-center justify-center px-4 py-2 z-10 bg-background">
+        <div className="flex items-center gap-1.5 p-1 bg-[#14151b] border border-[#232532] shadow-xl rounded-full w-full justify-around">
+          {[
+            { id: "timer", label: "Focus", icon: LayoutGrid },
+            { id: "stats", label: "Stats", icon: Calendar },
+            { id: "shield", label: "Shield", icon: Shield, activeIndicator: state.shield.enabled && state.isActive },
+            { id: "settings", label: "Settings", icon: SlidersHorizontal },
+          ].map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id as typeof activeTab)}
+                className={`flex-1 flex items-center justify-center gap-1.5 rounded-full transition-all duration-200 relative text-[11px] font-bold py-1.5 ${
+                  isActive
+                    ? "bg-[#20222d] text-white shadow-sm"
+                    : "text-[#5a5e70] hover:text-white hover:bg-white/5"
+                }`}
+                title={tab.label}
+              >
+                <div className="relative flex items-center justify-center">
+                  <Icon className="w-3.5 h-3.5" />
+                  {tab.activeIndicator && (
+                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  )}
+                </div>
+                <span>{tab.label}</span>
+              </button>
+            );
+          })}
+        </div>
       </nav>
 
       {/* Floating Music Player Bar */}

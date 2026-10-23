@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
-import { Radius } from '@/constants/theme';
 import { playCompletionSound } from '@/lib/sound';
 import { VolumeSlider } from '@/components/ui/VolumeSlider';
 import { Play, Pause, X, AlertTriangle, CheckCircle2, Plus, Music, RotateCcw, ShieldCheck } from 'lucide-react-native';
@@ -101,26 +100,28 @@ export function DeepFocusOverlay() {
         ]}
       >
         {/* Top Left Lofi-Beats Music Pill */}
-        {soundEnabled && musicEnabled && <TouchableOpacity
-          style={[
-            styles.musicPillBtn,
-            {
-              backgroundColor: isMusicPlaying ? colors.card : 'rgba(255, 255, 255, 0.05)',
-              borderColor: isMusicPlaying ? colors.mutedText : colors.border,
-              top: Math.max(insets.top + 12, 40),
-            },
-          ]}
-          onPress={() => setMusicModalOpen(true)}
-          activeOpacity={0.7}
-        >
-          <Music size={16} color={isMusicPlaying ? colors.text : colors.mutedText} />
-          <Text style={[styles.musicPillText, { color: isMusicPlaying ? colors.text : colors.mutedText }]}>
-            Lofi-Beats
-          </Text>
-          {isMusicPlaying ? (
-            <View style={[styles.activeDot, { backgroundColor: colors.text }]} />
-          ) : null}
-        </TouchableOpacity>}
+        {soundEnabled && musicEnabled && (
+          <TouchableOpacity
+            style={[
+              styles.musicPillBtn,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+                top: Math.max(insets.top + 12, 40),
+              },
+            ]}
+            onPress={() => setMusicModalOpen(true)}
+            activeOpacity={0.7}
+          >
+            <Music size={16} color={isMusicPlaying ? colors.text : colors.mutedText} />
+            <Text style={[styles.musicPillText, { color: isMusicPlaying ? colors.text : colors.mutedText }]}>
+              Lofi-Beats
+            </Text>
+            {isMusicPlaying ? (
+              <View style={[styles.activeDot, { backgroundColor: colors.text }]} />
+            ) : null}
+          </TouchableOpacity>
+        )}
 
         <TouchableOpacity
           style={[
@@ -132,6 +133,7 @@ export function DeepFocusOverlay() {
             },
           ]}
           onPress={() => setDeepFocusMode(false)}
+          activeOpacity={0.7}
         >
           <X size={20} color={colors.text} />
         </TouchableOpacity>
@@ -147,7 +149,6 @@ export function DeepFocusOverlay() {
 
           {/* Deep Focus Controls Row */}
           <View style={styles.controlsRow}>
-
             {/* Log Distraction Button */}
             <TouchableOpacity
               style={[
@@ -159,19 +160,19 @@ export function DeepFocusOverlay() {
               disabled={!isActive}
               activeOpacity={0.7}
             >
-              <AlertTriangle size={24} color={colors.text} />
+              <AlertTriangle size={22} color={colors.text} />
             </TouchableOpacity>
 
             {/* Play / Pause Main Button */}
             <TouchableOpacity
-              style={[styles.playBtn, { backgroundColor: colors.primary }]}
+              style={[styles.playBtn, { backgroundColor: colors.text }]}
               onPress={() => setIsActive(!isActive)}
               activeOpacity={0.8}
             >
               {isActive ? (
-                <Pause size={32} color={colors.primaryText} />
+                <Pause size={32} color={colors.background} />
               ) : (
-                <Play size={32} color={colors.primaryText} fill={colors.primaryText} style={{ marginLeft: 3 }} />
+                <Play size={32} color={colors.background} fill={colors.background} style={{ marginLeft: 3 }} />
               )}
             </TouchableOpacity>
 
@@ -186,7 +187,7 @@ export function DeepFocusOverlay() {
               disabled={!isActive}
               activeOpacity={0.7}
             >
-              <CheckCircle2 size={24} color={colors.text} />
+              <CheckCircle2 size={22} color={colors.text} />
             </TouchableOpacity>
           </View>
         </View>
@@ -197,7 +198,7 @@ export function DeepFocusOverlay() {
             <TouchableOpacity activeOpacity={1} style={[styles.modalBox, { backgroundColor: colors.card, borderColor: colors.border }]} onPress={() => {}}>
               <Text style={[styles.modalTitle, { color: colors.text }]}>Lofi-Beats</Text>
               <Text style={[styles.modalSub, { color: colors.mutedText }]}>
-                Control Lofi-Beats audio while in Deep Focus mode.
+                Control background ambient audio while focusing.
               </Text>
               
               <View style={{ gap: 12, marginVertical: 16 }}>
@@ -232,7 +233,7 @@ export function DeepFocusOverlay() {
               </View>
 
               <TouchableOpacity
-                style={[styles.closeModalBtn, { backgroundColor: colors.border }]}
+                style={[styles.closeModalBtn, { backgroundColor: colors.muted }]}
                 onPress={() => setMusicModalOpen(false)}
               >
                 <Text style={{ color: colors.text, fontWeight: '600' }}>Done</Text>
@@ -259,13 +260,13 @@ export function DeepFocusOverlay() {
                       setDistractionModalOpen(false);
                     }}
                   >
-                    <Text style={{ color: colors.text, fontWeight: '500' }}>{cat}</Text>
+                    <Text style={{ color: colors.text, fontWeight: '600' }}>{cat}</Text>
                     <Plus size={16} color={colors.mutedText} />
                   </TouchableOpacity>
                 ))}
               </View>
               <TouchableOpacity
-                style={[styles.closeModalBtn, { backgroundColor: colors.border }]}
+                style={[styles.closeModalBtn, { backgroundColor: colors.muted }]}
                 onPress={() => setDistractionModalOpen(false)}
               >
                 <Text style={{ color: colors.text, fontWeight: '600' }}>Cancel</Text>
@@ -288,9 +289,9 @@ const styles = StyleSheet.create({
   exitBtn: {
     position: 'absolute',
     right: 20,
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
@@ -299,9 +300,9 @@ const styles = StyleSheet.create({
   musicPillBtn: {
     position: 'absolute',
     left: 20,
-    height: 40,
-    paddingHorizontal: 14,
-    borderRadius: 20,
+    height: 44,
+    paddingHorizontal: 16,
+    borderRadius: 22,
     borderWidth: 1,
     flexDirection: 'row',
     alignItems: 'center',
@@ -321,57 +322,57 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   timerText: {
-    fontSize: 72,
+    fontSize: 76,
     fontWeight: '800',
     letterSpacing: -3,
+    fontVariant: ['tabular-nums'],
   },
   shieldPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: 10,
-    paddingVertical: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
     borderRadius: 999,
     borderWidth: 1,
-    marginTop: 8,
+    marginTop: 12,
   },
   shieldPillText: {
-    fontSize: 10,
+    fontSize: 11,
     fontWeight: '700',
     letterSpacing: 0.6,
     textTransform: 'uppercase',
-  },
-  sessionText: {
-    fontSize: 16,
-    fontWeight: '500',
-    marginTop: 12,
   },
   controlsRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 20,
-    marginTop: 40,
+    marginTop: 48,
   },
   playBtn: {
-    width: 80,
-    height: 80,
-    borderRadius: Radius.base,
+    width: 76,
+    height: 76,
+    borderRadius: 38,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 6,
   },
   secondaryActionBtn: {
     width: 52,
     height: 52,
-    borderRadius: Radius.base,
+    borderRadius: 26,
     borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.75)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: 20,
@@ -379,30 +380,33 @@ const styles = StyleSheet.create({
   modalBox: {
     width: '100%',
     maxWidth: 360,
-    borderRadius: Radius.base,
+    borderRadius: 24,
     borderWidth: 1,
-    padding: 20,
+    padding: 22,
   },
   modalTitle: {
     fontSize: 18,
     fontWeight: '700',
-    marginBottom: 12,
+    marginBottom: 6,
   },
   modalSub: {
     fontSize: 13,
-    marginBottom: 10,
+    marginBottom: 12,
+    lineHeight: 18,
   },
   distractionItem: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    padding: 12,
-    borderRadius: 10,
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    borderRadius: 16,
     borderWidth: 1,
   },
   closeModalBtn: {
-    padding: 12,
-    borderRadius: 10,
+    marginTop: 12,
+    paddingVertical: 14,
+    borderRadius: 16,
     alignItems: 'center',
   },
 });
