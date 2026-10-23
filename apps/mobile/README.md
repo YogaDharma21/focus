@@ -1,9 +1,9 @@
 # Focus Mobile App
 
 [![Version](https://img.shields.io/badge/Version-v0.0.1-blue?style=for-the-badge)](https://github.com/YogaDharma21/focus)
-[![Expo](https://img.shields.io/badge/Expo-v52.0.0-000000?style=for-the-badge&logo=expo&logoColor=white)](https://expo.dev/)
-[![React Native](https://img.shields.io/badge/React_Native-v0.76.7-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactnative.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Expo](https://img.shields.io/badge/Expo-v58.0.0-000000?style=for-the-badge&logo=expo&logoColor=white)](https://expo.dev/)
+[![React Native](https://img.shields.io/badge/React_Native-v0.88.0-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://reactnative.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
 
 **Focus Mobile** is the React Native / Expo companion application for the Focus productivity suite. Currently in active development, it provides focus tracking, dynamic flow break calculations, ambient audio playback, and productivity stats for iOS and Android.
@@ -38,9 +38,9 @@
 
 ## Tech Stack
 
-- **Framework**: Expo SDK 52 (Expo Router file-based routing)
-- **Core Library**: React Native
-- **Language**: TypeScript
+- **Framework**: Expo SDK 58 (Expo Router file-based routing)
+- **Core Library**: React Native 0.88
+- **Language**: TypeScript 6.0
 - **Icons**: Lucide React Native
 - **State Management**: Zustand with persistence
 
@@ -50,7 +50,7 @@
 
 ### Prerequisites
 
-- Node.js (v18+ recommended)
+- Node.js (v22.13+ recommended)
 - pnpm (v10+ recommended)
 - Expo Go app on mobile OR Android Studio / Xcode for emulators.
 

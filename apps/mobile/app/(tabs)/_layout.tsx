@@ -2,7 +2,7 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 import { View, StyleSheet, AppState } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { BottomTabBarProps } from 'expo-router/js-tabs';
 import { useTheme } from '@/context/ThemeContext';
 import { Header } from '@/components/Header';
 import { FloatingTabBar, FLOATING_TAB_BAR_HEIGHT, FLOATING_TAB_BAR_BOTTOM_GAP } from '@/components/FloatingTabBar';

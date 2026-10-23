@@ -13,7 +13,7 @@ import {
   isServiceRunning,
   startShield,
   stopShield,
-} from 'focus-shield';
+} from '@/modules/shield';
 import { isBlockingRequired } from './shield';
 import { useAppStore } from './store';
 
