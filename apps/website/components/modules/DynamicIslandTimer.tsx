@@ -140,7 +140,7 @@ export function DynamicIslandTimer() {
                     {formatTime(timeLeft)}
                 </span>
                 {isActive && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald animate-pulse" />
                 )}
             </button>
 

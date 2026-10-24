@@ -32,7 +32,7 @@ export function BottomNavbar() {
         >
             <nav
                 className={cn(
-                    "flex items-center gap-2 p-2 bg-[#14151b] border border-[#232532] shadow-2xl rounded-full",
+                    "flex items-center gap-2 p-2 bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-full",
                     "flex-row md:flex-col",
                 )}
             >
@@ -47,8 +47,8 @@ export function BottomNavbar() {
                             className={cn(
                                 "relative flex flex-col items-center justify-center w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 transition-all duration-300 ease-out group rounded-full",
                                 isActive
-                                    ? "text-white bg-[#20222d] shadow-md"
-                                    : "text-[#5a5e70] hover:text-white hover:bg-white/5",
+                                    ? "text-primary-foreground bg-primary shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-surface",
                             )}
                         >
                             <span

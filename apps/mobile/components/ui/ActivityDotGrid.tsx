@@ -75,10 +75,10 @@ export function ActivityDotGrid({ sessions = [] }: ActivityDotGridProps) {
                     style={[
                       styles.dot,
                       {
-                        backgroundColor: isActive ? '#ffffff' : '#272936',
-                        shadowColor: isActive ? '#ffffff' : 'transparent',
-                        shadowOpacity: isActive ? 0.35 : 0,
-                        shadowRadius: isActive ? 3 : 0,
+                        backgroundColor: isActive ? colors.primary : colors.surfaceInset,
+                        shadowColor: 'transparent',
+                        shadowOpacity: 0,
+                        shadowRadius: 0,
                       },
                     ]}
                   />

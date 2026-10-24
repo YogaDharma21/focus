@@ -614,7 +614,7 @@ export function Popup() {
 
       {/* Main Navigation Bar */}
       <nav className="flex items-center justify-center px-4 py-2 z-10 bg-background">
-        <div className="flex items-center gap-1.5 p-1 bg-[#14151b] border border-[#232532] shadow-xl rounded-full w-full justify-around">
+        <div className="flex items-center gap-1.5 p-1 bg-card border border-border shadow-xl rounded-full w-full justify-around">
           {[
             { id: "timer", label: "Focus", icon: LayoutGrid },
             { id: "stats", label: "Stats", icon: Calendar },
@@ -629,15 +629,15 @@ export function Popup() {
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
                 className={`flex-1 flex items-center justify-center gap-1.5 rounded-full transition-all duration-200 relative text-[11px] font-bold py-1.5 ${
                   isActive
-                    ? "bg-[#20222d] text-white shadow-sm"
-                    : "text-[#5a5e70] hover:text-white hover:bg-white/5"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-surface"
                 }`}
                 title={tab.label}
               >
                 <div className="relative flex items-center justify-center">
                   <Icon className="w-3.5 h-3.5" />
                   {tab.activeIndicator && (
-                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald animate-pulse" />
                   )}
                 </div>
                 <span>{tab.label}</span>
@@ -1156,7 +1156,7 @@ export function Popup() {
                             "bg-secondary"
                           }`}>
                             <div
-                              className="h-full rounded-full bg-rose-500 transition-all duration-500"
+                              className="h-full rounded-full bg-crimson transition-all duration-500"
                               style={{ width: `${percent}%` }}
                             />
                           </div>
@@ -1406,8 +1406,8 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
               "bg-card border-border"
             }`}>
               <div className="flex items-center gap-2">
-                <Database className="w-[18px] h-[18px] text-red-500" />
-                <span className="text-base font-bold text-red-500">Data</span>
+                <Database className="w-[18px] h-[18px] text-destructive" />
+                <span className="text-base font-bold text-destructive">Data</span>
               </div>
               <button
                 onClick={() => {
@@ -1415,7 +1415,7 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
                     resetAllData();
                   }
                 }}
-                className="w-full py-2.5 rounded-xl font-bold text-xs border border-red-500 bg-red-500 text-white hover:bg-red-600 transition-all"
+                className="w-full py-2.5 rounded-xl font-bold text-xs border border-destructive/30 bg-destructive/15 text-destructive hover:bg-destructive/25 transition-all"
               >
                 Reset All Extension Data
               </button>

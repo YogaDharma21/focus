@@ -31,12 +31,12 @@ function CustomToggleSwitch({ value, onToggle, disabled = false }: CustomToggleS
 
   const trackColor = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#282a36', '#ffffff'],
+    outputRange: [colors.muted, colors.primary],
   });
 
   const thumbColor = animatedValue.interpolate({
     inputRange: [0, 1],
-    outputRange: ['#717488', '#0a0b0e'],
+    outputRange: [colors.mutedText, colors.primaryText],
   });
 
   return (
@@ -290,16 +290,16 @@ export function SettingsPage() {
       {/* Data Section */}
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.sectionHeader}>
-          <Trash2 size={18} color="#ef4444" />
-          <Text style={[styles.sectionTitle, { color: "#ef4444" }]}>Data</Text>
+          <Trash2 size={18} color={colors.destructive} />
+          <Text style={[styles.sectionTitle, { color: colors.destructive }]}>Data</Text>
         </View>
 
         <TouchableOpacity
-          style={styles.resetBtn}
+          style={[styles.resetBtn, { backgroundColor: colors.crimsonBg, borderColor: colors.destructive }]}
           onPress={handleConfirmResetData}
           activeOpacity={0.8}
         >
-          <Text style={styles.resetBtnText}>Reset All Data</Text>
+          <Text style={[styles.resetBtnText, { color: colors.destructive }]}>Reset All Data</Text>
         </TouchableOpacity>
       </View>
 

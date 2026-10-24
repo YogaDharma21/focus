@@ -292,7 +292,7 @@ export function DeepFocusOverlay() {
                         className={cn(
                             "w-14 h-14 rounded-[var(--radius)] border-2 transition-all",
                             isActive
-                                ? "hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50"
+                                ? "hover:bg-emerald-bg hover:text-emerald hover:border-emerald/40"
                                 : "opacity-50 cursor-not-allowed",
                         )}
                         onClick={handleCompleteSession}

@@ -19,13 +19,13 @@ const DISTRACTION_CATEGORIES = ["Phone", "Social Media", "Bathroom", "Meeting", 
 
 const getCategoryColor = (category: string) => {
     const colors: Record<string, string> = {
-        "Phone": "bg-rose-500",
-        "Social Media": "bg-rose-500",
-        "Bathroom": "bg-rose-500",
-        "Meeting": "bg-rose-500",
-        "Other": "bg-rose-500",
+        "Phone": "bg-crimson",
+        "Social Media": "bg-crimson",
+        "Bathroom": "bg-blue",
+        "Meeting": "bg-amber",
+        "Other": "bg-muted-foreground",
     };
-    return colors[category] || "bg-rose-500";
+    return colors[category] || "bg-crimson";
 };
 
 export function StatsJournal() {
@@ -172,75 +172,88 @@ export function StatsJournal() {
 
     return (
         <div className="h-full flex flex-col gap-6">
-            <Card className="p-4 bg-primary/5 border border-primary/10 shadow-sm rounded-[var(--radius)]">
+            <Card className="p-5 bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-[24px]">
                 <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                        <div className="p-2 bg-primary/10 rounded-[var(--radius)] text-primary">
+                        <div className="p-2 bg-surface-inset rounded-[10px] text-foreground">
                             <Clock className="w-4 h-4" />
                         </div>
-                        <span className="text-sm font-medium">
+                        <span className="text-[15px] font-medium tracking-[-0.015em]">
                             Day Progress
                         </span>
                     </div>
-                    <span className="text-sm font-bold text-primary">
+                    <span className="text-sm font-medium tabular-nums text-foreground">
                         {dayProgress}%
                     </span>
                 </div>
-                <Progress value={dayProgress} className="h-2" />
-                <p className="text-xs text-muted-foreground mt-2">
+                <Progress value={dayProgress} className="h-2 bg-surface-inset" />
+                <p className="text-[11px] text-muted-foreground mt-2">
                     {Math.floor((totalMinutesInDay - totalMinutesPassed) / 60)}h{" "}
                     {(totalMinutesInDay - totalMinutesPassed) % 60}m remaining
                     today
                 </p>
             </Card>
 
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Card
-                    className="p-4 flex flex-col items-center justify-center gap-2 bg-primary/5 border border-primary/10 shadow-sm rounded-[var(--radius)] cursor-pointer hover:bg-primary/10 transition-colors"
+                    className="p-5 flex flex-col justify-between bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-[24px] cursor-pointer hover:bg-surface/50 transition-colors"
                     onClick={() => setShowHours(!showHours)}
                 >
-                    <div className="p-2 bg-primary/10 border border-primary/20 rounded-[var(--radius)] text-primary mb-1">
-                        <Activity className="w-5 h-5" />
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                            {showHours ? "Hours Today" : "Minutes Today"}
+                        </span>
+                        <div className="p-1.5 bg-surface-inset rounded-[10px] text-muted-foreground">
+                            <Activity className="w-4 h-4" />
+                        </div>
                     </div>
-                    <div className="text-2xl font-bold">
+                    <div className="text-[22px] font-medium tabular-nums tracking-[-0.03em] text-foreground my-1">
                         {showHours ? focusHours : focusMinutes}
                     </div>
-                    <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                        {showHours ? "Hours Today" : "Minutes Today"}
+                    <span className="text-[11px] text-muted-foreground">
+                        Click to toggle units
+                    </span>
+                </Card>
+
+                {/* Longest Streak */}
+                <Card className="p-5 bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] flex flex-col justify-between rounded-[24px]">
+                    <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                            Streak
+                        </span>
+                        <div className="p-1.5 bg-amber-bg rounded-[10px] text-amber">
+                            <Flame className="w-4 h-4" />
+                        </div>
+                    </div>
+                    <div className="flex items-baseline justify-between my-1">
+                        <div>
+                            <span className="text-[22px] font-medium tabular-nums tracking-[-0.03em] text-foreground">
+                                {currentStreak}
+                            </span>
+                            <span className="text-xs text-muted-foreground ml-1">days current</span>
+                        </div>
+                        <div className="text-right">
+                            <span className="text-sm font-medium tabular-nums text-muted-foreground">
+                                {bestStreak}
+                            </span>
+                            <span className="text-[11px] text-muted-foreground ml-1">best</span>
+                        </div>
+                    </div>
+                    <span className="text-[11px] text-muted-foreground">
+                        Consecutive focus days
                     </span>
                 </Card>
             </div>
 
-            {/* Statistics Grid */}
-            <div className="grid grid-cols-1 gap-4">
-                {/* Longest Streak */}
-                <Card className="p-4 bg-card border border-border/50 shadow-sm flex flex-col gap-3 rounded-[var(--radius)]">
-                    <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-[var(--radius)] bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 shadow-sm">
-                            <Flame className="w-4 h-4" />
-                        </div>
-                        <h3 className="text-sm font-bold tracking-tight text-foreground">Longest Streak</h3>
-                    </div>
-                    <div className="flex flex-col gap-2 pt-1">
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">Current</span>
-                            <span className="text-base font-bold">{currentStreak} Days</span>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs text-muted-foreground">Best</span>
-                            <span className="text-base font-bold">{bestStreak} Days</span>
-                        </div>
-                    </div>
-                </Card>
-            </div>
-
             {/* Weekly Focus Trend Chart */}
-            <Card className="p-4 bg-card border border-border/50 shadow-sm flex flex-col rounded-[var(--radius)] space-y-3">
-                <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-[var(--radius)] bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 shadow-sm">
-                        <TrendingUp className="w-4 h-4" />
+            <Card className="p-5 bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] flex flex-col rounded-[24px] space-y-3">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <div className="p-1.5 bg-surface-inset rounded-[10px] text-muted-foreground">
+                            <TrendingUp className="w-4 h-4" />
+                        </div>
+                        <h3 className="text-[15px] font-medium tracking-[-0.015em] text-foreground">Focus Trend</h3>
                     </div>
-                    <h3 className="text-sm font-bold tracking-tight text-foreground">Focus Trend</h3>
                 </div>
                 <div className="space-y-2">
                     <div className="flex items-end justify-between gap-2 h-24 pt-2">
@@ -259,29 +272,29 @@ export function StatsJournal() {
                                         {day}: {minsLogged} mins
                                     </div>
 
-                                    <span className="text-[10px] font-mono text-muted-foreground">
+                                    <span className="text-[10px] tabular-nums text-muted-foreground">
                                         {minsLogged}m
                                     </span>
                                     <div
-                                        className={`w-full rounded-t-md transition-all duration-300 ${
+                                        className={`w-full rounded-[2px] transition-all duration-300 ${
                                             minsLogged > 0
-                                                ? "bg-foreground group-hover:bg-foreground/80"
-                                                : "bg-muted/40"
+                                                ? "bg-primary group-hover:bg-primary/80"
+                                                : "bg-surface-inset"
                                         }`}
                                         style={{ height: `${heightPercent}%` }}
                                     />
-                                    <span className="text-xs font-mono font-bold text-foreground mt-1">
+                                    <span className="text-[10px] font-medium text-muted-foreground mt-1">
                                         {day}
                                     </span>
                                 </div>
                             );
                         })}
                     </div>
-                    <div className="w-full border-b border-foreground/20" />
+                    <div className="w-full border-b border-border-subtle" />
                 </div>
             </Card>
 
-            <Card className="p-6 bg-card border border-border/50 shadow-sm flex flex-col gap-4 rounded-[var(--radius)]">
+            <Card className="p-5 bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] flex flex-col gap-4 rounded-[24px]">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                         <div className="w-9 h-9 rounded-[var(--radius)] bg-primary/10 border border-primary/20 text-primary flex items-center justify-center shrink-0 shadow-sm">

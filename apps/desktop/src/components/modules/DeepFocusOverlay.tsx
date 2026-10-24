@@ -188,7 +188,7 @@ export const DeepFocusOverlay: React.FC = () => {
               onClick={() => setShowDistractionMenu(!showDistractionMenu)}
               disabled={!isActive}
               className={cn(
-                "w-11 h-11 rounded-xl bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-rose-400 transition-colors shadow-sm",
+                "w-11 h-11 rounded-xl bg-card border border-border flex items-center justify-center text-muted-foreground hover:text-crimson transition-colors shadow-sm",
                 !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
               )}
               title={isActive ? "Log Distraction" : "Start timer to log distraction"}
@@ -230,7 +230,7 @@ export const DeepFocusOverlay: React.FC = () => {
             onClick={handleCompleteSession}
             disabled={!isActive}
             className={cn(
-              "w-11 h-11 flex items-center justify-center text-muted-foreground hover:text-emerald-400 transition-colors",
+              "w-11 h-11 flex items-center justify-center text-muted-foreground hover:text-emerald transition-colors",
               !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
             )}
             title={isActive ? "Complete Session" : "Start timer to complete session"}

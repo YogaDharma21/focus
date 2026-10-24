@@ -179,7 +179,7 @@ export function DeepFocusOverlay({
               className={`w-11 h-11 rounded-xl border-2 flex items-center justify-center transition-all ${
                 !state.isActive
                   ? "border-border text-muted-foreground cursor-not-allowed opacity-50"
-                  : "border-border text-muted-foreground hover:text-rose-400 hover:border-rose-500/50 hover:bg-rose-500/10"
+                  : "border-border text-muted-foreground hover:text-crimson hover:border-crimson/50 hover:bg-crimson-bg"
               }`}
               title={state.isActive ? "Log Distraction" : "Start timer first"}
             >
@@ -222,7 +222,7 @@ export function DeepFocusOverlay({
             onClick={handleComplete}
             className={`w-11 h-11 rounded-xl border-2 flex items-center justify-center transition-all ${
               (state.isActive || state.timerState === "BREAK")
-                ? "border-border text-muted-foreground hover:text-emerald-400 hover:border-emerald-500/50 hover:bg-emerald-500/10 cursor-pointer"
+                ? "border-border text-muted-foreground hover:text-emerald hover:border-emerald/50 hover:bg-emerald-bg cursor-pointer"
                 : "border-border text-muted-foreground opacity-50 cursor-not-allowed"
             }`}
             title={state.timerState === "BREAK" ? "Finish Break & Return to Flow" : (state.isActive ? "Complete Session" : "Start timer first")}
