@@ -58,9 +58,6 @@ export function DownloadSection() {
           <h2 className="text-3xl font-bold tracking-tight text-foreground">
             Get Focus on All Devices
           </h2>
-          <p className="mt-3 text-sm text-muted-foreground">
-            Download the native apps or launch the web version immediately.
-          </p>
         </div>
 
         {/* Downloads Grid */}
