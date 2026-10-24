@@ -616,8 +616,8 @@ export function Popup() {
         <div className="flex items-center gap-1.5 p-1 bg-card border border-border shadow-xl rounded-full w-full justify-around">
           {[
             { id: "timer", label: "Focus", icon: LayoutGrid },
-            { id: "stats", label: "Stats", icon: Calendar },
             { id: "shield", label: "Shield", icon: Shield, activeIndicator: state.shield.enabled && state.isActive },
+            { id: "stats", label: "Stats", icon: Calendar },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
