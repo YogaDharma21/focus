@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import Image from "next/image"
-import { Timer, Menu, X, ExternalLink } from "lucide-react"
+import { Menu, X, ExternalLink } from "lucide-react"
 
 function GithubIcon({ className }: { className?: string }) {
   return (
@@ -16,169 +16,120 @@ function GithubIcon({ className }: { className?: string }) {
   )
 }
 
+const navLinks = [
+  { href: "#ecosystem", label: "Ecosystem" },
+  { href: "#interactive-demo", label: "Try Demo" },
+  { href: "#features", label: "Features" },
+  { href: "#download", label: "Downloads" },
+  { href: "#faq", label: "FAQ" },
+]
+
 export function Header() {
-  const [scrolled, setScrolled] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20)
-    }
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
-
   return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-200 ${
-        scrolled
-          ? "bg-background/90 backdrop-blur-md border-b border-border py-3"
-          : "bg-transparent py-5"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative flex items-center justify-between">
-        {/* Brand Logo - Minimal with Actual Focus Target Icon */}
-        <a href="#" className="flex items-center gap-2.5" aria-label="FocusTrackers Home">
-          <Image
-            src="/icon.png"
-            alt="FocusTrackers Application Icon"
-            width={32}
-            height={32}
-            className="size-8 rounded-lg object-contain"
-          />
-          <span className="font-bold text-lg tracking-tight text-foreground">
-            FocusTrackers
-          </span>
-        </a>
-
-        {/* Desktop Nav - Mathematically Centered */}
-        <nav aria-label="Primary navigation" className="hidden md:flex items-center gap-1 bg-muted/50 p-1 rounded-xl border border-border absolute left-1/2 -translate-x-1/2">
-          <a
-            href="#ecosystem"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg transition-colors"
-          >
-            Ecosystem
-          </a>
-          <a
-            href="#interactive-demo"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg transition-colors"
-          >
-            Try Demo
-          </a>
-          <a
-            href="#features"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg transition-colors"
-          >
-            Features
-          </a>
-          <a
-            href="#download"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg transition-colors"
-          >
-            Downloads
-          </a>
-          <a
-            href="#faq"
-            className="px-4 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground rounded-lg transition-colors"
-          >
-            FAQ
-          </a>
-        </nav>
-
-        {/* Action Buttons */}
-        <div className="hidden md:flex items-center gap-3">
-          <a
-            href="https://github.com/YogaDharma21/focus"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="p-2 text-muted-foreground hover:text-foreground transition-colors"
-            title="GitHub Repository"
-            aria-label="GitHub Repository"
-          >
-            <GithubIcon className="size-5" />
-          </a>
-          <a
-            href="https://app.focustrackers.my.id"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
-          >
-            Launch Web App
-            <ExternalLink className="size-3.5" />
-          </a>
-        </div>
-
-        {/* Mobile Menu Trigger */}
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden p-2 text-muted-foreground hover:text-foreground"
-          aria-label="Toggle menu"
+    <header className="fixed top-3 sm:top-5 left-1/2 -translate-x-1/2 z-50 w-[calc(100%-2rem)] max-w-5xl transition-all duration-300">
+      <div className="relative">
+        <nav
+          aria-label="Primary navigation"
+          className="bg-card/95 backdrop-blur-md border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-full px-3 py-1.5 sm:px-4 sm:py-2 flex items-center justify-between gap-3"
         >
-          {mobileMenuOpen ? <X className="size-6" /> : <Menu className="size-6" />}
-        </button>
-      </div>
+          {/* Brand Logo */}
+          <a href="#" className="flex items-center gap-2.5 shrink-0" aria-label="FocusTrackers Home">
+            <Image
+              src="/icon.png"
+              alt="FocusTrackers Application Icon"
+              width={28}
+              height={28}
+              className="size-7 rounded-lg object-contain"
+            />
+            <span className="font-bold text-sm sm:text-base tracking-tight text-foreground">
+              FocusTrackers
+            </span>
+          </a>
 
-      {/* Mobile Drawer */}
-      {mobileMenuOpen && (
-        <div className="md:hidden bg-background border-b border-border px-6 py-6 space-y-4">
-          <a
-            href="#ecosystem"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block text-sm font-medium text-foreground py-2 border-b border-border/50"
-          >
-            Ecosystem
-          </a>
-          <a
-            href="#interactive-demo"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block text-sm font-medium text-foreground py-2 border-b border-border/50"
-          >
-            Try Demo
-          </a>
-          <a
-            href="#features"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block text-sm font-medium text-foreground py-2 border-b border-border/50"
-          >
-            Features
-          </a>
-          <a
-            href="#download"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block text-sm font-medium text-foreground py-2 border-b border-border/50"
-          >
-            Downloads
-          </a>
-          <a
-            href="#faq"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block text-sm font-medium text-foreground py-2 border-b border-border/50"
-          >
-            FAQ
-          </a>
-          <div className="pt-2 flex items-center justify-between">
+          {/* Desktop Nav Items */}
+          <div className="hidden md:flex items-center gap-1 bg-surface-inset p-1 rounded-full border border-border/40">
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                className="px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-surface rounded-full transition-colors"
+              >
+                {link.label}
+              </a>
+            ))}
+          </div>
+
+          {/* Actions */}
+          <div className="flex items-center gap-2">
             <a
               href="https://github.com/YogaDharma21/focus"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm font-medium text-muted-foreground"
+              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-surface-inset rounded-full transition-colors"
+              title="GitHub Repository"
               aria-label="GitHub Repository"
             >
-              <GithubIcon className="size-5" />
-              GitHub
+              <GithubIcon className="size-4" />
             </a>
             <a
               href="https://app.focustrackers.my.id"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 px-4 py-2 rounded-xl text-xs font-semibold bg-primary text-primary-foreground"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity shadow-sm"
             >
-              Launch Web App
+              <span>Launch App</span>
               <ExternalLink className="size-3" />
             </a>
+
+            {/* Mobile Menu Trigger */}
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-surface-inset transition-colors"
+              aria-label="Toggle menu"
+            >
+              {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+            </button>
           </div>
-        </div>
-      )}
+        </nav>
+
+        {/* Mobile Dropdown Menu Card */}
+        {mobileMenuOpen && (
+          <div className="md:hidden absolute top-full left-0 right-0 mt-2 p-3 bg-card/95 backdrop-blur-md border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-[20px] flex flex-col gap-1 animate-in fade-in zoom-in-95 duration-150">
+            {navLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="px-3.5 py-2 text-xs font-medium text-foreground hover:bg-surface rounded-xl transition-colors"
+              >
+                {link.label}
+              </a>
+            ))}
+            <div className="pt-2 mt-1 border-t border-border flex items-center justify-between px-2">
+              <a
+                href="https://github.com/YogaDharma21/focus"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground"
+              >
+                <GithubIcon className="size-4" />
+                <span>GitHub</span>
+              </a>
+              <a
+                href="https://app.focustrackers.my.id"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground"
+              >
+                <span>Launch App</span>
+                <ExternalLink className="size-3" />
+              </a>
+            </div>
+          </div>
+        )}
+      </div>
     </header>
   )
 }
