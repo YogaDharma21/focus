@@ -103,7 +103,7 @@ export function PermissionGate({
             <View
               style={[
                 styles.dot,
-                { backgroundColor: row.granted ? '#22c55e' : colors.mutedText },
+                { backgroundColor: row.granted ? colors.emerald : colors.mutedText },
               ]}
             />
             <View style={styles.rowText}>
@@ -111,7 +111,7 @@ export function PermissionGate({
               <Text style={[styles.rowSubtitle, { color: colors.mutedText }]}>{row.subtitle}</Text>
             </View>
             {row.granted ? (
-              <ShieldCheck size={20} color="#22c55e" />
+              <ShieldCheck size={20} color={colors.emerald} />
             ) : (
               <TouchableOpacity
                 style={[styles.grantBtn, { backgroundColor: colors.primary }]}

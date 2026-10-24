@@ -3,7 +3,6 @@ import {
   Timer as TimerIcon,
   LayoutGrid,
   Calendar,
-  SlidersHorizontal,
   Shield,
   BarChart3,
   Play,
@@ -438,7 +437,7 @@ export function Popup() {
       "text-foreground"
     }`}>
       {/* Top Header */}
-      <header className={`px-4 py-3 flex items-center z-10 ${
+      <header className={`px-4 py-3 flex items-center z-10 shrink-0 ${
         "bg-background/95 border-b border-border"
       }`}>
         {/* Left: Logo */}
@@ -481,7 +480,7 @@ export function Popup() {
         {/* Right: Settings */}
         <div className="flex-1 flex justify-end">
           <button
-            onClick={() => setActiveTab("settings")}
+            onClick={() => setActiveTab(activeTab === "settings" ? "timer" : "settings")}
             className={`p-1.5 rounded-lg transition-all ${
               activeTab === "settings"
                 ? "bg-primary text-primary-foreground"
@@ -613,13 +612,12 @@ export function Popup() {
       )}
 
       {/* Main Navigation Bar */}
-      <nav className="flex items-center justify-center px-4 py-2 z-10 bg-background">
-        <div className="flex items-center gap-1.5 p-1 bg-[#14151b] border border-[#232532] shadow-xl rounded-full w-full justify-around">
+      <nav className="flex items-center justify-center px-4 py-2 z-10 bg-background shrink-0">
+        <div className="flex items-center gap-1.5 p-1 bg-card border border-border shadow-xl rounded-full w-full justify-around">
           {[
             { id: "timer", label: "Focus", icon: LayoutGrid },
-            { id: "stats", label: "Stats", icon: Calendar },
             { id: "shield", label: "Shield", icon: Shield, activeIndicator: state.shield.enabled && state.isActive },
-            { id: "settings", label: "Settings", icon: SlidersHorizontal },
+            { id: "stats", label: "Stats", icon: Calendar },
           ].map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -629,15 +627,15 @@ export function Popup() {
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
                 className={`flex-1 flex items-center justify-center gap-1.5 rounded-full transition-all duration-200 relative text-[11px] font-bold py-1.5 ${
                   isActive
-                    ? "bg-[#20222d] text-white shadow-sm"
-                    : "text-[#5a5e70] hover:text-white hover:bg-white/5"
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground hover:bg-surface"
                 }`}
                 title={tab.label}
               >
                 <div className="relative flex items-center justify-center">
                   <Icon className="w-3.5 h-3.5" />
                   {tab.activeIndicator && (
-                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-emerald animate-pulse" />
                   )}
                 </div>
                 <span>{tab.label}</span>
@@ -648,7 +646,7 @@ export function Popup() {
       </nav>
 
       {/* Floating Music Player Bar */}
-      <div className="px-3 pt-2 z-20">
+      <div className="px-3 pt-2 z-20 shrink-0">
         <div className={`flex items-center justify-between p-2 px-3 rounded-2xl border shadow-md transition-all ${
           soundEnabled && musicEnabled
             ? "bg-card border-border text-foreground"
@@ -781,10 +779,10 @@ export function Popup() {
       </div>
 
       {/* Main Tab Content */}
-      <div className="flex-1 overflow-y-auto p-4 z-10 relative">
+      <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 z-10 relative">
         {/* TIMER TAB */}
         {activeTab === "timer" && (
-          <div className="flex flex-col items-center justify-between min-h-full overflow-y-auto stable-scrollbar pb-1 pt-1 gap-2">
+          <div className="flex flex-col items-center justify-between min-h-full pb-1 pt-1 gap-2">
             {/* Timer Label */}
             <div className="flex items-center justify-center gap-2 mt-1 mb-0.5">
               {state.timerState === "BREAK" ? (
@@ -882,7 +880,7 @@ export function Popup() {
 
         {/* SHIELD TAB */}
         {activeTab === "shield" && (
-          <div className="flex flex-col gap-3 h-full overflow-y-auto stable-scrollbar">
+          <div className="flex flex-col gap-3">
             <div className={`p-3 rounded-xl border flex items-center justify-between ${
               state.shield.enabled
                 ? "bg-card border-border text-foreground"
@@ -959,7 +957,7 @@ export function Popup() {
               </div>
 
               {shieldListTab === "blocked" && (
-                <div className="flex-1 overflow-y-auto stable-scrollbar space-y-1.5 pr-1">
+                <div className="max-h-56 overflow-y-auto overflow-x-hidden space-y-1.5 pr-1">
                   {state.shield.blockedSites.map((site) => (
                     <div
                       key={site}
@@ -977,7 +975,7 @@ export function Popup() {
               )}
 
               {shieldListTab === "unblocked" && (
-                <div className="flex-1 overflow-y-auto stable-scrollbar space-y-1.5 pr-1">
+                <div className="max-h-56 overflow-y-auto overflow-x-hidden space-y-1.5 pr-1">
                   {state.shield.allowedSites.length === 0 && (
                     <p className="text-[10px] text-muted-foreground mb-1">
                       No unblocked domains yet.
@@ -1004,7 +1002,7 @@ export function Popup() {
 
         {/* STATS TAB */}
         {activeTab === "stats" && (
-          <div className="flex flex-col gap-3 h-full overflow-y-auto stable-scrollbar">
+          <div className="flex flex-col gap-3">
             {/* Day Progress Card (First Card in Stats) */}
             {(() => {
               const now = new Date();
@@ -1156,7 +1154,7 @@ export function Popup() {
                             "bg-secondary"
                           }`}>
                             <div
-                              className="h-full rounded-full bg-rose-500 transition-all duration-500"
+                              className="h-full rounded-full bg-crimson transition-all duration-500"
                               style={{ width: `${percent}%` }}
                             />
                           </div>
@@ -1171,7 +1169,7 @@ export function Popup() {
 
         {/* SETTINGS TAB */}
         {activeTab === "settings" && (
-          <div className="flex flex-col gap-3 h-full overflow-y-auto stable-scrollbar">
+          <div className="flex flex-col gap-3 pb-2">
             {/* Timer Settings */}
             <div className={`p-4 rounded-[16px] border flex flex-col gap-3 ${
               "bg-card border-border"
@@ -1406,8 +1404,8 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
               "bg-card border-border"
             }`}>
               <div className="flex items-center gap-2">
-                <Database className="w-[18px] h-[18px] text-red-500" />
-                <span className="text-base font-bold text-red-500">Data</span>
+                <Database className="w-[18px] h-[18px] text-destructive" />
+                <span className="text-base font-bold text-destructive">Data</span>
               </div>
               <button
                 onClick={() => {
@@ -1415,7 +1413,7 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
                     resetAllData();
                   }
                 }}
-                className="w-full py-2.5 rounded-xl font-bold text-xs border border-red-500 bg-red-500 text-white hover:bg-red-600 transition-all"
+                className="w-full py-2.5 rounded-xl font-bold text-xs border border-destructive/30 bg-destructive/15 text-destructive hover:bg-destructive/25 transition-all"
               >
                 Reset All Extension Data
               </button>

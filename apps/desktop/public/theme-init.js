@@ -2,8 +2,8 @@
 // when the stored theme is dark. Mirrors the theme persisted by zustand
 // (`focus-desktop-storage-v1` -> { state: { theme } }).
 (function () {
-  var DARK_BG = "oklch(0.145 0 0)";
-  var LIGHT_BG = "oklch(1 0 0)";
+  var DARK_BG = "#08090b";
+  var LIGHT_BG = "#f2f1ed";
   try {
     var theme = "dark";
     try {

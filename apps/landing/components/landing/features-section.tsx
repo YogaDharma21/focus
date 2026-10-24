@@ -114,11 +114,11 @@ function VolumeIcon(props: React.SVGProps<SVGSVGElement>) {
 
 function FeatureList({ items }: { items: { icon: React.ComponentType<{ className?: string }>; label: string }[] }) {
   return (
-    <ul className="text-muted-foreground mt-8 divide-y *:flex *:items-center *:gap-3 *:py-3">
+    <ul className="text-muted-foreground mt-8 space-y-3">
       {items.map(({ icon: Icon, label }) => (
-        <li key={label}>
-          <Icon className="size-4" />
-          {label}
+        <li key={label} className="flex items-center gap-3 text-sm">
+          <Icon className="size-4 shrink-0" />
+          <span>{label}</span>
         </li>
       ))}
     </ul>

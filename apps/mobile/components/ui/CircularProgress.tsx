@@ -17,9 +17,9 @@ export function CircularProgress({
   strokeWidth = 3,
   progress = 0.75,
   label = '1',
-  trackColor = '#242634',
-  progressColor = '#ffffff',
-  textColor = '#ffffff',
+  trackColor = 'rgba(255, 255, 255, 0.07)',
+  progressColor = '#f2f1ec',
+  textColor = '#f4f4f2',
 }: CircularProgressProps) {
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;

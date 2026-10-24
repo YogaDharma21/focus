@@ -1,6 +1,6 @@
 "use client"
 
-import { ExternalLink, ArrowRight, Check } from "lucide-react"
+import { ExternalLink, ArrowRight } from "lucide-react"
 import { WebTimerPreview } from "./app-previews"
 
 export function Hero() {
@@ -13,12 +13,6 @@ export function Hero() {
           Master Your Attention <br className="hidden sm:block" />
           Stay in Flow
         </h1>
-
-        {/* Subtitle */}
-        <p className="mt-5 text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto font-normal leading-relaxed">
-          The minimalist productivity suite with a smart Flow timer, 
-          intelligent break calculations, website distraction blocking, and lofi audio.
-        </p>
 
         {/* CTAs */}
         <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
@@ -38,26 +32,6 @@ export function Hero() {
             Explore Features
             <ArrowRight className="size-4" />
           </a>
-        </div>
-
-        {/* Key Points */}
-        <div className="mt-8 flex flex-wrap items-center justify-center gap-y-2 gap-x-6 text-xs text-muted-foreground font-medium">
-          <div className="flex items-center gap-1.5">
-            <Check className="size-3.5 text-foreground" />
-            <span>Cross-Platform Sync</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Check className="size-3.5 text-foreground" />
-            <span>Focus Shield Site Blocker</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Check className="size-3.5 text-foreground" />
-            <span>Offline Support</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <Check className="size-3.5 text-foreground" />
-            <span>Open Source</span>
-          </div>
         </div>
 
         {/* App Preview Component */}

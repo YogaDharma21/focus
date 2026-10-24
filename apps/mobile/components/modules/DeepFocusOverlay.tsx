@@ -141,8 +141,8 @@ export function DeepFocusOverlay() {
         <View style={styles.content}>
           <Text style={[styles.timerText, { color: colors.text }]}>{formatTime(timeLeft)}</Text>
           {shieldEnforcing ? (
-            <View style={[styles.shieldPill, { backgroundColor: colors.card, borderColor: '#22c55e' }]}>
-              <ShieldCheck size={12} color="#22c55e" />
+            <View style={[styles.shieldPill, { backgroundColor: colors.card, borderColor: colors.emerald }]}>
+              <ShieldCheck size={12} color={colors.emerald} />
               <Text style={[styles.shieldPillText, { color: colors.mutedText }]}>Shield enforcing</Text>
             </View>
           ) : null}

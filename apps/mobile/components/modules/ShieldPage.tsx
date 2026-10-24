@@ -288,11 +288,11 @@ export function ShieldPage() {
             <View
               style={[
                 styles.statusIconCircle,
-                { backgroundColor: enforcing ? '#22c55e20' : colors.muted },
+                { backgroundColor: enforcing ? colors.emeraldBg : colors.muted },
               ]}
             >
               {shield.enabled ? (
-                <ShieldCheck size={22} color={enforcing ? '#22c55e' : colors.text} />
+                <ShieldCheck size={22} color={enforcing ? colors.emerald : colors.text} />
               ) : (
                 <ShieldAlert size={22} color={colors.mutedText} />
               )}
@@ -312,7 +312,7 @@ export function ShieldPage() {
           <TouchableOpacity
             style={[
               styles.switchTrack,
-              { backgroundColor: shield.enabled ? '#ffffff' : colors.muted },
+              { backgroundColor: shield.enabled ? colors.primary : colors.muted },
             ]}
             onPress={() => setShieldEnabled(!shield.enabled)}
             activeOpacity={0.8}
@@ -321,7 +321,7 @@ export function ShieldPage() {
               style={[
                 styles.switchThumb,
                 {
-                  backgroundColor: shield.enabled ? '#0a0b0e' : colors.mutedText,
+                  backgroundColor: shield.enabled ? colors.primaryText : colors.mutedText,
                   transform: [{ translateX: shield.enabled ? 18 : 2 }],
                 },
               ]}
@@ -448,14 +448,14 @@ export function ShieldPage() {
           <View
             style={[
               styles.switchTrack,
-              { backgroundColor: shield.urlBlocking ? '#ffffff' : colors.card },
+              { backgroundColor: shield.urlBlocking ? colors.primary : colors.card },
             ]}
           >
             <View
               style={[
                 styles.switchThumb,
                 {
-                  backgroundColor: shield.urlBlocking ? '#0a0b0e' : colors.mutedText,
+                  backgroundColor: shield.urlBlocking ? colors.primaryText : colors.mutedText,
                   transform: [{ translateX: shield.urlBlocking ? 18 : 2 }],
                 },
               ]}
@@ -534,7 +534,7 @@ export function ShieldPage() {
               <Text
                 style={[
                   styles.statusValue,
-                  { color: nativeStatus?.hasUsageAccess ? '#22c55e' : colors.mutedText },
+                  { color: nativeStatus?.hasUsageAccess ? colors.emerald : colors.mutedText },
                 ]}
               >
                 {nativeStatus?.hasUsageAccess ? 'Granted' : 'Not granted'}
@@ -545,7 +545,7 @@ export function ShieldPage() {
               <Text
                 style={[
                   styles.statusValue,
-                  { color: nativeStatus?.canDrawOverlays ? '#22c55e' : colors.mutedText },
+                  { color: nativeStatus?.canDrawOverlays ? colors.emerald : colors.mutedText },
                 ]}
               >
                 {nativeStatus?.canDrawOverlays ? 'Granted' : 'Not granted'}
@@ -556,7 +556,7 @@ export function ShieldPage() {
               <Text
                 style={[
                   styles.statusValue,
-                  { color: nativeStatus?.ignoringBatteryOptimizations ? '#22c55e' : colors.mutedText },
+                  { color: nativeStatus?.ignoringBatteryOptimizations ? colors.emerald : colors.mutedText },
                 ]}
               >
                 {nativeStatus?.ignoringBatteryOptimizations ? 'Unrestricted' : 'Restricted'}
@@ -567,7 +567,7 @@ export function ShieldPage() {
               <Text
                 style={[
                   styles.statusValue,
-                  { color: nativeStatus?.accessibilityEnabled ? '#22c55e' : colors.mutedText },
+                  { color: nativeStatus?.accessibilityEnabled ? colors.emerald : colors.mutedText },
                 ]}
               >
                 {nativeStatus?.accessibilityEnabled ? 'Enabled' : 'Disabled'}

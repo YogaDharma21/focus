@@ -44,10 +44,10 @@ export function SettingsPage() {
             </div>
 
             {/* Appearance Section */}
-            <Card className="p-4 bg-card border border-border flex flex-col gap-3 rounded-[16px]">
+            <Card className="p-5 bg-card border border-border flex flex-col gap-3 rounded-[24px]">
                 <div className="flex items-center gap-2">
                     <Palette className="w-[18px] h-[18px] text-foreground" />
-                    <h3 className="text-base font-bold text-foreground">Appearance</h3>
+                    <h3 className="text-[15px] font-medium tracking-[-0.015em] text-foreground">Appearance</h3>
                 </div>
                 <div className="flex items-center gap-2">
                     {(["light", "dark"] as const).map((mode) => {
@@ -57,10 +57,10 @@ export function SettingsPage() {
                                 key={mode}
                                 onClick={() => setTheme(mode)}
                                 className={cn(
-                                    "flex-1 px-3 py-2.5 rounded-[10px] text-xs font-bold transition-all border cursor-pointer",
+                                    "flex-1 px-3 py-2.5 rounded-[10px] text-xs font-medium transition-all border cursor-pointer",
                                     isActive
                                         ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                                        : "bg-secondary text-muted-foreground border-border hover:bg-secondary hover:text-foreground"
+                                        : "bg-surface-inset text-muted-foreground border-transparent hover:bg-surface hover:text-foreground"
                                 )}
                             >
                                 {mode === "light" ? "Light" : "Dark"}
@@ -71,16 +71,16 @@ export function SettingsPage() {
             </Card>
 
             {/* Timer Section */}
-            <Card className="p-4 bg-card border border-border flex flex-col gap-3 rounded-[16px]">
+            <Card className="p-5 bg-card border border-border flex flex-col gap-3 rounded-[24px]">
                 <div className="flex items-center gap-2">
                     <Timer className="w-[18px] h-[18px] text-foreground" />
-                    <h3 className="text-base font-bold text-foreground">Timer</h3>
+                    <h3 className="text-[15px] font-medium tracking-[-0.015em] text-foreground">Timer</h3>
                 </div>
 
-                <div className="flex items-center justify-between rounded-[10px] px-4 py-3 border bg-secondary border-border">
+                <div className="flex items-center justify-between rounded-[16px] px-4 py-3 bg-surface-inset">
                     <div className="flex flex-col">
-                        <span className="text-xs font-bold text-foreground">Auto-start Break</span>
-                        <span className="text-[10px] text-muted-foreground">Start break countdown automatically</span>
+                        <span className="text-xs font-medium text-foreground">Auto-start Break</span>
+                        <span className="text-[11px] text-muted-foreground">Start break countdown automatically</span>
                     </div>
                     <Switch
                         checked={autoStartBreak}
@@ -88,10 +88,10 @@ export function SettingsPage() {
                     />
                 </div>
 
-                <div className="flex items-center justify-between rounded-[10px] px-4 py-3 border bg-secondary border-border">
+                <div className="flex items-center justify-between rounded-[16px] px-4 py-3 bg-surface-inset">
                     <div className="flex flex-col">
-                        <span className="text-xs font-bold text-foreground">Auto-start Flow Timer</span>
-                        <span className="text-[10px] text-muted-foreground">Start next flow session when break ends</span>
+                        <span className="text-xs font-medium text-foreground">Auto-start Flow Timer</span>
+                        <span className="text-[11px] text-muted-foreground">Start next flow session when break ends</span>
                     </div>
                     <Switch
                         checked={autoStartFlow}
@@ -101,17 +101,17 @@ export function SettingsPage() {
             </Card>
 
             {/* Sound Section */}
-            <Card className="p-4 bg-card border border-border flex flex-col gap-3 rounded-[16px]">
+            <Card className="p-5 bg-card border border-border flex flex-col gap-3 rounded-[24px]">
                 <div className="flex items-center gap-2">
                     <Volume2 className="w-[18px] h-[18px] text-foreground" />
-                    <h3 className="text-base font-bold text-foreground">Sound</h3>
+                    <h3 className="text-[15px] font-medium tracking-[-0.015em] text-foreground">Sound</h3>
                 </div>
 
                 {/* Master Sound Toggle */}
-                <div className="flex items-center justify-between rounded-[10px] px-4 py-3 border bg-secondary border-border">
+                <div className="flex items-center justify-between rounded-[16px] px-4 py-3 bg-surface-inset">
                     <div className="flex flex-col">
-                        <span className="text-xs font-bold text-foreground">Sound</span>
-                        <span className="text-[10px] text-muted-foreground">Enable or disable all sound</span>
+                        <span className="text-xs font-medium text-foreground">Sound</span>
+                        <span className="text-[11px] text-muted-foreground">Enable or disable all sound</span>
                     </div>
                     <Switch
                         checked={soundEnabled}
@@ -209,10 +209,10 @@ export function SettingsPage() {
             </Card>
 
             {/* Data Section */}
-            <Card className="p-4 bg-card border border-border flex flex-col gap-3 rounded-[16px]">
+            <Card className="p-5 bg-card border border-border flex flex-col gap-3 rounded-[24px]">
                 <div className="flex items-center gap-2">
-                    <Database className="w-[18px] h-[18px] text-red-500" />
-                    <h3 className="text-base font-bold text-red-500">Data</h3>
+                    <Database className="w-[18px] h-[18px] text-destructive" />
+                    <h3 className="text-[15px] font-medium tracking-[-0.015em] text-destructive">Data</h3>
                 </div>
                 <button
                     onClick={() => {
@@ -220,22 +220,22 @@ export function SettingsPage() {
                             resetAllData();
                         }
                     }}
-                    className="w-full py-2.5 rounded-[10px] font-bold text-xs border border-red-500 bg-red-500 text-white hover:bg-red-600 transition-all cursor-pointer"
+                    className="w-full py-2.5 rounded-[10px] font-medium text-xs border border-destructive/30 bg-destructive/15 text-destructive hover:bg-destructive/25 transition-all cursor-pointer"
                 >
                     Reset All Data
                 </button>
             </Card>
 
             {/* About Section */}
-            <Card className="p-4 bg-card border border-border flex flex-col gap-3 rounded-[16px]">
+            <Card className="p-5 bg-card border border-border flex flex-col gap-3 rounded-[24px]">
                 <div className="flex items-center gap-2">
                     <Info className="w-[18px] h-[18px] text-foreground" />
-                    <h3 className="text-base font-bold text-foreground">About</h3>
+                    <h3 className="text-[15px] font-medium tracking-[-0.015em] text-foreground">About</h3>
                 </div>
                 <div className="space-y-2 text-xs">
-                    <div className="flex items-center justify-between bg-secondary border border-border rounded-[10px] px-4 py-3">
+                    <div className="flex items-center justify-between bg-surface-inset rounded-[16px] px-4 py-3">
                         <span className="font-medium text-foreground">Version</span>
-                        <span className="font-mono text-muted-foreground">v0.0.1</span>
+                        <span className="font-mono text-muted-foreground tabular-nums">v0.0.1</span>
                     </div>
 
                     <div className="bg-secondary border border-border rounded-[10px] p-3.5 text-muted-foreground leading-relaxed">

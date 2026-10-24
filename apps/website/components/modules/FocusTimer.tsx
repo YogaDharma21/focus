@@ -228,7 +228,7 @@ export function FocusTimer() {
                         className={cn(
                             "w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 transition-all cursor-pointer",
                             isActive
-                                ? "hover:bg-green-500/10 hover:text-green-500 hover:border-green-500/50"
+                                ? "hover:bg-emerald-bg hover:text-emerald hover:border-emerald/40"
                                 : "opacity-50 cursor-not-allowed",
                         )}
                         onClick={handleCompleteSession}
