@@ -32,29 +32,29 @@ export function Header() {
       <div className="relative">
         <nav
           aria-label="Primary navigation"
-          className="bg-card/95 backdrop-blur-md border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-full px-3 py-1.5 sm:px-4 sm:py-2 flex items-center justify-between gap-3"
+          className="relative bg-card/95 backdrop-blur-md border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-full px-4 py-2 sm:px-5 sm:py-2.5 flex items-center justify-between"
         >
           {/* Brand Logo */}
           <a href="#" className="flex items-center gap-2.5 shrink-0" aria-label="FocusTrackers Home">
             <Image
               src="/icon.png"
               alt="FocusTrackers Application Icon"
-              width={28}
-              height={28}
-              className="size-7 rounded-lg object-contain"
+              width={26}
+              height={26}
+              className="size-6.5 rounded-lg object-contain"
             />
-            <span className="font-bold text-sm sm:text-base tracking-tight text-foreground">
+            <span className="font-bold text-sm tracking-tight text-foreground">
               FocusTrackers
             </span>
           </a>
 
-          {/* Desktop Nav Items */}
-          <div className="hidden md:flex items-center gap-1 bg-surface-inset p-1 rounded-full border border-border/40">
+          {/* Desktop Nav Items - Centered, Borderless, Clean Typography */}
+          <div className="hidden md:flex items-center gap-6 absolute left-1/2 -translate-x-1/2">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className="px-3 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-surface rounded-full transition-colors"
+                className="text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors"
               >
                 {link.label}
               </a>
@@ -62,12 +62,12 @@ export function Header() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5 shrink-0">
             <a
               href="https://github.com/YogaDharma21/focus"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 text-muted-foreground hover:text-foreground hover:bg-surface-inset rounded-full transition-colors"
+              className="p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full"
               title="GitHub Repository"
               aria-label="GitHub Repository"
             >
@@ -77,7 +77,7 @@ export function Header() {
               href="https://app.focustrackers.my.id"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground hover:opacity-90 transition-opacity shadow-sm"
+              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
             >
               <span>Launch App</span>
               <ExternalLink className="size-3" />
@@ -86,7 +86,7 @@ export function Header() {
             {/* Mobile Menu Trigger */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-surface-inset transition-colors"
+              className="md:hidden p-1.5 rounded-full text-muted-foreground hover:text-foreground transition-colors"
               aria-label="Toggle menu"
             >
               {mobileMenuOpen ? <X className="size-5" /> : <Menu className="size-5" />}
@@ -96,13 +96,13 @@ export function Header() {
 
         {/* Mobile Dropdown Menu Card */}
         {mobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 right-0 mt-2 p-3 bg-card/95 backdrop-blur-md border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-[20px] flex flex-col gap-1 animate-in fade-in zoom-in-95 duration-150">
+          <div className="md:hidden absolute top-full left-0 right-0 mt-2 p-3 bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-[20px] flex flex-col gap-1 animate-in fade-in zoom-in-95 duration-150">
             {navLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="px-3.5 py-2 text-xs font-medium text-foreground hover:bg-surface rounded-xl transition-colors"
+                className="px-3.5 py-2 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-surface rounded-xl transition-colors"
               >
                 {link.label}
               </a>
@@ -121,7 +121,7 @@ export function Header() {
                 href="https://app.focustrackers.my.id"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-semibold bg-primary text-primary-foreground"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground"
               >
                 <span>Launch App</span>
                 <ExternalLink className="size-3" />
