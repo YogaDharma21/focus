@@ -104,7 +104,7 @@ export function Blocked() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 select-none font-sans bg-background text-foreground">
+    <div className="min-h-screen w-full flex items-center justify-center p-6 select-none font-sans bg-background text-foreground">
       <div className="max-w-md w-full p-8 rounded-2xl border flex flex-col items-center text-center shadow-2xl bg-card border-border">
         <div className="w-14 h-14 rounded-2xl border flex items-center justify-center mb-5 bg-primary text-primary-foreground border-primary">
           <ShieldAlert className="w-7 h-7" />
