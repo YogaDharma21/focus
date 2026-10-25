@@ -38,6 +38,3 @@ coverage/
 
 # Raw icon outputs
 IconKitchen-Output/
-
-# Agent skills (installed via skills-lock.json, like node_modules)
-.agents/
