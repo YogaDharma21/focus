@@ -50,11 +50,6 @@ export default function Page() {
 
     return (
         <main className="relative min-h-screen overflow-x-clip bg-background text-foreground transition-colors duration-500">
-            <div className="fixed inset-0 pointer-events-none z-0">
-                <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-[var(--radius)] blur-[120px] opacity-20" />
-                <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-[var(--radius)] blur-[120px] opacity-20" />
-            </div>
-
             {deepFocusMode && <DeepFocusOverlay />}
 
             <div className={cn(

@@ -5,7 +5,7 @@ Pod::Spec.new do |s|
   s.description    = 'iOS stub for the Focus Shield native module. Real enforcement is Android-only.'
   s.author         = ''
   s.homepage       = 'https://github.com/YogaDharma21/focus'
-  s.platforms      = { :ios => '15.1' }
+  s.platforms      = { :ios => '16.4' }
   s.source         = { :git => '' }
   s.static_framework = true
 

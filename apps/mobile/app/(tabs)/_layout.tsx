@@ -2,14 +2,16 @@ import { Tabs } from 'expo-router';
 import React from 'react';
 import { View, StyleSheet, AppState } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { BottomTabBarProps } from 'expo-router/js-tabs';
 import { useTheme } from '@/context/ThemeContext';
 import { Header } from '@/components/Header';
-import { FloatingTabBar } from '@/components/FloatingTabBar';
+import { FloatingTabBar, FLOATING_TAB_BAR_HEIGHT, FLOATING_TAB_BAR_BOTTOM_GAP } from '@/components/FloatingTabBar';
 import { MediaPlayer } from '@/components/modules/MediaPlayer';
 import { DeepFocusOverlay } from '@/components/modules/DeepFocusOverlay';
 import { DynamicIslandTimer } from '@/components/modules/DynamicIslandTimer';
-import { Clock, BarChart2, Shield, Settings } from 'lucide-react-native';
+import { ActiveSessionCard } from '@/components/modules/ActiveSessionCard';
+import { LayoutGrid, Calendar, Shield, SlidersHorizontal } from 'lucide-react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAppStore } from '@/lib/store';
 import { drainShieldViolations, syncShieldService } from '@/lib/shieldService';
@@ -17,6 +19,7 @@ import { playCompletionSound } from '@/lib/sound';
 
 export default function TabLayout() {
   const { colors, themeMode } = useTheme();
+  const insets = useSafeAreaInsets();
 
   const {
     isActive,
@@ -108,6 +111,8 @@ export default function TabLayout() {
     });
   }, []);
 
+  const floatingBottomPadding = Math.max(insets.bottom, 6) + FLOATING_TAB_BAR_HEIGHT + FLOATING_TAB_BAR_BOTTOM_GAP + 6;
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar style={themeMode === 'dark' ? 'light' : 'dark'} />
@@ -125,15 +130,15 @@ export default function TabLayout() {
           <Tabs.Screen
             name="index"
             options={{
-              title: 'Timer',
-              tabBarIcon: ({ color }) => <Clock size={22} color={color} />,
+              title: 'Focus',
+              tabBarIcon: ({ color }) => <LayoutGrid size={22} color={color} />,
             }}
           />
           <Tabs.Screen
             name="journal"
             options={{
               title: 'Stats',
-              tabBarIcon: ({ color }) => <BarChart2 size={22} color={color} />,
+              tabBarIcon: ({ color }) => <Calendar size={22} color={color} />,
             }}
           />
           <Tabs.Screen
@@ -147,10 +152,22 @@ export default function TabLayout() {
             name="settings"
             options={{
               title: 'Settings',
-              tabBarIcon: ({ color }) => <Settings size={22} color={color} />,
+              tabBarIcon: ({ color }) => <SlidersHorizontal size={22} color={color} />,
             }}
           />
         </Tabs>
+
+        {/* Floating Active In-Progress Session Card (matching Image 2) */}
+        {isActive && !deepFocusMode && (
+          <View
+            style={[
+              styles.floatingActiveCardWrapper,
+              { bottom: floatingBottomPadding },
+            ]}
+          >
+            <ActiveSessionCard />
+          </View>
+        )}
       </View>
 
       <MediaPlayer />
@@ -165,5 +182,11 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+  },
+  floatingActiveCardWrapper: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    zIndex: 90,
   },
 });

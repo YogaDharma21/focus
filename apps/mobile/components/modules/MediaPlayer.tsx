@@ -38,10 +38,10 @@ export function MediaPlayer() {
   const soundRef = useRef<AudioPlayer | null>(null);
 
   const bottomOffset =
-    Math.max(insets.bottom, 0) +
+    Math.max(insets.bottom, 6) +
     FLOATING_TAB_BAR_BOTTOM_GAP +
     FLOATING_TAB_BAR_HEIGHT +
-    10;
+    12;
 
   useEffect(() => {
     return () => {
@@ -68,64 +68,52 @@ export function MediaPlayer() {
       }
       const source = url && url.startsWith('http')
         ? { uri: url }
-        : require('../../assets/music1.mp3');
+        : require('@/assets/music1.mp3');
+
       const player = createAudioPlayer(source);
       player.volume = musicVolume;
       player.loop = true;
-      soundRef.current = player;
       player.play();
+      soundRef.current = player;
       setIsMusicPlaying(true);
-    } catch (error) {
-      console.log('Error loading audio:', error);
+    } catch {
+      // Audio playback error handling
     }
-  }, [musicEnabled, musicVolume, setIsMusicPlaying, soundEnabled]);
+  }, [musicVolume, soundEnabled, musicEnabled, setIsMusicPlaying]);
 
-  const changeVolume = (newVol: number) => {
-    setMusicVolume(newVol);
-    if (soundRef.current) {
-      soundRef.current.volume = newVol;
-    }
-  };
-
-  useEffect(() => {
-    const syncState = async () => {
-      if (!soundEnabled || !musicEnabled) {
-        if (isMusicPlaying) setIsMusicPlaying(false);
-        if (soundRef.current) soundRef.current.pause();
-      } else if (isMusicPlaying) {
-        if (!soundRef.current) {
-          const track = localPlaylist[currentTrackIndex] || localPlaylist[0];
-          if (track) {
-            await playSound(track.url);
-          }
-        } else {
-          soundRef.current.play();
-        }
-      } else {
-        if (soundRef.current) {
-          soundRef.current.pause();
-        }
-      }
-    };
-    syncState();
-  }, [isMusicPlaying, currentTrackIndex, localPlaylist, musicEnabled, playSound, setIsMusicPlaying, soundEnabled]);
-
-  const togglePlay = async () => {
-    if (!soundEnabled || !musicEnabled) return;
-    setIsMusicPlaying(!isMusicPlaying);
-  };
-
-  const selectTrack = async (index: number) => {
-    if (!soundEnabled || !musicEnabled) return;
+  const selectTrack = (index: number) => {
     setCurrentTrackIndex(index);
     const track = localPlaylist[index];
     if (track) {
       setMediaUrl('LOCAL', track.url);
-      await playSound(track.url);
+      if (isMusicPlaying) {
+        playSound(track.url);
+      }
     }
   };
 
-  const currentTrack = localPlaylist[currentTrackIndex] || localPlaylist[0];
+  const togglePlay = () => {
+    if (isMusicPlaying) {
+      if (soundRef.current) {
+        soundRef.current.pause();
+      }
+      setIsMusicPlaying(false);
+    } else {
+      const track = localPlaylist[currentTrackIndex];
+      if (track) {
+        playSound(track.url);
+      }
+    }
+  };
+
+  const changeVolume = (val: number) => {
+    setMusicVolume(val);
+    if (soundRef.current) {
+      soundRef.current.volume = val;
+    }
+  };
+
+  const currentTrack = localPlaylist[currentTrackIndex];
 
   if (!soundEnabled || !musicEnabled) return null;
 
@@ -157,14 +145,14 @@ export function MediaPlayer() {
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={[styles.playBtn, { backgroundColor: colors.primary }]}
+          style={[styles.playBtn, { backgroundColor: colors.text }]}
           onPress={togglePlay}
           activeOpacity={0.8}
         >
           {isMusicPlaying ? (
-            <Pause size={16} color={colors.primaryText} />
+            <Pause size={16} color={colors.background} />
           ) : (
-            <Play size={16} color={colors.primaryText} fill={colors.primaryText} style={{ marginLeft: 2 }} />
+            <Play size={16} color={colors.background} fill={colors.background} style={{ marginLeft: 2 }} />
           )}
         </TouchableOpacity>
 
@@ -260,36 +248,39 @@ export function MediaPlayer() {
 const styles = StyleSheet.create({
   miniBar: {
     position: 'absolute',
-    bottom: 56,
-    left: 12,
-    right: 12,
-    borderRadius: 18,
+    left: 16,
+    right: 16,
+    borderRadius: 24,
     borderWidth: 1,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 8,
   },
   miniBarLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
+    gap: 12,
     flex: 1,
   },
   miniTitle: {
-    fontSize: 13,
+    fontSize: 14,
     fontWeight: '600',
   },
   miniSub: {
-    fontSize: 11,
+    fontSize: 12,
     marginTop: 1,
   },
   playBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 10,
+    width: 38,
+    height: 38,
+    borderRadius: 19,
     justifyContent: 'center',
     alignItems: 'center',
     marginHorizontal: 8,
@@ -299,12 +290,12 @@ const styles = StyleSheet.create({
   },
   modalBackdrop: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(0,0,0,0.65)',
     justifyContent: 'flex-end',
   },
   modalCard: {
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
     borderWidth: 1,
     borderBottomWidth: 0,
     maxHeight: '75%',
@@ -329,7 +320,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     padding: 20,
-    gap: 16,
+    gap: 20,
   },
   trackList: {
     gap: 10,
@@ -338,8 +329,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    padding: 12,
-    borderRadius: 12,
+    padding: 14,
+    borderRadius: 16,
     borderWidth: 1,
   },
   trackName: {
@@ -351,27 +342,17 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   volumeSection: {
-    paddingTop: 12,
+    paddingTop: 16,
     borderTopWidth: 1,
-    gap: 8,
+    gap: 12,
   },
   volumeHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-  },
-  volumeText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  volumeBarRow: {
-    flexDirection: 'row',
     gap: 8,
   },
-  volumeStepBtn: {
-    flex: 1,
-    height: 10,
-    borderRadius: 5,
-    borderWidth: 1,
+  volumeText: {
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

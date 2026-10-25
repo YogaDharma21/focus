@@ -138,7 +138,7 @@ export const FocusTimer: React.FC = () => {
             onClick={() => setShowDistractionMenu(!showDistractionMenu)}
             disabled={!isActive}
             className={cn(
-              "w-12 h-12 rounded-2xl bg-card border border-border hover:bg-secondary text-muted-foreground hover:text-rose-400 transition-all flex items-center justify-center shadow-md active:scale-95 relative",
+              "w-12 h-12 rounded-2xl bg-card border border-border hover:bg-secondary text-muted-foreground hover:text-crimson transition-all flex items-center justify-center shadow-md active:scale-95 relative",
               !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
             )}
             title={isActive ? "Log Distraction" : "Start timer to log distraction"}
@@ -180,7 +180,7 @@ export const FocusTimer: React.FC = () => {
           onClick={handleCompleteSession}
           disabled={!isActive}
           className={cn(
-            "w-12 h-12 rounded-2xl bg-card border border-border hover:bg-secondary text-muted-foreground hover:text-emerald-400 transition-all flex items-center justify-center shadow-md active:scale-95",
+            "w-12 h-12 rounded-2xl bg-card border border-border hover:bg-secondary text-muted-foreground hover:text-emerald transition-all flex items-center justify-center shadow-md active:scale-95",
             !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
           )}
           title={isActive ? "Finish / Complete Session" : "Start timer to complete session"}

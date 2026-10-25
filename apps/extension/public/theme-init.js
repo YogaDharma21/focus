@@ -11,8 +11,8 @@
 (function () {
   var STORAGE_KEY = "focus_extension_state_v6";
   var THEME_MIRROR_KEY = "focus_extension_theme";
-  var DARK_BG = "oklch(0.145 0 0)";
-  var LIGHT_BG = "oklch(1 0 0)";
+  var DARK_BG = "#08090b";
+  var LIGHT_BG = "#f2f1ed";
 
   function apply(mode) {
     var isDark = mode !== "light";

@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import {
   View,
   PanResponder,
@@ -8,6 +8,7 @@ import {
   ViewStyle,
   StyleProp,
   LayoutChangeEvent,
+  type ViewInstance,
 } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -27,45 +28,50 @@ export function VolumeSlider({
   disabled = false,
 }: VolumeSliderProps) {
   const { colors } = useTheme();
-  const trackRef = useRef<View>(null);
-  const widthRef = useRef<number>(0);
-  const pageXRef = useRef<number>(0);
+  const trackRef = useRef<ViewInstance>(null);
+  const [trackWidth, setTrackWidth] = useState(0);
+  const [trackPageX, setTrackPageX] = useState(0);
 
-  const updateFromPosition = (relativeX: number) => {
-    if (disabled) return;
-    if (widthRef.current <= 0) return;
-    const ratio = Math.max(0, Math.min(1, relativeX / widthRef.current));
-    // Continuous precision rounded to 2 decimal places (1% resolution: e.g. 0.01, 0.13, 0.37, 0.42, 0.68, 0.99)
-    const rounded = Math.round(ratio * 100) / 100;
-    onValueChange(rounded);
-  };
+  const updateFromPosition = useCallback(
+    (relativeX: number) => {
+      if (disabled) return;
+      if (trackWidth <= 0) return;
+      const ratio = Math.max(0, Math.min(1, relativeX / trackWidth));
+      // Continuous precision rounded to 2 decimal places (1% resolution: e.g. 0.01, 0.13, 0.37, 0.42, 0.68, 0.99)
+      const rounded = Math.round(ratio * 100) / 100;
+      onValueChange(rounded);
+    },
+    [disabled, onValueChange, trackWidth],
+  );
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderGrant: (evt: GestureResponderEvent) => {
-        const localX = evt.nativeEvent.locationX;
-        updateFromPosition(localX);
-      },
-      onPanResponderMove: (evt: GestureResponderEvent, _gestureState: PanResponderGestureState) => {
-        if (pageXRef.current !== undefined && widthRef.current > 0) {
-          const relativeX = evt.nativeEvent.pageX - pageXRef.current;
-          updateFromPosition(relativeX);
-        } else {
-          updateFromPosition(evt.nativeEvent.locationX);
-        }
-      },
-    })
-  ).current;
+  const panResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onStartShouldSetPanResponder: () => true,
+        onMoveShouldSetPanResponder: () => true,
+        onPanResponderGrant: (evt: GestureResponderEvent) => {
+          const localX = evt.nativeEvent.locationX;
+          updateFromPosition(localX);
+        },
+        onPanResponderMove: (evt: GestureResponderEvent, _gestureState: PanResponderGestureState) => {
+          if (trackWidth > 0) {
+            const relativeX = evt.nativeEvent.pageX - trackPageX;
+            updateFromPosition(relativeX);
+          } else {
+            updateFromPosition(evt.nativeEvent.locationX);
+          }
+        },
+      }),
+    [trackPageX, trackWidth, updateFromPosition],
+  );
 
   const onLayout = (e: LayoutChangeEvent) => {
-    widthRef.current = e.nativeEvent.layout.width;
+    setTrackWidth(e.nativeEvent.layout.width);
     trackRef.current?.measure((_x, _y, width, _height, pageX, _pageY) => {
       if (width > 0) {
-        widthRef.current = width;
+        setTrackWidth(width);
       }
-      pageXRef.current = pageX;
+      setTrackPageX(pageX);
     });
   };
 

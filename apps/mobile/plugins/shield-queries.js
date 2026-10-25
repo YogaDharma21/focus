@@ -3,7 +3,7 @@
  * (for the Shield app picker, icons, and labels) without the broad
  * QUERY_ALL_PACKAGES permission.
  */
-const { withAndroidManifest } = require('@expo/config-plugins');
+const { withAndroidManifest } = require('expo/config-plugins');
 
 const LAUNCHER_INTENT = {
   intent: [

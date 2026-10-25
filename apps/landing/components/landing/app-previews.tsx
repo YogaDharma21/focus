@@ -41,7 +41,7 @@ function ControlButtons({
         <Target className={iconSize} />
       </button>
       <button
-        className={`${playSize} rounded-2xl bg-[#e6e6e6] hover:bg-white text-zinc-950 shadow-xl flex items-center justify-center`}
+        className={`${playSize} rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl flex items-center justify-center`}
       >
         <Play className={`${size === "small" ? "size-5" : "size-6"} fill-current`} />
       </button>
@@ -90,9 +90,9 @@ function LofiBar({ compact = false }: { compact?: boolean }) {
 
 export function WebTimerPreview() {
   return (
-    <div className="w-full bg-[#09090b] rounded-xl overflow-hidden border border-zinc-800/50">
+    <div className="w-full bg-background rounded-2xl overflow-hidden border border-border">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-zinc-800/50">
+      <div className="flex items-center justify-between px-5 py-3 border-b border-border">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
             <Timer className="size-3.5 text-primary-foreground" />
@@ -100,7 +100,7 @@ export function WebTimerPreview() {
           <span className="text-sm font-bold text-foreground">Focus</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-[#141416]/90 border border-white/10 text-white/90">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-2xl bg-card border border-border text-foreground">
             <Music className="size-3.5" />
             <span className="text-[11px] font-medium">Lo-Fi</span>
             <div className="flex items-end gap-[2px] h-3">
@@ -227,14 +227,14 @@ export function DesktopTimerPreview() {
         {/* Main Content */}
         <div className="flex-1 flex flex-col items-center px-4 py-5">
           {/* Mode Switcher */}
-          <div className="bg-[#141414] border border-zinc-800/80 p-1 rounded-lg flex items-center w-56 mb-3">
-            <div className="flex-1 py-1.5 text-[10px] font-semibold rounded-xl bg-[#e6e6e6] text-zinc-950 text-center shadow-sm">
+          <div className="bg-surface border border-border p-1 rounded-lg flex items-center w-56 mb-3">
+            <div className="flex-1 py-1.5 text-[10px] font-semibold rounded-xl bg-primary text-primary-foreground text-center shadow-sm">
               Flow
             </div>
-            <div className="flex-1 py-1.5 text-[10px] font-semibold rounded-xl text-zinc-400 text-center">
+            <div className="flex-1 py-1.5 text-[10px] font-semibold rounded-xl text-muted-foreground text-center">
               Break
             </div>
-            <div className="flex-1 py-1.5 text-[10px] font-semibold rounded-xl text-zinc-400 text-center">
+            <div className="flex-1 py-1.5 text-[10px] font-semibold rounded-xl text-muted-foreground text-center">
               Focus
             </div>
           </div>
@@ -268,10 +268,10 @@ export function DesktopTimerPreview() {
 
 export function MobileTimerPreview() {
   return (
-    <div className="w-full max-w-[280px] mx-auto bg-[#09090b] rounded-[28px] overflow-hidden border-2 border-zinc-800">
+    <div className="w-full max-w-[280px] mx-auto bg-background rounded-[28px] overflow-hidden border border-border">
       {/* Status Bar area */}
       <div className="h-5 flex items-center justify-center">
-        <div className="w-16 h-3 bg-zinc-800 rounded-full" />
+        <div className="w-16 h-3 bg-surface rounded-full" />
       </div>
 
       {/* Header */}
@@ -283,10 +283,10 @@ export function MobileTimerPreview() {
           <span className="text-xs font-bold text-foreground">FOCUS</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <button className="p-1 rounded-md text-zinc-400">
+          <button className="p-1 rounded-md text-muted-foreground">
             <Target className="size-3" />
           </button>
-          <button className="p-1 rounded-md text-zinc-400">
+          <button className="p-1 rounded-md text-muted-foreground">
             <Settings className="size-3" />
           </button>
         </div>
@@ -302,7 +302,7 @@ export function MobileTimerPreview() {
           <div
             key={label}
             className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[8px] font-bold ${
-              active ? "bg-white text-black" : "text-neutral-500"
+              active ? "bg-primary text-primary-foreground" : "text-muted-foreground"
             }`}
           >
             <Icon className="size-2" />
@@ -319,14 +319,14 @@ export function MobileTimerPreview() {
       {/* Content */}
       <div className="flex flex-col items-center px-4 py-4">
         {/* Mode Switcher */}
-        <div className="flex w-full max-w-[220px] p-0.5 bg-[#141414] border border-zinc-800 rounded-[10px] mb-3">
-          <div className="flex-1 py-1.5 text-[9px] font-bold rounded-[10px] bg-white text-black text-center shadow-sm">
+        <div className="flex w-full max-w-[220px] p-0.5 bg-surface border border-border rounded-[10px] mb-3">
+          <div className="flex-1 py-1.5 text-[9px] font-bold rounded-[10px] bg-primary text-primary-foreground text-center shadow-sm">
             Flow
           </div>
-          <div className="flex-1 py-1.5 text-[9px] font-bold rounded-[10px] text-zinc-500 text-center">
+          <div className="flex-1 py-1.5 text-[9px] font-bold rounded-[10px] text-muted-foreground text-center">
             Break
           </div>
-          <div className="flex-1 py-1.5 text-[9px] font-bold rounded-[10px] text-zinc-500 text-center">
+          <div className="flex-1 py-1.5 text-[9px] font-bold rounded-[10px] text-muted-foreground text-center">
             Focus
           </div>
         </div>
@@ -382,7 +382,7 @@ export function MobileTimerPreview() {
 
 export function ExtensionTimerPreview() {
   return (
-    <div className="w-full max-w-[320px] mx-auto bg-[#09090b] rounded-xl overflow-hidden border border-zinc-800/50">
+    <div className="w-full max-w-[320px] mx-auto bg-background rounded-2xl overflow-hidden border border-border">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-2.5 bg-neutral-950/95 border-b border-neutral-800/50">
         <div className="flex items-center gap-2">

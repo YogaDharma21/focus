@@ -1,7 +1,7 @@
 "use client";
 
 import { useAppStore, ViewType } from "@/lib/store";
-import { Timer, BarChart2, Settings } from "lucide-react";
+import { LayoutGrid, Calendar, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function BottomNavbar() {
@@ -13,11 +13,11 @@ export function BottomNavbar() {
         value: ViewType;
         icon: React.ReactNode;
     }[] = [
-        { label: "Focus", value: "FOCUS", icon: <Timer className="w-5 h-5" /> },
+        { label: "Focus", value: "FOCUS", icon: <LayoutGrid className="w-5 h-5" /> },
         {
             label: "Stats",
             value: "JOURNAL",
-            icon: <BarChart2 className="w-5 h-5" />,
+            icon: <Calendar className="w-5 h-5" />,
         },
         { label: "Settings", value: "SETTINGS", icon: <Settings className="w-5 h-5" /> },
     ];
@@ -32,7 +32,7 @@ export function BottomNavbar() {
         >
             <nav
                 className={cn(
-                    "flex items-center gap-2 p-2 bg-sidebar border border-sidebar-border shadow-lg ring-1 ring-white/5 rounded-[var(--radius)]",
+                    "flex items-center gap-2 p-2 bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-full",
                     "flex-row md:flex-col",
                 )}
             >
@@ -42,18 +42,20 @@ export function BottomNavbar() {
                         <button
                             key={item.value}
                             onClick={() => setView(item.value)}
+                            title={item.label}
+                            aria-label={item.label}
                             className={cn(
-                                "relative flex flex-col items-center justify-center w-11 h-11 sm:w-12 sm:h-12 md:w-14 md:h-14 transition-all duration-300 ease-out group rounded-[var(--radius)]",
+                                "relative flex flex-col items-center justify-center w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 transition-all duration-300 ease-out group rounded-full",
                                 isActive
-                                    ? "text-primary-foreground bg-primary shadow-lg"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-white/5",
+                                    ? "text-primary-foreground bg-primary shadow-sm"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-surface",
                             )}
                         >
                             <span
                                 className={cn(
                                     "transform transition-transform duration-300",
                                     isActive
-                                        ? "scale-110"
+                                        ? "scale-105"
                                         : "group-hover:scale-105",
                                 )}
                             >
@@ -66,6 +68,3 @@ export function BottomNavbar() {
         </div>
     );
 }
-
-
-
