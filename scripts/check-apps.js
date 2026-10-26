@@ -6,27 +6,28 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 const appsDir = path.join(rootDir, "apps");
+const packagesDir = path.join(rootDir, "packages");
 
-console.log("🔍 Inspecting monorepo app structure...\n");
+console.log("🔍 Inspecting monorepo workspace structure...\n");
 
-if (!fs.existsSync(appsDir)) {
-  console.error("❌ apps directory not found!");
-  process.exit(1);
-}
-
-const apps = fs.readdirSync(appsDir);
-
-for (const app of apps) {
-  const appPath = path.join(appsDir, app);
-  if (fs.statSync(appPath).isDirectory()) {
-    const pkgPath = path.join(appPath, "package.json");
-    if (fs.existsSync(pkgPath)) {
-      const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
-      console.log(`✅ App: ${app.padEnd(12)} | Name: ${pkg.name.padEnd(12)} | Version: ${pkg.version}`);
-    } else {
-      console.log(`📦 App: ${app.padEnd(12)} | Directory present (Placeholder/No package.json)`);
+function inspectDir(dir, label) {
+  if (!fs.existsSync(dir)) return;
+  const entries = fs.readdirSync(dir);
+  for (const entry of entries) {
+    const entryPath = path.join(dir, entry);
+    if (fs.statSync(entryPath).isDirectory()) {
+      const pkgPath = path.join(entryPath, "package.json");
+      if (fs.existsSync(pkgPath)) {
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
+        console.log(`✅ [${label}] ${entry.padEnd(12)} | Name: ${pkg.name.padEnd(18)} | Version: ${pkg.version}`);
+      } else {
+        console.log(`📦 [${label}] ${entry.padEnd(12)} | Directory present (Placeholder/No package.json)`);
+      }
     }
   }
 }
+
+inspectDir(appsDir, "App");
+inspectDir(packagesDir, "Pkg");
 
 console.log("\n✨ Monorepo inspection complete!");

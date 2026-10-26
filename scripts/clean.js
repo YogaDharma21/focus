@@ -6,6 +6,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 const appsDir = path.join(rootDir, "apps");
+const packagesDir = path.join(rootDir, "packages");
 
 const targetsToClean = [".next", "dist", "out", ".turbo", "tsconfig.tsbuildinfo"];
 
@@ -18,16 +19,25 @@ function removeDir(dirPath) {
   }
 }
 
-if (fs.existsSync(appsDir)) {
-  const apps = fs.readdirSync(appsDir);
-  for (const app of apps) {
-    const appPath = path.join(appsDir, app);
-    if (fs.statSync(appPath).isDirectory()) {
+// Clean root targets
+for (const target of targetsToClean) {
+  removeDir(path.join(rootDir, target));
+}
+
+function cleanEntries(dir) {
+  if (!fs.existsSync(dir)) return;
+  const entries = fs.readdirSync(dir);
+  for (const entry of entries) {
+    const entryPath = path.join(dir, entry);
+    if (fs.statSync(entryPath).isDirectory()) {
       for (const target of targetsToClean) {
-        removeDir(path.join(appPath, target));
+        removeDir(path.join(entryPath, target));
       }
     }
   }
 }
+
+cleanEntries(appsDir);
+cleanEntries(packagesDir);
 
 console.log("\n✨ Cleanup complete!");
