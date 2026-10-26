@@ -12,11 +12,11 @@ services:
       - NODE_ENV=production
       - PORT=3001
 
-  website:
+  web:
     build:
       context: ..
-      dockerfile: docker/Dockerfile.website
-    container_name: focus-website
+      dockerfile: docker/Dockerfile.web
+    container_name: focus-web
     ports:
       - "3000:3000"
     environment:

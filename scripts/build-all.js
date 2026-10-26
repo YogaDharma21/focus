@@ -8,7 +8,7 @@ const __dirname = path.dirname(__filename);
 const rootDir = path.resolve(__dirname, "..");
 const appsDir = path.join(rootDir, "apps");
 
-const targetApps = ["website", "landing", "desktop", "extension"];
+const targetApps = ["web", "landing", "desktop", "extension"];
 
 console.log("🚀 Building all active Focus monorepo applications...\n");
 

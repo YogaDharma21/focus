@@ -10,7 +10,7 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      website: ${{ steps.filter.outputs.website }}
+      web: ${{ steps.filter.outputs.web }}
       landing: ${{ steps.filter.outputs.landing }}
       mobile: ${{ steps.filter.outputs.mobile }}
       desktop: ${{ steps.filter.outputs.desktop }}
@@ -23,8 +23,8 @@ jobs:
         id: filter
         with:
           filters: |
-            website:
-              - 'apps/website/**'
+            web:
+              - 'apps/web/**'
             landing:
               - 'apps/landing/**'
             mobile:
@@ -38,9 +38,9 @@ jobs:
             extension:
               - 'apps/extension/**'
 
-  build-website:
+  build-web:
     needs: detect-changes
-    if: needs.detect-changes.outputs.website == 'true'
+    if: needs.detect-changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -51,15 +51,15 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-          cache-dependency-path: 'apps/website/pnpm-lock.yaml'
+          cache-dependency-path: 'apps/web/pnpm-lock.yaml'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-        working-directory: apps/website
-      - name: Typecheck & Build Website App
+        working-directory: apps/web
+      - name: Typecheck & Build Web App
         run: |
           pnpm run typecheck || true
           pnpm run build
-        working-directory: apps/website
+        working-directory: apps/web
 
   build-landing:
     needs: detect-changes
