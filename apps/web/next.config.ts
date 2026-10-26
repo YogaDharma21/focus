@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  transpilePackages: ["@focus/types", "@focus/utils", "@focus/ui"],
 };
 
 export default nextConfig;

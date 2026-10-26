@@ -1,5 +1,5 @@
 {
-  "name": "focus-extension",
+  "name": "@focus/extension",
   "version": "0.0.1",
   "private": true,
   "packageManager": "pnpm@10.33.4",
@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@clerk/chrome-extension": "^3.1.60",
+    "@focus/types": "workspace:*",
+    "@focus/utils": "workspace:*",
     "clsx": "^2.1.1",
     "convex": "^1.42.3",
     "date-fns": "^4.1.0",

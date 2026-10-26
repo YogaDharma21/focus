@@ -6,7 +6,7 @@ This directory contains container configurations and orchestration setups for th
 
 | Service | Application Path | Container Name | Port Mapping | Dockerfile |
 |---|---|---|---|---|
-| **`website`** | `apps/website/` | `focus-website` | `3000:3000` | `docker/Dockerfile.website` |
+| **`web`** | `apps/web/` | `focus-web` | `3000:3000` | `docker/Dockerfile.web` |
 | **`landing`** | `apps/landing/` | `focus-landing` | `3001:3001` | `docker/Dockerfile.landing` |
 | **`backend`** | `apps/backend/` | `focus-backend` | `8080:8080` | `docker/Dockerfile.backend` |
 
@@ -25,7 +25,7 @@ docker-compose -f docker/docker-compose.yml up --build -d
 docker-compose -f docker/docker-compose.yml up landing
 
 # Start Web App
-docker-compose -f docker/docker-compose.yml up website
+docker-compose -f docker/docker-compose.yml up web
 ```
 
 ### Stop Services
