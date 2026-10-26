@@ -10,7 +10,7 @@ const packagesDir = path.join(rootDir, "packages");
 
 const targetsToClean = [".next", "dist", "out", ".turbo", "tsconfig.tsbuildinfo"];
 
-console.log("🧹 Cleaning build artifacts across monorepo...\n");
+console.log("Cleaning build artifacts across monorepo...\n");
 
 function removeDir(dirPath) {
   if (fs.existsSync(dirPath)) {
@@ -40,4 +40,4 @@ function cleanEntries(dir) {
 cleanEntries(appsDir);
 cleanEntries(packagesDir);
 
-console.log("\n✨ Cleanup complete!");
+console.log("\nCleanup complete!");

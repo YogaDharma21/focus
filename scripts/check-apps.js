@@ -8,7 +8,7 @@ const rootDir = path.resolve(__dirname, "..");
 const appsDir = path.join(rootDir, "apps");
 const packagesDir = path.join(rootDir, "packages");
 
-console.log("🔍 Inspecting monorepo workspace structure...\n");
+console.log("Inspecting monorepo workspace structure...\n");
 
 function inspectDir(dir, label) {
   if (!fs.existsSync(dir)) return;
@@ -19,9 +19,9 @@ function inspectDir(dir, label) {
       const pkgPath = path.join(entryPath, "package.json");
       if (fs.existsSync(pkgPath)) {
         const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf-8"));
-        console.log(`✅ [${label}] ${entry.padEnd(12)} | Name: ${pkg.name.padEnd(18)} | Version: ${pkg.version}`);
+        console.log(`[${label}] ${entry.padEnd(12)} | Name: ${pkg.name.padEnd(18)} | Version: ${pkg.version}`);
       } else {
-        console.log(`📦 [${label}] ${entry.padEnd(12)} | Directory present (Placeholder/No package.json)`);
+        console.log(`[${label}] ${entry.padEnd(12)} | Directory present (Placeholder/No package.json)`);
       }
     }
   }
@@ -30,4 +30,4 @@ function inspectDir(dir, label) {
 inspectDir(appsDir, "App");
 inspectDir(packagesDir, "Pkg");
 
-console.log("\n✨ Monorepo inspection complete!");
+console.log("\nMonorepo inspection complete!");
