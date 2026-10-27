@@ -10,7 +10,7 @@ jobs:
   detect-changes:
     runs-on: ubuntu-latest
     outputs:
-      website: ${{ steps.filter.outputs.website }}
+      web: ${{ steps.filter.outputs.web }}
       landing: ${{ steps.filter.outputs.landing }}
       mobile: ${{ steps.filter.outputs.mobile }}
       desktop: ${{ steps.filter.outputs.desktop }}
@@ -23,24 +23,28 @@ jobs:
         id: filter
         with:
           filters: |
-            website:
-              - 'apps/website/**'
+            web:
+              - 'apps/web/**'
+              - 'packages/**'
             landing:
               - 'apps/landing/**'
+              - 'packages/**'
             mobile:
               - 'apps/mobile/**'
             desktop:
               - 'apps/desktop/**'
+              - 'packages/**'
             backend:
               - 'apps/backend/**'
             cli:
               - 'apps/cli/**'
             extension:
               - 'apps/extension/**'
+              - 'packages/**'
 
-  build-website:
+  build-web:
     needs: detect-changes
-    if: needs.detect-changes.outputs.website == 'true'
+    if: needs.detect-changes.outputs.web == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -51,15 +55,11 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-          cache-dependency-path: 'apps/website/pnpm-lock.yaml'
+          cache-dependency-path: 'pnpm-lock.yaml'
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        working-directory: apps/website
-      - name: Typecheck & Build Website App
-        run: |
-          pnpm run typecheck || true
-          pnpm run build
-        working-directory: apps/website
+        run: pnpm install --filter @focus/web... --frozen-lockfile
+      - name: Build Web App
+        run: pnpm turbo run build --filter=@focus/web
 
   build-landing:
     needs: detect-changes
@@ -74,15 +74,11 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-          cache-dependency-path: 'apps/landing/pnpm-lock.yaml'
+          cache-dependency-path: 'pnpm-lock.yaml'
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        working-directory: apps/landing
-      - name: Typecheck & Build Landing App
-        run: |
-          pnpm run typecheck || true
-          pnpm run build
-        working-directory: apps/landing
+        run: pnpm install --filter @focus/landing... --frozen-lockfile
+      - name: Build Landing App
+        run: pnpm turbo run build --filter=@focus/landing
 
   build-mobile:
     needs: detect-changes
@@ -115,13 +111,11 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-          cache-dependency-path: 'apps/desktop/pnpm-lock.yaml'
+          cache-dependency-path: 'pnpm-lock.yaml'
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        working-directory: apps/desktop
+        run: pnpm install --filter @focus/desktop... --frozen-lockfile
       - name: Build Desktop App
-        run: pnpm run build
-        working-directory: apps/desktop
+        run: pnpm turbo run build --filter=@focus/desktop
 
   build-backend:
     needs: detect-changes
@@ -154,10 +148,8 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-          cache-dependency-path: 'apps/extension/pnpm-lock.yaml'
+          cache-dependency-path: 'pnpm-lock.yaml'
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        working-directory: apps/extension
+        run: pnpm install --filter @focus/extension... --frozen-lockfile
       - name: Build Extension
-        run: pnpm run build
-        working-directory: apps/extension
+        run: pnpm turbo run build --filter=@focus/extension

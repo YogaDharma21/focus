@@ -1,14 +1,15 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { Session, Distraction, PlaylistItem, TimerState, ViewType } from "@focus/types";
 
-export type ViewType = "FOCUS" | "JOURNAL" | "SETTINGS";
+export type { Session, Distraction, PlaylistItem, TimerState, ViewType };
 
 interface AppState {
     currentView: ViewType;
     setView: (view: ViewType) => void;
 
     localUrl: string;
-    localPlaylist: { id: string; title: string; artist: string; url: string }[];
+    localPlaylist: PlaylistItem[];
     setMediaUrl: (url: string) => void;
     mediaPlayerOpen: boolean;
     setMediaPlayerOpen: (open: boolean) => void;
@@ -28,14 +29,14 @@ interface AppState {
     setSoundEffectEnabled: (enabled: boolean) => void;
 
     timerMode: "STOPWATCH";
-    timerState: "FLOW" | "BREAK";
+    timerState: TimerState;
     timeLeft: number;
     isActive: boolean;
     sessionStartTime: string | null;
     autoStartBreak: boolean;
     autoStartFlow: boolean;
     setTimerMode: (mode: "STOPWATCH") => void;
-    setTimerState: (state: "FLOW" | "BREAK") => void;
+    setTimerState: (state: TimerState) => void;
     setTimeLeft: (time: number | ((prev: number) => number)) => void;
     setIsActive: (active: boolean) => void;
     setSessionStartTime: (time: string | null) => void;
@@ -54,19 +55,6 @@ interface AppState {
     addDistraction: (category: string) => void;
 
     resetAllData: () => void;
-}
-
-export interface Session {
-    id: string;
-    date: string;
-    duration: number;
-    mode: "STOPWATCH";
-}
-
-export interface Distraction {
-    id: string;
-    timestamp: string;
-    category: string;
 }
 
 export const useAppStore = create<AppState>()(
