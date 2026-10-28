@@ -159,6 +159,12 @@
     --sidebar-ring: #5f6065;
 }
 
+html,
+body {
+    overflow-x: hidden;
+    max-width: 100vw;
+}
+
 @layer utilities {
     .surface {
         background-color: var(--card);

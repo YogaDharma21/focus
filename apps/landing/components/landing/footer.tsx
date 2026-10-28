@@ -21,12 +21,6 @@ export function Footer() {
 
           {/* Links */}
           <div className="flex flex-wrap items-center justify-center gap-5 text-xs text-muted-foreground font-medium">
-            <a href="#ecosystem" className="hover:text-foreground transition-colors">
-              Ecosystem
-            </a>
-            <a href="#interactive-demo" className="hover:text-foreground transition-colors">
-              Try Demo
-            </a>
             <a href="#features" className="hover:text-foreground transition-colors">
               Features
             </a>
