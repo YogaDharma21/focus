@@ -158,6 +158,16 @@ export function DeepFocusOverlay({
       </button>
 
       <div className="flex flex-col items-center gap-4">
+        {(() => {
+          const focused = state.tasks?.find((t) => t.id === state.selectedTaskId);
+          if (!focused) return null;
+          return (
+            <div className="px-3 py-1 rounded-full bg-card border border-border text-[11px] font-medium text-foreground tracking-wide max-w-[280px] truncate shadow-sm mb-1">
+              {focused.text}
+            </div>
+          );
+        })()}
+
         {/* Large Timer Display */}
         <div
           className={`text-6xl font-black font-mono tracking-tighter leading-none text-foreground select-none ${
