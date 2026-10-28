@@ -38,10 +38,14 @@ import {
   TrendingUp,
   Focus,
   Database,
+  CheckSquare,
+  Square,
+  Target,
+  ListChecks,
 } from "lucide-react";
 import { DeepFocusOverlay } from "./components/DeepFocusOverlay";
 import { Progress } from "../components/ui/progress";
-import { AppStateData, ThemeMode } from "../types";
+import { AppStateData, ThemeMode, TaskItem, TaskPriority } from "../types";
 import { getStoredState, saveStoredState, subscribeToStateChanges, getCachedState, DEFAULT_STATE, getWeeklyMinutesFromSessions, getTodayMinutesFromSessions, calculateStreaksFromSessions, DAYS_OF_WEEK } from "../lib/storage";
 import "../index.css";
 
@@ -53,11 +57,26 @@ const DISTRACTION_CATEGORIES = [
   "Other"
 ];
 
+const PRIORITY_STYLES: Record<TaskPriority, string> = {
+  urgent: "bg-crimson-bg text-crimson",
+  high: "bg-amber-bg text-amber",
+  medium: "bg-blue-bg text-blue",
+  low: "bg-surface-inset text-muted-foreground",
+};
+
 export function Popup() {
   const [state, setState] = useState<AppStateData | null>(getCachedState());
-  const [activeTab, setActiveTab] = useState<"timer" | "shield" | "stats" | "settings">("timer");
+  const [activeTab, setActiveTab] = useState<"timer" | "tasks" | "shield" | "stats" | "settings">("timer");
   const [showDistractionPicker, setShowDistractionPicker] = useState(false);
   const [showFloatingTimerCard, setShowFloatingTimerCard] = useState(false);
+
+  // Local inputs
+  const [taskTitle, setTaskTitle] = useState("");
+  const [taskPriority, setTaskPriority] = useState<TaskPriority>("medium");
+  const [taskDeadline, setTaskDeadline] = useState("");
+  const [taskFilter, setTaskFilter] = useState<"all" | "active" | "completed">("all");
+  const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
+  const [newSubtaskText, setNewSubtaskText] = useState("");
 
   // Deep Focus Mode: auto-activate when timer starts
   const prevIsActiveRef = useRef(state?.isActive ?? false);
@@ -275,11 +294,14 @@ export function Popup() {
 
     const durationLogged = state.timeLeft > 0 ? state.timeLeft : 1;
 
+    const focusedTask = (state.tasks || []).find((t) => t.id === state.selectedTaskId);
     const newSession = {
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
       duration: durationLogged,
-      mode: state.timerMode
+      mode: state.timerMode,
+      taskId: focusedTask?.id,
+      taskName: focusedTask?.text,
     };
 
     const newSessionList = [newSession, ...state.sessions];
@@ -377,6 +399,92 @@ export function Popup() {
         allowedSites: state.shield.allowedSites.filter(s => s !== site)
       }
     });
+  };
+
+  // Task Handlers
+  const handleAddTask = (e: React.FormEvent) => {
+    e.preventDefault();
+    const trimmed = taskTitle.trim();
+    if (!trimmed) return;
+    const newTask: TaskItem = {
+      id: crypto.randomUUID(),
+      text: trimmed,
+      completed: false,
+      priority: taskPriority,
+      deadline: taskDeadline || undefined,
+      subtasks: [],
+    };
+    updateState({
+      tasks: [newTask, ...(state.tasks || [])],
+    });
+    setTaskTitle("");
+    setTaskDeadline("");
+  };
+
+  const handleToggleTask = (id: string) => {
+    const updated = (state.tasks || []).map((t) =>
+      t.id === id
+        ? {
+            ...t,
+            completed: !t.completed,
+            completedAt: !t.completed ? new Date().toISOString() : undefined,
+          }
+        : t
+    );
+    updateState({ tasks: updated });
+  };
+
+  const handleDeleteTask = (id: string) => {
+    updateState({
+      tasks: (state.tasks || []).filter((t) => t.id !== id),
+      selectedTaskId: state.selectedTaskId === id ? null : state.selectedTaskId,
+    });
+  };
+
+  const handleFocusTask = (task: TaskItem) => {
+    updateState({ selectedTaskId: task.id });
+    setActiveTab("timer");
+  };
+
+  const handleAddSubtask = (taskId: string) => {
+    const trimmed = newSubtaskText.trim();
+    if (!trimmed) return;
+    const updated = (state.tasks || []).map((t) => {
+      if (t.id !== taskId) return t;
+      return {
+        ...t,
+        subtasks: [
+          ...(t.subtasks || []),
+          { id: crypto.randomUUID(), text: trimmed, completed: false },
+        ],
+      };
+    });
+    updateState({ tasks: updated });
+    setNewSubtaskText("");
+  };
+
+  const handleToggleSubtask = (taskId: string, subtaskId: string) => {
+    const updated = (state.tasks || []).map((t) => {
+      if (t.id !== taskId) return t;
+      return {
+        ...t,
+        subtasks: (t.subtasks || []).map((s) =>
+          s.id === subtaskId ? { ...s, completed: !s.completed } : s
+        ),
+      };
+    });
+    updateState({ tasks: updated });
+  };
+
+  const handleDeleteSubtask = (taskId: string, subtaskId: string) => {
+    const updated = (state.tasks || []).map((t) => {
+      if (t.id !== taskId) return t;
+      return {
+        ...t,
+        subtasks: (t.subtasks || []).filter((s) => s.id !== subtaskId),
+      };
+    });
+    updateState({ tasks: updated });
   };
 
   const openGithubLink = () => {
@@ -616,6 +724,7 @@ export function Popup() {
         <div className="flex items-center gap-1.5 p-1 bg-card border border-border shadow-xl rounded-full w-full justify-around">
           {[
             { id: "timer", label: "Focus", icon: LayoutGrid },
+            { id: "tasks", label: "Tasks", icon: CheckSquare },
             { id: "shield", label: "Shield", icon: Shield, activeIndicator: state.shield.enabled && state.isActive },
             { id: "stats", label: "Stats", icon: Calendar },
           ].map((tab) => {
@@ -805,6 +914,46 @@ export function Popup() {
               </span>
             </div>
 
+            {/* Focused Task Pill or Selector */}
+            {(() => {
+              const focused = (state.tasks || []).find((t) => t.id === state.selectedTaskId);
+              if (focused) {
+                return (
+                  <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs text-foreground shadow-sm max-w-[280px] truncate animate-in fade-in duration-300">
+                    <Target className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    <span className="truncate">{focused.text}</span>
+                    <button
+                      onClick={() => updateState({ selectedTaskId: null })}
+                      className="text-muted-foreground hover:text-foreground ml-1 p-0.5 rounded cursor-pointer transition-colors"
+                      title="Clear focused task"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </div>
+                );
+              }
+              const activeTasks = (state.tasks || []).filter((t) => !t.completed);
+              if (activeTasks.length > 0) {
+                return (
+                  <div className="flex items-center gap-1.5">
+                    <select
+                      value=""
+                      onChange={(e) => updateState({ selectedTaskId: e.target.value || null })}
+                      className="bg-card border border-border text-[11px] text-muted-foreground rounded-full px-2.5 py-1 focus:outline-none cursor-pointer max-w-[200px] truncate"
+                    >
+                      <option value="" disabled>Link a task...</option>
+                      {activeTasks.map((t) => (
+                        <option key={t.id} value={t.id}>
+                          {t.text}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                );
+              }
+              return null;
+            })()}
+
             {/* Control Buttons Grid */}
             <div className="flex items-center gap-2">
               {/* Reset Timer */}
@@ -874,6 +1023,327 @@ export function Popup() {
               >
                 <Focus className="w-4 h-4" />
               </button>
+            </div>
+          </div>
+        )}
+
+        {/* TASKS TAB */}
+        {activeTab === "tasks" && (
+          <div className="flex flex-col gap-3 pb-2">
+            {/* Metric KPI Row */}
+            <div className="grid grid-cols-2 gap-2">
+              <div className="p-3 flex flex-col justify-between bg-card border border-border shadow-sm rounded-2xl">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                    Active
+                  </span>
+                  <div className="p-1 bg-surface-inset rounded-lg text-muted-foreground">
+                    <CheckSquare className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <div className="text-xl font-medium tabular-nums tracking-tight text-foreground my-0.5">
+                  {(state.tasks || []).filter((t) => !t.completed).length}
+                </div>
+              </div>
+
+              <div className="p-3 flex flex-col justify-between bg-card border border-border shadow-sm rounded-2xl">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                    Done
+                  </span>
+                  <div className="p-1 bg-surface-inset rounded-lg text-muted-foreground">
+                    <ListChecks className="w-3.5 h-3.5" />
+                  </div>
+                </div>
+                <div className="text-xl font-medium tabular-nums tracking-tight text-foreground my-0.5">
+                  {(state.tasks || []).filter((t) => t.completed).length}
+                </div>
+              </div>
+            </div>
+
+            {/* Task Add Form */}
+            <form onSubmit={handleAddTask} className="p-3 bg-card border border-border rounded-2xl space-y-2">
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="text"
+                  placeholder="Add a new task..."
+                  value={taskTitle}
+                  onChange={(e) => setTaskTitle(e.target.value)}
+                  className="flex-1 bg-surface-inset border-0 rounded-xl px-3 h-8 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
+                />
+                <button
+                  type="submit"
+                  className="h-8 px-3 rounded-xl bg-primary text-primary-foreground text-xs font-medium shadow-sm hover:shadow active:scale-95 transition-all duration-200 cursor-pointer flex items-center gap-1 shrink-0"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Add</span>
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between flex-wrap gap-1.5 pt-0.5 text-[10px] text-muted-foreground">
+                <div className="flex items-center gap-1">
+                  <span>Priority:</span>
+                  {(["low", "medium", "high", "urgent"] as TaskPriority[]).map((p) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setTaskPriority(p)}
+                      className={`px-2 py-0.5 rounded-full capitalize font-medium transition-all cursor-pointer ${
+                        taskPriority === p
+                          ? PRIORITY_STYLES[p]
+                          : "bg-surface-inset text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="flex items-center gap-1">
+                  <Calendar className="w-3 h-3" />
+                  <input
+                    type="date"
+                    value={taskDeadline}
+                    onChange={(e) => setTaskDeadline(e.target.value)}
+                    className="bg-transparent border-0 text-[10px] text-muted-foreground focus:outline-none cursor-pointer [color-scheme:dark]"
+                  />
+                </div>
+              </div>
+            </form>
+
+            {/* Filter Tabs & Task List */}
+            <div className="p-3 bg-card border border-border rounded-2xl space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1 bg-surface-inset p-0.5 rounded-full">
+                  {(["all", "active", "completed"] as const).map((tab) => (
+                    <button
+                      key={tab}
+                      onClick={() => setTaskFilter(tab)}
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-medium capitalize transition-all cursor-pointer ${
+                        taskFilter === tab
+                          ? "bg-card text-foreground shadow-sm"
+                          : "text-muted-foreground hover:text-foreground"
+                      }`}
+                    >
+                      {tab}
+                    </button>
+                  ))}
+                </div>
+
+                <span className="text-[10px] font-mono tabular-nums text-muted-foreground">
+                  {(state.tasks || []).filter((t) => {
+                    if (taskFilter === "active") return !t.completed;
+                    if (taskFilter === "completed") return t.completed;
+                    return true;
+                  }).length} tasks
+                </span>
+              </div>
+
+              {/* Task Items */}
+              {(() => {
+                const list = (state.tasks || []).filter((t) => {
+                  if (taskFilter === "active") return !t.completed;
+                  if (taskFilter === "completed") return t.completed;
+                  return true;
+                });
+
+                if (list.length === 0) {
+                  return (
+                    <div className="py-6 flex flex-col items-center justify-center text-center text-muted-foreground text-xs gap-1">
+                      <CheckSquare className="w-6 h-6 opacity-40 mb-1" />
+                      <span className="text-[11px]">No tasks in this view</span>
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="flex flex-col gap-1.5 max-h-[220px] overflow-y-auto pr-0.5">
+                    {list.map((task) => {
+                      const isFocused = state.selectedTaskId === task.id;
+                      const isExpanded = expandedTaskId === task.id;
+                      const subtasks = task.subtasks || [];
+                      const completedSubtasks = subtasks.filter((s) => s.completed).length;
+
+                      return (
+                        <div
+                          key={task.id}
+                          className={`p-2.5 rounded-xl border transition-all ${
+                            isFocused
+                              ? "bg-surface border-foreground/30"
+                              : "bg-surface-inset border-border hover:border-border/80"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <button
+                                onClick={() => handleToggleTask(task.id)}
+                                className="text-muted-foreground hover:text-foreground transition-all cursor-pointer shrink-0"
+                                title={task.completed ? "Mark incomplete" : "Mark complete"}
+                              >
+                                {task.completed ? (
+                                  <CheckSquare className="w-3.5 h-3.5 text-emerald" />
+                                ) : (
+                                  <Square className="w-3.5 h-3.5" />
+                                )}
+                              </button>
+
+                              <div className="flex flex-col min-w-0 flex-1">
+                                <span
+                                  className={`text-xs font-medium truncate ${
+                                    task.completed
+                                      ? "line-through text-muted-foreground"
+                                      : "text-foreground"
+                                  }`}
+                                >
+                                  {task.text}
+                                </span>
+
+                                <div className="flex items-center gap-1.5 mt-0.5">
+                                  {task.priority && (
+                                    <span
+                                      className={`text-[9px] px-1.5 py-0.2 rounded-full font-medium capitalize ${
+                                        PRIORITY_STYLES[task.priority]
+                                      }`}
+                                    >
+                                      {task.priority}
+                                    </span>
+                                  )}
+
+                                  {task.deadline && (
+                                    <span className="text-[9px] font-mono tabular-nums text-muted-foreground flex items-center gap-0.5">
+                                      <Calendar className="w-2.5 h-2.5" />
+                                      {task.deadline}
+                                    </span>
+                                  )}
+
+                                  {subtasks.length > 0 && (
+                                    <button
+                                      onClick={() =>
+                                        setExpandedTaskId(isExpanded ? null : task.id)
+                                      }
+                                      className="text-[9px] font-mono tabular-nums text-muted-foreground hover:text-foreground flex items-center gap-0.5 cursor-pointer"
+                                    >
+                                      <span>
+                                        {completedSubtasks}/{subtasks.length}
+                                      </span>
+                                      {isExpanded ? (
+                                        <ChevronUp className="w-2.5 h-2.5" />
+                                      ) : (
+                                        <ChevronDown className="w-2.5 h-2.5" />
+                                      )}
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1 shrink-0">
+                              <button
+                                onClick={() =>
+                                  setExpandedTaskId(isExpanded ? null : task.id)
+                                }
+                                className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-surface transition-colors cursor-pointer"
+                                title="Subtasks"
+                              >
+                                <ListChecks className="w-3 h-3" />
+                              </button>
+
+                              <button
+                                onClick={() => handleFocusTask(task)}
+                                className={`p-1 rounded-lg transition-colors cursor-pointer ${
+                                  isFocused
+                                    ? "bg-primary text-primary-foreground"
+                                    : "text-muted-foreground hover:text-foreground hover:bg-surface"
+                                }`}
+                                title={isFocused ? "Current focus target" : "Focus on task"}
+                              >
+                                <Target className="w-3 h-3" />
+                              </button>
+
+                              <button
+                                onClick={() => handleDeleteTask(task.id)}
+                                className="p-1 rounded-lg text-muted-foreground hover:text-crimson hover:bg-crimson-bg transition-colors cursor-pointer"
+                                title="Delete task"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Expanded Subtasks */}
+                          {isExpanded && (
+                            <div className="mt-2 pt-2 border-t border-border flex flex-col gap-1.5">
+                              {subtasks.map((sub) => (
+                                <div
+                                  key={sub.id}
+                                  className="flex items-center justify-between gap-1.5 pl-4 pr-1 text-[11px]"
+                                >
+                                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                    <button
+                                      onClick={() =>
+                                        handleToggleSubtask(task.id, sub.id)
+                                      }
+                                      className="text-muted-foreground hover:text-foreground cursor-pointer"
+                                    >
+                                      {sub.completed ? (
+                                        <CheckSquare className="w-3 h-3 text-emerald" />
+                                      ) : (
+                                        <Square className="w-3 h-3" />
+                                      )}
+                                    </button>
+                                    <span
+                                      className={`truncate ${
+                                        sub.completed
+                                          ? "line-through text-muted-foreground"
+                                          : "text-foreground"
+                                      }`}
+                                    >
+                                      {sub.text}
+                                    </span>
+                                  </div>
+                                  <button
+                                    onClick={() =>
+                                      handleDeleteSubtask(task.id, sub.id)
+                                    }
+                                    className="text-muted-foreground hover:text-crimson p-0.5"
+                                  >
+                                    <Trash2 className="w-2.5 h-2.5" />
+                                  </button>
+                                </div>
+                              ))}
+
+                              <div className="flex items-center gap-1.5 pl-4 mt-0.5">
+                                <input
+                                  type="text"
+                                  placeholder="Add subtask..."
+                                  value={newSubtaskText}
+                                  onChange={(e) =>
+                                    setNewSubtaskText(e.target.value)
+                                  }
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter") {
+                                      e.preventDefault();
+                                      handleAddSubtask(task.id);
+                                    }
+                                  }}
+                                  className="flex-1 bg-surface border border-border rounded-lg px-2 py-1 text-[11px] text-foreground placeholder:text-muted-foreground focus:outline-none"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => handleAddSubtask(task.id)}
+                                  className="px-2 py-1 rounded-lg bg-primary text-primary-foreground text-[10px] font-medium cursor-pointer"
+                                >
+                                  Add
+                                </button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
