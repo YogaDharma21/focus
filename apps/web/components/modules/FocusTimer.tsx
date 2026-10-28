@@ -4,7 +4,7 @@ import { useAppStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
 import React, { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Play, Pause, RotateCcw, CheckCircle2, Focus, Clock, Coffee } from "lucide-react";
+import { Play, Pause, RotateCcw, CheckCircle2, Focus, Clock, Coffee, Target, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DistractionCounter } from "./DistractionCounter";
 
@@ -23,6 +23,9 @@ export function FocusTimer() {
         soundEffectEnabled,
         soundEnabled,
         autoStartBreak,
+        tasks,
+        selectedTaskId,
+        setSelectedTaskId,
     } = useAppStore(
         useShallow((s) => ({
             timeLeft: s.timeLeft,
@@ -38,6 +41,9 @@ export function FocusTimer() {
             soundEffectEnabled: s.soundEffectEnabled,
             soundEnabled: s.soundEnabled ?? true,
             autoStartBreak: s.autoStartBreak ?? true,
+            tasks: s.tasks,
+            selectedTaskId: s.selectedTaskId,
+            setSelectedTaskId: s.setSelectedTaskId,
         }))
     );
 
@@ -109,11 +115,14 @@ export function FocusTimer() {
         const duration = timeLeft;
 
         if (duration > 0) {
+            const focusedTask = tasks.find((t) => t.id === selectedTaskId);
             addSession({
                 id: crypto.randomUUID(),
                 date: new Date().toISOString(),
                 duration,
                 mode: "STOPWATCH",
+                taskId: focusedTask?.id,
+                taskName: focusedTask?.text,
             });
             fetch("/api/sessions", {
                 method: "POST",
@@ -185,6 +194,46 @@ export function FocusTimer() {
                 <div className="text-[3.5rem] sm:text-[5rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow">
                     {formatTime(timeLeft)}
                 </div>
+
+                {/* Focused Task Pill or Selector */}
+                {(() => {
+                    const focused = tasks.find((t) => t.id === selectedTaskId);
+                    if (focused) {
+                        return (
+                            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs text-foreground shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] max-w-xs truncate animate-in fade-in duration-300">
+                                <Target className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                                <span className="truncate">{focused.text}</span>
+                                <button
+                                    onClick={() => setSelectedTaskId(null)}
+                                    className="text-muted-foreground hover:text-foreground ml-1 p-0.5 rounded cursor-pointer transition-colors"
+                                    title="Clear focused task"
+                                >
+                                    <X className="w-3 h-3" />
+                                </button>
+                            </div>
+                        );
+                    }
+                    const activeTasks = tasks.filter((t) => !t.completed);
+                    if (activeTasks.length > 0) {
+                        return (
+                            <div className="flex items-center gap-1.5">
+                                <select
+                                    value=""
+                                    onChange={(e) => setSelectedTaskId(e.target.value || null)}
+                                    className="bg-card border border-border text-[11px] text-muted-foreground rounded-full px-3 py-1 focus:outline-none cursor-pointer max-w-[220px] truncate"
+                                >
+                                    <option value="" disabled>Link a task to focus...</option>
+                                    {activeTasks.map((t) => (
+                                        <option key={t.id} value={t.id}>
+                                            {t.text}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        );
+                    }
+                    return null;
+                })()}
             </div>
 
             <div className="grid grid-cols-3 items-center w-full max-w-[280px] sm:max-w-xs">

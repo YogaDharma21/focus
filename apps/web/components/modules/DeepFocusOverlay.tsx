@@ -26,6 +26,8 @@ export function DeepFocusOverlay() {
         soundEffectVolume,
         soundEffectEnabled,
         autoStartBreak,
+        tasks,
+        selectedTaskId,
     } = useAppStore(
         useShallow((s) => ({
             timeLeft: s.timeLeft,
@@ -44,6 +46,8 @@ export function DeepFocusOverlay() {
             soundEffectVolume: s.soundEffectVolume,
             soundEffectEnabled: s.soundEffectEnabled,
             autoStartBreak: s.autoStartBreak ?? true,
+            tasks: s.tasks,
+            selectedTaskId: s.selectedTaskId,
         }))
     );
 
@@ -109,11 +113,14 @@ export function DeepFocusOverlay() {
         const duration = timeLeft;
 
         if (duration > 0) {
+            const focusedTask = tasks.find((t) => t.id === selectedTaskId);
             addSession({
                 id: crypto.randomUUID(),
                 date: new Date().toISOString(),
                 duration,
                 mode: "STOPWATCH",
+                taskId: focusedTask?.id,
+                taskName: focusedTask?.text,
             });
             fetch("/api/sessions", {
                 method: "POST",
@@ -266,6 +273,16 @@ export function DeepFocusOverlay() {
             </button>
 
             <div className="flex flex-col items-center gap-4">
+                {(() => {
+                    const focused = tasks.find((t) => t.id === selectedTaskId);
+                    if (!focused) return null;
+                    return (
+                        <div className="px-3.5 py-1.5 rounded-full bg-card/80 border border-border text-xs font-medium text-foreground tracking-wide max-w-sm truncate shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] mb-2">
+                            {focused.text}
+                        </div>
+                    );
+                })()}
+
                 <div className="text-[4rem] sm:text-[6rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground select-none">
                     {formatTime(timeLeft)}
                 </div>
