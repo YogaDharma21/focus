@@ -5,7 +5,7 @@ import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
 import { playCompletionSound } from '@/lib/sound';
 import { VolumeSlider } from '@/components/ui/VolumeSlider';
-import { Play, Pause, X, AlertTriangle, CheckCircle2, Plus, Music, RotateCcw, ShieldCheck } from 'lucide-react-native';
+import { Play, Pause, X, AlertTriangle, CheckCircle2, Plus, Music, RotateCcw, ShieldCheck, Target } from 'lucide-react-native';
 import { isBlockingRequired } from '@/lib/shield';
 
 const DISTRACTION_CATEGORIES = [
@@ -39,8 +39,11 @@ export function DeepFocusOverlay() {
     autoStartBreak,
     autoStartFlow,
     shield,
+    tasks,
+    selectedTaskId,
   } = useAppStore();
 
+  const activeTask = tasks.find((t) => t.id === selectedTaskId);
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
   const [musicModalOpen, setMusicModalOpen] = useState(false);
   const shieldEnforcing = isBlockingRequired(shield.enabled, isActive, timerState);
@@ -72,6 +75,8 @@ export function DeepFocusOverlay() {
         date: new Date().toISOString(),
         duration: flowDuration,
         mode: 'STOPWATCH',
+        taskId: activeTask?.id,
+        taskName: activeTask?.text,
       });
     }
 
@@ -140,6 +145,14 @@ export function DeepFocusOverlay() {
 
         <View style={styles.content}>
           <Text style={[styles.timerText, { color: colors.text }]}>{formatTime(timeLeft)}</Text>
+          {activeTask ? (
+            <View style={[styles.taskPill, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <Target size={12} color={colors.emerald} />
+              <Text style={[styles.taskPillText, { color: colors.text }]} numberOfLines={1}>
+                {activeTask.text}
+              </Text>
+            </View>
+          ) : null}
           {shieldEnforcing ? (
             <View style={[styles.shieldPill, { backgroundColor: colors.card, borderColor: colors.emerald }]}>
               <ShieldCheck size={12} color={colors.emerald} />
@@ -326,6 +339,21 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     letterSpacing: -3,
     fontVariant: ['tabular-nums'],
+  },
+  taskPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 999,
+    borderWidth: 1,
+    marginTop: 10,
+    maxWidth: 260,
+  },
+  taskPillText: {
+    fontSize: 12,
+    fontWeight: '500',
   },
   shieldPill: {
     flexDirection: 'row',
