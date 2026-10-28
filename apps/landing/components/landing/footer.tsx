@@ -37,11 +37,6 @@ export function Footer() {
               FAQ
             </a>
           </div>
-
-          {/* Copyright */}
-          <div className="flex items-center gap-3 text-xs text-muted-foreground font-medium">
-            <span>FocusTrackers</span>
-          </div>
         </div>
       </div>
     </footer>
