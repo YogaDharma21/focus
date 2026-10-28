@@ -1,8 +1,26 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Session, Distraction, PlaylistItem, TimerState, ViewType } from "@focus/types";
+import type {
+    Session,
+    Distraction,
+    PlaylistItem,
+    TimerState,
+    ViewType,
+    TaskItem,
+    SubtaskItem,
+    TaskPriority,
+} from "@focus/types";
 
-export type { Session, Distraction, PlaylistItem, TimerState, ViewType };
+export type {
+    Session,
+    Distraction,
+    PlaylistItem,
+    TimerState,
+    ViewType,
+    TaskItem,
+    SubtaskItem,
+    TaskPriority,
+};
 
 interface AppState {
     currentView: ViewType;
@@ -42,6 +60,17 @@ interface AppState {
     setSessionStartTime: (time: string | null) => void;
     setAutoStartBreak: (enabled: boolean) => void;
     setAutoStartFlow: (enabled: boolean) => void;
+
+    tasks: TaskItem[];
+    selectedTaskId: string | null;
+    addTask: (task: { text: string; priority?: TaskPriority; deadline?: string }) => void;
+    toggleTask: (id: string) => void;
+    updateTask: (id: string, updates: Partial<TaskItem>) => void;
+    deleteTask: (id: string) => void;
+    addSubtask: (taskId: string, text: string) => void;
+    toggleSubtask: (taskId: string, subtaskId: string) => void;
+    deleteSubtask: (taskId: string, subtaskId: string) => void;
+    setSelectedTaskId: (id: string | null) => void;
 
     sessions: Session[];
     distractions: Distraction[];
@@ -109,6 +138,82 @@ export const useAppStore = create<AppState>()(
             autoStartFlow: true,
             setAutoStartFlow: (enabled) => set({ autoStartFlow: enabled }),
 
+            tasks: [],
+            selectedTaskId: null,
+            addTask: ({ text, priority = "medium", deadline }) =>
+                set((state) => ({
+                    tasks: [
+                        {
+                            id: crypto.randomUUID(),
+                            text: text.trim(),
+                            completed: false,
+                            priority,
+                            deadline: deadline || undefined,
+                            subtasks: [],
+                        },
+                        ...state.tasks,
+                    ],
+                })),
+            toggleTask: (id) =>
+                set((state) => ({
+                    tasks: state.tasks.map((task) =>
+                        task.id === id
+                            ? {
+                                  ...task,
+                                  completed: !task.completed,
+                                  completedAt: !task.completed ? new Date().toISOString() : undefined,
+                              }
+                            : task,
+                    ),
+                })),
+            updateTask: (id, updates) =>
+                set((state) => ({
+                    tasks: state.tasks.map((task) =>
+                        task.id === id ? { ...task, ...updates } : task,
+                    ),
+                })),
+            deleteTask: (id) =>
+                set((state) => ({
+                    tasks: state.tasks.filter((task) => task.id !== id),
+                    selectedTaskId: state.selectedTaskId === id ? null : state.selectedTaskId,
+                })),
+            addSubtask: (taskId, text) =>
+                set((state) => ({
+                    tasks: state.tasks.map((task) => {
+                        if (task.id !== taskId) return task;
+                        const subtasks = [
+                            ...(task.subtasks || []),
+                            {
+                                id: crypto.randomUUID(),
+                                text: text.trim(),
+                                completed: false,
+                            },
+                        ];
+                        return { ...task, subtasks };
+                    }),
+                })),
+            toggleSubtask: (taskId, subtaskId) =>
+                set((state) => ({
+                    tasks: state.tasks.map((task) => {
+                        if (task.id !== taskId) return task;
+                        const subtasks = (task.subtasks || []).map((sub) =>
+                            sub.id === subtaskId ? { ...sub, completed: !sub.completed } : sub,
+                        );
+                        return { ...task, subtasks };
+                    }),
+                })),
+            deleteSubtask: (taskId, subtaskId) =>
+                set((state) => ({
+                    tasks: state.tasks.map((task) => {
+                        if (task.id !== taskId) return task;
+                        return {
+                            ...task,
+                            subtasks: (task.subtasks || []).filter((sub) => sub.id !== subtaskId),
+                        };
+                    }),
+                })),
+            setSelectedTaskId: (id) => set({ selectedTaskId: id }),
+
             sessions: [],
             distractions: [],
 
@@ -153,6 +258,8 @@ export const useAppStore = create<AppState>()(
                     sessionStartTime: null,
                     autoStartBreak: true,
                     autoStartFlow: true,
+                    tasks: [],
+                    selectedTaskId: null,
                     sessions: [],
                     distractions: [],
                     deepFocusMode: false,
