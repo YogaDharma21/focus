@@ -25,6 +25,8 @@ export const FloatingTimerCapsule: React.FC = () => {
     setDeepFocusMode,
     autoStartBreak,
     autoStartFlow,
+    tasks,
+    selectedTaskId,
   } = useDesktopStore();
 
   const [isExpanded, setIsExpanded] = useState(false);
@@ -56,11 +58,14 @@ export const FloatingTimerCapsule: React.FC = () => {
     const durationWorked = Math.max(1, flowTimeElapsed);
     const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
 
+    const focusedTask = tasks.find((t) => t.id === selectedTaskId);
     addSession({
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
       duration: durationWorked,
       mode: 'STOPWATCH',
+      taskId: focusedTask?.id,
+      taskName: focusedTask?.text,
     });
 
     const breakMins = Math.floor(calculatedBreakSeconds / 60);
