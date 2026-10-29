@@ -3,7 +3,9 @@ import { persist } from "zustand/middleware";
 import {
   DEFAULT_SHIELD_CONFIG,
   ShieldConfig,
+  ShieldSchedule,
   ShieldViolation,
+  isBlocklistLocked,
   normalizeAppName,
   normalizeSite,
 } from "./shield";
@@ -91,6 +93,10 @@ export interface DesktopState {
   // Focus Shield (app + website blocking)
   shield: ShieldConfig;
   setShieldEnabled: (enabled: boolean) => void;
+  setShieldStrictMode: (enabled: boolean) => void;
+  setShieldSchedules: (schedules: ShieldSchedule[]) => void;
+  toggleShieldSchedule: (id: string) => void;
+  updateShieldSchedule: (id: string, updates: Partial<ShieldSchedule>) => void;
   addBlockedSite: (site: string) => void;
   removeBlockedSite: (site: string) => void;
   addAllowedSite: (site: string) => void;
@@ -228,11 +234,44 @@ export const useDesktopStore = create<DesktopState>()(
       // Focus Shield
       shield: { ...DEFAULT_SHIELD_CONFIG },
       setShieldEnabled: (enabled) =>
-        set((state) => ({ shield: { ...state.shield, enabled } })),
+        set((state) => {
+          if (!enabled && isBlocklistLocked(state.shield, state.isActive, state.timerState)) {
+            return state;
+          }
+          return { shield: { ...state.shield, enabled } };
+        }),
+      setShieldStrictMode: (strictMode) =>
+        set((state) => {
+          if (!strictMode && isBlocklistLocked(state.shield, state.isActive, state.timerState)) {
+            return state;
+          }
+          return { shield: { ...state.shield, strictMode } };
+        }),
+      setShieldSchedules: (schedules) =>
+        set((state) => ({ shield: { ...state.shield, schedules } })),
+      toggleShieldSchedule: (id) =>
+        set((state) => ({
+          shield: {
+            ...state.shield,
+            schedules: (state.shield.schedules || []).map((s) =>
+              s.id === id ? { ...s, enabled: !s.enabled } : s,
+            ),
+          },
+        })),
+      updateShieldSchedule: (id, updates) =>
+        set((state) => ({
+          shield: {
+            ...state.shield,
+            schedules: (state.shield.schedules || []).map((s) =>
+              s.id === id ? { ...s, ...updates } : s,
+            ),
+          },
+        })),
       addBlockedSite: (site) => {
         const clean = normalizeSite(site);
         if (!clean) return;
         set((state) => {
+          if (isBlocklistLocked(state.shield, state.isActive, state.timerState)) return state;
           if (state.shield.blockedSites.includes(clean)) return state;
           return {
             shield: {
@@ -243,16 +282,20 @@ export const useDesktopStore = create<DesktopState>()(
         });
       },
       removeBlockedSite: (site) =>
-        set((state) => ({
-          shield: {
-            ...state.shield,
-            blockedSites: state.shield.blockedSites.filter((s) => s !== site),
-          },
-        })),
+        set((state) => {
+          if (isBlocklistLocked(state.shield, state.isActive, state.timerState)) return state;
+          return {
+            shield: {
+              ...state.shield,
+              blockedSites: state.shield.blockedSites.filter((s) => s !== site),
+            },
+          };
+        }),
       addAllowedSite: (site) => {
         const clean = normalizeSite(site);
         if (!clean) return;
         set((state) => {
+          if (isBlocklistLocked(state.shield, state.isActive, state.timerState)) return state;
           if (state.shield.allowedSites.includes(clean)) return state;
           return {
             shield: {
@@ -263,16 +306,20 @@ export const useDesktopStore = create<DesktopState>()(
         });
       },
       removeAllowedSite: (site) =>
-        set((state) => ({
-          shield: {
-            ...state.shield,
-            allowedSites: state.shield.allowedSites.filter((s) => s !== site),
-          },
-        })),
+        set((state) => {
+          if (isBlocklistLocked(state.shield, state.isActive, state.timerState)) return state;
+          return {
+            shield: {
+              ...state.shield,
+              allowedSites: state.shield.allowedSites.filter((s) => s !== site),
+            },
+          };
+        }),
       addBlockedApp: (app) => {
         const clean = normalizeAppName(app);
         if (!clean) return;
         set((state) => {
+          if (isBlocklistLocked(state.shield, state.isActive, state.timerState)) return state;
           if (state.shield.blockedApps.includes(clean)) return state;
           return {
             shield: {
@@ -283,12 +330,15 @@ export const useDesktopStore = create<DesktopState>()(
         });
       },
       removeBlockedApp: (app) =>
-        set((state) => ({
-          shield: {
-            ...state.shield,
-            blockedApps: state.shield.blockedApps.filter((a) => a !== app),
-          },
-        })),
+        set((state) => {
+          if (isBlocklistLocked(state.shield, state.isActive, state.timerState)) return state;
+          return {
+            shield: {
+              ...state.shield,
+              blockedApps: state.shield.blockedApps.filter((a) => a !== app),
+            },
+          };
+        }),
 
       shieldViolations: [],
       pushShieldViolation: (violation) =>
@@ -343,6 +393,10 @@ export const useDesktopStore = create<DesktopState>()(
           shield: {
             ...DEFAULT_SHIELD_CONFIG,
             ...storedShield,
+            strictMode: storedShield.strictMode ?? false,
+            schedules: Array.isArray(storedShield.schedules)
+              ? storedShield.schedules
+              : DEFAULT_SHIELD_CONFIG.schedules,
             blockedSites:
               storedShield.blockedSites ?? DEFAULT_SHIELD_CONFIG.blockedSites,
             allowedSites:

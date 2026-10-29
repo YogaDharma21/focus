@@ -329,6 +329,8 @@ let shieldConfig = {
     blockedSites: [],
     allowedSites: [],
     blockedApps: [],
+    strictMode: false,
+    schedules: [],
 };
 let shieldSession = { isActive: false, timerState: "FLOW" };
 let shieldPollTimer = null;
@@ -363,6 +365,8 @@ function updateShieldState(payload) {
             blockedSites: Array.isArray(s.blockedSites) ? s.blockedSites : [],
             allowedSites: Array.isArray(s.allowedSites) ? s.allowedSites : [],
             blockedApps: Array.isArray(s.blockedApps) ? s.blockedApps : [],
+            strictMode: !!s.strictMode,
+            schedules: Array.isArray(s.schedules) ? s.schedules : [],
         };
     }
     if (payload.session && typeof payload.session === "object") {
@@ -380,13 +384,39 @@ function updateShieldState(payload) {
     }
 }
 
+function isScheduleActive(schedules, now = new Date()) {
+    if (!Array.isArray(schedules) || schedules.length === 0) return false;
+    const currentDay = now.getDay();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+
+    return schedules.some((rule) => {
+        if (!rule || !rule.enabled) return false;
+        if (Array.isArray(rule.days) && rule.days.length > 0 && !rule.days.includes(currentDay)) {
+            return false;
+        }
+        const [startH, startM] = String(rule.start || "09:00").split(":").map(Number);
+        const [endH, endM] = String(rule.end || "17:00").split(":").map(Number);
+        if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) {
+            return false;
+        }
+        const startTotal = startH * 60 + startM;
+        const endTotal = endH * 60 + endM;
+
+        if (startTotal <= endTotal) {
+            return currentMinutes >= startTotal && currentMinutes < endTotal;
+        } else {
+            return currentMinutes >= startTotal || currentMinutes < endTotal;
+        }
+    });
+}
+
 function isShieldBlockingRequired() {
-    return (
-        shieldConfig.enabled &&
-        shieldSession.isActive &&
-        shieldSession.timerState === "FLOW" &&
-        (shieldConfig.blockedApps.length > 0 || shieldConfig.blockedSites.length > 0)
-    );
+    const hasItems = shieldConfig.blockedApps.length > 0 || shieldConfig.blockedSites.length > 0;
+    if (!hasItems) return false;
+    const inSchedule = isScheduleActive(shieldConfig.schedules);
+    const isEnabled = shieldConfig.enabled || inSchedule;
+    const inFlow = shieldSession.isActive && shieldSession.timerState === "FLOW";
+    return isEnabled && (inFlow || inSchedule);
 }
 
 function normalizeSiteEntry(site) {

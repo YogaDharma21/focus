@@ -8,19 +8,30 @@ import {
   AppWindow,
   Check,
   Info,
+  Lock,
+  Clock,
+  Calendar,
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
-import { isBlockingRequired } from '../../lib/shield';
+import {
+  isBlockingRequired,
+  isBlocklistLocked,
+  isScheduleActive,
+  getActiveSchedule,
+  ShieldSchedule,
+} from '../../lib/shield';
 import { cn } from '../../lib/utils';
 import { BlockedAppIcon, SiteIcon } from './ShieldIcons';
 import { RunningAppsPicker } from './RunningAppsPicker';
 
-type ShieldListTab = "blocked" | "allowed" | "apps";
+type ShieldListTab = "blocked" | "allowed" | "apps" | "schedules";
+
+const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
 const QUICK_ADD_SITES = ["facebook.com", "instagram.com", "reddit.com", "youtube.com"];
 const QUICK_ADD_APPS = ["discord.exe", "steam.exe", "spotify.exe"];
 
-const TAB_CONFIG: { id: ShieldListTab; label: (counts: { blocked: number; allowed: number; apps: number }) => string; placeholder: string; submitLabel: string }[] = [
+const TAB_CONFIG: { id: ShieldListTab; label: (counts: { blocked: number; allowed: number; apps: number; schedules: number }) => string; placeholder: string; submitLabel: string }[] = [
   {
     id: "blocked",
     label: (c) => `Blocked Sites (${c.blocked})`,
@@ -39,12 +50,21 @@ const TAB_CONFIG: { id: ShieldListTab; label: (counts: { blocked: number; allowe
     placeholder: "Type an app to block (or pick below)...",
     submitLabel: "Block",
   },
+  {
+    id: "schedules",
+    label: (c) => `Schedules (${c.schedules})`,
+    placeholder: "",
+    submitLabel: "",
+  },
 ];
 
 export const ShieldPage: React.FC = () => {
   const {
     shield,
     setShieldEnabled,
+    setShieldStrictMode,
+    toggleShieldSchedule,
+    updateShieldSchedule,
     addBlockedSite,
     removeBlockedSite,
     addAllowedSite,
@@ -59,11 +79,16 @@ export const ShieldPage: React.FC = () => {
   const [input, setInput] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
 
-  const blocking = isBlockingRequired(shield.enabled, isActive, timerState);
+  const locked = isBlocklistLocked(shield, isActive, timerState);
+  const scheduleActive = isScheduleActive(shield.schedules);
+  const activeSchedule = getActiveSchedule(shield.schedules);
+  const blocking = isBlockingRequired(shield, isActive, timerState);
+
   const counts = {
     blocked: shield.blockedSites.length,
     allowed: shield.allowedSites.length,
     apps: shield.blockedApps.length,
+    schedules: (shield.schedules || []).filter((s) => s.enabled).length,
   };
   const activeTab = TAB_CONFIG.find((t) => t.id === listTab) ?? TAB_CONFIG[0];
 
@@ -74,14 +99,22 @@ export const ShieldPage: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (locked) {
+      showFeedback("Blocklist is locked in active Flow session.");
+      return;
+    }
     if (!input.trim()) return;
     if (listTab === "blocked") addBlockedSite(input);
     else if (listTab === "allowed") addAllowedSite(input);
-    else addBlockedApp(input);
+    else if (listTab === "apps") addBlockedApp(input);
     setInput("");
   };
 
   const handleQuickAdd = (value: string, kind: "site" | "app") => {
+    if (locked) {
+      showFeedback("Blocklist is locked in active Flow session.");
+      return;
+    }
     if (kind === "site") {
       if (listTab === "allowed") addAllowedSite(value);
       else addBlockedSite(value);
@@ -92,8 +125,19 @@ export const ShieldPage: React.FC = () => {
   };
 
   const handleBlockRunningApp = (image: string) => {
+    if (locked) {
+      showFeedback("Blocklist is locked in active Flow session.");
+      return;
+    }
     addBlockedApp(image);
     showFeedback(`Blocked ${image}.`);
+  };
+
+  const handleDayToggle = (scheduleId: string, currentDays: number[], dayIndex: number) => {
+    const updated = currentDays.includes(dayIndex)
+      ? currentDays.filter((d) => d !== dayIndex)
+      : [...currentDays, dayIndex].sort();
+    updateShieldSchedule(scheduleId, { days: updated });
   };
 
   return (
@@ -121,13 +165,15 @@ export const ShieldPage: React.FC = () => {
         <section
           className={cn(
             "p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center gap-4 justify-between shadow-sm",
-            shield.enabled
+            shield.enabled || blocking
               ? "bg-secondary/70 border-border"
               : "bg-secondary/40 border-border"
           )}
         >
           <div className="flex items-center gap-3">
-            {shield.enabled ? (
+            {blocking ? (
+              <ShieldCheck className="w-6 h-6 text-emerald-400 shrink-0" />
+            ) : shield.enabled ? (
               <ShieldCheck className="w-6 h-6 text-foreground shrink-0" />
             ) : (
               <ShieldAlert className="w-6 h-6 text-muted-foreground shrink-0" />
@@ -137,18 +183,20 @@ export const ShieldPage: React.FC = () => {
                 SITE & APP BLOCKER SHIELD
               </h2>
               <p className="text-[11px] text-muted-foreground">
-                {shield.enabled
-                  ? blocking
-                    ? "Enforcing now — Flow session is active"
-                    : isActive
+                {blocking
+                  ? scheduleActive
+                    ? `Enforcing now — Scheduled rule active${activeSchedule?.name ? ` (${activeSchedule.name})` : ""}`
+                    : "Enforcing now — Flow session is active"
+                  : shield.enabled
+                    ? isActive
                       ? "Paused — resumes when you return to Flow"
-                      : "Armed — activates when you start a Flow session"
-                  : "Shield currently OFF"}
+                      : "Armed — activates during Flow sessions or scheduled hours"
+                    : "Shield currently OFF"}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {shield.enabled && (
+            {(shield.enabled || blocking) && (
               <span
                 className={cn(
                   "px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border",
@@ -162,14 +210,20 @@ export const ShieldPage: React.FC = () => {
             )}
             <button
               onClick={() => {
+                if (locked && shield.enabled) {
+                  showFeedback("Cannot disable Shield during locked Flow session.");
+                  return;
+                }
                 setShieldEnabled(!shield.enabled);
                 showFeedback(!shield.enabled ? "Shield enabled." : "Shield disabled.");
               }}
+              disabled={locked && shield.enabled}
               className={cn(
                 "px-4 py-2 rounded-xl text-xs font-bold border transition-all active:scale-95",
                 shield.enabled
                   ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-secondary text-secondary-foreground border-border hover:bg-secondary/80"
+                  : "bg-secondary text-secondary-foreground border-border hover:bg-secondary/80",
+                locked && shield.enabled && "opacity-50 cursor-not-allowed"
               )}
             >
               {shield.enabled ? "ENABLED" : "ENABLE"}
@@ -177,22 +231,103 @@ export const ShieldPage: React.FC = () => {
           </div>
         </section>
 
-        <section className="space-y-4">
-          <form onSubmit={handleSubmit} className="flex gap-2">
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={activeTab.placeholder}
-              className="flex-1 px-4 py-2.5 rounded-xl text-xs font-mono bg-secondary/70 border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:border-muted-foreground transition-colors"
-            />
+        {locked && (
+          <div className="p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 flex items-center gap-3">
+            <Lock className="w-5 h-5 text-amber-400 shrink-0" />
+            <div>
+              <h3 className="text-xs font-bold text-amber-200 uppercase tracking-wider">Strict Mode Active</h3>
+              <p className="text-[11px] text-amber-300/80">
+                Blocklist edits are locked while your Flow session is active to prevent impulse overrides.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <section className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="p-4 rounded-2xl border border-border bg-card/60 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0">
+                <Lock className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-foreground tracking-tight">STRICT MODE</div>
+                <div className="text-[11px] text-muted-foreground truncate">
+                  Lock blocklist during Flow sessions
+                </div>
+              </div>
+            </div>
             <button
-              type="submit"
-              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-all active:scale-95 shadow-sm"
+              type="button"
+              disabled={locked}
+              onClick={() => {
+                setShieldStrictMode(!shield.strictMode);
+                showFeedback(!shield.strictMode ? "Strict mode enabled." : "Strict mode disabled.");
+              }}
+              className={cn(
+                "px-3 py-1.5 rounded-xl text-xs font-bold border transition-all active:scale-95 shrink-0",
+                shield.strictMode
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-secondary text-secondary-foreground border-border hover:bg-secondary/80",
+                locked && "opacity-50 cursor-not-allowed"
+              )}
             >
-              {activeTab.submitLabel}
+              {shield.strictMode ? "ON" : "OFF"}
             </button>
-          </form>
+          </div>
+
+          <div className="p-4 rounded-2xl border border-border bg-card/60 flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-8 h-8 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0">
+                <Clock className="w-4 h-4 text-muted-foreground" />
+              </div>
+              <div className="min-w-0">
+                <div className="text-xs font-bold text-foreground tracking-tight">SCHEDULE RULES</div>
+                <div className="text-[11px] text-muted-foreground truncate">
+                  {scheduleActive ? "Schedule actively enforcing" : "Auto-enable during specific hours"}
+                </div>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setListTab("schedules")}
+              className={cn(
+                "px-3 py-1.5 rounded-xl text-xs font-bold border transition-all active:scale-95 shrink-0",
+                listTab === "schedules"
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-secondary text-secondary-foreground border-border hover:bg-secondary/80"
+              )}
+            >
+              {listTab === "schedules" ? "OPEN" : "VIEW"}
+            </button>
+          </div>
+        </section>
+
+        <section className="space-y-4">
+          {listTab !== "schedules" && (
+            <form onSubmit={handleSubmit} className="flex gap-2">
+              <input
+                type="text"
+                value={input}
+                disabled={locked}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={locked ? "Blocklist locked during active Flow session" : activeTab.placeholder}
+                className={cn(
+                  "flex-1 px-4 py-2.5 rounded-xl text-xs font-mono bg-secondary/70 border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:border-muted-foreground transition-colors",
+                  locked && "opacity-50 cursor-not-allowed"
+                )}
+              />
+              <button
+                type="submit"
+                disabled={locked}
+                className={cn(
+                  "px-5 py-2.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-all active:scale-95 shadow-sm",
+                  locked && "opacity-50 cursor-not-allowed"
+                )}
+              >
+                {activeTab.submitLabel}
+              </button>
+            </form>
+          )}
 
           <div className="flex gap-1 p-1 rounded-xl bg-card border border-border">
             {TAB_CONFIG.map((tab) => (
@@ -208,6 +343,8 @@ export const ShieldPage: React.FC = () => {
               >
                 {tab.id === "apps" ? (
                   <AppWindow className="w-3.5 h-3.5" />
+                ) : tab.id === "schedules" ? (
+                  <Clock className="w-3.5 h-3.5" />
                 ) : (
                   <Globe className="w-3.5 h-3.5" />
                 )}
@@ -234,10 +371,14 @@ export const ShieldPage: React.FC = () => {
                   </span>
                   <button
                     onClick={() => removeBlockedSite(site)}
-                    className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-400 hover:bg-secondary transition-colors"
-                    title={`Unblock ${site}`}
+                    disabled={locked}
+                    className={cn(
+                      "p-1.5 rounded-lg text-muted-foreground transition-colors",
+                      locked ? "opacity-30 cursor-not-allowed" : "hover:text-rose-400 hover:bg-secondary"
+                    )}
+                    title={locked ? "Locked in active Flow session" : `Unblock ${site}`}
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    {locked ? <Lock className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
                   </button>
                 </div>
               ))}
@@ -249,7 +390,11 @@ export const ShieldPage: React.FC = () => {
                   <button
                     key={site}
                     onClick={() => handleQuickAdd(site, "site")}
-                    className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-secondary border border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground transition-colors"
+                    disabled={locked}
+                    className={cn(
+                      "px-2.5 py-1 rounded-full text-[10px] font-mono bg-secondary border border-border text-muted-foreground transition-colors",
+                      locked ? "opacity-30 cursor-not-allowed" : "hover:text-foreground hover:border-muted-foreground"
+                    )}
                   >
                     + {site}
                   </button>
@@ -277,10 +422,14 @@ export const ShieldPage: React.FC = () => {
                   </span>
                   <button
                     onClick={() => removeAllowedSite(site)}
-                    className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-400 hover:bg-secondary transition-colors"
-                    title={`Remove ${site} from allowed list`}
+                    disabled={locked}
+                    className={cn(
+                      "p-1.5 rounded-lg text-muted-foreground transition-colors",
+                      locked ? "opacity-30 cursor-not-allowed" : "hover:text-rose-400 hover:bg-secondary"
+                    )}
+                    title={locked ? "Locked in active Flow session" : `Remove ${site} from allowed list`}
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    {locked ? <Lock className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
                   </button>
                 </div>
               ))}
@@ -306,10 +455,14 @@ export const ShieldPage: React.FC = () => {
                   </span>
                   <button
                     onClick={() => removeBlockedApp(app)}
-                    className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-400 hover:bg-secondary transition-colors"
-                    title={`Unblock ${app}`}
+                    disabled={locked}
+                    className={cn(
+                      "p-1.5 rounded-lg text-muted-foreground transition-colors",
+                      locked ? "opacity-30 cursor-not-allowed" : "hover:text-rose-400 hover:bg-secondary"
+                    )}
+                    title={locked ? "Locked in active Flow session" : `Unblock ${app}`}
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    {locked ? <Lock className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
                   </button>
                 </div>
               ))}
@@ -330,12 +483,118 @@ export const ShieldPage: React.FC = () => {
                   <button
                     key={app}
                     onClick={() => handleQuickAdd(app, "app")}
-                    className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-secondary border border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground transition-colors"
+                    disabled={locked}
+                    className={cn(
+                      "px-2.5 py-1 rounded-full text-[10px] font-mono bg-secondary border border-border text-muted-foreground transition-colors",
+                      locked ? "opacity-30 cursor-not-allowed" : "hover:text-foreground hover:border-muted-foreground"
+                    )}
                   >
                     + {app}
                   </button>
                 ))}
               </div>
+            </div>
+          )}
+
+          {listTab === "schedules" && (
+            <div className="space-y-3">
+              {(shield.schedules || []).map((rule) => {
+                const ruleActive = isScheduleActive([rule]);
+                return (
+                  <div
+                    key={rule.id}
+                    className="p-4 rounded-2xl border border-border bg-card/60 space-y-4"
+                  >
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Calendar className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <div>
+                          <div className="text-xs font-bold text-foreground">
+                            {rule.name || "Schedule Rule"}
+                          </div>
+                          <div className="text-[11px] text-muted-foreground">
+                            Auto-enable shield on selected days and hours
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        {ruleActive && (
+                          <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                            Active Now
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => toggleShieldSchedule(rule.id)}
+                          className={cn(
+                            "px-3 py-1 rounded-xl text-xs font-bold border transition-all active:scale-95",
+                            rule.enabled
+                              ? "bg-primary text-primary-foreground border-primary"
+                              : "bg-secondary text-secondary-foreground border-border hover:bg-secondary/80"
+                          )}
+                        >
+                          {rule.enabled ? "ENABLED" : "ENABLE"}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1 border-t border-border/50">
+                      <div>
+                        <label className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground block mb-1">
+                          Start Time
+                        </label>
+                        <input
+                          type="time"
+                          value={rule.start}
+                          onChange={(e) =>
+                            updateShieldSchedule(rule.id, { start: e.target.value })
+                          }
+                          className="w-full px-3 py-1.5 rounded-xl text-xs font-mono tabular-nums bg-secondary/70 border border-border text-foreground focus:outline-none focus:border-muted-foreground"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground block mb-1">
+                          End Time
+                        </label>
+                        <input
+                          type="time"
+                          value={rule.end}
+                          onChange={(e) =>
+                            updateShieldSchedule(rule.id, { end: e.target.value })
+                          }
+                          className="w-full px-3 py-1.5 rounded-xl text-xs font-mono tabular-nums bg-secondary/70 border border-border text-foreground focus:outline-none focus:border-muted-foreground"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] uppercase tracking-wider font-semibold text-muted-foreground block mb-1.5">
+                        Active Days
+                      </label>
+                      <div className="flex flex-wrap gap-1.5">
+                        {DAYS_OF_WEEK.map((dayName, idx) => {
+                          const isSelected = rule.days.includes(idx);
+                          return (
+                            <button
+                              key={dayName}
+                              type="button"
+                              onClick={() => handleDayToggle(rule.id, rule.days, idx)}
+                              className={cn(
+                                "px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-colors",
+                                isSelected
+                                  ? "bg-primary text-primary-foreground border-primary"
+                                  : "bg-secondary/60 text-muted-foreground border-border hover:text-foreground"
+                              )}
+                            >
+                              {dayName}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </section>

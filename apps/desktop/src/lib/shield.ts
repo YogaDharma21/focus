@@ -1,9 +1,32 @@
+import {
+  isBlocklistLocked as utilIsBlocklistLocked,
+  isScheduleActive as utilIsScheduleActive,
+  getActiveSchedule as utilGetActiveSchedule,
+  DEFAULT_SHIELD_SCHEDULES,
+} from "@focus/utils";
+
+export interface ShieldSchedule {
+  id: string;
+  name?: string;
+  enabled: boolean;
+  start: string; // "HH:mm" (24h)
+  end: string;   // "HH:mm" (24h)
+  days: number[]; // 0 = Sun, 1 = Mon, ..., 6 = Sat
+}
+
 export interface ShieldConfig {
   enabled: boolean;
   blockedSites: string[];
   allowedSites: string[];
   blockedApps: string[];
+  strictMode: boolean;
+  schedules: ShieldSchedule[];
 }
+
+export { DEFAULT_SHIELD_SCHEDULES };
+export const isScheduleActive = utilIsScheduleActive;
+export const getActiveSchedule = utilGetActiveSchedule;
+export const isBlocklistLocked = utilIsBlocklistLocked;
 
 export interface ShieldViolation {
   kind: "app" | "site";
@@ -38,6 +61,8 @@ export const DEFAULT_SHIELD_CONFIG: ShieldConfig = {
   blockedSites: DEFAULT_BLOCKED_SITES,
   allowedSites: [],
   blockedApps: DEFAULT_BLOCKED_APPS,
+  strictMode: false,
+  schedules: DEFAULT_SHIELD_SCHEDULES,
 };
 
 /** Strip scheme, www prefix, path, and port from a user-entered domain. */
@@ -177,11 +202,18 @@ export function matchBlockedApp(
   return null;
 }
 
-/** Shield only enforces while a Flow session is actively running. */
+/** Shield enforces during active Flow sessions or during scheduled shield hours. */
 export function isBlockingRequired(
-  shieldEnabled: boolean,
+  shield: ShieldConfig | boolean,
   isActive: boolean,
-  timerState: "FLOW" | "BREAK",
+  timerState: "FLOW" | "BREAK" | string,
+  now: Date = new Date(),
 ): boolean {
-  return shieldEnabled && isActive && timerState === "FLOW";
+  if (typeof shield === "boolean") {
+    return shield && isActive && timerState === "FLOW";
+  }
+  const inSchedule = isScheduleActive(shield.schedules, now);
+  const isEnabled = shield.enabled || inSchedule;
+  const inFlow = isActive && timerState === "FLOW";
+  return isEnabled && (inFlow || inSchedule);
 }
