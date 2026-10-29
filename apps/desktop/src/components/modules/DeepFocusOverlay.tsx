@@ -27,6 +27,8 @@ export const DeepFocusOverlay: React.FC = () => {
     setVolume,
     autoStartBreak,
     autoStartFlow,
+    tasks,
+    selectedTaskId,
   } = useDesktopStore();
 
   const [showDistractionMenu, setShowDistractionMenu] = useState(false);
@@ -70,11 +72,14 @@ export const DeepFocusOverlay: React.FC = () => {
     const durationWorked = Math.max(1, flowTimeElapsed);
     const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
 
+    const focusedTask = tasks.find((t) => t.id === selectedTaskId);
     addSession({
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
       duration: durationWorked,
       mode: 'STOPWATCH',
+      taskId: focusedTask?.id,
+      taskName: focusedTask?.text,
     });
 
     const breakMins = Math.floor(calculatedBreakSeconds / 60);
@@ -178,6 +183,16 @@ export const DeepFocusOverlay: React.FC = () => {
       <div />
 
       <div className="flex flex-col items-center justify-center space-y-6 my-auto">
+        {(() => {
+          const focused = tasks.find((t) => t.id === selectedTaskId);
+          if (!focused) return null;
+          return (
+            <div className="px-3.5 py-1.5 rounded-full bg-card border border-border text-xs font-medium text-foreground tracking-wide max-w-sm truncate shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)]">
+              {focused.text}
+            </div>
+          );
+        })()}
+
         <h1 className="text-[120px] md:text-[150px] font-extrabold tracking-tight text-foreground leading-none font-sans select-none">
           {timeString}
         </h1>

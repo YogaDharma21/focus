@@ -24,12 +24,21 @@ function ControlButtons({
 }: {
   size?: "normal" | "small"
 }) {
-  const btnSize = size === "small" ? "w-10 h-10" : "w-12 h-12"
-  const playSize = size === "small" ? "w-14 h-14" : "w-16 h-16"
-  const iconSize = size === "small" ? "size-4" : "size-5"
+  const btnSize =
+    size === "small"
+      ? "w-8 h-8 sm:w-10 sm:h-10"
+      : "w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12"
+  const playSize =
+    size === "small"
+      ? "w-11 h-11 sm:w-14 sm:h-14"
+      : "w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16"
+  const iconSize =
+    size === "small" ? "size-3.5 sm:size-4" : "size-4 sm:size-5"
+  const playIconSize =
+    size === "small" ? "size-4 sm:size-5" : "size-4 sm:size-5 md:size-6"
 
   return (
-    <div className="flex items-center justify-center gap-3">
+    <div className="flex items-center justify-center gap-2 sm:gap-3">
       <button
         className={`${btnSize} rounded-2xl bg-zinc-900 border border-zinc-800/80 flex items-center justify-center text-zinc-400`}
       >
@@ -43,7 +52,7 @@ function ControlButtons({
       <button
         className={`${playSize} rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground shadow-xl flex items-center justify-center`}
       >
-        <Play className={`${size === "small" ? "size-5" : "size-6"} fill-current`} />
+        <Play className={`${playIconSize} fill-current`} />
       </button>
       <button
         className={`${btnSize} rounded-2xl bg-zinc-900 border border-zinc-800/80 flex items-center justify-center text-zinc-400`}
@@ -92,7 +101,7 @@ export function WebTimerPreview() {
   return (
     <div className="w-full bg-background rounded-2xl overflow-hidden border border-border">
       {/* Header */}
-      <div className="flex items-center justify-between px-5 py-3 border-b border-border">
+      <div className="flex items-center justify-between px-3.5 sm:px-5 py-3 border-b border-border">
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-lg bg-primary flex items-center justify-center">
             <Timer className="size-3.5 text-primary-foreground" />
@@ -119,18 +128,18 @@ export function WebTimerPreview() {
       </div>
 
       {/* Content */}
-      <div className="flex flex-col items-center px-5 py-6">
+      <div className="flex flex-col items-center px-3 sm:px-5 py-6">
         {/* Mode Switcher */}
-        <div className="flex gap-2 p-1 bg-secondary/40 rounded-[10px] border border-border/30 mb-4">
-          <div className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-sm font-medium bg-primary text-primary-foreground shadow-md">
+        <div className="flex gap-1.5 sm:gap-2 p-1 bg-secondary/40 rounded-[10px] border border-border/30 mb-4 max-w-full overflow-x-auto">
+          <div className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-[10px] text-xs sm:text-sm font-medium bg-primary text-primary-foreground shadow-md">
             <Timer className="size-3.5" />
             <span>Flow</span>
           </div>
-          <div className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-sm font-medium text-muted-foreground">
+          <div className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-[10px] text-xs sm:text-sm font-medium text-muted-foreground">
             <Coffee className="size-3.5" />
             <span>Break</span>
           </div>
-          <div className="flex items-center gap-1.5 px-4 py-2 rounded-[10px] text-sm font-medium text-muted-foreground">
+          <div className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-[10px] text-xs sm:text-sm font-medium text-muted-foreground">
             <Clock className="size-3.5" />
             <span>Focus</span>
           </div>
@@ -147,12 +156,12 @@ export function WebTimerPreview() {
         </div>
 
         {/* Timer */}
-        <div className="text-[5rem] md:text-[7rem] font-bold leading-none tracking-tighter tabular-nums text-foreground select-none font-sans">
+        <div className="text-6xl sm:text-[5rem] md:text-[7rem] font-bold leading-none tracking-tighter tabular-nums text-foreground select-none font-sans">
           25:00
         </div>
 
         {/* Progress Bar */}
-        <div className="w-full max-w-xs h-1.5 bg-zinc-800/80 rounded-full mb-5">
+        <div className="w-full max-w-[240px] sm:max-w-xs h-1.5 bg-zinc-800/80 rounded-full mb-5">
           <div className="bg-zinc-200 h-full rounded-full w-1/3" />
         </div>
 

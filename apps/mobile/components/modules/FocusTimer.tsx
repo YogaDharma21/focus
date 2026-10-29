@@ -22,6 +22,8 @@ import {
   AlertTriangle,
   Flame,
   ShieldAlert,
+  Target,
+  X,
 } from 'lucide-react-native';
 
 const DISTRACTION_CATEGORIES = [
@@ -48,8 +50,12 @@ export function FocusTimer() {
     autoStartFlow,
     sessions,
     shield,
+    tasks,
+    selectedTaskId,
+    setSelectedTaskId,
   } = useAppStore();
 
+  const activeTask = tasks.find((t) => t.id === selectedTaskId);
   const [distractionModalOpen, setDistractionModalOpen] = useState(false);
   const [cycleCount, setCycleCount] = useState(1);
 
@@ -118,6 +124,8 @@ export function FocusTimer() {
         date: new Date().toISOString(),
         duration: flowDuration,
         mode: 'STOPWATCH',
+        taskId: activeTask?.id,
+        taskName: activeTask?.text,
       });
       setCycleCount((prev) => prev + 1);
     }
@@ -143,6 +151,36 @@ export function FocusTimer() {
 
   return (
     <View style={styles.container}>
+      {/* Active Task Link Banner */}
+      {activeTask ? (
+        <View
+          style={[
+            styles.taskStrip,
+            { backgroundColor: colors.card, borderColor: colors.emerald },
+          ]}
+        >
+          <View style={styles.taskStripLeft}>
+            <View style={[styles.taskStripDot, { backgroundColor: colors.emeraldBg }]}>
+              <Target size={13} color={colors.emerald} />
+            </View>
+            <View style={styles.taskStripInfo}>
+              <Text style={[styles.taskStripTag, { color: colors.emerald }]}>FOCUS TASK</Text>
+              <Text style={[styles.taskStripTitle, { color: colors.text }]} numberOfLines={1}>
+                {activeTask.text}
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            onPress={() => setSelectedTaskId(null)}
+            style={[styles.taskStripClose, { backgroundColor: colors.surfaceInset }]}
+            activeOpacity={0.7}
+            accessibilityLabel="Unlink task"
+          >
+            <X size={13} color={colors.mutedText} />
+          </TouchableOpacity>
+        </View>
+      ) : null}
+
       {/* ── ROW 1: TWO HALF-WIDTH CARDS (matching Image 1) ── */}
       <View style={styles.row2Cols}>
         {/* Card 1 (Left): Flow Mode with Circular Ring */}
@@ -172,8 +210,8 @@ export function FocusTimer() {
             </TouchableOpacity>
           </View>
           <View style={styles.cardBottomCol}>
-            <Text style={[styles.cardTitle, { color: colors.text }]}>
-              {timerState === 'BREAK' ? 'Smart break' : 'Chest focus'}
+            <Text style={[styles.cardTitle, { color: colors.text }]} numberOfLines={1}>
+              {timerState === 'BREAK' ? 'Smart break' : activeTask ? activeTask.text : 'Chest focus'}
             </Text>
             <Text style={[styles.cardSubtext, { color: colors.mutedText }]}>
               {isActive ? 'Active flow' : 'Continuous'}
@@ -403,6 +441,44 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     paddingBottom: 20,
+  },
+  taskStrip: {
+    width: '100%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  taskStripLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    flex: 1,
+    marginRight: 10,
+  },
+  taskStripDot: {
+    padding: 6,
+    borderRadius: 8,
+  },
+  taskStripInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  taskStripTag: {
+    fontSize: 9,
+    fontWeight: '700',
+    letterSpacing: 1,
+  },
+  taskStripTitle: {
+    fontSize: 13,
+    fontWeight: '500',
+  },
+  taskStripClose: {
+    padding: 6,
+    borderRadius: 8,
   },
   row2Cols: {
     flexDirection: 'row',

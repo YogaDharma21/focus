@@ -21,6 +21,8 @@ export function DynamicIslandTimer() {
         soundEffectEnabled,
         soundEnabled,
         autoStartBreak,
+        tasks,
+        selectedTaskId,
     } = useAppStore(
         useShallow((s) => ({
             timeLeft: s.timeLeft,
@@ -35,6 +37,8 @@ export function DynamicIslandTimer() {
             soundEffectEnabled: s.soundEffectEnabled,
             soundEnabled: s.soundEnabled ?? true,
             autoStartBreak: s.autoStartBreak ?? true,
+            tasks: s.tasks,
+            selectedTaskId: s.selectedTaskId,
         }))
     );
     const [isExpanded, setIsExpanded] = useState(false);
@@ -98,11 +102,14 @@ export function DynamicIslandTimer() {
 
         const duration = timeLeft;
         if (duration > 0) {
+            const focusedTask = tasks.find((t) => t.id === selectedTaskId);
             addSession({
                 id: crypto.randomUUID(),
                 date: new Date().toISOString(),
                 duration,
                 mode: "STOPWATCH",
+                taskId: focusedTask?.id,
+                taskName: focusedTask?.text,
             });
         }
 

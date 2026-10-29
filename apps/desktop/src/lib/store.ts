@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { TaskItem, TaskPriority } from "@focus/types";
 import {
   DEFAULT_SHIELD_CONFIG,
   ShieldConfig,
@@ -8,13 +9,15 @@ import {
   normalizeSite,
 } from "./shield";
 
-export type ViewType = "FOCUS" | "JOURNAL" | "SHIELD" | "SETTINGS";
+export type ViewType = "FOCUS" | "TASKS" | "JOURNAL" | "SHIELD" | "SETTINGS";
 
 export interface Session {
   id: string;
   date: string;
   duration: number;
   mode: "STOPWATCH";
+  taskId?: string;
+  taskName?: string;
 }
 
 export interface Distraction {
@@ -75,6 +78,18 @@ export interface DesktopState {
   setSessionStartTime: (time: string | null) => void;
   setAutoStartBreak: (enabled: boolean) => void;
   setAutoStartFlow: (enabled: boolean) => void;
+
+  // Tasks
+  tasks: TaskItem[];
+  selectedTaskId: string | null;
+  addTask: (task: { text: string; priority?: TaskPriority; deadline?: string }) => void;
+  toggleTask: (id: string) => void;
+  updateTask: (id: string, updates: Partial<TaskItem>) => void;
+  deleteTask: (id: string) => void;
+  addSubtask: (taskId: string, text: string) => void;
+  toggleSubtask: (taskId: string, subtaskId: string) => void;
+  deleteSubtask: (taskId: string, subtaskId: string) => void;
+  setSelectedTaskId: (id: string | null) => void;
 
   // Sessions
   sessions: Session[];
@@ -194,6 +209,83 @@ export const useDesktopStore = create<DesktopState>()(
       setAutoStartBreak: (enabled) => set({ autoStartBreak: enabled }),
       autoStartFlow: true,
       setAutoStartFlow: (enabled) => set({ autoStartFlow: enabled }),
+
+      // Tasks
+      tasks: [],
+      selectedTaskId: null,
+      addTask: ({ text, priority = "medium", deadline }) =>
+        set((state) => ({
+          tasks: [
+            {
+              id: crypto.randomUUID(),
+              text: text.trim(),
+              completed: false,
+              priority,
+              deadline: deadline || undefined,
+              subtasks: [],
+            },
+            ...state.tasks,
+          ],
+        })),
+      toggleTask: (id) =>
+        set((state) => ({
+          tasks: state.tasks.map((task) =>
+            task.id === id
+              ? {
+                  ...task,
+                  completed: !task.completed,
+                  completedAt: !task.completed ? new Date().toISOString() : undefined,
+                }
+              : task
+          ),
+        })),
+      updateTask: (id, updates) =>
+        set((state) => ({
+          tasks: state.tasks.map((task) =>
+            task.id === id ? { ...task, ...updates } : task
+          ),
+        })),
+      deleteTask: (id) =>
+        set((state) => ({
+          tasks: state.tasks.filter((task) => task.id !== id),
+          selectedTaskId: state.selectedTaskId === id ? null : state.selectedTaskId,
+        })),
+      addSubtask: (taskId, text) =>
+        set((state) => ({
+          tasks: state.tasks.map((task) => {
+            if (task.id !== taskId) return task;
+            const subtasks = [
+              ...(task.subtasks || []),
+              {
+                id: crypto.randomUUID(),
+                text: text.trim(),
+                completed: false,
+              },
+            ];
+            return { ...task, subtasks };
+          }),
+        })),
+      toggleSubtask: (taskId, subtaskId) =>
+        set((state) => ({
+          tasks: state.tasks.map((task) => {
+            if (task.id !== taskId) return task;
+            const subtasks = (task.subtasks || []).map((sub) =>
+              sub.id === subtaskId ? { ...sub, completed: !sub.completed } : sub
+            );
+            return { ...task, subtasks };
+          }),
+        })),
+      deleteSubtask: (taskId, subtaskId) =>
+        set((state) => ({
+          tasks: state.tasks.map((task) => {
+            if (task.id !== taskId) return task;
+            return {
+              ...task,
+              subtasks: (task.subtasks || []).filter((sub) => sub.id !== subtaskId),
+            };
+          }),
+        })),
+      setSelectedTaskId: (id) => set({ selectedTaskId: id }),
 
       // Sessions
       sessions: [

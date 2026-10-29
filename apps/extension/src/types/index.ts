@@ -1,4 +1,8 @@
-export type TimerMode = "FLOW";
+import type { TaskItem, TaskPriority, SubtaskItem } from "@focus/types";
+
+export type { TaskItem, TaskPriority, SubtaskItem };
+
+export type TimerMode = "STOPWATCH" | "FLOW";
 export type TimerState = "FLOW" | "BREAK";
 export type ThemeMode = "light" | "dark";
 
@@ -7,6 +11,8 @@ export interface Session {
   date: string;
   duration: number; // in seconds
   mode: TimerMode;
+  taskId?: string;
+  taskName?: string;
 }
 
 export interface Distraction {
@@ -38,6 +44,9 @@ export interface AppStateData {
   sessionStartTime: string | null;
   
   timerSettings?: TimerSettings;
+
+  tasks: TaskItem[];
+  selectedTaskId?: string | null;
 
   sessions: Session[];
   distractions: Distraction[];

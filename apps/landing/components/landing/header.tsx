@@ -17,8 +17,6 @@ function GithubIcon({ className }: { className?: string }) {
 }
 
 const navLinks = [
-  { href: "#ecosystem", label: "Ecosystem" },
-  { href: "#interactive-demo", label: "Try Demo" },
   { href: "#features", label: "Features" },
   { href: "#download", label: "Downloads" },
   { href: "#faq", label: "FAQ" },
@@ -32,18 +30,18 @@ export function Header() {
       <div className="relative">
         <nav
           aria-label="Primary navigation"
-          className="relative bg-card/95 backdrop-blur-md border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-full px-4 py-2 sm:px-5 sm:py-2.5 flex items-center justify-between"
+          className="relative bg-card/95 backdrop-blur-md border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-full px-3 sm:px-5 py-2 sm:py-2.5 flex items-center justify-between"
         >
           {/* Brand Logo */}
-          <a href="#" className="flex items-center gap-2.5 shrink-0" aria-label="FocusTrackers Home">
+          <a href="#" className="flex items-center gap-2 sm:gap-2.5 shrink-0" aria-label="FocusTrackers Home">
             <Image
               src="/icon.png"
               alt="FocusTrackers Application Icon"
               width={26}
               height={26}
-              className="size-6.5 rounded-lg object-contain"
+              className="size-6 sm:size-6.5 rounded-lg object-contain"
             />
-            <span className="font-bold text-sm tracking-tight text-foreground">
+            <span className="font-bold text-xs sm:text-sm tracking-tight text-foreground">
               FocusTrackers
             </span>
           </a>
@@ -62,12 +60,12 @@ export function Header() {
           </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-2.5 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-2.5 shrink-0">
             <a
               href="https://github.com/YogaDharma21/focus"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full"
+              className="hidden sm:inline-flex p-1.5 text-muted-foreground hover:text-foreground transition-colors rounded-full"
               title="GitHub Repository"
               aria-label="GitHub Repository"
             >
@@ -77,7 +75,7 @@ export function Header() {
               href="https://app.focustrackers.my.id"
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 sm:px-3.5 rounded-full text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 transition-opacity"
             >
               <span>Launch App</span>
               <ExternalLink className="size-3" />

@@ -14,6 +14,7 @@ interface CustomToggleSwitchProps {
 }
 
 function CustomToggleSwitch({ value, onToggle, disabled = false }: CustomToggleSwitchProps) {
+  const { colors } = useTheme();
   const [animatedValue] = useState(() => new Animated.Value(value ? 1 : 0));
 
   useEffect(() => {

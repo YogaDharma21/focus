@@ -10,7 +10,7 @@ import { MediaPlayer } from '@/components/modules/MediaPlayer';
 import { DeepFocusOverlay } from '@/components/modules/DeepFocusOverlay';
 import { DynamicIslandTimer } from '@/components/modules/DynamicIslandTimer';
 import { ActiveSessionCard } from '@/components/modules/ActiveSessionCard';
-import { LayoutGrid, Calendar, Shield, SlidersHorizontal } from 'lucide-react-native';
+import { LayoutGrid, Calendar, Shield, SlidersHorizontal, CheckSquare } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useAppStore } from '@/lib/store';
@@ -132,6 +132,13 @@ export default function TabLayout() {
             options={{
               title: 'Focus',
               tabBarIcon: ({ color }) => <LayoutGrid size={22} color={color} />,
+            }}
+          />
+          <Tabs.Screen
+            name="tasks"
+            options={{
+              title: 'Tasks',
+              tabBarIcon: ({ color }) => <CheckSquare size={22} color={color} />,
             }}
           />
           <Tabs.Screen

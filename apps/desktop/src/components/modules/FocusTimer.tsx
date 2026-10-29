@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { playCompletionSound } from '../../lib/sound';
 import {
   Play, Pause, RotateCcw, AlertTriangle, Focus, CheckCircle2,
-  Clock, Coffee
+  Clock, Coffee, Target, X
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
@@ -26,6 +26,9 @@ export const FocusTimer: React.FC = () => {
     setDeepFocusMode,
     autoStartBreak,
     autoStartFlow,
+    tasks,
+    selectedTaskId,
+    setSelectedTaskId,
   } = useDesktopStore();
 
   const [showDistractionMenu, setShowDistractionMenu] = useState(false);
@@ -54,11 +57,14 @@ export const FocusTimer: React.FC = () => {
     const durationWorked = Math.max(1, flowTimeElapsed);
     const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
 
+    const focusedTask = tasks.find((t) => t.id === selectedTaskId);
     addSession({
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
       duration: durationWorked,
       mode: 'STOPWATCH',
+      taskId: focusedTask?.id,
+      taskName: focusedTask?.text,
     });
 
     const breakMins = Math.floor(calculatedBreakSeconds / 60);
@@ -115,6 +121,46 @@ export const FocusTimer: React.FC = () => {
         <h1 className="text-[100px] md:text-[120px] font-extrabold tracking-tighter text-foreground leading-none font-sans select-none">
           {formatDisplayTime(activeSeconds)}
         </h1>
+
+        {/* Focused Task Pill / Selector */}
+        {(() => {
+          const focused = tasks.find((t) => t.id === selectedTaskId);
+          if (focused) {
+            return (
+              <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs text-foreground shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] max-w-xs truncate animate-in fade-in duration-300">
+                <Target className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                <span className="truncate">{focused.text}</span>
+                <button
+                  onClick={() => setSelectedTaskId(null)}
+                  className="text-muted-foreground hover:text-foreground ml-1 p-0.5 rounded cursor-pointer transition-colors"
+                  title="Clear focused task"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
+            );
+          }
+          const activeTasks = tasks.filter((t) => !t.completed);
+          if (activeTasks.length > 0) {
+            return (
+              <div className="flex items-center gap-1.5">
+                <select
+                  value={selectedTaskId || ""}
+                  onChange={(e) => setSelectedTaskId(e.target.value || null)}
+                  className="bg-card border border-border text-[11px] text-muted-foreground rounded-full px-3 py-1 focus:outline-none cursor-pointer max-w-[220px] truncate"
+                >
+                  <option value="" disabled>Link a task to focus...</option>
+                  {activeTasks.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.text}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            );
+          }
+          return null;
+        })()}
       </div>
 
       <div className="w-full max-w-sm h-1.5 bg-muted/80 rounded-full overflow-hidden my-2">

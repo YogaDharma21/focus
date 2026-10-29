@@ -64,6 +64,8 @@ export const DEFAULT_STATE: AppStateData = {
     autoStartBreak: false,
     autoStartTimer: false
   },
+  tasks: [],
+  selectedTaskId: null,
   soundEnabled: true,
   musicEnabled: true,
   isMusicPlaying: false,
@@ -228,6 +230,10 @@ function migrateState(fresh: AppStateData): AppStateData {
   if (fresh.shield && !('allowedSites' in fresh.shield)) {
     fresh.shield = Object.assign({}, fresh.shield, { allowedSites: [] });
   }
+  if (!Array.isArray(fresh.tasks)) {
+    fresh.tasks = [];
+  }
+  fresh.selectedTaskId = fresh.selectedTaskId ?? null;
   if (!fresh.timerSettings) {
     fresh.timerSettings = {
       autoStartBreak: false,
