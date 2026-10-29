@@ -34,6 +34,17 @@ export const DEFAULT_STATE: AppStateData = {
   distractions: [],
   shield: {
     enabled: true,
+    strictMode: false,
+    schedules: [
+      {
+        id: "work-hours",
+        name: "Work Hours",
+        enabled: false,
+        start: "09:00",
+        end: "17:00",
+        days: [1, 2, 3, 4, 5],
+      },
+    ],
     blockedSites: [
       "facebook.com",
       "twitter.com",
@@ -225,8 +236,27 @@ function migrateState(fresh: AppStateData): AppStateData {
       return s;
     });
   }
-  if (fresh.shield && !('allowedSites' in fresh.shield)) {
-    fresh.shield = Object.assign({}, fresh.shield, { allowedSites: [] });
+  if (fresh.shield) {
+    if (!('allowedSites' in fresh.shield)) {
+      fresh.shield = Object.assign({}, fresh.shield, { allowedSites: [] });
+    }
+    if (!('strictMode' in fresh.shield)) {
+      fresh.shield = Object.assign({}, fresh.shield, { strictMode: false });
+    }
+    if (!('schedules' in fresh.shield) || !Array.isArray(fresh.shield.schedules)) {
+      fresh.shield = Object.assign({}, fresh.shield, {
+        schedules: [
+          {
+            id: "work-hours",
+            name: "Work Hours",
+            enabled: false,
+            start: "09:00",
+            end: "17:00",
+            days: [1, 2, 3, 4, 5],
+          },
+        ],
+      });
+    }
   }
   if (!fresh.timerSettings) {
     fresh.timerSettings = {

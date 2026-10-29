@@ -16,10 +16,21 @@ export interface Distraction {
   website?: string;
 }
 
+export interface ShieldSchedule {
+  id: string;
+  name?: string;
+  enabled: boolean;
+  start: string; // "HH:mm" (24h)
+  end: string;   // "HH:mm" (24h)
+  days: number[]; // 0 = Sun, 1 = Mon, ..., 6 = Sat
+}
+
 export interface ShieldConfig {
   enabled: boolean;
   blockedSites: string[];
   allowedSites: string[];
+  strictMode?: boolean;
+  schedules?: ShieldSchedule[];
 }
 
 export interface TimerSettings {

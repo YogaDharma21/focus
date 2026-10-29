@@ -1,9 +1,11 @@
 import { getStoredState, saveStoredState, getWeeklyMinutesFromSessions, getTodayMinutesFromSessions, calculateStreaksFromSessions } from "../lib/storage";
-import { AppStateData } from "../types";
+import { AppStateData, ShieldSchedule } from "../types";
+import { isBlockingRequired } from "../lib/shield";
 
 let timerInterval: ReturnType<typeof setInterval> | null = null;
 
 const KEEPALIVE_ALARM = "focus-keepalive";
+const SHIELD_SCHEDULE_ALARM = "focus-shield-schedule";
 const OFFSCREEN_DOCUMENT_PATH = "offscreen.html";
 
 // ─── Auto-Pause State Persistence ─────────────────────────────────────────
@@ -314,14 +316,15 @@ function isUrlBlocked(targetUrl: string, blockedSites: string[], allowedSites: s
   });
 }
 
+function isShieldBlockingActive(state: AppStateData): boolean {
+  return isBlockingRequired(state.shield, state.isActive, state.timerState);
+}
+
 async function enforceTabBlocking(state?: AppStateData) {
   if (typeof chrome === "undefined" || !chrome.tabs) return;
 
   const currentState = state || (await getStoredState());
-  const isBlockingRequired =
-    currentState.shield.enabled &&
-    currentState.isActive &&
-    currentState.timerState === "FLOW";
+  const isBlockingRequired = isShieldBlockingActive(currentState);
 
   if (!isBlockingRequired) return;
 
@@ -653,7 +656,7 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
     const url = changeInfo.url || tab.url;
     if (url) {
       const state = await getStoredState();
-      if (state.shield.enabled && state.isActive && state.timerState === "FLOW") {
+      if (isShieldBlockingActive(state)) {
         if (isUrlBlocked(url, state.shield.blockedSites, state.shield.allowedSites)) {
           const blockedPageUrl = chrome.runtime.getURL(
             `blocked.html?target=${encodeURIComponent(url)}`
@@ -669,7 +672,7 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
 
   chrome.tabs.onActivated.addListener(async (activeInfo) => {
     const state = await getStoredState();
-    if (state.shield.enabled && state.isActive && state.timerState === "FLOW") {
+    if (isShieldBlockingActive(state)) {
       chrome.tabs.get(activeInfo.tabId, (tab) => {
         if (tab?.id && tab.url && isUrlBlocked(tab.url, state.shield.blockedSites, state.shield.allowedSites)) {
           const blockedPageUrl = chrome.runtime.getURL(
@@ -714,7 +717,17 @@ if (typeof chrome !== "undefined" && chrome.alarms) {
       } else if (!state.isActive) {
         stopBackgroundTimer();
       }
+      if (isShieldBlockingActive(state)) {
+        enforceTabBlocking(state);
+      }
       scheduleSyncExternalAudioState("alarm");
+    } else if (alarm.name === SHIELD_SCHEDULE_ALARM) {
+      const state = await getStoredState();
+      if (isShieldBlockingActive(state)) {
+        enforceTabBlocking(state);
+      } else if (!state.isActive) {
+        restoreBlockedTabs();
+      }
     }
   });
 }
@@ -730,22 +743,29 @@ if (typeof chrome !== "undefined" && chrome.storage) {
 
       const wasActive = Boolean(oldState?.isActive);
       const isNowActive = Boolean(newState.isActive);
+      const oldShield = oldState ? JSON.stringify(oldState.shield) : "";
+      const newShield = JSON.stringify(newState.shield);
+      const oldBlocking = oldState ? isShieldBlockingActive(oldState) : false;
+      const newBlocking = isShieldBlockingActive(newState);
 
       if (isNowActive) {
         if (timerInterval === null) {
           startBackgroundTimer();
-        } else {
-          // If shield was toggled or blocked sites updated during an active session
-          const oldShield = oldState ? JSON.stringify(oldState.shield) : "";
-          const newShield = JSON.stringify(newState.shield);
-          if (oldShield !== newShield && newState.shield.enabled) {
-            enforceTabBlocking(newState);
-          }
+        } else if (oldShield !== newShield && newBlocking) {
+          enforceTabBlocking(newState);
         }
       } else {
         stopBackgroundTimer();
         updateBadge(newState.timeLeft || 0, false, newState.timerState || "FLOW");
-        if (wasActive) {
+        if (wasActive && !newBlocking) {
+          restoreBlockedTabs();
+        }
+      }
+
+      if (oldShield !== newShield) {
+        if (newBlocking && !oldBlocking) {
+          enforceTabBlocking(newState);
+        } else if (!newBlocking && oldBlocking && !isNowActive) {
           restoreBlockedTabs();
         }
       }
@@ -773,6 +793,9 @@ if (typeof chrome !== "undefined" && chrome.runtime) {
       setMusicAutoPaused(false);
       setMusicCurrentTime(0);
       clearAudioDelayTracking();
+      if (typeof chrome !== "undefined" && chrome.alarms) {
+        chrome.alarms.create(SHIELD_SCHEDULE_ALARM, { periodInMinutes: 1 });
+      }
       scheduleSyncExternalAudioState("runtime.onStartup");
     });
   }
@@ -781,6 +804,9 @@ if (typeof chrome !== "undefined" && chrome.runtime) {
       setMusicAutoPaused(false);
       setMusicCurrentTime(0);
       clearAudioDelayTracking();
+      if (typeof chrome !== "undefined" && chrome.alarms) {
+        chrome.alarms.create(SHIELD_SCHEDULE_ALARM, { periodInMinutes: 1 });
+      }
       scheduleSyncExternalAudioState("runtime.onInstalled");
     });
   }
@@ -793,7 +819,15 @@ getStoredState().then(async (state) => {
     startBackgroundTimer();
   } else {
     updateBadge(state.timeLeft, false, state.timerState);
-    restoreBlockedTabs();
+    if (!isShieldBlockingActive(state)) {
+      restoreBlockedTabs();
+    }
+  }
+  if (isShieldBlockingActive(state)) {
+    enforceTabBlocking(state);
+  }
+  if (typeof chrome !== "undefined" && chrome.alarms) {
+    chrome.alarms.create(SHIELD_SCHEDULE_ALARM, { periodInMinutes: 1 });
   }
   scheduleSyncExternalAudioState("init");
 });

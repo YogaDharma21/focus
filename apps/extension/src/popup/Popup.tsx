@@ -14,6 +14,7 @@ import {
   ExternalLink,
   Flame,
   Clock,
+  Lock,
   CheckCircle2,
   Circle,
   ShieldAlert,
@@ -41,8 +42,9 @@ import {
 } from "lucide-react";
 import { DeepFocusOverlay } from "./components/DeepFocusOverlay";
 import { Progress } from "../components/ui/progress";
-import { AppStateData, ThemeMode } from "../types";
+import { AppStateData, ThemeMode, ShieldSchedule } from "../types";
 import { getStoredState, saveStoredState, subscribeToStateChanges, getCachedState, DEFAULT_STATE, getWeeklyMinutesFromSessions, getTodayMinutesFromSessions, calculateStreaksFromSessions, DAYS_OF_WEEK } from "../lib/storage";
+import { isBlocklistLocked, isBlockingRequired, isScheduleActive, getActiveSchedule } from "../lib/shield";
 import "../index.css";
 
 const DISTRACTION_CATEGORIES = [
@@ -65,7 +67,7 @@ export function Popup() {
 
   // Local inputs
   const [newSiteUrl, setNewSiteUrl] = useState("");
-  const [shieldListTab, setShieldListTab] = useState<"blocked" | "unblocked">("blocked");
+  const [shieldListTab, setShieldListTab] = useState<"blocked" | "unblocked" | "schedules">("blocked");
 
   // Settings inputs
 
@@ -337,6 +339,7 @@ export function Popup() {
   // Shield Handlers
   const addShieldSite = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isBlocklistLocked(state.shield, state.isActive, state.timerState)) return;
     if (!newSiteUrl.trim()) return;
     let clean = newSiteUrl.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "");
     if (!clean) return;
@@ -349,7 +352,7 @@ export function Popup() {
           blockedSites: [...state.shield.blockedSites, clean]
         }
       });
-    } else {
+    } else if (shieldListTab === "unblocked") {
       if (state.shield.allowedSites.includes(clean)) return;
       updateState({
         shield: {
@@ -362,6 +365,7 @@ export function Popup() {
   };
 
   const removeBlockedSite = (site: string) => {
+    if (isBlocklistLocked(state.shield, state.isActive, state.timerState)) return;
     updateState({
       shield: {
         ...state.shield,
@@ -371,12 +375,42 @@ export function Popup() {
   };
 
   const removeAllowedSite = (site: string) => {
+    if (isBlocklistLocked(state.shield, state.isActive, state.timerState)) return;
     updateState({
       shield: {
         ...state.shield,
         allowedSites: state.shield.allowedSites.filter(s => s !== site)
       }
     });
+  };
+
+  const toggleShieldSchedule = (id: string) => {
+    updateState({
+      shield: {
+        ...state.shield,
+        schedules: (state.shield.schedules || []).map((s) =>
+          s.id === id ? { ...s, enabled: !s.enabled } : s
+        ),
+      },
+    });
+  };
+
+  const updateShieldSchedule = (id: string, updates: Partial<ShieldSchedule>) => {
+    updateState({
+      shield: {
+        ...state.shield,
+        schedules: (state.shield.schedules || []).map((s) =>
+          s.id === id ? { ...s, ...updates } : s
+        ),
+      },
+    });
+  };
+
+  const handleScheduleDayToggle = (id: string, currentDays: number[], dayIndex: number) => {
+    const updated = currentDays.includes(dayIndex)
+      ? currentDays.filter((d) => d !== dayIndex)
+      : [...currentDays, dayIndex].sort();
+    updateShieldSchedule(id, { days: updated });
   };
 
   const openGithubLink = () => {
@@ -879,126 +913,323 @@ export function Popup() {
         )}
 
         {/* SHIELD TAB */}
-        {activeTab === "shield" && (
-          <div className="flex flex-col gap-3">
-            <div className={`p-3 rounded-xl border flex items-center justify-between ${
-              state.shield.enabled
-                ? "bg-card border-border text-foreground"
-                : "bg-background border-border text-muted-foreground"
-            }`}>
-              <div className="flex items-center gap-2.5">
-                {state.shield.enabled ? <ShieldCheck className="w-5 h-5" /> : <ShieldAlert className="w-5 h-5" />}
-                <div>
-                  <h3 className="text-xs font-bold font-mono">SITE BLOCKER SHIELD</h3>
-                  <p className="text-[10px] opacity-70">
-                    {state.shield.enabled
-                      ? (state.isActive && state.timerState === "FLOW"
-                          ? "Active during Flow sessions"
-                          : "Paused (Active during Flow sessions)")
-                      : "Shield currently OFF"}
-                  </p>
-                </div>
-              </div>
+        {activeTab === "shield" && (() => {
+          const locked = isBlocklistLocked(state.shield, state.isActive, state.timerState);
+          const scheduleActive = isScheduleActive(state.shield.schedules);
+          const activeSchedule = getActiveSchedule(state.shield.schedules);
+          const blocking = isBlockingRequired(state.shield, state.isActive, state.timerState);
+          const schedules = state.shield.schedules || [];
+          const activeSchedulesCount = schedules.filter((s) => s.enabled).length;
 
-              <button
-                onClick={() => updateState({ shield: { ...state.shield, enabled: !state.shield.enabled } })}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                  state.shield.enabled
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-secondary text-secondary-foreground border-border"
+          return (
+            <div className="flex flex-col gap-3">
+              <div
+                className={`p-3 rounded-xl border flex items-center justify-between ${
+                  state.shield.enabled || blocking
+                    ? "bg-card border-border text-foreground"
+                    : "bg-background border-border text-muted-foreground"
                 }`}
               >
-                {state.shield.enabled ? "ENABLED" : "ENABLE"}
-              </button>
-            </div>
-
-            <form onSubmit={addShieldSite} className="flex gap-2">
-              <input
-                type="text"
-                value={newSiteUrl}
-                onChange={(e) => setNewSiteUrl(e.target.value)}
-                placeholder={shieldListTab === "blocked" ? "Block domain (e.g. twitter.com)..." : "Allow domain (e.g. music.youtube.com)..."}
-                className={`flex-1 px-3 py-2 rounded-xl text-xs font-mono border focus:outline-none ${
-                  "bg-card border-border text-foreground placeholder-muted-foreground focus:border-foreground"
-                }`}
-              />
-              <button
-                type="submit"
-                className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
-                  "bg-secondary border-border text-foreground hover:bg-accent"
-                }`}
-              >
-                {shieldListTab === "blocked" ? "Block" : "Allow"}
-              </button>
-            </form>
-
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <div className="flex gap-1 p-1 rounded-xl bg-card border border-border mb-2">
-                <button
-                  onClick={() => setShieldListTab("blocked")}
-                  className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono uppercase transition-all ${
-                    shieldListTab === "blocked"
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Blocked ({state.shield.blockedSites.length})
-                </button>
-                <button
-                  onClick={() => setShieldListTab("unblocked")}
-                  className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono uppercase transition-all ${
-                    shieldListTab === "unblocked"
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Unblocked ({state.shield.allowedSites.length})
-                </button>
-              </div>
-
-              {shieldListTab === "blocked" && (
-                <div className="max-h-56 overflow-y-auto overflow-x-hidden space-y-1.5 pr-1">
-                  {state.shield.blockedSites.map((site) => (
-                    <div
-                      key={site}
-                      className={`px-3 py-2 rounded-xl border flex items-center justify-between text-xs font-mono ${
-                        "bg-card/60 border-border text-foreground"
-                      }`}
-                    >
-                      <span className="text-[11px]">{site}</span>
-                      <button onClick={() => removeBlockedSite(site)} className={`p-1 ${"text-muted-foreground hover:text-foreground"}`}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {shieldListTab === "unblocked" && (
-                <div className="max-h-56 overflow-y-auto overflow-x-hidden space-y-1.5 pr-1">
-                  {state.shield.allowedSites.length === 0 && (
-                    <p className="text-[10px] text-muted-foreground mb-1">
-                      No unblocked domains yet.
-                    </p>
+                <div className="flex items-center gap-2.5">
+                  {blocking ? (
+                    <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                  ) : state.shield.enabled ? (
+                    <ShieldCheck className="w-5 h-5 text-foreground" />
+                  ) : (
+                    <ShieldAlert className="w-5 h-5 text-muted-foreground" />
                   )}
-                  {state.shield.allowedSites.map((site) => (
-                    <div
-                      key={site}
-                      className={`px-3 py-2 rounded-xl border flex items-center justify-between text-xs font-mono ${
-                        "bg-card/60 border-border text-foreground"
-                      }`}
-                    >
-                      <span className="text-[11px]">{site}</span>
-                      <button onClick={() => removeAllowedSite(site)} className={`p-1 ${"text-muted-foreground hover:text-foreground"}`}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
+                  <div>
+                    <h3 className="text-xs font-bold font-mono">SITE BLOCKER SHIELD</h3>
+                    <p className="text-[10px] opacity-70">
+                      {blocking
+                        ? scheduleActive
+                          ? `Enforcing: ${activeSchedule?.name || "Schedule"}`
+                          : "Active during Flow sessions"
+                        : state.shield.enabled
+                          ? "Armed (Active during Flow or schedules)"
+                          : "Shield currently OFF"}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {blocking && (
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                      Enforcing
+                    </span>
+                  )}
+                  <button
+                    disabled={locked && state.shield.enabled}
+                    onClick={() => {
+                      if (locked && state.shield.enabled) return;
+                      updateState({ shield: { ...state.shield, enabled: !state.shield.enabled } });
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                      state.shield.enabled
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-secondary text-secondary-foreground border-border"
+                    } ${locked && state.shield.enabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                  >
+                    {state.shield.enabled ? "ENABLED" : "ENABLE"}
+                  </button>
+                </div>
+              </div>
+
+              {locked && (
+                <div className="p-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 flex items-center gap-2.5">
+                  <Lock className="w-4 h-4 text-amber-400 shrink-0" />
+                  <div>
+                    <h4 className="text-[11px] font-bold text-amber-200 uppercase tracking-wider">Strict Mode Active</h4>
+                    <p className="text-[10px] text-amber-300/80">
+                      Blocklist edits are locked while your Flow session is active.
+                    </p>
+                  </div>
                 </div>
               )}
+
+              {/* Strict Mode Toggle Card */}
+              <div className="p-2.5 rounded-xl border border-border bg-card/60 flex items-center justify-between">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <Lock className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <div className="min-w-0">
+                    <div className="text-xs font-bold font-mono">STRICT MODE</div>
+                    <div className="text-[10px] text-muted-foreground truncate">
+                      Lock blocklist during Flow sessions
+                    </div>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  disabled={locked}
+                  onClick={() =>
+                    updateState({
+                      shield: { ...state.shield, strictMode: !state.shield.strictMode },
+                    })
+                  }
+                  className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
+                    state.shield.strictMode
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-secondary text-secondary-foreground border-border"
+                  } ${locked ? "opacity-50 cursor-not-allowed" : ""}`}
+                >
+                  {state.shield.strictMode ? "ON" : "OFF"}
+                </button>
+              </div>
+
+              {shieldListTab !== "schedules" && (
+                <form onSubmit={addShieldSite} className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newSiteUrl}
+                    disabled={locked}
+                    onChange={(e) => setNewSiteUrl(e.target.value)}
+                    placeholder={
+                      locked
+                        ? "Blocklist locked during active session"
+                        : shieldListTab === "blocked"
+                          ? "Block domain (e.g. twitter.com)..."
+                          : "Allow domain (e.g. music.youtube.com)..."
+                    }
+                    className={`flex-1 px-3 py-2 rounded-xl text-xs font-mono border focus:outline-none bg-card border-border text-foreground placeholder-muted-foreground focus:border-foreground ${
+                      locked ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                  />
+                  <button
+                    type="submit"
+                    disabled={locked}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all bg-secondary border-border text-foreground hover:bg-accent ${
+                      locked ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                  >
+                    {shieldListTab === "blocked" ? "Block" : "Allow"}
+                  </button>
+                </form>
+              )}
+
+              <div className="flex-1 flex flex-col overflow-hidden">
+                <div className="flex gap-1 p-1 rounded-xl bg-card border border-border mb-2">
+                  <button
+                    onClick={() => setShieldListTab("blocked")}
+                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono uppercase transition-all ${
+                      shieldListTab === "blocked"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Blocked ({state.shield.blockedSites.length})
+                  </button>
+                  <button
+                    onClick={() => setShieldListTab("unblocked")}
+                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono uppercase transition-all ${
+                      shieldListTab === "unblocked"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Unblocked ({state.shield.allowedSites.length})
+                  </button>
+                  <button
+                    onClick={() => setShieldListTab("schedules")}
+                    className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono uppercase transition-all ${
+                      shieldListTab === "schedules"
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Schedules ({activeSchedulesCount})
+                  </button>
+                </div>
+
+                {shieldListTab === "blocked" && (
+                  <div className="max-h-56 overflow-y-auto overflow-x-hidden space-y-1.5 pr-1">
+                    {state.shield.blockedSites.map((site) => (
+                      <div
+                        key={site}
+                        className="px-3 py-2 rounded-xl border flex items-center justify-between text-xs font-mono bg-card/60 border-border text-foreground"
+                      >
+                        <span className="text-[11px] truncate">{site}</span>
+                        <button
+                          disabled={locked}
+                          onClick={() => removeBlockedSite(site)}
+                          className={`p-1 text-muted-foreground ${
+                            locked ? "opacity-30 cursor-not-allowed" : "hover:text-foreground"
+                          }`}
+                          title={locked ? "Locked during active session" : "Remove"}
+                        >
+                          {locked ? <Lock className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {shieldListTab === "unblocked" && (
+                  <div className="max-h-56 overflow-y-auto overflow-x-hidden space-y-1.5 pr-1">
+                    {state.shield.allowedSites.length === 0 && (
+                      <p className="text-[10px] text-muted-foreground mb-1">
+                        No unblocked domains yet.
+                      </p>
+                    )}
+                    {state.shield.allowedSites.map((site) => (
+                      <div
+                        key={site}
+                        className="px-3 py-2 rounded-xl border flex items-center justify-between text-xs font-mono bg-card/60 border-border text-foreground"
+                      >
+                        <span className="text-[11px] truncate">{site}</span>
+                        <button
+                          disabled={locked}
+                          onClick={() => removeAllowedSite(site)}
+                          className={`p-1 text-muted-foreground ${
+                            locked ? "opacity-30 cursor-not-allowed" : "hover:text-foreground"
+                          }`}
+                          title={locked ? "Locked during active session" : "Remove"}
+                        >
+                          {locked ? <Lock className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {shieldListTab === "schedules" && (
+                  <div className="max-h-56 overflow-y-auto overflow-x-hidden space-y-2.5 pr-1">
+                    {schedules.map((rule) => {
+                      const ruleActive = isScheduleActive([rule]);
+                      const dayLabels = ["S", "M", "T", "W", "T", "F", "S"];
+                      return (
+                        <div
+                          key={rule.id}
+                          className="p-3 rounded-xl border border-border bg-card/60 space-y-2.5"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                              <Calendar className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                              <span className="text-xs font-bold font-mono truncate">
+                                {rule.name || "Schedule Rule"}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {ruleActive && (
+                                <span className="px-1.5 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
+                                  Active
+                                </span>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => toggleShieldSchedule(rule.id)}
+                                className={`px-2 py-0.5 rounded-md text-[10px] font-bold border transition-all ${
+                                  rule.enabled
+                                    ? "bg-primary text-primary-foreground border-primary"
+                                    : "bg-secondary text-secondary-foreground border-border hover:bg-secondary/80"
+                                }`}
+                              >
+                                {rule.enabled ? "ENABLED" : "ENABLE"}
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+                            <div>
+                              <span className="text-[9px] uppercase tracking-wider text-muted-foreground block mb-0.5">
+                                Start
+                              </span>
+                              <input
+                                type="time"
+                                value={rule.start}
+                                onChange={(e) =>
+                                  updateShieldSchedule(rule.id, { start: e.target.value })
+                                }
+                                className="w-full px-2 py-1 rounded-lg text-[11px] font-mono tabular-nums bg-secondary/70 border border-border text-foreground focus:outline-none"
+                              />
+                            </div>
+                            <div>
+                              <span className="text-[9px] uppercase tracking-wider text-muted-foreground block mb-0.5">
+                                End
+                              </span>
+                              <input
+                                type="time"
+                                value={rule.end}
+                                onChange={(e) =>
+                                  updateShieldSchedule(rule.id, { end: e.target.value })
+                                }
+                                className="w-full px-2 py-1 rounded-lg text-[11px] font-mono tabular-nums bg-secondary/70 border border-border text-foreground focus:outline-none"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <span className="text-[9px] uppercase tracking-wider text-muted-foreground block mb-1">
+                              Days
+                            </span>
+                            <div className="flex gap-1 justify-between">
+                              {dayLabels.map((lbl, idx) => {
+                                const selected = rule.days.includes(idx);
+                                return (
+                                  <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => handleScheduleDayToggle(rule.id, rule.days, idx)}
+                                    className={`flex-1 py-1 rounded text-[9px] font-bold border transition-colors ${
+                                      selected
+                                        ? "bg-primary text-primary-foreground border-primary"
+                                        : "bg-secondary/50 text-muted-foreground border-border hover:text-foreground"
+                                    }`}
+                                  >
+                                    {lbl}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* STATS TAB */}
         {activeTab === "stats" && (
