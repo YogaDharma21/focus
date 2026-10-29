@@ -6,7 +6,11 @@
     "strict": true,
     "declaration": true,
     "skipLibCheck": true,
-    "isolatedModules": true
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@focus/types": ["../types/src/index.ts"]
+    }
   },
   "include": ["src"]
 }
