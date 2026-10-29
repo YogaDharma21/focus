@@ -121,12 +121,12 @@ export function SettingsPage() {
 
                 {/* Music Subsection */}
                 <div className={cn("flex flex-col gap-2 transition-opacity", !soundEnabled && "opacity-50")}>
-                    <span className="px-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Music</span>
+                    <span className="px-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Ambient Audio</span>
 
                     <div className="flex items-center justify-between rounded-[10px] px-4 py-3 border bg-secondary border-border">
                         <div className="flex flex-col">
-                            <span className="text-xs font-bold text-foreground">Music</span>
-                            <span className="text-[10px] text-muted-foreground">Enable or disable background music</span>
+                            <span className="text-xs font-bold text-foreground">Ambient Audio</span>
+                            <span className="text-[10px] text-muted-foreground">Enable or disable background music and noise</span>
                         </div>
                         <Switch
                             disabled={!soundEnabled}
@@ -139,7 +139,7 @@ export function SettingsPage() {
                         <div className="flex items-center justify-between rounded-[10px] px-4 py-3 border bg-secondary border-border">
                             <div className="flex flex-col w-full gap-2">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold text-foreground">Music Volume</span>
+                                    <span className="text-xs font-bold text-foreground">Audio Volume</span>
                                     <span className="font-mono text-xs text-foreground">{musicVolume}%</span>
                                 </div>
                                 <input

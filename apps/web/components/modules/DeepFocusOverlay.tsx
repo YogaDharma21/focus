@@ -2,7 +2,7 @@
 
 import { useAppStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
-import { Pause, Play, X, CheckCircle2, Music, Volume2, VolumeX } from "lucide-react";
+import { Pause, Play, X, CheckCircle2, Music, Volume2, VolumeX, Waves } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState, useCallback } from "react";
@@ -26,6 +26,10 @@ export function DeepFocusOverlay() {
         soundEffectVolume,
         soundEffectEnabled,
         autoStartBreak,
+        audioMode,
+        noiseColor,
+        stations,
+        activeStationId,
     } = useAppStore(
         useShallow((s) => ({
             timeLeft: s.timeLeft,
@@ -44,8 +48,19 @@ export function DeepFocusOverlay() {
             soundEffectVolume: s.soundEffectVolume,
             soundEffectEnabled: s.soundEffectEnabled,
             autoStartBreak: s.autoStartBreak ?? true,
+            audioMode: s.audioMode || "stream",
+            noiseColor: s.noiseColor || "brown",
+            stations: s.stations || [],
+            activeStationId: s.activeStationId || "station-lofi-beats",
         }))
     );
+
+    const activeStation =
+        stations.find((s) => s.id === activeStationId) || stations[0];
+    const currentAudioTitle =
+        audioMode === "noise"
+            ? `${noiseColor.charAt(0).toUpperCase() + noiseColor.slice(1)} Noise`
+            : activeStation?.name || "Lofi Focus";
 
     const [showMusicMenu, setShowMusicMenu] = useState(false);
 
@@ -172,20 +187,24 @@ export function DeepFocusOverlay() {
         <div className="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center animate-in fade-in duration-300 select-none">
             <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
             
-            {/* Top Left Lofi-Beats Music Control */}
+            {/* Top Left Audio Control */}
             <div className="absolute top-6 left-6 z-50">
                 <button
                     onClick={() => setShowMusicMenu(!showMusicMenu)}
                     className={cn(
-                        "h-10 px-3.5 rounded-full border transition-all flex items-center gap-2 shadow-sm",
+                        "h-10 px-3.5 rounded-full border transition-all flex items-center gap-2 shadow-sm cursor-pointer",
                         isMusicPlaying
                             ? "bg-secondary/50 border-border text-foreground ring-1 ring-border shadow-md"
                             : "bg-secondary/50 border-border text-muted-foreground hover:text-foreground hover:bg-secondary/50"
                     )}
-                    title={isMusicPlaying ? "Lofi-Beats: Playing" : "Lofi-Beats: Paused"}
+                    title={isMusicPlaying ? `${currentAudioTitle}: Playing` : `${currentAudioTitle}: Paused`}
                 >
-                    <Music className={cn("w-4 h-4", isMusicPlaying && "text-foreground")} />
-                    <span className="text-xs font-semibold tracking-wide">Lofi-Beats</span>
+                    {audioMode === "noise" ? (
+                        <Waves className={cn("w-4 h-4", isMusicPlaying && "text-foreground")} />
+                    ) : (
+                        <Music className={cn("w-4 h-4", isMusicPlaying && "text-foreground")} />
+                    )}
+                    <span className="text-xs font-semibold tracking-wide max-w-[140px] truncate">{currentAudioTitle}</span>
                     {isMusicPlaying && (
                         <span className="flex items-center gap-0.5 h-3 ml-0.5">
                             <span className="w-0.5 h-2.5 bg-foreground rounded-full animate-bounce [animation-delay:-0.3s]" />
@@ -198,16 +217,20 @@ export function DeepFocusOverlay() {
                 {showMusicMenu && (
                     <div className="absolute top-full left-0 mt-2.5 w-64 bg-card border border-border rounded-2xl p-3.5 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-150 space-y-3">
                         <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2 text-foreground">
-                                <Music className="w-4 h-4 text-foreground" />
-                                <span className="text-xs font-semibold tracking-wide">
-                                    Lofi-Beats
+                            <div className="flex items-center gap-2 text-foreground min-w-0 pr-2">
+                                {audioMode === "noise" ? (
+                                    <Waves className="w-4 h-4 text-foreground shrink-0" />
+                                ) : (
+                                    <Music className="w-4 h-4 text-foreground shrink-0" />
+                                )}
+                                <span className="text-xs font-semibold tracking-wide truncate">
+                                    {currentAudioTitle}
                                 </span>
                             </div>
                             <button
                                 onClick={() => setIsMusicPlaying(!isMusicPlaying)}
                                 className={cn(
-                                    "px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5",
+                                    "px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shrink-0",
                                     isMusicPlaying
                                         ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow"
                                         : "bg-secondary/50 text-foreground hover:bg-secondary"

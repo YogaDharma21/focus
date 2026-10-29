@@ -25,6 +25,17 @@ export interface PlaylistItem {
   url: string;
 }
 
+export type AudioMode = "stream" | "noise";
+export type NoiseColorType = "brown" | "pink" | "white";
+
+export interface StreamStation {
+  id: string;
+  name: string;
+  url: string;
+  genre?: string;
+  isCustom?: boolean;
+}
+
 export interface ShieldConfig {
   enabled: boolean;
   blockedSites: string[];

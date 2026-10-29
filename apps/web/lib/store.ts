@@ -1,12 +1,50 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Session, Distraction, PlaylistItem, TimerState, ViewType } from "@focus/types";
+import type { Session, Distraction, PlaylistItem, TimerState, ViewType, AudioMode, NoiseColorType, StreamStation } from "@focus/types";
 
-export type { Session, Distraction, PlaylistItem, TimerState, ViewType };
+export type { Session, Distraction, PlaylistItem, TimerState, ViewType, AudioMode, NoiseColorType, StreamStation };
+
+export const DEFAULT_STATIONS: StreamStation[] = [
+    {
+        id: "station-lofi-beats",
+        name: "Lofi Focus",
+        url: "/music1.mp3",
+        genre: "Chillhop",
+    },
+    {
+        id: "station-somafm-groovesalad",
+        name: "SomaFM Groove Salad",
+        url: "https://ice1.somafm.com/groovesalad-128-mp3",
+        genre: "Ambient Downtempo",
+    },
+    {
+        id: "station-somafm-dronezone",
+        name: "SomaFM Drone Zone",
+        url: "https://ice1.somafm.com/dronezone-128-mp3",
+        genre: "Deep Atmosphere",
+    },
+    {
+        id: "station-somafm-defcon",
+        name: "SomaFM DEF CON",
+        url: "https://ice1.somafm.com/defcon-128-mp3",
+        genre: "Electronic Chill",
+    },
+];
 
 interface AppState {
     currentView: ViewType;
     setView: (view: ViewType) => void;
+
+    audioMode: AudioMode;
+    setAudioMode: (mode: AudioMode) => void;
+    noiseColor: NoiseColorType;
+    setNoiseColor: (color: NoiseColorType) => void;
+
+    stations: StreamStation[];
+    activeStationId: string;
+    setActiveStationId: (id: string) => void;
+    addCustomStation: (name: string, url: string) => void;
+    removeCustomStation: (id: string) => void;
 
     localUrl: string;
     localPlaylist: PlaylistItem[];
@@ -62,6 +100,52 @@ export const useAppStore = create<AppState>()(
         (set) => ({
             currentView: "FOCUS",
             setView: (view) => set({ currentView: view }),
+
+            audioMode: "stream",
+            setAudioMode: (mode) => set({ audioMode: mode }),
+            noiseColor: "brown",
+            setNoiseColor: (color) => set({ noiseColor: color }),
+
+            stations: DEFAULT_STATIONS,
+            activeStationId: "station-lofi-beats",
+            setActiveStationId: (id) =>
+                set((state) => {
+                    const st = state.stations.find((s) => s.id === id);
+                    return {
+                        activeStationId: id,
+                        localUrl: st?.url || state.localUrl,
+                    };
+                }),
+            addCustomStation: (name, url) =>
+                set((state) => {
+                    const newStation: StreamStation = {
+                        id: `custom-${Date.now()}`,
+                        name: name.trim(),
+                        url: url.trim(),
+                        genre: "Custom Stream",
+                        isCustom: true,
+                    };
+                    return {
+                        stations: [...state.stations, newStation],
+                        activeStationId: newStation.id,
+                        localUrl: newStation.url,
+                    };
+                }),
+            removeCustomStation: (id) =>
+                set((state) => {
+                    const nextStations = state.stations.filter((s) => s.id !== id);
+                    const nextActiveId =
+                        state.activeStationId === id
+                            ? nextStations[0]?.id || "station-lofi-beats"
+                            : state.activeStationId;
+                    const nextUrl =
+                        nextStations.find((s) => s.id === nextActiveId)?.url || "/music1.mp3";
+                    return {
+                        stations: nextStations.length ? nextStations : DEFAULT_STATIONS,
+                        activeStationId: nextActiveId,
+                        localUrl: nextUrl,
+                    };
+                }),
 
             localUrl: "/music1.mp3",
             localPlaylist: [
@@ -135,6 +219,10 @@ export const useAppStore = create<AppState>()(
                 useAppStore.persist.clearStorage();
                 set({
                     currentView: "FOCUS",
+                    audioMode: "stream",
+                    noiseColor: "brown",
+                    stations: DEFAULT_STATIONS,
+                    activeStationId: "station-lofi-beats",
                     localUrl: "/music1.mp3",
                     localPlaylist: [
                         {
