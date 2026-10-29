@@ -185,12 +185,12 @@ export const ShieldPage: React.FC = () => {
               <p className="text-[11px] text-muted-foreground">
                 {blocking
                   ? scheduleActive
-                    ? `Enforcing now — Scheduled rule active${activeSchedule?.name ? ` (${activeSchedule.name})` : ""}`
-                    : "Enforcing now — Flow session is active"
+                    ? `Enforcing now: Scheduled rule active${activeSchedule?.name ? ` (${activeSchedule.name})` : ""}`
+                    : "Enforcing now: Flow session is active"
                   : shield.enabled
                     ? isActive
-                      ? "Paused — resumes when you return to Flow"
-                      : "Armed — activates during Flow sessions or scheduled hours"
+                      ? "Paused: resumes when you return to Flow"
+                      : "Armed: activates during Flow sessions or scheduled hours"
                     : "Shield currently OFF"}
               </p>
             </div>
