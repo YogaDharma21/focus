@@ -1,7 +1,14 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeStorage } from './storage';
-import { DEFAULT_SHIELD_CONFIG, normalizeAppName, normalizeSite, type ShieldConfig } from './shield';
+import {
+  DEFAULT_SHIELD_CONFIG,
+  normalizeAppName,
+  normalizeSite,
+  isBlocklistLocked,
+  type ShieldConfig,
+  type ShieldSchedule,
+} from './shield';
 
 export type ViewType = 'FOCUS' | 'JOURNAL' | 'SHIELD' | 'SETTINGS';
 
@@ -72,6 +79,10 @@ interface AppState {
 
   shield: ShieldConfig;
   setShieldEnabled: (enabled: boolean) => void;
+  setShieldStrictMode: (enabled: boolean) => void;
+  setShieldSchedules: (schedules: ShieldSchedule[]) => void;
+  toggleShieldSchedule: (id: string) => void;
+  updateShieldSchedule: (id: string, updates: Partial<ShieldSchedule>) => void;
   setUrlBlocking: (enabled: boolean) => void;
   addBlockedSite: (site: string) => void;
   removeBlockedSite: (site: string) => void;
@@ -170,39 +181,83 @@ export const useAppStore = create<AppState>()(
 
       shield: { ...DEFAULT_SHIELD_CONFIG },
       setShieldEnabled: (enabled) =>
-        set((state) => ({ shield: { ...state.shield, enabled } })),
+        set((state) => {
+          if (!enabled && isBlocklistLocked(state.shield, state.isActive, state.timerState)) {
+            return state;
+          }
+          return { shield: { ...state.shield, enabled } };
+        }),
+      setShieldStrictMode: (strictMode) =>
+        set((state) => {
+          if (!strictMode && isBlocklistLocked(state.shield, state.isActive, state.timerState)) {
+            return state;
+          }
+          return { shield: { ...state.shield, strictMode } };
+        }),
+      setShieldSchedules: (schedules) =>
+        set((state) => ({ shield: { ...state.shield, schedules } })),
+      toggleShieldSchedule: (id) =>
+        set((state) => ({
+          shield: {
+            ...state.shield,
+            schedules: (state.shield.schedules || []).map((s) =>
+              s.id === id ? { ...s, enabled: !s.enabled } : s
+            ),
+          },
+        })),
+      updateShieldSchedule: (id, updates) =>
+        set((state) => ({
+          shield: {
+            ...state.shield,
+            schedules: (state.shield.schedules || []).map((s) =>
+              s.id === id ? { ...s, ...updates } : s
+            ),
+          },
+        })),
       setUrlBlocking: (enabled) =>
         set((state) => ({ shield: { ...state.shield, urlBlocking: enabled } })),
       addBlockedSite: (site) =>
         set((state) => {
+          if (isBlocklistLocked(state.shield, state.isActive, state.timerState)) return state;
           const clean = normalizeSite(site);
           if (!clean || state.shield.blockedSites.includes(clean)) return state;
           return { shield: { ...state.shield, blockedSites: [...state.shield.blockedSites, clean] } };
         }),
       removeBlockedSite: (site) =>
-        set((state) => ({
-          shield: { ...state.shield, blockedSites: state.shield.blockedSites.filter((s) => s !== site) },
-        })),
+        set((state) => {
+          if (isBlocklistLocked(state.shield, state.isActive, state.timerState)) return state;
+          return {
+            shield: { ...state.shield, blockedSites: state.shield.blockedSites.filter((s) => s !== site) },
+          };
+        }),
       addAllowedSite: (site) =>
         set((state) => {
+          if (isBlocklistLocked(state.shield, state.isActive, state.timerState)) return state;
           const clean = normalizeSite(site);
           if (!clean || state.shield.allowedSites.includes(clean)) return state;
           return { shield: { ...state.shield, allowedSites: [...state.shield.allowedSites, clean] } };
         }),
       removeAllowedSite: (site) =>
-        set((state) => ({
-          shield: { ...state.shield, allowedSites: state.shield.allowedSites.filter((s) => s !== site) },
-        })),
+        set((state) => {
+          if (isBlocklistLocked(state.shield, state.isActive, state.timerState)) return state;
+          return {
+            shield: { ...state.shield, allowedSites: state.shield.allowedSites.filter((s) => s !== site) },
+          };
+        }),
       addBlockedApp: (app) =>
         set((state) => {
+          if (isBlocklistLocked(state.shield, state.isActive, state.timerState)) return state;
           const clean = normalizeAppName(app);
           if (!clean || state.shield.blockedApps.includes(clean)) return state;
           return { shield: { ...state.shield, blockedApps: [...state.shield.blockedApps, clean] } };
         }),
       removeBlockedApp: (app) =>
-        set((state) => ({
-          shield: { ...state.shield, blockedApps: state.shield.blockedApps.filter((a) => a !== app) },
-        })),
+        set((state) => {
+          if (isBlocklistLocked(state.shield, state.isActive, state.timerState)) return state;
+          return {
+            shield: { ...state.shield, blockedApps: state.shield.blockedApps.filter((a) => a !== app) },
+          };
+        }),
 
       addSession: (session) =>
         set((state) => ({
@@ -245,7 +300,14 @@ export const useAppStore = create<AppState>()(
             ? (state.shield as Record<string, unknown>)
             : {};
         // Field-merge so new shield options backfill onto existing installs.
-        state.shield = { ...DEFAULT_SHIELD_CONFIG, ...storedShield };
+        state.shield = {
+          ...DEFAULT_SHIELD_CONFIG,
+          ...storedShield,
+          strictMode: typeof storedShield.strictMode === 'boolean' ? storedShield.strictMode : false,
+          schedules: Array.isArray(storedShield.schedules)
+            ? storedShield.schedules
+            : DEFAULT_SHIELD_CONFIG.schedules,
+        };
         return state as unknown as AppState;
       },
     }

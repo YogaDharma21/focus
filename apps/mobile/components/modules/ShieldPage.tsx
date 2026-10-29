@@ -2,7 +2,12 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, Text, ScrollView, TextInput, TouchableOpacity, StyleSheet, AppState, Platform, Modal, Image } from 'react-native';
 import { useAppStore } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
-import { isBlockingRequired } from '@/lib/shield';
+import {
+  isBlockingRequired,
+  isBlocklistLocked,
+  isScheduleActive,
+  getActiveSchedule,
+} from '@/lib/shield';
 import {
   getNativeShieldStatus,
   openAccessibilitySettings,
@@ -14,7 +19,20 @@ import {
 } from '@/lib/shieldService';
 import { getInstalledApps, type InstalledShieldApp } from '@/modules/shield';
 import { getApplicationIconAsync } from 'expo-intent-launcher';
-import { Shield, ShieldCheck, ShieldAlert, Plus, X, Globe, Smartphone, Lock, Check, Search } from 'lucide-react-native';
+import {
+  Shield,
+  ShieldCheck,
+  ShieldAlert,
+  Plus,
+  X,
+  Globe,
+  Smartphone,
+  Lock,
+  Check,
+  Search,
+  Clock,
+  Calendar,
+} from 'lucide-react-native';
 
 type ThemeColors = {
   text: string;
@@ -123,11 +141,13 @@ function BlockedAppRow({
   label,
   colors,
   onRemove,
+  locked,
 }: {
   packageName: string;
   label: string;
   colors: ThemeColors;
   onRemove: () => void;
+  locked?: boolean;
 }) {
   return (
     <View
@@ -146,9 +166,13 @@ function BlockedAppRow({
           {packageName}
         </Text>
       </View>
-      <TouchableOpacity onPress={onRemove} hitSlop={8}>
-        <X size={16} color={colors.mutedText} />
-      </TouchableOpacity>
+      {locked ? (
+        <Lock size={16} color={colors.mutedText} style={{ opacity: 0.5 }} />
+      ) : (
+        <TouchableOpacity onPress={onRemove} hitSlop={8}>
+          <X size={16} color={colors.mutedText} />
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -202,6 +226,9 @@ export function ShieldPage() {
   const {
     shield,
     setShieldEnabled,
+    setShieldStrictMode,
+    toggleShieldSchedule,
+    updateShieldSchedule,
     setUrlBlocking,
     addBlockedSite,
     removeBlockedSite,
@@ -235,7 +262,10 @@ export function ShieldPage() {
     }
   });
 
-  const enforcing = isBlockingRequired(shield.enabled, isActive, timerState);
+  const locked = isBlocklistLocked(shield, isActive, timerState);
+  const scheduleActive = isScheduleActive(shield.schedules);
+  const activeSchedule = getActiveSchedule(shield.schedules);
+  const enforcing = isBlockingRequired(shield, isActive, timerState);
   const setupDoneCount = [
     nativeStatus?.hasUsageAccess,
     nativeStatus?.canDrawOverlays,
@@ -253,6 +283,7 @@ export function ShieldPage() {
   }, [refreshNativeStatus]);
 
   const handleAddSite = () => {
+    if (locked) return;
     const value = siteInput.trim();
     if (!value) return;
     if (listTab === 'blocked') addBlockedSite(value);
@@ -260,9 +291,17 @@ export function ShieldPage() {
     setSiteInput('');
   };
 
+  const handleScheduleDayToggle = (id: string, currentDays: number[], dayIndex: number) => {
+    const updated = currentDays.includes(dayIndex)
+      ? currentDays.filter((d) => d !== dayIndex)
+      : [...currentDays, dayIndex].sort();
+    updateShieldSchedule(id, { days: updated });
+  };
+
   const sites = listTab === 'blocked' ? shield.blockedSites : shield.allowedSites;
 
   const openAppPicker = () => {
+    if (locked) return;
     setInstalledApps(getInstalledApps());
     setAppSearch('');
     setPickerOpen(true);
@@ -291,20 +330,22 @@ export function ShieldPage() {
                 { backgroundColor: enforcing ? colors.emeraldBg : colors.muted },
               ]}
             >
-              {shield.enabled ? (
+              {shield.enabled || enforcing ? (
                 <ShieldCheck size={22} color={enforcing ? colors.emerald : colors.text} />
               ) : (
                 <ShieldAlert size={22} color={colors.mutedText} />
               )}
             </View>
-            <View>
+            <View style={{ flex: 1 }}>
               <Text style={[styles.statusHeroTitle, { color: colors.text }]}>
-                {shield.enabled ? (enforcing ? 'Shield Enforcing' : 'Shield Armed') : 'Shield Inactive'}
+                {enforcing ? 'Shield Enforcing' : shield.enabled ? 'Shield Armed' : 'Shield Inactive'}
               </Text>
               <Text style={[styles.statusHeroSub, { color: colors.mutedText }]}>
                 {enforcing
-                  ? 'Zero distractions allowed right now'
-                  : 'Activates during active Flow sessions'}
+                  ? scheduleActive
+                    ? `Scheduled rule active${activeSchedule?.name ? `: ${activeSchedule.name}` : ''}`
+                    : 'Zero distractions allowed right now'
+                  : 'Activates during Flow sessions or schedules'}
               </Text>
             </View>
           </View>
@@ -312,9 +353,16 @@ export function ShieldPage() {
           <TouchableOpacity
             style={[
               styles.switchTrack,
-              { backgroundColor: shield.enabled ? colors.primary : colors.muted },
+              {
+                backgroundColor: shield.enabled ? colors.primary : colors.muted,
+                opacity: locked && shield.enabled ? 0.4 : 1,
+              },
             ]}
-            onPress={() => setShieldEnabled(!shield.enabled)}
+            disabled={locked && shield.enabled}
+            onPress={() => {
+              if (locked && shield.enabled) return;
+              setShieldEnabled(!shield.enabled);
+            }}
             activeOpacity={0.8}
           >
             <View
@@ -327,6 +375,194 @@ export function ShieldPage() {
               ]}
             />
           </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* ── STRICT MODE LOCKED BANNER ── */}
+      {locked ? (
+        <View style={styles.lockedBanner}>
+          <Lock size={18} color="#f59e0b" />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.lockedBannerTitle}>Strict Mode Active</Text>
+            <Text style={styles.lockedBannerSub}>
+              Blocklist edits are locked while your Flow session is active to prevent impulse overrides.
+            </Text>
+          </View>
+        </View>
+      ) : null}
+
+      {/* ── STRICT MODE CARD ── */}
+      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={styles.statusCardHeader}>
+          <View style={styles.statusLeft}>
+            <View style={[styles.statusIconCircle, { backgroundColor: colors.muted }]}>
+              <Lock size={20} color={colors.text} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.statusHeroTitle, { color: colors.text }]}>Strict Mode</Text>
+              <Text style={[styles.statusHeroSub, { color: colors.mutedText }]}>
+                Lock blocklist during active Flow sessions
+              </Text>
+            </View>
+          </View>
+
+          <TouchableOpacity
+            style={[
+              styles.switchTrack,
+              {
+                backgroundColor: shield.strictMode ? colors.primary : colors.muted,
+                opacity: locked ? 0.4 : 1,
+              },
+            ]}
+            disabled={locked}
+            onPress={() => {
+              if (locked) return;
+              setShieldStrictMode(!shield.strictMode);
+            }}
+            activeOpacity={0.8}
+          >
+            <View
+              style={[
+                styles.switchThumb,
+                {
+                  backgroundColor: shield.strictMode ? colors.primaryText : colors.mutedText,
+                  transform: [{ translateX: shield.strictMode ? 18 : 2 }],
+                },
+              ]}
+            />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* ── SCHEDULE RULES SECTION ── */}
+      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={styles.sectionHeader}>
+          <Clock size={18} color={colors.text} />
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Schedule Rules</Text>
+        </View>
+        <Text style={[styles.noteText, { color: colors.mutedText }]}>
+          Auto-enable shield enforcement during specific hours without starting a timer.
+        </Text>
+
+        <View style={{ gap: 12 }}>
+          {(shield.schedules || []).map((rule) => {
+            const ruleActive = isScheduleActive([rule]);
+            const dayLabels = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+            return (
+              <View
+                key={rule.id}
+                style={[
+                  styles.scheduleCard,
+                  { backgroundColor: colors.muted, borderColor: colors.border },
+                ]}
+              >
+                <View style={styles.scheduleHeader}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                    <Calendar size={16} color={colors.text} />
+                    <Text style={[styles.scheduleName, { color: colors.text }]}>
+                      {rule.name || 'Schedule Rule'}
+                    </Text>
+                    {ruleActive ? (
+                      <View style={styles.activeTag}>
+                        <Text style={styles.activeTagText}>Active</Text>
+                      </View>
+                    ) : null}
+                  </View>
+                  <TouchableOpacity
+                    style={[
+                      styles.switchTrack,
+                      { backgroundColor: rule.enabled ? colors.primary : colors.card },
+                    ]}
+                    onPress={() => toggleShieldSchedule(rule.id)}
+                    activeOpacity={0.8}
+                  >
+                    <View
+                      style={[
+                        styles.switchThumb,
+                        {
+                          backgroundColor: rule.enabled ? colors.primaryText : colors.mutedText,
+                          transform: [{ translateX: rule.enabled ? 18 : 2 }],
+                        },
+                      ]}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                <View style={styles.timeRow}>
+                  <View style={styles.timeCol}>
+                    <Text style={[styles.timeLabel, { color: colors.mutedText }]}>Start Time</Text>
+                    <TextInput
+                      style={[
+                        styles.timeInput,
+                        {
+                          backgroundColor: colors.card,
+                          borderColor: colors.border,
+                          color: colors.text,
+                        },
+                      ]}
+                      value={rule.start}
+                      onChangeText={(val) => updateShieldSchedule(rule.id, { start: val })}
+                      placeholder="09:00"
+                      placeholderTextColor={colors.mutedText}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                  </View>
+                  <View style={styles.timeCol}>
+                    <Text style={[styles.timeLabel, { color: colors.mutedText }]}>End Time</Text>
+                    <TextInput
+                      style={[
+                        styles.timeInput,
+                        {
+                          backgroundColor: colors.card,
+                          borderColor: colors.border,
+                          color: colors.text,
+                        },
+                      ]}
+                      value={rule.end}
+                      onChangeText={(val) => updateShieldSchedule(rule.id, { end: val })}
+                      placeholder="17:00"
+                      placeholderTextColor={colors.mutedText}
+                      autoCapitalize="none"
+                      autoCorrect={false}
+                    />
+                  </View>
+                </View>
+
+                <View>
+                  <Text style={[styles.timeLabel, { color: colors.mutedText }]}>Active Days</Text>
+                  <View style={styles.daysRow}>
+                    {dayLabels.map((lbl, idx) => {
+                      const selected = rule.days.includes(idx);
+                      return (
+                        <TouchableOpacity
+                          key={lbl}
+                          style={[
+                            styles.dayBtn,
+                            {
+                              backgroundColor: selected ? colors.primary : colors.card,
+                              borderColor: selected ? colors.primary : colors.border,
+                            },
+                          ]}
+                          onPress={() => handleScheduleDayToggle(rule.id, rule.days, idx)}
+                          activeOpacity={0.7}
+                        >
+                          <Text
+                            style={[
+                              styles.dayBtnText,
+                              { color: selected ? colors.primaryText : colors.mutedText },
+                            ]}
+                          >
+                            {lbl}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                </View>
+              </View>
+            );
+          })}
         </View>
       </View>
 
@@ -382,9 +618,21 @@ export function ShieldPage() {
           <TextInput
             style={[
               styles.input,
-              { backgroundColor: colors.muted, borderColor: colors.border, color: colors.text },
+              {
+                backgroundColor: colors.muted,
+                borderColor: colors.border,
+                color: colors.text,
+                opacity: locked ? 0.5 : 1,
+              },
             ]}
-            placeholder={listTab === 'blocked' ? 'Block domain (twitter.com)...' : 'Allow domain...'}
+            editable={!locked}
+            placeholder={
+              locked
+                ? 'Blocklist locked during active session'
+                : listTab === 'blocked'
+                  ? 'Block domain (twitter.com)...'
+                  : 'Allow domain...'
+            }
             placeholderTextColor={colors.mutedText}
             value={siteInput}
             onChangeText={setSiteInput}
@@ -393,8 +641,9 @@ export function ShieldPage() {
             autoCorrect={false}
           />
           <TouchableOpacity
-            style={[styles.addBtn, { backgroundColor: colors.text }]}
+            style={[styles.addBtn, { backgroundColor: colors.text, opacity: locked ? 0.4 : 1 }]}
             onPress={handleAddSite}
+            disabled={locked}
             activeOpacity={0.8}
           >
             <Plus size={18} color={colors.background} />
@@ -420,12 +669,16 @@ export function ShieldPage() {
                 <Text style={[styles.listText, { color: colors.text }]} numberOfLines={1}>
                   {site}
                 </Text>
-                <TouchableOpacity
-                  onPress={() => (listTab === 'blocked' ? removeBlockedSite(site) : removeAllowedSite(site))}
-                  hitSlop={8}
-                >
-                  <X size={16} color={colors.mutedText} />
-                </TouchableOpacity>
+                {locked ? (
+                  <Lock size={16} color={colors.mutedText} style={{ opacity: 0.5 }} />
+                ) : (
+                  <TouchableOpacity
+                    onPress={() => (listTab === 'blocked' ? removeBlockedSite(site) : removeAllowedSite(site))}
+                    hitSlop={8}
+                  >
+                    <X size={16} color={colors.mutedText} />
+                  </TouchableOpacity>
+                )}
               </View>
             ))}
           </View>
@@ -481,15 +734,17 @@ export function ShieldPage() {
             {
               backgroundColor: colors.muted,
               borderColor: colors.border,
-              opacity: nativeStatus?.supported ? 1 : 0.5,
+              opacity: nativeStatus?.supported && !locked ? 1 : 0.5,
             },
           ]}
           onPress={openAppPicker}
-          disabled={!nativeStatus?.supported}
+          disabled={!nativeStatus?.supported || locked}
           activeOpacity={0.7}
         >
           <Search size={16} color={colors.text} />
-          <Text style={[styles.browseBtnText, { color: colors.text }]}>Browse installed apps</Text>
+          <Text style={[styles.browseBtnText, { color: colors.text }]}>
+            {locked ? 'Blocklist locked' : 'Browse installed apps'}
+          </Text>
         </TouchableOpacity>
         {!nativeStatus?.supported ? (
           <Text style={[styles.subNoteText, { color: colors.mutedText }]}>
@@ -507,6 +762,7 @@ export function ShieldPage() {
                 packageName={app}
                 label={installedLabels[app] ?? app}
                 colors={colors}
+                locked={locked}
                 onRemove={() => removeBlockedApp(app)}
               />
             ))}
@@ -935,5 +1191,93 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  lockedBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(245, 158, 11, 0.3)',
+    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+  },
+  lockedBannerTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#fef3c7',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  lockedBannerSub: {
+    fontSize: 11,
+    color: 'rgba(253, 230, 138, 0.85)',
+    marginTop: 2,
+  },
+  scheduleCard: {
+    padding: 14,
+    borderRadius: 18,
+    borderWidth: 1,
+    gap: 12,
+  },
+  scheduleHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  scheduleName: {
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  activeTag: {
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: 'rgba(16, 185, 129, 0.3)',
+    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+  },
+  activeTagText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#34d399',
+    textTransform: 'uppercase',
+  },
+  timeRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  timeCol: {
+    flex: 1,
+  },
+  timeLabel: {
+    fontSize: 10,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    marginBottom: 4,
+  },
+  timeInput: {
+    borderWidth: 1,
+    borderRadius: 12,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    fontSize: 13,
+  },
+  daysRow: {
+    flexDirection: 'row',
+    gap: 6,
+    justifyContent: 'space-between',
+  },
+  dayBtn: {
+    flex: 1,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dayBtnText: {
+    fontSize: 11,
+    fontWeight: '700',
   },
 });

@@ -100,7 +100,10 @@ export default function TabLayout() {
 
   React.useEffect(() => {
     syncShieldService();
-    return useAppStore.subscribe((state, prev) => {
+    const interval = setInterval(() => {
+      syncShieldService();
+    }, 60000);
+    const unsub = useAppStore.subscribe((state, prev) => {
       if (
         state.shield !== prev.shield ||
         state.isActive !== prev.isActive ||
@@ -109,6 +112,10 @@ export default function TabLayout() {
         syncShieldService();
       }
     });
+    return () => {
+      clearInterval(interval);
+      unsub();
+    };
   }, []);
 
   const floatingBottomPadding = Math.max(insets.bottom, 6) + FLOATING_TAB_BAR_HEIGHT + FLOATING_TAB_BAR_BOTTOM_GAP + 6;

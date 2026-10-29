@@ -112,7 +112,7 @@ export function syncShieldService(): void {
   if (!isNativeShieldSupported()) return;
   const { shield, isActive, timerState } = useAppStore.getState();
   const shouldRun =
-    isBlockingRequired(shield.enabled, isActive, timerState) && hasUsageAccess() && canDrawOverlays();
+    isBlockingRequired(shield, isActive, timerState) && hasUsageAccess() && canDrawOverlays();
   if (shouldRun) {
     startShield(shield.blockedApps, shield.urlBlocking, shield.blockedSites, shield.allowedSites);
   } else if (isServiceRunning()) {
