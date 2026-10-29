@@ -11,7 +11,8 @@ export interface Session {
   id: string;
   date: string;
   duration: number;
-  mode: 'STOPWATCH';
+  mode: 'STOPWATCH' | 'POMODORO' | string;
+  tag?: string;
 }
 
 export interface Distraction {

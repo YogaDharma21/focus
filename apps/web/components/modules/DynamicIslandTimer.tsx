@@ -11,6 +11,10 @@ export function DynamicIslandTimer() {
     const {
         timeLeft,
         isActive,
+        timerMode,
+        timerState,
+        pomodoroInterval,
+        activeTag,
         setIsActive,
         setTimeLeft,
         setTimerState,
@@ -25,6 +29,10 @@ export function DynamicIslandTimer() {
         useShallow((s) => ({
             timeLeft: s.timeLeft,
             isActive: s.isActive,
+            timerMode: s.timerMode,
+            timerState: s.timerState,
+            pomodoroInterval: s.pomodoroInterval ?? "25/5",
+            activeTag: s.activeTag ?? "work",
             setIsActive: s.setIsActive,
             setTimeLeft: s.setTimeLeft,
             setTimerState: s.setTimerState,
@@ -96,24 +104,48 @@ export function DynamicIslandTimer() {
         setIsActive(false);
         playSound();
 
-        const duration = timeLeft;
-        if (duration > 0) {
-            addSession({
-                id: crypto.randomUUID(),
-                date: new Date().toISOString(),
-                duration,
-                mode: "STOPWATCH",
-            });
-        }
+        if (timerMode === "POMODORO") {
+            const isLong = pomodoroInterval === "50/10";
+            const fullWorkSecs = isLong ? 50 * 60 : 25 * 60;
+            const fullBreakSecs = isLong ? 10 * 60 : 5 * 60;
 
-        const breakSeconds = Math.floor(duration / 5);
-        if (breakSeconds > 0) {
-            setTimeLeft(breakSeconds);
-            setTimerState("BREAK");
-            setIsActive(autoStartBreak);
+            if (timerState === "FLOW") {
+                const elapsedSeconds = Math.max(1, fullWorkSecs - timeLeft);
+                addSession({
+                    id: crypto.randomUUID(),
+                    date: new Date().toISOString(),
+                    duration: elapsedSeconds,
+                    mode: "POMODORO",
+                    tag: activeTag || "work",
+                });
+                setTimeLeft(fullBreakSecs);
+                setTimerState("BREAK");
+                setIsActive(autoStartBreak);
+            } else {
+                setTimeLeft(fullWorkSecs);
+                setTimerState("FLOW");
+            }
         } else {
-            setTimeLeft(0);
-            setTimerState("FLOW");
+            const duration = timeLeft;
+            if (duration > 0) {
+                addSession({
+                    id: crypto.randomUUID(),
+                    date: new Date().toISOString(),
+                    duration,
+                    mode: "STOPWATCH",
+                    tag: activeTag || "work",
+                });
+            }
+
+            const breakSeconds = Math.floor(duration / 5);
+            if (breakSeconds > 0) {
+                setTimeLeft(breakSeconds);
+                setTimerState("BREAK");
+                setIsActive(autoStartBreak);
+            } else {
+                setTimeLeft(0);
+                setTimerState("FLOW");
+            }
         }
 
         setDeepFocusMode(false);

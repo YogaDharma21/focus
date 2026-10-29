@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { duration, focus, note } = body;
+        const { duration, focus, note, tag, mode } = body;
 
         await new Promise((resolve) => setTimeout(resolve, 300));
 
@@ -14,6 +14,8 @@ export async function POST(request: Request) {
             duration,
             focus,
             note,
+            tag,
+            mode,
         });
     } catch {
         return NextResponse.json(

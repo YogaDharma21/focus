@@ -1,8 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { Session, Distraction, PlaylistItem, TimerState, ViewType } from "@focus/types";
+import type { Session, Distraction, PlaylistItem, TimerState, ViewType, TimerMode, PomodoroInterval, SessionTag } from "@focus/types";
 
-export type { Session, Distraction, PlaylistItem, TimerState, ViewType };
+export type { Session, Distraction, PlaylistItem, TimerState, ViewType, TimerMode, PomodoroInterval, SessionTag };
 
 interface AppState {
     currentView: ViewType;
@@ -28,20 +28,27 @@ interface AppState {
     soundEffectEnabled: boolean;
     setSoundEffectEnabled: (enabled: boolean) => void;
 
-    timerMode: "STOPWATCH";
+    timerMode: TimerMode;
     timerState: TimerState;
     timeLeft: number;
     isActive: boolean;
     sessionStartTime: string | null;
     autoStartBreak: boolean;
     autoStartFlow: boolean;
-    setTimerMode: (mode: "STOPWATCH") => void;
+    pomodoroInterval: PomodoroInterval;
+    activeTag: string;
+    dailyTargetMinutes: number;
+
+    setTimerMode: (mode: TimerMode) => void;
     setTimerState: (state: TimerState) => void;
     setTimeLeft: (time: number | ((prev: number) => number)) => void;
     setIsActive: (active: boolean) => void;
     setSessionStartTime: (time: string | null) => void;
     setAutoStartBreak: (enabled: boolean) => void;
     setAutoStartFlow: (enabled: boolean) => void;
+    setPomodoroInterval: (interval: PomodoroInterval) => void;
+    setActiveTag: (tag: string) => void;
+    setDailyTargetMinutes: (minutes: number) => void;
 
     sessions: Session[];
     distractions: Distraction[];
@@ -96,6 +103,10 @@ export const useAppStore = create<AppState>()(
             timeLeft: 0,
             isActive: false,
             sessionStartTime: null,
+            pomodoroInterval: "25/5",
+            activeTag: "work",
+            dailyTargetMinutes: 120,
+
             setTimerMode: (mode) => set({ timerMode: mode }),
             setTimerState: (state) => set({ timerState: state }),
             setTimeLeft: (timeOrFn) =>
@@ -104,10 +115,11 @@ export const useAppStore = create<AppState>()(
                 })),
             setIsActive: (active) => set({ isActive: active }),
             setSessionStartTime: (time) => set({ sessionStartTime: time }),
-            autoStartBreak: true,
             setAutoStartBreak: (enabled) => set({ autoStartBreak: enabled }),
-            autoStartFlow: true,
             setAutoStartFlow: (enabled) => set({ autoStartFlow: enabled }),
+            setPomodoroInterval: (interval) => set({ pomodoroInterval: interval }),
+            setActiveTag: (tag) => set({ activeTag: tag }),
+            setDailyTargetMinutes: (minutes) => set({ dailyTargetMinutes: minutes }),
 
             sessions: [],
             distractions: [],
@@ -153,6 +165,9 @@ export const useAppStore = create<AppState>()(
                     sessionStartTime: null,
                     autoStartBreak: true,
                     autoStartFlow: true,
+                    pomodoroInterval: "25/5",
+                    activeTag: "work",
+                    dailyTargetMinutes: 120,
                     sessions: [],
                     distractions: [],
                     deepFocusMode: false,

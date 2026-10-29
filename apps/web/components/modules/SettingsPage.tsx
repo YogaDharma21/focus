@@ -23,6 +23,10 @@ export function SettingsPage() {
     const setAutoStartBreak = useAppStore((s) => s.setAutoStartBreak);
     const autoStartFlow = useAppStore((s) => s.autoStartFlow ?? true);
     const setAutoStartFlow = useAppStore((s) => s.setAutoStartFlow);
+    const dailyTargetMinutes = useAppStore((s) => s.dailyTargetMinutes ?? 120);
+    const setDailyTargetMinutes = useAppStore((s) => s.setDailyTargetMinutes);
+    const pomodoroInterval = useAppStore((s) => s.pomodoroInterval ?? "25/5");
+    const setPomodoroInterval = useAppStore((s) => s.setPomodoroInterval);
     const { theme, setTheme } = useTheme();
 
     const playTestSoundEffect = () => {
@@ -97,6 +101,54 @@ export function SettingsPage() {
                         checked={autoStartFlow}
                         onCheckedChange={setAutoStartFlow}
                     />
+                </div>
+
+                <div className="flex items-center justify-between rounded-[16px] px-4 py-3 bg-surface-inset">
+                    <div className="flex flex-col">
+                        <span className="text-xs font-medium text-foreground">Daily Focus Target</span>
+                        <span className="text-[11px] text-muted-foreground">Target minutes of focus per day</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        {[60, 120, 180, 240].map((mins) => (
+                            <button
+                                key={mins}
+                                type="button"
+                                onClick={() => setDailyTargetMinutes(mins)}
+                                className={cn(
+                                    "px-2.5 py-1 rounded-[8px] text-xs font-mono font-medium border transition-all cursor-pointer active:scale-95",
+                                    dailyTargetMinutes === mins
+                                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                        : "bg-card text-muted-foreground border-border hover:text-foreground"
+                                )}
+                            >
+                                {mins}m
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="flex items-center justify-between rounded-[16px] px-4 py-3 bg-surface-inset">
+                    <div className="flex flex-col">
+                        <span className="text-xs font-medium text-foreground">Pomodoro Interval</span>
+                        <span className="text-[11px] text-muted-foreground">Focus and break interval duration</span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                        {(["25/5", "50/10"] as const).map((interval) => (
+                            <button
+                                key={interval}
+                                type="button"
+                                onClick={() => setPomodoroInterval(interval)}
+                                className={cn(
+                                    "px-2.5 py-1 rounded-[8px] text-xs font-mono font-medium border transition-all cursor-pointer active:scale-95",
+                                    pomodoroInterval === interval
+                                        ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                        : "bg-card text-muted-foreground border-border hover:text-foreground"
+                                )}
+                            >
+                                {interval === "25/5" ? "25m / 5m" : "50m / 10m"}
+                            </button>
+                        ))}
+                    </div>
                 </div>
             </Card>
 

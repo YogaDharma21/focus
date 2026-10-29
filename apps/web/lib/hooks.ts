@@ -31,6 +31,8 @@ export function useTimerEngine() {
         setIsMusicPlaying,
         autoStartBreak,
         autoStartFlow,
+        pomodoroInterval,
+        activeTag,
     } = useAppStore(
         useShallow((s) => ({
             isActive: s.isActive,
@@ -48,15 +50,28 @@ export function useTimerEngine() {
             setIsMusicPlaying: s.setIsMusicPlaying,
             autoStartBreak: s.autoStartBreak ?? true,
             autoStartFlow: s.autoStartFlow ?? true,
+            pomodoroInterval: s.pomodoroInterval ?? "25/5",
+            activeTag: s.activeTag ?? "work",
         }))
     );
 
     const prevTimerRef = useRef({ isActive, timerMode, timerState });
 
+    const playSound = React.useCallback(() => {
+        if (!soundEnabled || !soundEffectEnabled) return;
+        try {
+            const audio = new Audio("/soundeffect.mp3");
+            audio.volume = (soundEffectVolume ?? 80) / 100;
+            audio.play().catch(() => {});
+        } catch {
+            // ignore
+        }
+    }, [soundEnabled, soundEffectEnabled, soundEffectVolume]);
+
     useEffect(() => {
         const prev = prevTimerRef.current;
-        const isRunningFlow = isActive && timerMode === "STOPWATCH" && timerState === "FLOW";
-        const wasRunningFlow = prev.isActive && prev.timerMode === "STOPWATCH" && prev.timerState === "FLOW";
+        const isRunningFlow = isActive && timerState === "FLOW";
+        const wasRunningFlow = prev.isActive && prev.timerState === "FLOW";
 
         if (isRunningFlow && !wasRunningFlow) {
             setIsMusicPlaying(true);
@@ -67,73 +82,58 @@ export function useTimerEngine() {
         prevTimerRef.current = { isActive, timerMode, timerState };
     }, [isActive, timerMode, timerState, setIsMusicPlaying]);
 
-    const handleAutoCompleteSession = React.useCallback(() => {
-        setIsActive(false);
-
-        try {
-            if (soundEffectEnabled ?? true) {
-                const audio = new Audio("/soundeffect.mp3");
-                audio.volume = (soundEffectVolume ?? 80) / 100;
-                audio.play().catch(() => {});
-            }
-        } catch {
-            // ignore
-        }
-
-        const duration = timeLeft;
-        if (duration > 0) {
-            addSession({
-                id: crypto.randomUUID(),
-                date: new Date().toISOString(),
-                duration,
-                mode: "STOPWATCH",
-            });
-
-            const breakSeconds = Math.floor(duration / 5);
-            if (breakSeconds > 0) {
-                setTimeLeft(breakSeconds);
-                setTimerState("BREAK");
-                setIsActive(autoStartBreak);
-            } else {
-                setTimeLeft(0);
-            }
-        }
-
-        setDeepFocusMode(false);
-    }, [
-        timeLeft,
-        setTimeLeft,
-        setIsActive,
-        setTimerState,
-        setDeepFocusMode,
-        addSession,
-        soundEffectEnabled,
-        soundEffectVolume,
-        autoStartBreak,
-    ]);
-
-    const autoCompleteRef = useRef(handleAutoCompleteSession);
-    useEffect(() => {
-        autoCompleteRef.current = handleAutoCompleteSession;
-    }, [handleAutoCompleteSession]);
-
     useEffect(() => {
         if (!isActive) return;
 
         const interval = setInterval(() => {
             setTimeLeft((prev) => {
+                if (timerMode === "POMODORO") {
+                    const next = prev - 1;
+                    if (next <= 0) {
+                        playSound();
+                        const isLong = pomodoroInterval === "50/10";
+                        const workSecs = isLong ? 50 * 60 : 25 * 60;
+                        const breakSecs = isLong ? 10 * 60 : 5 * 60;
+
+                        if (timerState === "FLOW") {
+                            addSession({
+                                id: crypto.randomUUID(),
+                                date: new Date().toISOString(),
+                                duration: workSecs,
+                                mode: "POMODORO",
+                                tag: activeTag || "work",
+                            });
+                            fetch("/api/sessions", {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                    duration: workSecs,
+                                    tag: activeTag || "work",
+                                }),
+                            }).catch(() => {});
+
+                            setTimerState("BREAK");
+                            setIsActive(autoStartBreak);
+                            return breakSecs;
+                        } else {
+                            setTimerState("FLOW");
+                            if (autoStartFlow) {
+                                setIsActive(true);
+                                setDeepFocusMode(true);
+                            } else {
+                                setIsActive(false);
+                            }
+                            return workSecs;
+                        }
+                    }
+                    return next;
+                }
+
+                // STOPWATCH mode
                 if (timerState === "BREAK") {
                     const next = prev - 1;
                     if (next <= 0) {
-                        try {
-                            if ((soundEnabled ?? true) && (soundEffectEnabled ?? true)) {
-                                const audio = new Audio("/soundeffect.mp3");
-                                audio.volume = (soundEffectVolume ?? 80) / 100;
-                                audio.play().catch(() => {});
-                            }
-                        } catch {
-                            // ignore
-                        }
+                        playSound();
                         setTimerState("FLOW");
                         if (autoStartFlow) {
                             setDeepFocusMode(true);
@@ -149,5 +149,19 @@ export function useTimerEngine() {
         }, 1000);
 
         return () => clearInterval(interval);
-    }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive, setDeepFocusMode, autoStartFlow, soundEnabled, soundEffectEnabled, soundEffectVolume]);
+    }, [
+        isActive,
+        timerMode,
+        timerState,
+        pomodoroInterval,
+        activeTag,
+        autoStartBreak,
+        autoStartFlow,
+        playSound,
+        setTimeLeft,
+        setTimerState,
+        setIsActive,
+        setDeepFocusMode,
+        addSession,
+    ]);
 }

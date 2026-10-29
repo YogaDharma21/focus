@@ -12,6 +12,10 @@ export function DeepFocusOverlay() {
     const {
         timeLeft,
         isActive,
+        timerMode,
+        timerState,
+        pomodoroInterval,
+        activeTag,
         setIsActive,
         setDeepFocusMode,
         setTimeLeft,
@@ -30,6 +34,10 @@ export function DeepFocusOverlay() {
         useShallow((s) => ({
             timeLeft: s.timeLeft,
             isActive: s.isActive,
+            timerMode: s.timerMode,
+            timerState: s.timerState,
+            pomodoroInterval: s.pomodoroInterval ?? "25/5",
+            activeTag: s.activeTag ?? "work",
             setIsActive: s.setIsActive,
             setDeepFocusMode: s.setDeepFocusMode,
             setTimeLeft: s.setTimeLeft,
@@ -99,45 +107,77 @@ export function DeepFocusOverlay() {
 
         playSound();
 
-        let elapsedSeconds = 0;
-        if (sessionStartTimeRef.current) {
-            elapsedSeconds = Math.floor(
-                (Date.now() - sessionStartTimeRef.current) / 1000,
-            );
-        }
+        if (timerMode === "POMODORO") {
+            const isLong = pomodoroInterval === "50/10";
+            const fullWorkSecs = isLong ? 50 * 60 : 25 * 60;
+            const fullBreakSecs = isLong ? 10 * 60 : 5 * 60;
 
-        const duration = timeLeft;
+            if (timerState === "FLOW") {
+                const elapsedSeconds = Math.max(1, fullWorkSecs - timeLeft);
+                addSession({
+                    id: crypto.randomUUID(),
+                    date: new Date().toISOString(),
+                    duration: elapsedSeconds,
+                    mode: "POMODORO",
+                    tag: activeTag || "work",
+                });
+                fetch("/api/sessions", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        duration: elapsedSeconds,
+                        tag: activeTag || "work",
+                    }),
+                }).catch(() => {});
 
-        if (duration > 0) {
-            addSession({
-                id: crypto.randomUUID(),
-                date: new Date().toISOString(),
-                duration,
-                mode: "STOPWATCH",
-            });
-            fetch("/api/sessions", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    duration,
-                }),
-            }).catch(() => {});
-        }
-
-        const breakSeconds = Math.floor(duration / 5);
-        if (breakSeconds > 0) {
-            setTimeLeft(breakSeconds);
-            setTimerState("BREAK");
-            setIsActive(autoStartBreak);
+                setTimeLeft(fullBreakSecs);
+                setTimerState("BREAK");
+                setIsActive(autoStartBreak);
+            } else {
+                setTimeLeft(fullWorkSecs);
+                setTimerState("FLOW");
+            }
         } else {
-            setTimeLeft(0);
-            setTimerState("FLOW");
+            // STOPWATCH
+            const duration = timeLeft;
+
+            if (duration > 0) {
+                addSession({
+                    id: crypto.randomUUID(),
+                    date: new Date().toISOString(),
+                    duration,
+                    mode: "STOPWATCH",
+                    tag: activeTag || "work",
+                });
+                fetch("/api/sessions", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        duration,
+                        tag: activeTag || "work",
+                    }),
+                }).catch(() => {});
+            }
+
+            const breakSeconds = Math.floor(duration / 5);
+            if (breakSeconds > 0) {
+                setTimeLeft(breakSeconds);
+                setTimerState("BREAK");
+                setIsActive(autoStartBreak);
+            } else {
+                setTimeLeft(0);
+                setTimerState("FLOW");
+            }
         }
 
         setDeepFocusMode(false);
         sessionStartTimeRef.current = null;
     }, [
         timeLeft,
+        timerMode,
+        timerState,
+        pomodoroInterval,
+        activeTag,
         setTimeLeft,
         setIsActive,
         setTimerState,
@@ -266,6 +306,17 @@ export function DeepFocusOverlay() {
             </button>
 
             <div className="flex flex-col items-center gap-4">
+                <div className="flex items-center gap-2">
+                    <span className="px-3 py-1 rounded-full text-xs font-mono font-medium bg-card border border-border text-muted-foreground shadow-sm">
+                        {timerMode === "POMODORO" ? "Pomodoro" : "Flow"}
+                    </span>
+                    {activeTag && (
+                        <span className="px-3 py-1 rounded-full text-xs font-medium bg-surface-inset text-foreground border border-border-subtle">
+                            #{activeTag}
+                        </span>
+                    )}
+                </div>
+
                 <div className="text-[4rem] sm:text-[6rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground select-none">
                     {formatTime(timeLeft)}
                 </div>
