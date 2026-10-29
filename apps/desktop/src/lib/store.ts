@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { TaskItem, TaskPriority, SubtaskItem } from "@focus/types";
+import type { TaskItem, TaskPriority } from "@focus/types";
 import {
   DEFAULT_SHIELD_CONFIG,
   ShieldConfig,

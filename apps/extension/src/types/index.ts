@@ -2,7 +2,7 @@ import type { TaskItem, TaskPriority, SubtaskItem } from "@focus/types";
 
 export type { TaskItem, TaskPriority, SubtaskItem };
 
-export type TimerMode = "FLOW";
+export type TimerMode = "STOPWATCH" | "FLOW";
 export type TimerState = "FLOW" | "BREAK";
 export type ThemeMode = "light" | "dark";
 
