@@ -145,7 +145,7 @@ export const FocusTimer: React.FC = () => {
             return (
               <div className="flex items-center gap-1.5">
                 <select
-                  value=""
+                  value={selectedTaskId || ""}
                   onChange={(e) => setSelectedTaskId(e.target.value || null)}
                   className="bg-card border border-border text-[11px] text-muted-foreground rounded-full px-3 py-1 focus:outline-none cursor-pointer max-w-[220px] truncate"
                 >

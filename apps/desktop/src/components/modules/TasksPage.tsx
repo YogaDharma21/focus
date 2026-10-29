@@ -40,7 +40,7 @@ export const TasksPage: React.FC = () => {
   const [priority, setPriority] = useState<TaskPriority>('medium');
   const [deadline, setDeadline] = useState('');
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
-  const [newSubtaskText, setNewSubtaskText] = useState('');
+  const [subtaskInputs, setSubtaskInputs] = useState<Record<string, string>>({});
 
   const handleAddTask = (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,10 +61,10 @@ export const TasksPage: React.FC = () => {
   };
 
   const handleAddSubtask = (taskId: string) => {
-    const trimmed = newSubtaskText.trim();
+    const trimmed = (subtaskInputs[taskId] || '').trim();
     if (!trimmed) return;
     addSubtask(taskId, trimmed);
-    setNewSubtaskText('');
+    setSubtaskInputs((prev) => ({ ...prev, [taskId]: '' }));
   };
 
   const filteredTasks = tasks.filter((t) => {
@@ -353,8 +353,13 @@ export const TasksPage: React.FC = () => {
                         <input
                           type="text"
                           placeholder="Add subtask..."
-                          value={newSubtaskText}
-                          onChange={(e) => setNewSubtaskText(e.target.value)}
+                          value={subtaskInputs[task.id] || ''}
+                          onChange={(e) =>
+                            setSubtaskInputs((prev) => ({
+                              ...prev,
+                              [task.id]: e.target.value,
+                            }))
+                          }
                           onKeyDown={(e) => {
                             if (e.key === 'Enter') {
                               e.preventDefault();
