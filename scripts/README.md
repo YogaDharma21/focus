@@ -5,7 +5,7 @@ This folder contains node utility scripts to automate builds, inspections, and w
 ## Available Scripts
 
 ### 1. Build All Apps (`scripts/build-all.js`)
-Builds production output for active monorepo applications (`website`, `landing`, `desktop`, `extension`).
+Builds production output for active monorepo applications (`web`, `landing`, `desktop`, `extension`).
 
 ```bash
 node scripts/build-all.js
