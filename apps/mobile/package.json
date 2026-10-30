@@ -3,17 +3,18 @@
   "main": "expo-router/entry",
   "version": "0.0.1",
   "scripts": {
-    "start": "expo start --go",
-    "dev": "expo start --go",
-    "start:dev-client": "expo start --dev-client",
+    "start": "cross-env EXPO_NO_CACHE=1 expo start --go",
+    "dev": "cross-env EXPO_NO_CACHE=1 expo start --go",
+    "start:dev-client": "cross-env EXPO_NO_CACHE=1 expo start --dev-client",
     "reset-project": "node ./scripts/reset-project.js",
-    "android": "expo start --android --go",
-    "ios": "expo start --ios --go",
-    "web": "expo start --web",
+    "android": "cross-env EXPO_NO_CACHE=1 expo start --android --go",
+    "ios": "cross-env EXPO_NO_CACHE=1 expo start --ios --go",
+    "web": "cross-env EXPO_NO_CACHE=1 expo start --web",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@expo/metro-runtime": "~6.1.2",
     "@expo/vector-icons": "^15.0.3",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/bottom-tabs": "^7.4.0",
@@ -53,6 +54,7 @@
   "devDependencies": {
     "@expo/config-plugins": "~54.0.5",
     "@types/react": "~19.1.0",
+    "cross-env": "^7.0.3",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "typescript": "~5.9.2"
