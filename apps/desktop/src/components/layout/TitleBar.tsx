@@ -1,5 +1,5 @@
-import React from 'react';
-import { Minus, Square, Copy, X, Pin, Sparkles } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Minus, Square, Copy, X, Pin } from 'lucide-react';
 import { electron } from '../../lib/electron';
 import { useDesktopStore } from '../../lib/store';
 import { FloatingTimerCapsule } from './FloatingTimerCapsule';
@@ -10,7 +10,24 @@ export const TitleBar: React.FC = () => {
     isAlwaysOnTop, 
     setAlwaysOnTop, 
   } = useDesktopStore();
-  const [isMaximized, setIsMaximized] = React.useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    electron.isMaximized().then((maximized) => {
+      if (mounted) setIsMaximized(maximized);
+    });
+
+    const unsubscribe = electron.onMaximizeChange((maximized) => {
+      if (mounted) setIsMaximized(maximized);
+    });
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, []);
 
   const handleTogglePin = async () => {
     const nextState = !isAlwaysOnTop;
@@ -19,8 +36,11 @@ export const TitleBar: React.FC = () => {
   };
 
   const handleMaximize = () => {
+    if (!window.electron) {
+      setIsMaximized((prev) => !prev);
+      return;
+    }
     electron.maximizeWindow();
-    setIsMaximized(!isMaximized);
   };
 
   return (

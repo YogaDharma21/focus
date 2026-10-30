@@ -99,6 +99,18 @@ function createWindow() {
         mainWindow.show();
     });
 
+    mainWindow.on("maximize", () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send("window-maximize");
+        }
+    });
+
+    mainWindow.on("unmaximize", () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send("window-unmaximize");
+        }
+    });
+
     // The app lives in the tray: the X button hides the window instead of
     // quitting. A real quit only happens via Tray > "Quit Focus", which sets
     // app.isQuitting before closing.
@@ -214,6 +226,10 @@ function setupIPC() {
 
     ipcMain.handle("is-always-on-top", () => {
         return mainWindow ? mainWindow.isAlwaysOnTop() : false;
+    });
+
+    ipcMain.handle("is-maximized", () => {
+        return mainWindow ? mainWindow.isMaximized() : false;
     });
 
     ipcMain.on("set-window-size", (_event, { width, height }) => {

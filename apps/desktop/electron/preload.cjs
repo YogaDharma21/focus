@@ -6,6 +6,17 @@ contextBridge.exposeInMainWorld('electron', {
   closeWindow: () => ipcRenderer.send('close-window'),
   setAlwaysOnTop: (alwaysOnTop) => ipcRenderer.send('set-always-on-top', alwaysOnTop),
   isAlwaysOnTop: () => ipcRenderer.invoke('is-always-on-top'),
+  isMaximized: () => ipcRenderer.invoke('is-maximized'),
+  onMaximizeChange: (callback) => {
+    const onMax = () => callback(true);
+    const onUnmax = () => callback(false);
+    ipcRenderer.on('window-maximize', onMax);
+    ipcRenderer.on('window-unmaximize', onUnmax);
+    return () => {
+      ipcRenderer.removeListener('window-maximize', onMax);
+      ipcRenderer.removeListener('window-unmaximize', onUnmax);
+    };
+  },
   setWindowSize: (width, height) => ipcRenderer.send('set-window-size', { width, height }),
   showNotification: (title, body) => ipcRenderer.send('show-notification', { title, body }),
   onShortcut: (callback) => {

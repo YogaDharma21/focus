@@ -61,6 +61,8 @@ export interface ElectronAPI {
   closeWindow: () => void;
   setAlwaysOnTop: (alwaysOnTop: boolean) => void;
   isAlwaysOnTop: () => Promise<boolean>;
+  isMaximized: () => Promise<boolean>;
+  onMaximizeChange: (callback: (isMaximized: boolean) => void) => () => void;
   setWindowSize: (width: number, height: number) => void;
   showNotification: (title: string, body: string) => void;
   onShortcut: (callback: (command: string) => void) => () => void;
@@ -101,6 +103,14 @@ export const electron = {
   isAlwaysOnTop: async (): Promise<boolean> => {
     if (window.electron) return await window.electron.isAlwaysOnTop();
     return false;
+  },
+  isMaximized: async (): Promise<boolean> => {
+    if (window.electron) return await window.electron.isMaximized();
+    return false;
+  },
+  onMaximizeChange: (callback: (isMaximized: boolean) => void) => {
+    if (window.electron) return window.electron.onMaximizeChange(callback);
+    return () => {};
   },
   setWindowSize: (width: number, height: number) => {
     if (window.electron) window.electron.setWindowSize(width, height);
