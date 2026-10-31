@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Pause, ShieldAlert, Timer } from "lucide-react";
 import { AppStateData } from "../types";
-import { getStoredState, saveStoredState, subscribeToStateChanges } from "../lib/storage";
+import { getStoredState, saveStoredState, subscribeToStateChanges, getEffectiveTimeLeft } from "../lib/storage";
 import "../index.css";
 
 export function Blocked() {
@@ -37,6 +37,16 @@ export function Blocked() {
       unsubscribe();
     };
   }, []);
+
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    if (!state?.isActive) return;
+    const interval = setInterval(() => {
+      setTick((t) => t + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [state?.isActive]);
 
   useEffect(() => {
     if (!state || !targetUrl) return;
@@ -86,11 +96,18 @@ export function Blocked() {
 
   const pauseTimer = async () => {
     if (!state) return;
-    await saveStoredState({ isActive: false });
+    const current = getEffectiveTimeLeft(state);
+    await saveStoredState({
+      isActive: false,
+      timeLeft: current,
+      timerAnchorTimestamp: null,
+      targetEndTime: null,
+    });
   };
 
-  const mins = state ? Math.floor(state.timeLeft / 60) : 0;
-  const secs = state ? state.timeLeft % 60 : 0;
+  const effectiveTime = state ? getEffectiveTimeLeft(state) : 0;
+  const mins = Math.floor(effectiveTime / 60);
+  const secs = effectiveTime % 60;
   const timeFormatted = `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 
   let displayDomain = "Website Blocked";
