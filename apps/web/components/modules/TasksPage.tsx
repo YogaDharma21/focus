@@ -71,8 +71,16 @@ export function TasksPage() {
     };
 
     const handleFocusTask = (task: TaskItem) => {
+        if (task.completed) return;
         setSelectedTaskId(task.id);
         setView("FOCUS");
+    };
+
+    const handleDeleteTask = (taskId: string) => {
+        deleteTask(taskId);
+        if (expandedTaskId === taskId) {
+            setExpandedTaskId(null);
+        }
     };
 
     const handleAddSubtask = (taskId: string) => {
@@ -304,21 +312,23 @@ export function TasksPage() {
                                                 <ListChecks className="w-3.5 h-3.5" />
                                             </button>
 
-                                            <button
-                                                onClick={() => handleFocusTask(task)}
-                                                className={cn(
-                                                    "p-1.5 rounded-[10px] transition-all duration-300 cursor-pointer active:scale-95",
-                                                    isFocused
-                                                        ? "bg-primary text-primary-foreground"
-                                                        : "text-muted-foreground hover:text-foreground hover:bg-surface",
-                                                )}
-                                                title={isFocused ? "Current focus target" : "Focus on task"}
-                                            >
-                                                <Target className="w-3.5 h-3.5" />
-                                            </button>
+                                            {!task.completed && (
+                                                <button
+                                                    onClick={() => handleFocusTask(task)}
+                                                    className={cn(
+                                                        "p-1.5 rounded-[10px] transition-all duration-300 cursor-pointer active:scale-95",
+                                                        isFocused
+                                                            ? "bg-primary text-primary-foreground"
+                                                            : "text-muted-foreground hover:text-foreground hover:bg-surface",
+                                                    )}
+                                                    title={isFocused ? "Current focus target" : "Focus on task"}
+                                                >
+                                                    <Target className="w-3.5 h-3.5" />
+                                                </button>
+                                            )}
 
                                             <button
-                                                onClick={() => deleteTask(task.id)}
+                                                onClick={() => handleDeleteTask(task.id)}
                                                 className="p-1.5 rounded-[10px] text-muted-foreground hover:text-crimson hover:bg-crimson-bg transition-all duration-300 cursor-pointer active:scale-95"
                                                 title="Delete task"
                                             >
