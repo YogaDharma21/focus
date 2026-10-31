@@ -523,6 +523,7 @@ const styles = StyleSheet.create({
     fontSize: 34,
     fontWeight: '800',
     letterSpacing: -1,
+    fontVariant: ['tabular-nums'],
   },
   bigStatUnit: {
     fontSize: 14,
@@ -593,6 +594,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: '800',
     letterSpacing: -0.5,
+    fontVariant: ['tabular-nums'],
   },
   volumeUnit: {
     fontSize: 13,
