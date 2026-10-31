@@ -172,7 +172,6 @@ export const SettingsPage: React.FC = () => {
         </div>
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">Settings</h1>
-          <p className="text-xs text-muted-foreground">Configure timer intervals, themes, sound effects, and workspace preferences.</p>
         </div>
       </div>
 
@@ -185,7 +184,6 @@ export const SettingsPage: React.FC = () => {
               </div>
               <div>
                 <h2 className="text-sm font-semibold text-foreground tracking-tight">Timer & Focus</h2>
-                <p className="text-[11px] text-muted-foreground">Flow mode: open-ended stopwatch with smart break calculation.</p>
               </div>
             </div>
           </div>
@@ -245,7 +243,6 @@ export const SettingsPage: React.FC = () => {
             </div>
             <div>
               <h2 className="text-sm font-semibold text-foreground tracking-tight">Appearance</h2>
-              <p className="text-[11px] text-muted-foreground">Switch between light and dark mode.</p>
             </div>
           </div>
 
@@ -286,7 +283,6 @@ export const SettingsPage: React.FC = () => {
             </div>
             <div>
               <h2 className="text-sm font-semibold text-foreground tracking-tight">Sound & Notifications</h2>
-              <p className="text-[11px] text-muted-foreground">Configure session chime alerts, test audio feedback, and ambient levels.</p>
             </div>
           </div>
 
@@ -429,7 +425,6 @@ export const SettingsPage: React.FC = () => {
             </div>
             <div>
               <h2 className="text-sm font-semibold text-foreground tracking-tight">System & Window Preferences</h2>
-              <p className="text-[11px] text-muted-foreground">Window management and desktop notification triggers.</p>
             </div>
           </div>
 
@@ -485,7 +480,6 @@ export const SettingsPage: React.FC = () => {
             </div>
             <div>
               <h2 className="text-sm font-semibold text-foreground tracking-tight">Data, Storage & Backup</h2>
-              <p className="text-[11px] text-muted-foreground">View real-time storage stats, export JSON backups, or safely restore data.</p>
             </div>
           </div>
 
@@ -574,7 +568,6 @@ export const SettingsPage: React.FC = () => {
             </div>
             <div>
               <h2 className="text-sm font-semibold text-foreground tracking-tight">About Focus Desktop</h2>
-              <p className="text-[11px] text-muted-foreground">Application architecture, release information, and open source repository.</p>
             </div>
           </div>
 

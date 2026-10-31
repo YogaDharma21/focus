@@ -113,7 +113,6 @@ export const ShieldPage: React.FC = () => {
         </div>
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">Focus Shield</h1>
-          <p className="text-xs text-muted-foreground">Block distracting apps and websites while a Flow session is running.</p>
         </div>
       </div>
 
