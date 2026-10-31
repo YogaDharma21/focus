@@ -46,7 +46,7 @@ import {
 import { DeepFocusOverlay } from "./components/DeepFocusOverlay";
 import { Progress } from "../components/ui/progress";
 import { AppStateData, ThemeMode, TaskItem, TaskPriority } from "../types";
-import { getStoredState, saveStoredState, subscribeToStateChanges, getCachedState, DEFAULT_STATE, getWeeklyMinutesFromSessions, getTodayMinutesFromSessions, calculateStreaksFromSessions, DAYS_OF_WEEK } from "../lib/storage";
+import { getStoredState, saveStoredState, subscribeToStateChanges, getCachedState, DEFAULT_STATE, getWeeklyMinutesFromSessions, getTodayMinutesFromSessions, calculateStreaksFromSessions, DAYS_OF_WEEK, getEffectiveTimeLeft } from "../lib/storage";
 import "../index.css";
 
 const DISTRACTION_CATEGORIES = [
@@ -235,8 +235,21 @@ export function Popup() {
     document.body.classList.toggle("light", mode === "light");
   }, [state?.themeMode]);
 
-  // No local timer tick — the background service worker is the single source
-  // of truth. Timer state updates arrive via subscribeToStateChanges above.
+  // Local 1-second interval to update displayed timer when popup is open
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    if (!state?.isActive) return;
+    const interval = setInterval(() => {
+      setTick((t) => t + 1);
+      if (state.timerState === "BREAK" && getEffectiveTimeLeft(state) <= 0) {
+        if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+          chrome.runtime.sendMessage({ target: "background", action: "CHECK_BREAK_END" }).catch(() => {});
+        }
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [state?.isActive, state?.timerState]);
 
   if (!state) {
     return (
@@ -255,19 +268,53 @@ export function Popup() {
   };
 
 
-  // Timer controls — write to storage directly, the background's
-  // chrome.storage.onChanged listener reacts to start/stop the timer.
+  // Timer controls — write timestamp anchors to storage; background
+  // handles one-shot alarm for break end and event-based wakeups.
   const toggleTimer = () => {
     const starting = !state.isActive;
-    if (starting && state.timerState === "FLOW") {
-      updateState({ isActive: true, deepFocusMode: true, isMusicPlaying: soundEnabled && musicEnabled });
+    const currentTime = getEffectiveTimeLeft(state);
+
+    if (starting) {
+      if (state.timerState === "FLOW") {
+        const anchor = Date.now() - (currentTime * 1000);
+        updateState({
+          isActive: true,
+          deepFocusMode: true,
+          isMusicPlaying: soundEnabled && musicEnabled,
+          timerAnchorTimestamp: anchor,
+          targetEndTime: null,
+        });
+      } else {
+        const targetEnd = Date.now() + (currentTime * 1000);
+        updateState({
+          isActive: true,
+          deepFocusMode: false,
+          isMusicPlaying: false,
+          targetEndTime: targetEnd,
+          timerAnchorTimestamp: null,
+        });
+      }
     } else {
-      updateState({ isActive: starting, deepFocusMode: false, isMusicPlaying: false });
+      updateState({
+        isActive: false,
+        deepFocusMode: false,
+        isMusicPlaying: false,
+        timeLeft: currentTime,
+        timerAnchorTimestamp: null,
+        targetEndTime: null,
+      });
     }
   };
 
   const resetTimer = () => {
-    updateState({ isActive: false, deepFocusMode: false, timeLeft: 0, isMusicPlaying: false });
+    updateState({
+      isActive: false,
+      deepFocusMode: false,
+      timeLeft: 0,
+      timerAnchorTimestamp: null,
+      targetEndTime: null,
+      isMusicPlaying: false,
+    });
   };
 
   const completeSession = () => {
@@ -282,6 +329,8 @@ export function Popup() {
         timerState: "FLOW",
         previousMode: "FLOW",
         timeLeft: 0,
+        timerAnchorTimestamp: null,
+        targetEndTime: null,
       });
       return;
     }
@@ -292,7 +341,8 @@ export function Popup() {
       chrome.runtime.sendMessage({ target: "background", action: "RESTORE_BLOCKED_TABS" });
     }
 
-    const durationLogged = state.timeLeft > 0 ? state.timeLeft : 1;
+    const currentElapsed = getEffectiveTimeLeft(state);
+    const durationLogged = currentElapsed > 0 ? currentElapsed : 1;
 
     const focusedTask = (state.tasks || []).find((t) => t.id === state.selectedTaskId);
     const newSession = {
@@ -309,7 +359,7 @@ export function Popup() {
     const updatedTodayMins = getTodayMinutesFromSessions(newSessionList);
     const streaks = calculateStreaksFromSessions(newSessionList);
 
-    const breakDuration = Math.max(1, Math.floor(state.timeLeft / 5));
+    const breakDuration = Math.max(1, Math.floor(currentElapsed / 5));
 
     const autoStartBreak = Boolean(state.timerSettings?.autoStartBreak);
 
@@ -321,6 +371,8 @@ export function Popup() {
       timerState: "BREAK",
       previousMode: "FLOW",
       timeLeft: breakDuration,
+      timerAnchorTimestamp: null,
+      targetEndTime: autoStartBreak ? Date.now() + (breakDuration * 1000) : null,
       sessions: newSessionList,
       stats: {
         ...state.stats,
@@ -339,9 +391,13 @@ export function Popup() {
       timestamp: new Date().toISOString(),
       category
     };
+    const currentElapsed = getEffectiveTimeLeft(state);
     updateState({
       isActive: false,
       isMusicPlaying: false,
+      timeLeft: currentElapsed,
+      timerAnchorTimestamp: null,
+      targetEndTime: null,
       distractions: [...state.distractions, entry]
     });
     setShowDistractionPicker(false);
@@ -497,8 +553,9 @@ export function Popup() {
   };
 
   // Time calculations
-  const mins = Math.floor(state.timeLeft / 60);
-  const secs = state.timeLeft % 60;
+  const effectiveTimeLeft = getEffectiveTimeLeft(state);
+  const mins = Math.floor(effectiveTimeLeft / 60);
+  const secs = effectiveTimeLeft % 60;
   const timeFormatted = `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   const totalDuration = 0;
   const progressValue = state.timerState === "FLOW" ? 100 : 0;
@@ -522,7 +579,7 @@ export function Popup() {
     return (
       <div className="w-[420px] h-[580px] bg-background text-foreground relative flex flex-col overflow-hidden select-none font-sans">
         <DeepFocusOverlay
-          state={state}
+          state={{ ...state, timeLeft: effectiveTimeLeft }}
           onToggleTimer={toggleTimer}
           onCompleteSession={() => {
             completeSession();
