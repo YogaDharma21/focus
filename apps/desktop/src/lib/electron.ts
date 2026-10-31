@@ -61,6 +61,9 @@ export interface ElectronAPI {
   closeWindow: () => void;
   setAlwaysOnTop: (alwaysOnTop: boolean) => void;
   isAlwaysOnTop: () => Promise<boolean>;
+  setMiniMode: (enabled: boolean) => void;
+  isMiniMode: () => Promise<boolean>;
+  onMiniModeChange: (callback: (enabled: boolean) => void) => () => void;
   setWindowSize: (width: number, height: number) => void;
   showNotification: (title: string, body: string) => void;
   onShortcut: (callback: (command: string) => void) => () => void;
@@ -101,6 +104,17 @@ export const electron = {
   isAlwaysOnTop: async (): Promise<boolean> => {
     if (window.electron) return await window.electron.isAlwaysOnTop();
     return false;
+  },
+  setMiniMode: (enabled: boolean) => {
+    if (window.electron) window.electron.setMiniMode(enabled);
+  },
+  isMiniMode: async (): Promise<boolean> => {
+    if (window.electron) return await window.electron.isMiniMode();
+    return false;
+  },
+  onMiniModeChange: (callback: (enabled: boolean) => void) => {
+    if (window.electron) return window.electron.onMiniModeChange(callback);
+    return () => {};
   },
   setWindowSize: (width: number, height: number) => {
     if (window.electron) window.electron.setWindowSize(width, height);

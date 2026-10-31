@@ -7,6 +7,7 @@ const {
     Notification,
     globalShortcut,
     nativeImage,
+    screen,
 } = require("electron");
 const path = require("path");
 const fs = require("fs");
@@ -28,6 +29,66 @@ let shieldWindowReady = false;
 let shieldPendingViolations = [];
 let tray = null;
 let trayMinimizeHintShown = false;
+let isMiniMode = false;
+let savedNormalBounds = null;
+let savedAlwaysOnTop = false;
+
+const MINI_MODE_WIDTH = 260;
+const MINI_MODE_HEIGHT = 48;
+
+function enterMiniMode() {
+    if (!mainWindow || isMiniMode) return;
+    isMiniMode = true;
+
+    if (mainWindow.isMaximized()) {
+        mainWindow.unmaximize();
+    }
+
+    savedNormalBounds = mainWindow.getBounds();
+    savedAlwaysOnTop = mainWindow.isAlwaysOnTop();
+
+    mainWindow.setMinimumSize(MINI_MODE_WIDTH, MINI_MODE_HEIGHT);
+    mainWindow.setResizable(false);
+
+    try {
+        const currentDisplay = screen.getDisplayMatching(savedNormalBounds);
+        const workArea = currentDisplay.workArea;
+        const x = Math.round(workArea.x + workArea.width - MINI_MODE_WIDTH - 24);
+        const y = Math.round(workArea.y + workArea.height - MINI_MODE_HEIGHT - 24);
+        mainWindow.setBounds({ x, y, width: MINI_MODE_WIDTH, height: MINI_MODE_HEIGHT });
+    } catch {
+        mainWindow.setSize(MINI_MODE_WIDTH, MINI_MODE_HEIGHT);
+    }
+
+    mainWindow.setAlwaysOnTop(true, "screen-saver");
+    mainWindow.webContents.send("mini-mode-changed", true);
+}
+
+function exitMiniMode() {
+    if (!mainWindow || !isMiniMode) return;
+    isMiniMode = false;
+
+    mainWindow.setResizable(true);
+    mainWindow.setMinimumSize(380, 500);
+
+    if (savedNormalBounds) {
+        mainWindow.setBounds(savedNormalBounds);
+    } else {
+        mainWindow.setSize(1200, 800);
+        mainWindow.center();
+    }
+
+    mainWindow.setAlwaysOnTop(savedAlwaysOnTop || false);
+    mainWindow.webContents.send("mini-mode-changed", false);
+}
+
+function toggleMiniMode() {
+    if (isMiniMode) {
+        exitMiniMode();
+    } else {
+        enterMiniMode();
+    }
+}
 
 function createDummyTrayIcon() {
     // Create a 16x16 solid blue/cyan circle icon using nativeImage data URL
@@ -118,6 +179,8 @@ function createWindow() {
 
     mainWindow.on("closed", () => {
         mainWindow = null;
+        isMiniMode = false;
+        savedNormalBounds = null;
     });
 }
 
@@ -163,6 +226,12 @@ function createTray() {
                     if (!mainWindow) return;
                     const isTop = mainWindow.isAlwaysOnTop();
                     mainWindow.setAlwaysOnTop(!isTop);
+                },
+            },
+            {
+                label: "Toggle Mini Mode",
+                click: () => {
+                    toggleMiniMode();
                 },
             },
             { type: "separator" },
@@ -218,6 +287,18 @@ function setupIPC() {
 
     ipcMain.on("set-window-size", (_event, { width, height }) => {
         if (mainWindow) mainWindow.setSize(width, height);
+    });
+
+    ipcMain.on("set-mini-mode", (_event, enabled) => {
+        if (enabled) {
+            enterMiniMode();
+        } else {
+            exitMiniMode();
+        }
+    });
+
+    ipcMain.handle("is-mini-mode", () => {
+        return isMiniMode;
     });
 
     ipcMain.on("show-notification", (_event, { title, body }) => {
@@ -1102,6 +1183,10 @@ function registerShortcuts() {
         globalShortcut.register("CommandOrControl+Alt+P", () => {
             if (mainWindow)
                 mainWindow.webContents.send("global-shortcut", "toggle-timer");
+        });
+
+        globalShortcut.register("CommandOrControl+Alt+M", () => {
+            toggleMiniMode();
         });
     } catch (err) {
         console.error("Failed to register global shortcuts:", err);

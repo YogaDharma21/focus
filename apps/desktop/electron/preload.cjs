@@ -6,6 +6,13 @@ contextBridge.exposeInMainWorld('electron', {
   closeWindow: () => ipcRenderer.send('close-window'),
   setAlwaysOnTop: (alwaysOnTop) => ipcRenderer.send('set-always-on-top', alwaysOnTop),
   isAlwaysOnTop: () => ipcRenderer.invoke('is-always-on-top'),
+  setMiniMode: (enabled) => ipcRenderer.send('set-mini-mode', enabled),
+  isMiniMode: () => ipcRenderer.invoke('is-mini-mode'),
+  onMiniModeChange: (callback) => {
+    const handler = (_event, enabled) => callback(enabled);
+    ipcRenderer.on('mini-mode-changed', handler);
+    return () => ipcRenderer.removeListener('mini-mode-changed', handler);
+  },
   setWindowSize: (width, height) => ipcRenderer.send('set-window-size', { width, height }),
   showNotification: (title, body) => ipcRenderer.send('show-notification', { title, body }),
   onShortcut: (callback) => {
