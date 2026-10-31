@@ -117,13 +117,28 @@ export function useTimerEngine() {
         autoCompleteRef.current = handleAutoCompleteSession;
     }, [handleAutoCompleteSession]);
 
+    const lastTickRef = useRef<number>(0);
+
     useEffect(() => {
         if (!isActive) return;
 
-        const interval = setInterval(() => {
+        lastTickRef.current = Date.now();
+
+        const tick = () => {
+            const now = Date.now();
+            if (now < lastTickRef.current) {
+                lastTickRef.current = now;
+                return;
+            }
+
+            const delta = Math.floor((now - lastTickRef.current) / 1000);
+            if (delta <= 0) return;
+
+            lastTickRef.current += delta * 1000;
+
             setTimeLeft((prev) => {
                 if (timerState === "BREAK") {
-                    const next = prev - 1;
+                    const next = prev - delta;
                     if (next <= 0) {
                         try {
                             if ((soundEnabled ?? true) && (soundEffectEnabled ?? true)) {
@@ -144,10 +159,36 @@ export function useTimerEngine() {
                     }
                     return next;
                 }
-                return prev + 1;
+                return prev + delta;
             });
-        }, 1000);
+        };
 
-        return () => clearInterval(interval);
-    }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive, setDeepFocusMode, autoStartFlow, soundEnabled, soundEffectEnabled, soundEffectVolume]);
+        const interval = setInterval(tick, 1000);
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                tick();
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("focus", tick);
+
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            window.removeEventListener("focus", tick);
+        };
+    }, [
+        isActive,
+        setTimeLeft,
+        timerState,
+        setTimerState,
+        setIsActive,
+        setDeepFocusMode,
+        autoStartFlow,
+        soundEnabled,
+        soundEffectEnabled,
+        soundEffectVolume,
+    ]);
 }
