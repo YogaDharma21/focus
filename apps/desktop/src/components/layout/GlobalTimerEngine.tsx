@@ -41,7 +41,12 @@ export const GlobalTimerEngine: React.FC = () => {
           setTimeLeft((prev) => {
             const next = prev - 1;
             if (next <= 0) {
-              playCompletionSound();
+              const breakNotification = {
+                title: 'Break Finished!',
+                body: 'Time to get back into flow.',
+              };
+              playCompletionSound(false, breakNotification);
+              electron.showNotification(breakNotification.title, breakNotification.body);
               setTimerState('FLOW');
               if (autoStartFlow ?? true) {
                 setDeepFocusMode(true);

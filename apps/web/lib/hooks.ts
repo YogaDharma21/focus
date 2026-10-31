@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useSyncExternalStore } from "react";
 import { useAppStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
+import { playCompletionSound } from "@/lib/sound";
 
 export function useMediaQuery(query: string): boolean {
     return useSyncExternalStore(
@@ -70,15 +71,12 @@ export function useTimerEngine() {
     const handleAutoCompleteSession = React.useCallback(() => {
         setIsActive(false);
 
-        try {
-            if (soundEffectEnabled ?? true) {
-                const audio = new Audio("/soundeffect.mp3");
-                audio.volume = (soundEffectVolume ?? 80) / 100;
-                audio.play().catch(() => {});
-            }
-        } catch {
-            // ignore
-        }
+        playCompletionSound({
+            notification: {
+                title: "Flow Session Complete!",
+                body: "Great focus session! Time to take a break.",
+            },
+        });
 
         const duration = timeLeft;
         if (duration > 0) {
@@ -125,15 +123,12 @@ export function useTimerEngine() {
                 if (timerState === "BREAK") {
                     const next = prev - 1;
                     if (next <= 0) {
-                        try {
-                            if ((soundEnabled ?? true) && (soundEffectEnabled ?? true)) {
-                                const audio = new Audio("/soundeffect.mp3");
-                                audio.volume = (soundEffectVolume ?? 80) / 100;
-                                audio.play().catch(() => {});
-                            }
-                        } catch {
-                            // ignore
-                        }
+                        playCompletionSound({
+                            notification: {
+                                title: "Break Finished!",
+                                body: "Time to get back into flow.",
+                            },
+                        });
                         setTimerState("FLOW");
                         if (autoStartFlow) {
                             setDeepFocusMode(true);

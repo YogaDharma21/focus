@@ -7,8 +7,10 @@
   "exports": {
     ".": "./src/index.ts"
   },
+  "type": "module",
   "scripts": {
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types src/audio.test.ts"
   },
   "dependencies": {
     "clsx": "^2.1.1",

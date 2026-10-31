@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Play, Pause, RotateCcw, CheckCircle2, Focus, Clock, Coffee, Target, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DistractionCounter } from "./DistractionCounter";
+import { playCompletionSound, requestNotificationPermission } from "@/lib/sound";
 
 export function FocusTimer() {
     const {
@@ -47,47 +48,20 @@ export function FocusTimer() {
         }))
     );
 
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-
     const sessionStartTimeRef = useRef<number | null>(null);
 
     const playSound = React.useCallback(() => {
-        if (!soundEnabled || !soundEffectEnabled) return;
-        const vol = (soundEffectVolume ?? 80) / 100;
-        try {
-            if (audioRef.current) {
-                audioRef.current.currentTime = 0;
-                audioRef.current.volume = vol;
-                audioRef.current.play().catch(() => {
-                    const fallback = new Audio("/soundeffect.mp3");
-                    fallback.volume = vol;
-                    fallback.play().catch(() => {});
-                });
-            } else {
-                const fallback = new Audio("/soundeffect.mp3");
-                fallback.volume = vol;
-                fallback.play().catch(() => {});
-            }
-        } catch {
-            // Audio play might be blocked by browser policies
-        }
-    }, [soundEnabled, soundEffectEnabled, soundEffectVolume]);
-
-    useEffect(() => {
-        const unlockAudio = () => {
-            if (audioRef.current) {
-                audioRef.current.load();
-            }
-            window.removeEventListener("click", unlockAudio);
-            window.removeEventListener("keydown", unlockAudio);
-        };
-        window.addEventListener("click", unlockAudio);
-        window.addEventListener("keydown", unlockAudio);
-        return () => {
-            window.removeEventListener("click", unlockAudio);
-            window.removeEventListener("keydown", unlockAudio);
-        };
-    }, []);
+        const breakSeconds = Math.floor(timeLeft / 5);
+        const breakStr = breakSeconds > 0
+            ? `${Math.floor(breakSeconds / 60)}m`
+            : "a short";
+        playCompletionSound({
+            notification: {
+                title: "Flow Session Complete!",
+                body: `Focused for ${Math.floor(timeLeft / 60)}m. Earned ${breakStr} break!`,
+            },
+        });
+    }, [timeLeft]);
 
     useEffect(() => {
         if (isActive && !sessionStartTimeRef.current) {
@@ -158,7 +132,12 @@ export function FocusTimer() {
         autoStartBreak,
     ]);
 
-    const toggleTimer = () => setIsActive(!isActive);
+    const toggleTimer = () => {
+        if (!isActive) {
+            requestNotificationPermission();
+        }
+        setIsActive(!isActive);
+    };
 
     const resetTimer = () => {
         setIsActive(false);
@@ -174,8 +153,6 @@ export function FocusTimer() {
 
     return (
         <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center min-h-[50vh] relative">
-            <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
-
             <div className="flex flex-col items-center gap-4 mb-12 w-full">
                 <div className="flex items-center justify-center gap-2 mt-1 mb-0.5">
                     {timerState === "BREAK" ? (
