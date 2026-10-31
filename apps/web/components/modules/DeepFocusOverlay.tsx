@@ -4,7 +4,7 @@ import { useAppStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
 import { Pause, Play, X, CheckCircle2, Music, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { cn, getBreakDuration } from "@/lib/utils";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { DistractionCounter } from "./DistractionCounter";
 
@@ -26,6 +26,7 @@ export function DeepFocusOverlay() {
         soundEffectVolume,
         soundEffectEnabled,
         autoStartBreak,
+        breakRatio,
         tasks,
         selectedTaskId,
     } = useAppStore(
@@ -46,6 +47,7 @@ export function DeepFocusOverlay() {
             soundEffectVolume: s.soundEffectVolume,
             soundEffectEnabled: s.soundEffectEnabled,
             autoStartBreak: s.autoStartBreak ?? true,
+            breakRatio: s.breakRatio ?? "1/5",
             tasks: s.tasks,
             selectedTaskId: s.selectedTaskId,
         }))
@@ -131,7 +133,7 @@ export function DeepFocusOverlay() {
             }).catch(() => {});
         }
 
-        const breakSeconds = Math.floor(duration / 5);
+        const breakSeconds = getBreakDuration(duration, breakRatio);
         if (breakSeconds > 0) {
             setTimeLeft(breakSeconds);
             setTimerState("BREAK");
@@ -152,6 +154,7 @@ export function DeepFocusOverlay() {
         playSound,
         addSession,
         autoStartBreak,
+        breakRatio,
     ]);
 
     useEffect(() => {

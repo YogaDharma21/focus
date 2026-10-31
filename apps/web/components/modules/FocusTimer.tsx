@@ -5,7 +5,7 @@ import { useShallow } from "zustand/react/shallow";
 import React, { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, RotateCcw, CheckCircle2, Focus, Clock, Coffee, Target, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getBreakDuration } from "@/lib/utils";
 import { DistractionCounter } from "./DistractionCounter";
 
 export function FocusTimer() {
@@ -23,6 +23,7 @@ export function FocusTimer() {
         soundEffectEnabled,
         soundEnabled,
         autoStartBreak,
+        breakRatio,
         tasks,
         selectedTaskId,
         setSelectedTaskId,
@@ -41,6 +42,7 @@ export function FocusTimer() {
             soundEffectEnabled: s.soundEffectEnabled,
             soundEnabled: s.soundEnabled ?? true,
             autoStartBreak: s.autoStartBreak ?? true,
+            breakRatio: s.breakRatio ?? "1/5",
             tasks: s.tasks,
             selectedTaskId: s.selectedTaskId,
             setSelectedTaskId: s.setSelectedTaskId,
@@ -133,7 +135,7 @@ export function FocusTimer() {
             }).catch(() => {});
         }
 
-        const breakSeconds = Math.floor(duration / 5);
+        const breakSeconds = getBreakDuration(duration, breakRatio);
         if (breakSeconds > 0) {
             setTimeLeft(breakSeconds);
             setTimerState("BREAK");
@@ -156,6 +158,7 @@ export function FocusTimer() {
         addSession,
         setSessionStartTime,
         autoStartBreak,
+        breakRatio,
     ]);
 
     const toggleTimer = () => setIsActive(!isActive);

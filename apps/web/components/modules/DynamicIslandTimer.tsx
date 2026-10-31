@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useAppStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
 import { Play, Pause, CheckCircle2, Clock } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getBreakDuration } from "@/lib/utils";
 import { DistractionCounter } from "./DistractionCounter";
 
 export function DynamicIslandTimer() {
@@ -21,6 +21,7 @@ export function DynamicIslandTimer() {
         soundEffectEnabled,
         soundEnabled,
         autoStartBreak,
+        breakRatio,
         tasks,
         selectedTaskId,
     } = useAppStore(
@@ -37,6 +38,7 @@ export function DynamicIslandTimer() {
             soundEffectEnabled: s.soundEffectEnabled,
             soundEnabled: s.soundEnabled ?? true,
             autoStartBreak: s.autoStartBreak ?? true,
+            breakRatio: s.breakRatio ?? "1/5",
             tasks: s.tasks,
             selectedTaskId: s.selectedTaskId,
         }))
@@ -113,7 +115,7 @@ export function DynamicIslandTimer() {
             });
         }
 
-        const breakSeconds = Math.floor(duration / 5);
+        const breakSeconds = getBreakDuration(duration, breakRatio);
         if (breakSeconds > 0) {
             setTimeLeft(breakSeconds);
             setTimerState("BREAK");

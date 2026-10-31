@@ -27,6 +27,8 @@ export const SettingsPage: React.FC = () => {
     setAutoStartBreak,
     autoStartFlow,
     setAutoStartFlow,
+    breakRatio,
+    setBreakRatio,
     sessions,
     distractions,
   } = useDesktopStore();
@@ -187,6 +189,42 @@ export const SettingsPage: React.FC = () => {
                 <h2 className="text-sm font-semibold text-foreground tracking-tight">Timer & Focus</h2>
                 <p className="text-[11px] text-muted-foreground">Flow mode: open-ended stopwatch with smart break calculation.</p>
               </div>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-secondary/70 border border-border space-y-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <span className="text-xs font-semibold text-foreground block">Break Ratio</span>
+                <span className="text-[11px] text-muted-foreground block leading-tight">
+                  Calculate break length based on elapsed flow duration.
+                </span>
+              </div>
+              <span className="font-mono text-xs text-muted-foreground tabular-nums">
+                {breakRatio === "1/3" ? "33% of flow" : breakRatio === "1/4" ? "25% of flow" : "20% of flow"}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              {(["1/5", "1/4", "1/3"] as const).map((ratio) => {
+                const isActive = (breakRatio ?? "1/5") === ratio;
+                return (
+                  <button
+                    key={ratio}
+                    type="button"
+                    onClick={() => {
+                      setBreakRatio(ratio);
+                      showFeedback(`Break ratio set to ${ratio}.`);
+                    }}
+                    className={`flex-1 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer tabular-nums ${
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-md"
+                        : "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border"
+                    }`}
+                  >
+                    {ratio}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

@@ -9,6 +9,7 @@ import type {
     TaskItem,
     SubtaskItem,
     TaskPriority,
+    BreakRatio,
 } from "@focus/types";
 
 export type {
@@ -20,6 +21,7 @@ export type {
     TaskItem,
     SubtaskItem,
     TaskPriority,
+    BreakRatio,
 };
 
 interface AppState {
@@ -53,6 +55,7 @@ interface AppState {
     sessionStartTime: string | null;
     autoStartBreak: boolean;
     autoStartFlow: boolean;
+    breakRatio: BreakRatio;
     setTimerMode: (mode: "STOPWATCH") => void;
     setTimerState: (state: TimerState) => void;
     setTimeLeft: (time: number | ((prev: number) => number)) => void;
@@ -60,6 +63,7 @@ interface AppState {
     setSessionStartTime: (time: string | null) => void;
     setAutoStartBreak: (enabled: boolean) => void;
     setAutoStartFlow: (enabled: boolean) => void;
+    setBreakRatio: (ratio: BreakRatio) => void;
 
     tasks: TaskItem[];
     selectedTaskId: string | null;
@@ -137,6 +141,8 @@ export const useAppStore = create<AppState>()(
             setAutoStartBreak: (enabled) => set({ autoStartBreak: enabled }),
             autoStartFlow: true,
             setAutoStartFlow: (enabled) => set({ autoStartFlow: enabled }),
+            breakRatio: "1/5",
+            setBreakRatio: (ratio) => set({ breakRatio: ratio }),
 
             tasks: [],
             selectedTaskId: null,
@@ -258,6 +264,7 @@ export const useAppStore = create<AppState>()(
                     sessionStartTime: null,
                     autoStartBreak: true,
                     autoStartFlow: true,
+                    breakRatio: "1/5",
                     tasks: [],
                     selectedTaskId: null,
                     sessions: [],
