@@ -19,12 +19,15 @@ const toDateKey = (dateStr?: string) => {
     if (!dateStr.includes("T") && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
         return dateStr;
     }
-    return format(new Date(dateStr), "yyyy-MM-dd");
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return "";
+    return format(date, "yyyy-MM-dd");
 };
 
 const parseDateKey = (key: string) => {
-    const [y, m, d] = key.split("-").map(Number);
-    return new Date(y, m - 1, d);
+    const parts = key.split("-").map(Number);
+    if (parts.length !== 3 || parts.some(isNaN)) return new Date(NaN);
+    return new Date(parts[0], parts[1] - 1, parts[2]);
 };
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -86,7 +89,7 @@ export function StatsJournal() {
 
     const historicalSeconds = useMemo(() => {
         const todaysSessions = sessions.filter((s) =>
-            s.date && toDateKey(s.date) === todayStr
+            s && s.date && toDateKey(s.date) === todayStr
         );
         return todaysSessions.reduce((acc, s) => acc + s.duration, 0);
     }, [sessions, todayStr]);
@@ -100,7 +103,7 @@ export function StatsJournal() {
         if (!sessions || sessions.length === 0) return { currentStreak: 0, bestStreak: 0 };
 
         const uniqueDates = Array.from(
-            new Set(sessions.map((s) => toDateKey(s.date)).filter(Boolean)),
+            new Set(sessions.map((s) => toDateKey(s?.date)).filter(Boolean)),
         ).sort();
 
         if (uniqueDates.length === 0) return { currentStreak: 0, bestStreak: 0 };
@@ -147,7 +150,7 @@ export function StatsJournal() {
             const targetStr = format(targetDate, "yyyy-MM-dd");
 
             const daySessions = sessions.filter(
-                (s) => s.date && toDateKey(s.date) === targetStr
+                (s) => s && s.date && toDateKey(s.date) === targetStr
             );
             const histSecs = daySessions.reduce(
                 (acc, s) => acc + s.duration,

@@ -10,12 +10,15 @@ const toDateKey = (dateStr?: string) => {
   if (!dateStr.includes('T') && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
     return dateStr;
   }
-  return format(new Date(dateStr), 'yyyy-MM-dd');
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+  return format(date, 'yyyy-MM-dd');
 };
 
 const parseDateKey = (key: string) => {
-  const [y, m, d] = key.split('-').map(Number);
-  return new Date(y, m - 1, d);
+  const parts = key.split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) return new Date(NaN);
+  return new Date(parts[0], parts[1] - 1, parts[2]);
 };
 
 export const StatsJournal: React.FC = () => {
