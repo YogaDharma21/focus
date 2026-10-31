@@ -43,35 +43,39 @@ export function playSynthesizedChime(volume = 0.8): void {
     const ctx = getAudioContext();
     if (!ctx) return;
 
+    const scheduleTones = () => {
+      const now = ctx.currentTime;
+      const vol = Math.max(0.01, Math.min(1, typeof volume === "number" ? volume : 0.8));
+
+      // Two-tone chime: D5 (587.33 Hz) and A5 (880.00 Hz)
+      const tones = [
+        { freq: 587.33, offset: 0, duration: 0.35 },
+        { freq: 880.0, offset: 0.12, duration: 0.55 },
+      ];
+
+      for (const tone of tones) {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(tone.freq, now + tone.offset);
+
+        const startTime = now + tone.offset;
+        gain.gain.setValueAtTime(vol * 0.25, startTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, startTime + tone.duration);
+
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        osc.start(startTime);
+        osc.stop(startTime + tone.duration);
+      }
+    };
+
     if (ctx.state === "suspended") {
-      ctx.resume().catch(() => {});
-    }
-
-    const now = ctx.currentTime;
-    const vol = Math.max(0.01, Math.min(1, typeof volume === "number" ? volume : 0.8));
-
-    // Two-tone chime: D5 (587.33 Hz) and A5 (880.00 Hz)
-    const tones = [
-      { freq: 587.33, offset: 0, duration: 0.35 },
-      { freq: 880.0, offset: 0.12, duration: 0.55 },
-    ];
-
-    for (const tone of tones) {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-
-      osc.type = "sine";
-      osc.frequency.setValueAtTime(tone.freq, now + tone.offset);
-
-      const startTime = now + tone.offset;
-      gain.gain.setValueAtTime(vol * 0.25, startTime);
-      gain.gain.exponentialRampToValueAtTime(0.0001, startTime + tone.duration);
-
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-
-      osc.start(startTime);
-      osc.stop(startTime + tone.duration);
+      ctx.resume().then(scheduleTones).catch(() => scheduleTones());
+    } else {
+      scheduleTones();
     }
   } catch (err) {
     console.warn("Synthesized chime failed:", err);

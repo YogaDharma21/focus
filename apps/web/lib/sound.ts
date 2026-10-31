@@ -6,14 +6,13 @@ import {
 } from "@focus/utils";
 import { useAppStore } from "./store";
 
-registerAutoplayUnlock();
-
-export { requestNotificationPermission, showNotificationToast };
+export { registerAutoplayUnlock, requestNotificationPermission, showNotificationToast };
 
 export const playCompletionSound = (options?: {
   forcePlay?: boolean;
   notification?: { title: string; body: string };
 }) => {
+  registerAutoplayUnlock();
   const { soundEnabled, soundEffectEnabled, soundEffectVolume } = useAppStore.getState();
   if ((!soundEnabled || !soundEffectEnabled) && !options?.forcePlay) return;
 

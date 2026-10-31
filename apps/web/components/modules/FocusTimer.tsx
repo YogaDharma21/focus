@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Play, Pause, RotateCcw, CheckCircle2, Focus, Clock, Coffee, Target, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DistractionCounter } from "./DistractionCounter";
-import { playCompletionSound, requestNotificationPermission } from "@/lib/sound";
+import { playCompletionSound, requestNotificationPermission, registerAutoplayUnlock } from "@/lib/sound";
 
 export function FocusTimer() {
     const {
@@ -49,6 +49,10 @@ export function FocusTimer() {
     );
 
     const sessionStartTimeRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        registerAutoplayUnlock();
+    }, []);
 
     const playSound = React.useCallback(() => {
         const breakSeconds = Math.floor(timeLeft / 5);
@@ -134,6 +138,7 @@ export function FocusTimer() {
 
     const toggleTimer = () => {
         if (!isActive) {
+            registerAutoplayUnlock();
             requestNotificationPermission();
         }
         setIsActive(!isActive);

@@ -83,6 +83,8 @@ assert.strictEqual(resumeCalled, true, "unlockAudioContext should resume suspend
 
 // Synthesized chime creates and triggers oscillators
 playSynthesizedChime(0.8);
+// Allow promise microtask to resolve
+await Promise.resolve();
 assert.strictEqual(startCalled, true, "playSynthesizedChime should start oscillators");
 assert.strictEqual(stopCalled, true, "playSynthesizedChime should schedule oscillator stops");
 

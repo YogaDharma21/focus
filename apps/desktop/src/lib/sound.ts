@@ -2,12 +2,13 @@ import { registerAutoplayUnlock, playSynthesizedChime } from '@focus/utils';
 import { useDesktopStore } from './store';
 import { electron } from './electron';
 
-registerAutoplayUnlock();
+export { registerAutoplayUnlock };
 
 export const playCompletionSound = (
   forcePlay = false,
   notification?: { title: string; body: string }
 ) => {
+  registerAutoplayUnlock();
   const { soundEffectEnabled, soundEffectVolume } = useDesktopStore.getState();
   if (!soundEffectEnabled && !forcePlay) return;
 
