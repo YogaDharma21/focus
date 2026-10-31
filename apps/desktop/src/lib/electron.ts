@@ -10,6 +10,8 @@ export interface ShieldSyncPayload {
   session: {
     isActive: boolean;
     timerState: "FLOW" | "BREAK";
+    flowTimeElapsed?: number;
+    timeLeft?: number;
   };
 }
 
@@ -67,6 +69,7 @@ export interface ElectronAPI {
   showNotification: (title: string, body: string) => void;
   onShortcut: (callback: (command: string) => void) => () => void;
   onTimerAction: (callback: (action: string) => void) => () => void;
+  onShieldAction: (callback: (action: string) => void) => () => void;
   syncShieldState: (payload: ShieldSyncPayload) => void;
   getExternalAudioState: () => Promise<ExternalAudioState>;
   onExternalAudioState: (callback: (state: ExternalAudioState) => void) => () => void;
@@ -132,6 +135,12 @@ export const electron = {
   },
   onTimerAction: (callback: (action: string) => void) => {
     if (window.electron) return window.electron.onTimerAction(callback);
+    return () => {};
+  },
+  onShieldAction: (callback: (action: string) => void) => {
+    if (window.electron && window.electron.onShieldAction) {
+      return window.electron.onShieldAction(callback);
+    }
     return () => {};
   },
   syncShieldState: (payload: ShieldSyncPayload) => {

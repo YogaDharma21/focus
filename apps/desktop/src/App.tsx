@@ -31,6 +31,13 @@ export const App: React.FC = () => {
 
   const shieldSnoozedUntil = useRef(new Map<string, number>());
 
+  const elapsedMinutes = useDesktopStore(
+    (state) =>
+      Math.floor(
+        (state.timerState === "BREAK" ? state.timeLeft : state.flowTimeElapsed) / 60
+      )
+  );
+
   const snoozeShieldKeys = (keys: string[]) => {
     const now = Date.now();
     for (const key of keys) {
@@ -54,14 +61,23 @@ export const App: React.FC = () => {
       }
     });
 
+    const cleanupShieldAction = electron.onShieldAction((action) => {
+      if (action === 'toggle') {
+        const currentShield = useDesktopStore.getState().shield;
+        useDesktopStore.getState().setShieldEnabled(!currentShield.enabled);
+      }
+    });
+
     return () => {
       cleanupShortcut();
       cleanupAction();
+      cleanupShieldAction();
     };
   }, [deepFocusMode, isActive]);
 
   // Keep the main-process Shield monitor in sync with config + session state.
   useEffect(() => {
+    const state = useDesktopStore.getState();
     electron.syncShieldState({
       shield: {
         enabled: shield.enabled,
@@ -69,9 +85,14 @@ export const App: React.FC = () => {
         allowedSites: shield.allowedSites,
         blockedApps: shield.blockedApps,
       },
-      session: { isActive, timerState },
+      session: {
+        isActive,
+        timerState,
+        flowTimeElapsed: state.flowTimeElapsed,
+        timeLeft: state.timeLeft,
+      },
     });
-  }, [shield, isActive, timerState]);
+  }, [shield, isActive, timerState, elapsedMinutes]);
 
   // Handle Shield detections from the main process: log once per item,
   // surface the block overlay, and respect 10-minute snoozes on dismiss.

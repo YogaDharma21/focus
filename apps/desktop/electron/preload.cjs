@@ -29,6 +29,11 @@ contextBridge.exposeInMainWorld('electron', {
     ipcRenderer.on('timer-action', handler);
     return () => ipcRenderer.removeListener('timer-action', handler);
   },
+  onShieldAction: (callback) => {
+    const handler = (_event, action) => callback(action);
+    ipcRenderer.on('shield-action', handler);
+    return () => ipcRenderer.removeListener('shield-action', handler);
+  },
   syncShieldState: (payload) => ipcRenderer.send('shield:sync', payload),
   getExternalAudioState: () => ipcRenderer.invoke('audio:get-external-state'),
   onExternalAudioState: (callback) => {
