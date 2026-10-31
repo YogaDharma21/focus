@@ -534,7 +534,9 @@ function startWin32ProcessMonitor() {
                                 timestamp: Date.now(),
                             };
                         }
-                    } catch {}
+                    } catch (err) {
+                        console.warn("Failed to parse Win32 process helper payload:", err);
+                    }
                 }
             }
         });
@@ -563,7 +565,7 @@ function stopWin32ProcessMonitor() {
 
 async function listRunningProcesses() {
     if (process.platform === "win32") {
-        if (win32ProcessSnapshot && Date.now() - win32ProcessSnapshot.timestamp < 15000 && win32ProcessSnapshot.processes.length > 0) {
+        if (win32ProcessSnapshot && Date.now() - win32ProcessSnapshot.timestamp < 15000) {
             return win32ProcessSnapshot.processes;
         }
         const helperPath = getWin32ProcessHelperPath();
@@ -593,7 +595,7 @@ async function listRunningProcesses() {
 async function listWindowTitles() {
     // Window-title inspection is currently implemented for Windows only.
     if (process.platform !== "win32") return [];
-    if (win32ProcessSnapshot && Date.now() - win32ProcessSnapshot.timestamp < 15000 && win32ProcessSnapshot.windows.length > 0) {
+    if (win32ProcessSnapshot && Date.now() - win32ProcessSnapshot.timestamp < 15000) {
         return win32ProcessSnapshot.windows.map((w) => ({
             process: w.process,
             title: w.title,
@@ -685,7 +687,7 @@ function sanitizeImageName(imageName) {
 
 async function listWindowedProcessesRaw() {
     if (process.platform !== "win32") return [];
-    if (win32ProcessSnapshot && Date.now() - win32ProcessSnapshot.timestamp < 15000 && win32ProcessSnapshot.windows.length > 0) {
+    if (win32ProcessSnapshot && Date.now() - win32ProcessSnapshot.timestamp < 15000) {
         return win32ProcessSnapshot.windows.map((w) => {
             const raw = w.process || (w.path ? path.basename(w.path) : "");
             const procName = raw.replace(/\.exe$/i, "").trim();
@@ -701,7 +703,7 @@ async function listWindowedProcessesRaw() {
         const out = await execFileAsync(helperPath, ["0", "--once"]);
         try {
             const parsed = JSON.parse(out);
-            if (Array.isArray(parsed.windows) && parsed.windows.length > 0) {
+            if (Array.isArray(parsed.windows)) {
                 return parsed.windows.map((w) => {
                     const raw = w.process || (w.path ? path.basename(w.path) : "");
                     const procName = raw.replace(/\.exe$/i, "").trim();

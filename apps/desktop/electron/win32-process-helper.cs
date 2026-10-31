@@ -48,6 +48,13 @@ namespace FocusDesktop {
             public IntPtr pUserSid;
         }
 
+        struct WindowEntry {
+            public uint Pid;
+            public string Process;
+            public string Path;
+            public string Title;
+        }
+
         static void Main(string[] args) {
             Console.OutputEncoding = Encoding.UTF8;
 
@@ -107,7 +114,7 @@ namespace FocusDesktop {
 
             StringBuilder sb = new StringBuilder(512);
             StringBuilder pathSb = new StringBuilder(1024);
-            List<string> windows = new List<string>();
+            List<WindowEntry> windows = new List<WindowEntry>();
             HashSet<string> seenWindows = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             EnumWindows(delegate(IntPtr hWnd, IntPtr lParam) {
@@ -137,7 +144,12 @@ namespace FocusDesktop {
                             }
                             CloseHandle(hProc);
                         }
-                        windows.Add(pid + "\t" + procName + "\t" + exePath + "\t" + title);
+                        WindowEntry entry = new WindowEntry();
+                        entry.Pid = pid;
+                        entry.Process = procName;
+                        entry.Path = exePath;
+                        entry.Title = title;
+                        windows.Add(entry);
                     }
                 }
                 return true;
@@ -152,14 +164,14 @@ namespace FocusDesktop {
             json.Append("],\"windows\":[");
             for (int i = 0; i < windows.Count; i++) {
                 if (i > 0) json.Append(",");
-                string[] parts = windows[i].Split(new char[] { '\t' }, 4);
-                json.Append("{\"pid\":").Append(parts[0])
+                WindowEntry entry = windows[i];
+                json.Append("{\"pid\":").Append(entry.Pid)
                     .Append(",\"process\":");
-                EscapeJson(json, parts[1]);
+                EscapeJson(json, entry.Process);
                 json.Append(",\"path\":");
-                EscapeJson(json, parts[2]);
+                EscapeJson(json, entry.Path);
                 json.Append(",\"title\":");
-                EscapeJson(json, parts[3]);
+                EscapeJson(json, entry.Title);
                 json.Append("}");
             }
             json.Append("]}");
