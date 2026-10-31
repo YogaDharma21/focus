@@ -111,7 +111,7 @@ export const FloatingTimerCapsule: React.FC = () => {
       <button
         onClick={() => setIsExpanded(!isExpanded)}
         className={cn(
-          "flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold transition-all shadow-sm",
+          "flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold transition-all duration-300 ease-out active:scale-95 cursor-pointer shadow-sm",
           isExpanded
             ? "bg-primary text-primary-foreground border-primary"
             : "bg-card border-border text-foreground hover:bg-secondary",
