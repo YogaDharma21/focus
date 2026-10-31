@@ -117,10 +117,10 @@ export function MediaPlayer() {
             <button
                 onClick={() => setMediaPlayerOpen(!mediaPlayerOpen)}
                 className={cn(
-                    "flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl transition-all duration-300 shadow-md border group",
+                    "flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-2xl transition-all duration-300 border group",
                     mediaPlayerOpen
-                        ? "bg-card border-border text-foreground shadow-xl ring-1 ring-border"
-                        : "bg-card/90 hover:bg-accent border-border text-muted-foreground hover:text-foreground"
+                        ? "bg-card border-border text-foreground shadow-sm"
+                        : "bg-card hover:bg-surface border-border text-muted-foreground hover:text-foreground"
                 )}
                 aria-label="Toggle ambient music player"
             >
@@ -139,7 +139,7 @@ export function MediaPlayer() {
 
             {/* Expanded Floating Card Popup */}
             {mediaPlayerOpen && (
-                <div className="fixed right-4 sm:absolute sm:right-0 top-16 sm:top-full mt-2 w-[calc(100vw-2rem)] max-w-[320px] sm:w-80 bg-popover border border-border shadow-2xl rounded-2xl p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200 space-y-3.5">
+                <div className="fixed right-4 sm:absolute sm:right-0 top-16 sm:top-full mt-2 w-[calc(100vw-2rem)] max-w-[320px] sm:w-80 bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-[24px] p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200 space-y-3.5">
                     {/* Header */}
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2 text-foreground">
@@ -150,7 +150,7 @@ export function MediaPlayer() {
                         </div>
                         <button
                             onClick={() => setMediaPlayerOpen(false)}
-                            className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
+                            className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-surface transition-colors"
                             title="Collapse"
                         >
                             <ChevronDown className="w-4 h-4" />
@@ -158,10 +158,10 @@ export function MediaPlayer() {
                     </div>
 
                     {/* Main Inner Player Card */}
-                    <div className="bg-secondary border border-border rounded-2xl p-3 flex items-center justify-between gap-3 shadow-inner">
+                    <div className="bg-surface-inset border border-border rounded-[16px] p-3 flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
                             <div className={cn(
-                                "w-10 h-10 rounded-xl bg-muted border border-border flex items-center justify-center shrink-0 transition-transform duration-500",
+                                "w-10 h-10 rounded-xl bg-surface border border-border flex items-center justify-center shrink-0 transition-transform duration-500",
                                 isMusicPlaying && "rotate-45"
                             )}>
                                 <Disc className={cn("w-5 h-5 text-muted-foreground", isMusicPlaying && "text-primary animate-spin [animation-duration:6s]")} />
@@ -185,9 +185,9 @@ export function MediaPlayer() {
                             onClick={togglePlay}
                             disabled={!soundEnabled || !musicEnabled}
                             className={cn(
-                                "w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-lg transition-all duration-200",
+                                "w-10 h-10 rounded-full flex items-center justify-center shrink-0 shadow-sm transition-all duration-200",
                                 !soundEnabled || !musicEnabled
-                                    ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                                    ? "bg-surface text-muted-foreground cursor-not-allowed opacity-50"
                                     : "bg-primary hover:bg-primary/90 text-primary-foreground active:scale-95 cursor-pointer"
                             )}
                             title={!soundEnabled ? "Sound is disabled in Settings" : !musicEnabled ? "Music is disabled in Settings" : isMusicPlaying ? "Pause music" : "Play music"}
@@ -228,7 +228,7 @@ export function MediaPlayer() {
                                     step="1"
                                     value={isMusicMuted ? 0 : musicVolume}
                                     onChange={handleVolumeChange}
-                                    className="w-full h-1.5 bg-muted rounded-full appearance-none cursor-pointer accent-primary [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
+                                    className="w-full h-1.5 bg-surface-inset rounded-full appearance-none cursor-pointer accent-primary [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
                                 />
                             </div>
                         </div>

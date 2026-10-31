@@ -161,10 +161,10 @@ export function DeepFocusOverlay() {
                 <button
                     onClick={() => setShowMusicMenu(!showMusicMenu)}
                     className={cn(
-                        "h-10 px-3.5 rounded-full border transition-all flex items-center gap-2 shadow-sm",
+                        "h-10 px-3.5 rounded-full border transition-all flex items-center gap-2",
                         isMusicPlaying
-                            ? "bg-secondary/50 border-border text-foreground ring-1 ring-border shadow-md"
-                            : "bg-secondary/50 border-border text-muted-foreground hover:text-foreground hover:bg-secondary/50"
+                            ? "bg-surface border-border text-foreground shadow-sm"
+                            : "bg-surface-inset border-border text-muted-foreground hover:text-foreground hover:bg-surface"
                     )}
                     title={isMusicPlaying ? "Lofi-Beats: Playing" : "Lofi-Beats: Paused"}
                 >
@@ -180,7 +180,7 @@ export function DeepFocusOverlay() {
                 </button>
 
                 {showMusicMenu && (
-                    <div className="absolute top-full left-0 mt-2.5 w-64 bg-card border border-border rounded-2xl p-3.5 shadow-2xl z-50 animate-in fade-in slide-in-from-top-2 duration-150 space-y-3">
+                    <div className="absolute top-full left-0 mt-2.5 w-64 bg-card border border-border rounded-2xl p-3.5 shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] z-50 animate-in fade-in slide-in-from-top-2 duration-150 space-y-3">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2 text-foreground">
                                 <Music className="w-4 h-4 text-foreground" />
@@ -193,8 +193,8 @@ export function DeepFocusOverlay() {
                                 className={cn(
                                     "px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5",
                                     isMusicPlaying
-                                        ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow"
-                                        : "bg-secondary/50 text-foreground hover:bg-secondary"
+                                        ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-xs"
+                                        : "bg-surface-inset text-foreground hover:bg-surface"
                                 )}
                             >
                                 {isMusicPlaying ? (
@@ -234,7 +234,7 @@ export function DeepFocusOverlay() {
                                         setIsMusicMuted(false);
                                     }
                                 }}
-                                className="w-full h-1.5 bg-secondary/50 rounded-full appearance-none cursor-pointer accent-foreground [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
+                                className="w-full h-1.5 bg-surface-inset rounded-full appearance-none cursor-pointer accent-foreground [&::-webkit-slider-thumb]:w-3.5 [&::-webkit-slider-thumb]:h-3.5 [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:shadow-md"
                             />
                         </div>
                     </div>
@@ -254,7 +254,7 @@ export function DeepFocusOverlay() {
                     const focused = tasks.find((t) => t.id === selectedTaskId);
                     if (!focused) return null;
                     return (
-                        <div className="px-3.5 py-1.5 rounded-full bg-card/80 border border-border text-xs font-medium text-foreground tracking-wide max-w-sm truncate shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] mb-2">
+                        <div className="px-3.5 py-1.5 rounded-full bg-card border border-border text-xs font-medium text-foreground tracking-wide max-w-sm truncate shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] mb-2">
                             {focused.text}
                         </div>
                     );
@@ -270,7 +270,7 @@ export function DeepFocusOverlay() {
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="w-14 h-14 rounded-[var(--radius)] border-2 hover:bg-secondary/50 hover:border-border transition-all"
+                        className="w-14 h-14 rounded-[var(--radius)] border-2 hover:bg-surface hover:border-border transition-all"
                         onClick={toggleTimer}
                     >
                         {isActive ? (
@@ -299,7 +299,7 @@ export function DeepFocusOverlay() {
             </div>
 
             <div className="absolute bottom-8 text-xs text-muted-foreground">
-                Press <kbd className="px-2 py-1 bg-secondary/50 rounded text-[10px] font-mono border border-border">Esc</kbd> to exit focus mode
+                Press <kbd className="px-2 py-1 bg-surface-inset rounded text-[10px] font-mono border border-border">Esc</kbd> to exit focus mode
             </div>
         </div>
     );
