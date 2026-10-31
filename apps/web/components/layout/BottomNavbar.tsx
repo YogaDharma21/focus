@@ -46,7 +46,7 @@ export function BottomNavbar() {
                             title={item.label}
                             aria-label={item.label}
                             className={cn(
-                                "relative flex flex-col items-center justify-center w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 transition-all duration-300 ease-out group rounded-full",
+                                "relative flex flex-col items-center justify-center w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 transition-all duration-300 ease-out group rounded-full active:scale-95 cursor-pointer",
                                 isActive
                                     ? "text-primary-foreground bg-primary shadow-sm"
                                     : "text-muted-foreground hover:text-foreground hover:bg-surface",

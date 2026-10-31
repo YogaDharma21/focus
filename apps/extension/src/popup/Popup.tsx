@@ -565,7 +565,7 @@ export function Popup() {
               onClick={() => {
                 setShowFloatingTimerCard(!showFloatingTimerCard);
               }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold transition-all shadow-sm ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold transition-all duration-300 ease-out active:scale-95 cursor-pointer shadow-sm ${
                 showFloatingTimerCard
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-card border-border text-foreground hover:bg-secondary"
@@ -589,7 +589,7 @@ export function Popup() {
         <div className="flex-1 flex justify-end">
           <button
             onClick={() => setActiveTab(activeTab === "settings" ? "timer" : "settings")}
-            className={`p-1.5 rounded-lg transition-all ${
+            className={`p-1.5 rounded-lg transition-all duration-300 ease-out active:scale-95 cursor-pointer ${
               activeTab === "settings"
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
@@ -734,7 +734,7 @@ export function Popup() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={`flex-1 flex items-center justify-center gap-1.5 rounded-full transition-all duration-200 relative text-[11px] font-bold py-1.5 ${
+                className={`flex-1 flex items-center justify-center gap-1.5 rounded-full transition-all duration-300 ease-out active:scale-95 cursor-pointer relative text-[11px] font-bold py-1.5 ${
                   isActive
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-surface"
