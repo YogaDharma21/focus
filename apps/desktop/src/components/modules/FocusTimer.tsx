@@ -105,17 +105,17 @@ export const FocusTimer: React.FC = () => {
     <div className="flex flex-col items-center justify-center min-h-full max-w-2xl mx-auto w-full select-none space-y-6">
       {/* Giant Digital Clock Display */}
       <div className="my-2 flex flex-col items-center gap-2">
-        <div className="flex items-center justify-center gap-2 mt-1 mb-0.5">
+        <div className="flex items-center justify-center gap-1.5 mt-1 mb-0.5 text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
           {timerState === "BREAK" ? (
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-mono text-muted-foreground shadow-sm">
-              <Coffee className="w-3 h-3" />
-              <span className="text-[10px] font-bold">Break</span>
-            </div>
+            <>
+              <Coffee className="w-3.5 h-3.5" />
+              <span>Break</span>
+            </>
           ) : (
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-mono text-muted-foreground shadow-sm">
-              <Clock className="w-3 h-3" />
-              <span className="text-[10px] font-bold">Flow</span>
-            </div>
+            <>
+              <Clock className="w-3.5 h-3.5" />
+              <span>Flow</span>
+            </>
           )}
         </div>
         <h1 className="text-[100px] md:text-[120px] font-extrabold tracking-tighter text-foreground leading-none font-sans select-none">

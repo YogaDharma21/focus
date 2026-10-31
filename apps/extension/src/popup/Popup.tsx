@@ -893,17 +893,17 @@ export function Popup() {
         {activeTab === "timer" && (
           <div className="flex flex-col items-center justify-between min-h-full pb-1 pt-1 gap-2">
             {/* Timer Label */}
-            <div className="flex items-center justify-center gap-2 mt-1 mb-0.5">
+            <div className="flex items-center justify-center gap-1.5 mt-1 mb-0.5 text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
               {state.timerState === "BREAK" ? (
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-mono text-muted-foreground shadow-sm">
-                  <Coffee className="w-3 h-3" />
-                  <span className="text-[10px] font-bold">Break</span>
-                </div>
+                <>
+                  <Coffee className="w-3.5 h-3.5" />
+                  <span>Break</span>
+                </>
               ) : (
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-mono text-muted-foreground shadow-sm">
-                  <Clock className="w-3 h-3" />
-                  <span className="text-[10px] font-bold">Flow</span>
-                </div>
+                <>
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>Flow</span>
+                </>
               )}
             </div>
 
