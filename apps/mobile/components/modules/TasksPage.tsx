@@ -21,6 +21,7 @@ import {
   ChevronDown,
   ChevronUp,
   ListChecks,
+  Clock,
 } from 'lucide-react-native';
 
 const PRIORITIES: TaskPriority[] = ['low', 'medium', 'high', 'urgent'];
@@ -31,6 +32,7 @@ export function TasksPage() {
 
   const {
     tasks,
+    sessions,
     selectedTaskId,
     addTask,
     toggleTask,
@@ -46,6 +48,7 @@ export function TasksPage() {
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('medium');
   const [deadline, setDeadline] = useState('');
+  const [estimatedMinutes, setEstimatedMinutes] = useState('');
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [subtaskInputs, setSubtaskInputs] = useState<Record<string, string>>({});
 
@@ -59,13 +62,16 @@ export function TasksPage() {
     const trimmed = title.trim();
     if (!trimmed) return;
     triggerHaptic();
+    const parsedEst = parseInt(estimatedMinutes, 10);
     addTask({
       text: trimmed,
       priority,
       deadline: deadline.trim() || undefined,
+      estimatedMinutes: Number.isFinite(parsedEst) && parsedEst > 0 ? parsedEst : undefined,
     });
     setTitle('');
     setDeadline('');
+    setEstimatedMinutes('');
   };
 
   const handleToggleTask = (id: string) => {
@@ -109,6 +115,20 @@ export function TasksPage() {
       default:
         return { text: colors.mutedText, bg: colors.surfaceInset };
     }
+  };
+
+  const getVelocityBadgeColors = (actual: number, est: number, completed: boolean) => {
+    if (actual > est) return { text: colors.crimson, bg: colors.crimsonBg };
+    if (completed) return { text: colors.emerald, bg: colors.emeraldBg };
+    if (actual >= est * 0.8) return { text: colors.amber, bg: colors.amberBg };
+    return { text: colors.mutedText, bg: colors.surfaceInset };
+  };
+
+  const formatMins = (mins: number) => {
+    if (mins < 60) return `${mins}m`;
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
   };
 
   return (
@@ -210,7 +230,25 @@ export function TasksPage() {
         </View>
 
         <View style={styles.inputActionRow}>
-          <View style={styles.deadlineWrap}>
+          <View style={[styles.deadlineWrap, { flex: 1 }]}>
+            <TextInput
+              placeholder="Est min"
+              placeholderTextColor={colors.mutedText}
+              value={estimatedMinutes}
+              onChangeText={setEstimatedMinutes}
+              keyboardType="numeric"
+              style={[
+                styles.deadlineInput,
+                {
+                  color: colors.text,
+                  backgroundColor: colors.surfaceInset,
+                  borderColor: colors.border,
+                },
+              ]}
+            />
+          </View>
+
+          <View style={[styles.deadlineWrap, { flex: 1.2 }]}>
             <TextInput
               placeholder="Due date (optional)"
               placeholderTextColor={colors.mutedText}
@@ -307,6 +345,11 @@ export function TasksPage() {
             const pColors = getPriorityColors(task.priority || 'medium');
             const subtasks = task.subtasks || [];
             const completedSubtasks = subtasks.filter((s) => s.completed).length;
+            const taskSessions = (sessions || []).filter((s) => s.taskId === task.id);
+            const totalSeconds = taskSessions.reduce((acc, s) => acc + (s.duration || 0), 0);
+            const actualMinutes = Math.round(totalSeconds / 60);
+            const hasEstimate =
+              typeof task.estimatedMinutes === 'number' && task.estimatedMinutes > 0;
 
             return (
               <View
@@ -374,6 +417,60 @@ export function TasksPage() {
                           </Text>
                         </View>
                       ) : null}
+
+                      {hasEstimate && (
+                        <View
+                          style={[
+                            styles.badge,
+                            {
+                              backgroundColor: getVelocityBadgeColors(
+                                actualMinutes,
+                                task.estimatedMinutes!,
+                                task.completed,
+                              ).bg,
+                            },
+                          ]}
+                        >
+                          <Clock
+                            size={10}
+                            color={
+                              getVelocityBadgeColors(
+                                actualMinutes,
+                                task.estimatedMinutes!,
+                                task.completed,
+                              ).text
+                            }
+                          />
+                          <Text
+                            style={[
+                              styles.badgeText,
+                              {
+                                color: getVelocityBadgeColors(
+                                  actualMinutes,
+                                  task.estimatedMinutes!,
+                                  task.completed,
+                                ).text,
+                              },
+                            ]}
+                          >
+                            {formatMins(actualMinutes)} / {formatMins(task.estimatedMinutes!)}
+                          </Text>
+                        </View>
+                      )}
+
+                      {!hasEstimate && actualMinutes > 0 && (
+                        <View
+                          style={[
+                            styles.badge,
+                            { backgroundColor: colors.surfaceInset },
+                          ]}
+                        >
+                          <Clock size={10} color={colors.mutedText} />
+                          <Text style={[styles.badgeText, { color: colors.mutedText }]}>
+                            {formatMins(actualMinutes)}
+                          </Text>
+                        </View>
+                      )}
 
                       {isFocusSelected && (
                         <View
