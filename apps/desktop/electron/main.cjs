@@ -56,6 +56,7 @@ function createWindow() {
             contextIsolation: true,
             nodeIntegration: false,
             webSecurity: true,
+            backgroundThrottling: false,
         },
     });
 
@@ -121,6 +122,103 @@ function createWindow() {
     });
 }
 
+function formatTrayMinutes(seconds) {
+    return Math.floor(Math.max(0, seconds || 0) / 60);
+}
+
+function updateTrayMenu() {
+    if (!tray) return;
+
+    let statusLabel = "Focus Desktop - Idle";
+    let tooltip = "Focus Desktop";
+
+    if (shieldSession.isActive) {
+        if (shieldSession.timerState === "BREAK") {
+            const minutesLeft = Math.ceil(Math.max(0, shieldSession.timeLeft || 0) / 60);
+            statusLabel = `Break: ${minutesLeft}m remaining`;
+            tooltip = `Focus - Break (${minutesLeft}m left)`;
+        } else {
+            const minutes = formatTrayMinutes(shieldSession.flowTimeElapsed);
+            statusLabel = `Flow: ${minutes}m elapsed`;
+            tooltip = `Focus - Flow (${minutes}m elapsed)`;
+        }
+    } else if (shieldSession.flowTimeElapsed > 0) {
+        const minutes = formatTrayMinutes(shieldSession.flowTimeElapsed);
+        statusLabel = `Paused: ${minutes}m`;
+        tooltip = `Focus - Paused (${minutes}m)`;
+    }
+
+    try {
+        tray.setToolTip(tooltip);
+    } catch {
+        // ignore tray tooltip error if destroyed
+    }
+
+    const timerActionLabel = shieldSession.isActive
+        ? "Pause Timer"
+        : (shieldSession.flowTimeElapsed > 0 ? "Resume Timer" : "Start Timer");
+
+    const shieldActionLabel = shieldConfig.enabled ? "Mute Shield" : "Enable Shield";
+
+    const contextMenu = Menu.buildFromTemplate([
+        {
+            label: statusLabel,
+            enabled: false,
+        },
+        { type: "separator" },
+        {
+            label: "Show / Hide App",
+            click: () => {
+                if (!mainWindow) return;
+                if (mainWindow.isVisible()) {
+                    mainWindow.hide();
+                } else {
+                    mainWindow.show();
+                    mainWindow.focus();
+                }
+            },
+        },
+        {
+            label: timerActionLabel,
+            click: () => {
+                if (mainWindow) {
+                    mainWindow.webContents.send("timer-action", "toggle");
+                }
+            },
+        },
+        {
+            label: shieldActionLabel,
+            click: () => {
+                if (mainWindow) {
+                    mainWindow.webContents.send("shield-action", "toggle");
+                }
+            },
+        },
+        {
+            label: "Toggle Always On Top",
+            click: () => {
+                if (!mainWindow) return;
+                const isTop = mainWindow.isAlwaysOnTop();
+                mainWindow.setAlwaysOnTop(!isTop);
+            },
+        },
+        { type: "separator" },
+        {
+            label: "Quit Focus",
+            click: () => {
+                app.isQuitting = true;
+                app.quit();
+            },
+        },
+    ]);
+
+    try {
+        tray.setContextMenu(contextMenu);
+    } catch (err) {
+        console.error("Failed to update tray context menu:", err);
+    }
+}
+
 function createTray() {
     try {
         const trayIconPath = path.join(__dirname, "../public/icon16.png");
@@ -129,53 +227,6 @@ function createTray() {
             icon = createDummyTrayIcon();
         }
         tray = new Tray(icon);
-        tray.setToolTip("Focus Desktop");
-
-        const contextMenu = Menu.buildFromTemplate([
-            {
-                label: "Focus Desktop",
-                enabled: false,
-            },
-            { type: "separator" },
-            {
-                label: "Show / Hide App",
-                click: () => {
-                    if (!mainWindow) return;
-                    if (mainWindow.isVisible()) {
-                        mainWindow.hide();
-                    } else {
-                        mainWindow.show();
-                        mainWindow.focus();
-                    }
-                },
-            },
-            {
-                label: "Play / Pause Timer",
-                click: () => {
-                    if (mainWindow) {
-                        mainWindow.webContents.send("timer-action", "toggle");
-                    }
-                },
-            },
-            {
-                label: "Toggle Always On Top",
-                click: () => {
-                    if (!mainWindow) return;
-                    const isTop = mainWindow.isAlwaysOnTop();
-                    mainWindow.setAlwaysOnTop(!isTop);
-                },
-            },
-            { type: "separator" },
-            {
-                label: "Quit Focus",
-                click: () => {
-                    app.isQuitting = true;
-                    app.quit();
-                },
-            },
-        ]);
-
-        tray.setContextMenu(contextMenu);
         tray.on("click", () => {
             if (!mainWindow) return;
             if (mainWindow.isVisible()) {
@@ -185,6 +236,7 @@ function createTray() {
                 mainWindow.focus();
             }
         });
+        updateTrayMenu();
     } catch (err) {
         console.error("Tray creation failed:", err);
     }
@@ -330,7 +382,7 @@ let shieldConfig = {
     allowedSites: [],
     blockedApps: [],
 };
-let shieldSession = { isActive: false, timerState: "FLOW" };
+let shieldSession = { isActive: false, timerState: "FLOW", flowTimeElapsed: 0, timeLeft: 0 };
 let shieldPollTimer = null;
 const shieldLastNotified = new Map();
 const shieldSnoozedKeys = new Map();
@@ -369,6 +421,8 @@ function updateShieldState(payload) {
         shieldSession = {
             isActive: !!payload.session.isActive,
             timerState: payload.session.timerState === "BREAK" ? "BREAK" : "FLOW",
+            flowTimeElapsed: Number(payload.session.flowTimeElapsed) || 0,
+            timeLeft: Number(payload.session.timeLeft) || 0,
         };
     }
     if (!isShieldBlockingRequired()) {
@@ -378,6 +432,7 @@ function updateShieldState(payload) {
         shieldCalmUntil = Date.now() + SHIELD_SETTLE_MS;
         hideShieldOverlay();
     }
+    updateTrayMenu();
 }
 
 function isShieldBlockingRequired() {
