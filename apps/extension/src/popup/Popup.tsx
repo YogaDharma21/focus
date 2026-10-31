@@ -1717,7 +1717,7 @@ export function Popup() {
                     <button
                       key={mode}
                       onClick={() => updateState({ themeMode: mode })}
-                      className={`flex-1 px-3 py-2.5 rounded-xl text-xs font-bold transition-all border ${
+                      className={`flex-1 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 ease-out active:scale-95 cursor-pointer border ${
                         isActive
                           ? "bg-primary text-primary-foreground border-primary"
                           : "bg-secondary text-muted-foreground border-border hover:bg-secondary hover:text-foreground"
@@ -1857,9 +1857,9 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
                 <button
                   onClick={() => playTestSoundEffect()}
                   disabled={!soundEnabled || !soundEffectEnabled}
-                  className={`w-full py-2.5 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-2 ${
+                  className={`w-full py-2.5 rounded-xl font-bold text-xs border transition-all duration-300 ease-out flex items-center justify-center gap-2 ${
                     soundEnabled && soundEffectEnabled
-                      ? "border-border bg-secondary text-foreground hover:bg-accent cursor-pointer"
+                      ? "border-border bg-secondary text-foreground hover:bg-accent cursor-pointer active:scale-95"
                       : "border-border/50 bg-card/30 text-muted-foreground cursor-not-allowed opacity-50"
                   }`}
                 >
@@ -1883,7 +1883,7 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
                     resetAllData();
                   }
                 }}
-                className="w-full py-2.5 rounded-xl font-bold text-xs border border-destructive/30 bg-destructive/15 text-destructive hover:bg-destructive/25 transition-all"
+                className="w-full py-2.5 rounded-xl font-bold text-xs border border-destructive/30 bg-destructive/15 text-destructive hover:bg-destructive/25 transition-all duration-300 ease-out active:scale-95 cursor-pointer"
               >
                 Reset All Extension Data
               </button>
@@ -1909,7 +1909,7 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
 
                 <button
                   onClick={openGithubLink}
-                  className="w-full py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-between border border-border bg-secondary hover:bg-secondary text-white transition-all cursor-pointer"
+                  className="w-full py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-between border border-border bg-secondary hover:bg-secondary text-white transition-all duration-300 ease-out active:scale-95 cursor-pointer"
                 >
                   <div className="flex items-center gap-2">
                     <Github className="w-4 h-4" />

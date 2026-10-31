@@ -257,7 +257,7 @@ export const SettingsPage: React.FC = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => { setTheme("light"); showFeedback("Switched to light mode"); }}
-                className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300 ease-out active:scale-95 cursor-pointer ${
                   theme === "light"
                     ? "bg-primary text-primary-foreground shadow-md"
                     : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
@@ -267,7 +267,7 @@ export const SettingsPage: React.FC = () => {
               </button>
               <button
                 onClick={() => { setTheme("dark"); showFeedback("Switched to dark mode"); }}
-                className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300 ease-out active:scale-95 cursor-pointer ${
                   theme === "dark"
                     ? "bg-primary text-primary-foreground shadow-md"
                     : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
@@ -348,7 +348,7 @@ export const SettingsPage: React.FC = () => {
                 <button
                   onClick={playTestSound}
                   disabled={!soundEffectEnabled}
-                  className="w-full sm:w-auto px-4 py-2 bg-background hover:bg-secondary border border-border hover:border-border text-foreground hover:text-foreground rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm disabled:opacity-40"
+                  className="w-full sm:w-auto px-4 py-2 bg-background hover:bg-secondary border border-border hover:border-border text-foreground hover:text-foreground rounded-xl text-xs font-semibold transition-all duration-300 ease-out active:scale-95 cursor-pointer flex items-center justify-center gap-2 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Volume1 className="w-3.5 h-3.5 text-muted-foreground" />
                   Play Test Chime
@@ -470,7 +470,7 @@ export const SettingsPage: React.FC = () => {
               </div>
               <button
                 onClick={testDesktopNotification}
-                className="px-3 py-1.5 bg-background hover:bg-secondary border border-border hover:border-border text-foreground hover:text-foreground rounded-xl text-xs font-medium whitespace-nowrap transition-all shadow-sm"
+                className="px-3 py-1.5 bg-background hover:bg-secondary border border-border hover:border-border text-foreground hover:text-foreground rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-300 ease-out active:scale-95 cursor-pointer shadow-sm"
               >
                 Test Notification
               </button>
@@ -517,7 +517,7 @@ export const SettingsPage: React.FC = () => {
               </div>
               <button
                 onClick={handleExportData}
-                className="w-full px-4 py-2.5 bg-background hover:bg-secondary border border-border hover:border-border text-foreground rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm"
+                className="w-full px-4 py-2.5 bg-background hover:bg-secondary border border-border hover:border-border text-foreground rounded-xl text-xs font-semibold transition-all duration-300 ease-out active:scale-95 cursor-pointer flex items-center justify-center gap-2 shadow-sm"
               >
                 <Download className="w-3.5 h-3.5 text-muted-foreground" />
                 Download JSON Backup
@@ -536,7 +536,7 @@ export const SettingsPage: React.FC = () => {
               </div>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full px-4 py-2.5 bg-background hover:bg-secondary border border-border hover:border-border text-foreground rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm"
+                className="w-full px-4 py-2.5 bg-background hover:bg-secondary border border-border hover:border-border text-foreground rounded-xl text-xs font-semibold transition-all duration-300 ease-out active:scale-95 cursor-pointer flex items-center justify-center gap-2 shadow-sm"
               >
                 <Upload className="w-3.5 h-3.5 text-muted-foreground" />
                 Select File to Restore
@@ -558,7 +558,7 @@ export const SettingsPage: React.FC = () => {
                   setResetConfirmText('');
                   setShowResetModal(true);
                 }}
-                className="px-4 py-2.5 bg-rose-600/15 hover:bg-rose-600/25 border border-rose-500/30 text-rose-400 hover:text-rose-300 rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center gap-2 shadow-sm"
+                className="px-4 py-2.5 bg-rose-600/15 hover:bg-rose-600/25 border border-rose-500/30 text-rose-400 hover:text-rose-300 rounded-xl text-xs font-semibold transition-all duration-300 ease-out active:scale-95 cursor-pointer flex items-center gap-2 shadow-sm"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 Reset All Workspace Data
@@ -653,14 +653,14 @@ export const SettingsPage: React.FC = () => {
             <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-border">
               <button
                 onClick={() => setShowResetModal(false)}
-                className="px-4 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                className="px-4 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-all duration-300 ease-out active:scale-95 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 disabled={resetConfirmText.toLowerCase() !== 'reset'}
                 onClick={handleResetConfirmed}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 disabled:opacity-30 disabled:hover:bg-rose-600 text-white transition-all shadow-md active:scale-95"
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 disabled:opacity-30 disabled:hover:bg-rose-600 text-white transition-all duration-300 ease-out shadow-md active:scale-95 cursor-pointer disabled:cursor-not-allowed"
               >
                 Permanently Clear All Data
               </button>

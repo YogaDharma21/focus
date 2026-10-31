@@ -57,7 +57,7 @@ export function SettingsPage() {
                                 key={mode}
                                 onClick={() => setTheme(mode)}
                                 className={cn(
-                                    "flex-1 px-3 py-2.5 rounded-[10px] text-xs font-medium transition-all border cursor-pointer",
+                                    "flex-1 px-3 py-2.5 rounded-[10px] text-xs font-medium transition-all duration-300 ease-out active:scale-95 border cursor-pointer",
                                     isActive
                                         ? "bg-primary text-primary-foreground border-primary shadow-sm"
                                         : "bg-surface-inset text-muted-foreground border-transparent hover:bg-surface hover:text-foreground"
@@ -196,9 +196,9 @@ export function SettingsPage() {
                         onClick={playTestSoundEffect}
                         disabled={!soundEnabled || !soundEffectEnabled}
                         className={cn(
-                            "w-full py-2.5 rounded-[10px] font-bold text-xs border transition-all flex items-center justify-center gap-2",
+                            "w-full py-2.5 rounded-[10px] font-bold text-xs border transition-all duration-300 ease-out flex items-center justify-center gap-2",
                             soundEnabled && soundEffectEnabled
-                                ? "border-border bg-secondary text-foreground hover:bg-accent cursor-pointer"
+                                ? "border-border bg-secondary text-foreground hover:bg-accent cursor-pointer active:scale-95"
                                 : "border-border/50 bg-card/30 text-muted-foreground cursor-not-allowed opacity-50"
                         )}
                     >
@@ -220,7 +220,7 @@ export function SettingsPage() {
                             resetAllData();
                         }
                     }}
-                    className="w-full py-2.5 rounded-[10px] font-medium text-xs border border-destructive/30 bg-destructive/15 text-destructive hover:bg-destructive/25 transition-all cursor-pointer"
+                    className="w-full py-2.5 rounded-[10px] font-medium text-xs border border-destructive/30 bg-destructive/15 text-destructive hover:bg-destructive/25 transition-all duration-300 ease-out active:scale-95 cursor-pointer"
                 >
                     Reset All Data
                 </button>
