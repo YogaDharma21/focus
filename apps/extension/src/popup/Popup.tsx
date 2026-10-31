@@ -575,7 +575,7 @@ export function Popup() {
               <span className="flex items-center">
                 {state.timerState === "BREAK" ? <Coffee className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
               </span>
-              <span className="font-extrabold font-mono text-[11px] tracking-tight">
+              <span className="font-extrabold font-mono text-[11px] tracking-tight tabular-nums">
                 {timeFormatted}
               </span>
               {state.isActive && (
@@ -866,7 +866,7 @@ export function Popup() {
             <div className={`mt-2 pt-2 border-t border-border space-y-1 ${!soundEnabled || !musicEnabled ? "opacity-40" : ""}`}>
               <div className="flex items-center justify-between text-[10px] opacity-60">
                 <span>Music Volume</span>
-                <span className="font-mono">{Math.round(musicVolume * 100)}%</span>
+                <span className="font-mono tabular-nums">{Math.round(musicVolume * 100)}%</span>
               </div>
               <div className="flex items-center gap-2">
                 <Volume2 className="w-3.5 h-3.5 opacity-60 shrink-0" />
@@ -909,7 +909,7 @@ export function Popup() {
 
             {/* Timer Display - Big Number */}
             <div className="flex flex-col items-center justify-center my-2 py-3">
-              <span className="text-7xl font-black font-mono tracking-tighter leading-none">
+              <span className="text-7xl font-black font-mono tracking-tighter leading-none tabular-nums">
                 {timeFormatted}
               </span>
             </div>
@@ -1495,12 +1495,12 @@ export function Popup() {
                       </div>
                       <span className="text-xs font-bold font-sans">Day Progress</span>
                     </div>
-                    <span className="text-xs font-extrabold font-mono">{dayPercent}%</span>
+                    <span className="text-xs font-extrabold font-mono tabular-nums">{dayPercent}%</span>
                   </div>
 
                   <Progress value={dayPercent} className="h-2 rounded-full" />
 
-                  <div className="text-[10px] font-mono opacity-60">
+                  <div className="text-[10px] font-mono opacity-60 tabular-nums">
                     {remH}h {remM}m remaining today
                   </div>
                 </div>
@@ -1517,7 +1517,7 @@ export function Popup() {
                 }`}>
                   <Activity className="w-4 h-4" />
                 </div>
-                <span className="text-lg font-extrabold font-mono">{dynamicTodayMinutes}</span>
+                <span className="text-lg font-extrabold font-mono tracking-[-0.03em] tabular-nums">{dynamicTodayMinutes}</span>
                 <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">MINUTES TODAY</span>
               </div>
             </div>
@@ -1534,11 +1534,11 @@ export function Popup() {
                   <span className="text-xs font-bold font-sans mb-1">Longest Streak</span>
                   <div className="text-[11px] font-mono">
                     <span className={"text-muted-foreground"}>Current</span>
-                    <span className="font-bold ml-2">{dynamicStreaks.current} Days</span>
+                    <span className="font-bold ml-2 tabular-nums">{dynamicStreaks.current} Days</span>
                   </div>
                   <div className="text-[11px] font-mono">
                     <span className={"text-muted-foreground"}>Best</span>
-                    <span className="font-bold ml-2">{dynamicStreaks.best} Days</span>
+                    <span className="font-bold ml-2 tabular-nums">{dynamicStreaks.best} Days</span>
                   </div>
                 </div>
               </div>
@@ -1563,13 +1563,13 @@ export function Popup() {
                       key={day}
                       className="flex-1 flex flex-col items-center gap-1 h-full justify-end group relative cursor-pointer"
                     >
-                      <div className={`absolute -top-7 px-2 py-1 rounded text-[9px] font-mono font-bold border pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap shadow-lg ${
+                      <div className={`absolute -top-7 px-2 py-1 rounded text-[9px] font-mono font-bold border pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap shadow-lg tabular-nums ${
                         "bg-primary text-primary-foreground border-primary"
                       }`}>
                         {day}: {minsLogged} mins
                       </div>
 
-                      <span className="text-[8px] font-mono opacity-60">{minsLogged}m</span>
+                      <span className="text-[8px] font-mono opacity-60 tabular-nums">{minsLogged}m</span>
                       <div
                         className={`w-full rounded-t transition-all duration-300 ${
                           minsLogged > 0
@@ -1605,7 +1605,7 @@ export function Popup() {
                     const mostCommonPercent = mostCommon ? Math.round((mostCommon[1] / totalDistractions) * 100) : 0;
                     return (
                       <div className={`text-[11px] font-mono ${"text-muted-foreground"}`}>
-                        Most common: <span className="font-bold text-foreground">{mostCommon?.[0]}</span> ({mostCommonPercent}%)
+                        Most common: <span className="font-bold text-foreground">{mostCommon?.[0]}</span> <span className="tabular-nums">({mostCommonPercent}%)</span>
                       </div>
                     );
                   })()}
@@ -1618,7 +1618,7 @@ export function Popup() {
                         <div key={cat} className="space-y-1">
                           <div className="flex items-center justify-between text-[11px] font-mono">
                             <span className="font-bold">{cat}</span>
-                            <span className="opacity-70">{count} ({percent}%)</span>
+                            <span className="opacity-70 tabular-nums">{count} ({percent}%)</span>
                           </div>
                           <div className={`w-full h-1.5 rounded-full overflow-hidden ${
                             "bg-secondary"
@@ -1839,7 +1839,7 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
                     <div className="flex flex-col w-full gap-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-foreground">Sound Effects Volume</span>
-                        <span className="font-mono text-xs">{Math.round(soundEffectVolume * 100)}%</span>
+                        <span className="font-mono text-xs tabular-nums">{Math.round(soundEffectVolume * 100)}%</span>
                       </div>
                       <input
                         type="range"

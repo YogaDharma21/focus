@@ -170,7 +170,7 @@ export function DeepFocusOverlay({
 
         {/* Large Timer Display */}
         <div
-          className={`text-6xl font-black font-mono tracking-tighter leading-none text-foreground select-none ${
+          className={`text-6xl font-black font-mono tracking-tighter leading-none tabular-nums text-foreground select-none ${
             state.isActive ? "animate-pulse" : ""
           }`}
         >
