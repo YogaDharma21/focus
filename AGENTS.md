@@ -4,10 +4,15 @@ I hate a lot of text and hate emojis so i prefer to use simple words when talkin
 
 ## Core Directives
 
-- On every user prompt, always execute this sequence before anything else:
-  1. Call skill tool with ID `command-center` first to inspect intent and route through the yoga-skills lifecycle.
-  2. Call skill tool with ID `humanize` immediately after `command-center`.
-- Always use my git and github account if you have anything being done in git / github.
+- **Entry Point:** On every prompt, always call skill `command-center` first to inspect state and advance the lifecycle.
+- **Strict Linear Lifecycle with User Gates (No Skipping, No Chaining):**
+  - Features: `scout` (grill user, wait for reply) -> `spec` (confirm spec, wait for approval) -> `slice` (confirm task DAG, wait for approval) -> `build` -> `review` -> `launch`.
+  - Fixes: `debug` -> `build` -> `review` -> `launch`.
+  - Planning stages (`scout`, `spec`, `slice`) must end turn and wait for user confirmation. Never chain planning into `build` in the same turn.
+  - Never open PRs without `launch` (which generates PR descriptions via `pr-body`).
+- **Primary Thread is Orchestrator Only:** Never execute builds, tests, file edits, or deep searches directly in the primary thread. Always delegate implementation to child sessions via `subagent`.
+- **Communication Style:** Minimal, direct, telegraphic. Zero emojis. Zero em dashes (`—`) or en dashes (`–`).
+- Always use user git and GitHub account.
 - Give important link in response if necessary.
 
 ## Rules
