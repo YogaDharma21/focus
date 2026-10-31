@@ -6,6 +6,7 @@ import { useShallow } from "zustand/react/shallow";
 import { Play, Pause, CheckCircle2, Clock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DistractionCounter } from "./DistractionCounter";
+import { playCompletionSound } from "@/lib/sound";
 
 export function DynamicIslandTimer() {
     const {
@@ -43,7 +44,6 @@ export function DynamicIslandTimer() {
     );
     const [isExpanded, setIsExpanded] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
-    const audioRef = useRef<HTMLAudioElement | null>(null);
 
     // Close popover on outside click
     useEffect(() => {
@@ -59,26 +59,17 @@ export function DynamicIslandTimer() {
     }, [isExpanded]);
 
     const playSound = React.useCallback(() => {
-        if (!soundEnabled || !soundEffectEnabled) return;
-        const vol = (soundEffectVolume ?? 80) / 100;
-        try {
-            if (audioRef.current) {
-                audioRef.current.currentTime = 0;
-                audioRef.current.volume = vol;
-                audioRef.current.play().catch(() => {
-                    const fallback = new Audio("/soundeffect.mp3");
-                    fallback.volume = vol;
-                    fallback.play().catch(() => {});
-                });
-            } else {
-                const fallback = new Audio("/soundeffect.mp3");
-                fallback.volume = vol;
-                fallback.play().catch(() => {});
-            }
-        } catch {
-            // ignore
-        }
-    }, [soundEnabled, soundEffectEnabled, soundEffectVolume]);
+        const breakSeconds = Math.floor(timeLeft / 5);
+        const breakStr = breakSeconds > 0
+            ? `${Math.floor(breakSeconds / 60)}m`
+            : "a short";
+        playCompletionSound({
+            notification: {
+                title: "Flow Session Complete!",
+                body: `Focused for ${Math.floor(timeLeft / 60)}m. Earned ${breakStr} break!`,
+            },
+        });
+    }, [timeLeft]);
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -160,8 +151,6 @@ export function DynamicIslandTimer() {
                         "top-full mt-2.5 left-1/2 -translate-x-1/2",
                     )}
                 >
-                    <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
-
                     {/* Top Row: Time */}
                     <div className="flex items-center gap-2">
                         <div className="flex items-center gap-2 shrink-0">

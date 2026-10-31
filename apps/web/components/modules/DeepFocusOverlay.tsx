@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { DistractionCounter } from "./DistractionCounter";
+import { playCompletionSound } from "@/lib/sound";
 
 export function DeepFocusOverlay() {
     const {
@@ -53,42 +54,20 @@ export function DeepFocusOverlay() {
 
     const [showMusicMenu, setShowMusicMenu] = useState(false);
 
-    const audioRef = useRef<HTMLAudioElement | null>(null);
     const sessionStartTimeRef = useRef<number | null>(null);
 
     const playSound = useCallback(() => {
-        if (!soundEffectEnabled) return;
-        const vol = (soundEffectVolume ?? 80) / 100;
-        try {
-            const audio = new Audio("/soundeffect.mp3");
-            audio.volume = vol;
-            audio.play().catch(() => {
-                if (audioRef.current) {
-                    audioRef.current.currentTime = 0;
-                    audioRef.current.volume = vol;
-                    audioRef.current.play().catch(() => {});
-                }
-            });
-        } catch {
-            // ignore
-        }
-    }, [soundEffectEnabled, soundEffectVolume]);
-
-    useEffect(() => {
-        const unlockAudio = () => {
-            if (audioRef.current) {
-                audioRef.current.load();
-            }
-            window.removeEventListener("click", unlockAudio);
-            window.removeEventListener("keydown", unlockAudio);
-        };
-        window.addEventListener("click", unlockAudio);
-        window.addEventListener("keydown", unlockAudio);
-        return () => {
-            window.removeEventListener("click", unlockAudio);
-            window.removeEventListener("keydown", unlockAudio);
-        };
-    }, []);
+        const breakSeconds = Math.floor(timeLeft / 5);
+        const breakStr = breakSeconds > 0
+            ? `${Math.floor(breakSeconds / 60)}m`
+            : "a short";
+        playCompletionSound({
+            notification: {
+                title: "Flow Session Complete!",
+                body: `Focused for ${Math.floor(timeLeft / 60)}m. Earned ${breakStr} break!`,
+            },
+        });
+    }, [timeLeft]);
 
     useEffect(() => {
         if (isActive && !sessionStartTimeRef.current) {
@@ -177,8 +156,6 @@ export function DeepFocusOverlay() {
 
     return (
         <div className="fixed inset-0 z-[100] bg-background flex flex-col items-center justify-center animate-in fade-in duration-300 select-none">
-            <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
-            
             {/* Top Left Lofi-Beats Music Control */}
             <div className="absolute top-6 left-6 z-50">
                 <button
