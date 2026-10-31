@@ -97,7 +97,8 @@ export function buildAnnualHeatmapGrid(
         }
       }
 
-      if (isWithin365Range && cellDate.getDate() <= 7) {
+      // Check if this week contains the 1st of any month
+      if (cellDate.getDate() === 1) {
         weekMonthCandidate = cellDate.getMonth();
       }
 
@@ -118,7 +119,7 @@ export function buildAnnualHeatmapGrid(
     if (
       weekMonthCandidate !== null &&
       weekMonthCandidate !== lastLabeledMonth &&
-      weekIndex - lastLabeledWeekCol >= 3
+      weekIndex - lastLabeledWeekCol >= 2
     ) {
       monthLabel = MONTH_NAMES[weekMonthCandidate];
       lastLabeledMonth = weekMonthCandidate;

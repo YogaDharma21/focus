@@ -6,11 +6,12 @@ import type { Session } from "@focus/types";
 
 interface AnnualHeatmapProps {
   sessions: Session[];
+  liveElapsed?: number;
 }
 
 const WEEKDAY_LABELS = ["", "Mon", "", "Wed", "", "Fri", ""];
 
-export const AnnualHeatmap: React.FC<AnnualHeatmapProps> = ({ sessions }) => {
+export const AnnualHeatmap: React.FC<AnnualHeatmapProps> = ({ sessions, liveElapsed = 0 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [hoveredCell, setHoveredCell] = useState<{
     x: number;
@@ -28,12 +29,16 @@ export const AnnualHeatmap: React.FC<AnnualHeatmapProps> = ({ sessions }) => {
       const key = toDateKey(d);
       map[key] = (map[key] || 0) + Math.round(s.duration / 60);
     }
+    if (liveElapsed > 0) {
+      const todayKey = toDateKey(new Date());
+      map[todayKey] = (map[todayKey] || 0) + Math.round(liveElapsed / 60);
+    }
     return map;
-  }, [sessions]);
+  }, [sessions, liveElapsed]);
 
   const grid = useMemo(() => buildAnnualHeatmapGrid(dailyMinutes), [dailyMinutes]);
 
-  const getCellColorClass = (intensity: number) => {
+  const getCellColorClass = (intensity: 0 | 1 | 2 | 3 | 4) => {
     switch (intensity) {
       case 1:
         return "bg-emerald-bg";

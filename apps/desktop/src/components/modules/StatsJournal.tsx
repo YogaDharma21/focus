@@ -6,7 +6,23 @@ import { useDesktopStore } from '../../lib/store';
 import { AnnualHeatmap } from './AnnualHeatmap';
 
 export const StatsJournal: React.FC = () => {
-  const { sessions, distractions } = useDesktopStore();
+  const { sessions, distractions, isActive, sessionStartTime } = useDesktopStore();
+  const [liveElapsed, setLiveElapsed] = React.useState(0);
+
+  React.useEffect(() => {
+    if (!isActive || !sessionStartTime) {
+      setLiveElapsed(0);
+      return;
+    }
+    const updateElapsed = () => {
+      const start = new Date(sessionStartTime).getTime();
+      const elapsed = Math.max(0, Math.floor((Date.now() - start) / 1000));
+      setLiveElapsed(elapsed);
+    };
+    updateElapsed();
+    const interval = setInterval(updateElapsed, 1000);
+    return () => clearInterval(interval);
+  }, [isActive, sessionStartTime]);
 
   const now = new Date();
   const currentMinutesPassed = now.getHours() * 60 + now.getMinutes();
@@ -259,7 +275,7 @@ export const StatsJournal: React.FC = () => {
         </div>
       </div>
 
-      <AnnualHeatmap sessions={sessions} />
+      <AnnualHeatmap sessions={sessions} liveElapsed={liveElapsed} />
 
       <div className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-4">
         <div className="flex items-center gap-2.5">

@@ -33,14 +33,14 @@ export function AnnualHeatmap({ sessions, liveElapsed = 0 }: AnnualHeatmapProps)
     }
     if (liveElapsed > 0) {
       const todayKey = toDateKey(new Date());
-      map[todayKey] = (map[todayKey] || 0) + Math.floor(liveElapsed / 60);
+      map[todayKey] = (map[todayKey] || 0) + Math.round(liveElapsed / 60);
     }
     return map;
   }, [sessions, liveElapsed]);
 
   const grid = useMemo(() => buildAnnualHeatmapGrid(dailyMinutes), [dailyMinutes]);
 
-  const getCellColorClass = (intensity: number) => {
+  const getCellColorClass = (intensity: 0 | 1 | 2 | 3 | 4) => {
     switch (intensity) {
       case 1:
         return "bg-emerald-bg";

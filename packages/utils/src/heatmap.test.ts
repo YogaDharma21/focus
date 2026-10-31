@@ -33,4 +33,10 @@ assert.strictEqual(gridWithData.activeDays, 1);
 assert.strictEqual(gridWithData.totalMinutes, 75);
 assert.strictEqual(gridWithData.totalHours, "1.3");
 
+// Test 4: Month label detection on 1st of month
+const oct2026Grid = buildAnnualHeatmapGrid({}, new Date("2026-10-31T00:00:00Z"));
+const monthLabels = oct2026Grid.weeks.map((w) => w.monthLabel).filter(Boolean);
+assert.ok(monthLabels.length >= 10, "Should detect at least 10 month markers over 52 weeks");
+assert.ok(monthLabels.includes("Oct"), "Should include Oct label");
+
 console.log("Heatmap verification checks passed successfully.");
