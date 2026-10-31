@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { TaskItem, TaskPriority } from "@focus/types";
+import type { TaskItem, TaskPriority, BreakRatio } from "@focus/types";
 import {
   DEFAULT_SHIELD_CONFIG,
   ShieldConfig,
@@ -70,6 +70,7 @@ export interface DesktopState {
   sessionStartTime: string | null;
   autoStartBreak: boolean;
   autoStartFlow: boolean;
+  breakRatio: BreakRatio;
 
   setTimeLeft: (time: number | ((prev: number) => number)) => void;
   setFlowTimeElapsed: (time: number | ((prev: number) => number)) => void;
@@ -78,6 +79,7 @@ export interface DesktopState {
   setSessionStartTime: (time: string | null) => void;
   setAutoStartBreak: (enabled: boolean) => void;
   setAutoStartFlow: (enabled: boolean) => void;
+  setBreakRatio: (ratio: BreakRatio) => void;
 
   // Tasks
   tasks: TaskItem[];
@@ -209,6 +211,8 @@ export const useDesktopStore = create<DesktopState>()(
       setAutoStartBreak: (enabled) => set({ autoStartBreak: enabled }),
       autoStartFlow: true,
       setAutoStartFlow: (enabled) => set({ autoStartFlow: enabled }),
+      breakRatio: "1/5",
+      setBreakRatio: (ratio) => set({ breakRatio: ratio }),
 
       // Tasks
       tasks: [],
@@ -483,6 +487,7 @@ export const useDesktopStore = create<DesktopState>()(
         const storedShield = (persisted.shield ?? {}) as Partial<ShieldConfig>;
         return {
           ...(persisted as object),
+          breakRatio: (persisted.breakRatio as BreakRatio) ?? "1/5",
           autoPauseOnExternalAudio: persisted.autoPauseOnExternalAudio ?? false,
           autoPauseFadeDuration:
             typeof persisted.autoPauseFadeDuration === "number"

@@ -1,5 +1,6 @@
 export type TimerMode = "STOPWATCH" | "FLOW";
 export type TimerState = "FLOW" | "BREAK";
+export type BreakRatio = "1/5" | "1/4" | "1/3";
 export type ThemeMode = "light" | "dark";
 export type ViewType = "FOCUS" | "TASKS" | "JOURNAL" | "SETTINGS" | "SHIELD";
 
@@ -57,4 +58,5 @@ export interface TimerSettings {
   autoStartBreak?: boolean;
   autoStartTimer?: boolean;
   autoStartFlow?: boolean;
+  breakRatio?: BreakRatio;
 }

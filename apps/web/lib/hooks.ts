@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useSyncExternalStore } from "react";
 import { useAppStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
 import { playCompletionSound } from "@/lib/sound";
+import { getBreakDuration } from "@/lib/utils";
 
 export function useMediaQuery(query: string): boolean {
     return useSyncExternalStore(
@@ -32,6 +33,7 @@ export function useTimerEngine() {
         setIsMusicPlaying,
         autoStartBreak,
         autoStartFlow,
+        breakRatio,
     } = useAppStore(
         useShallow((s) => ({
             isActive: s.isActive,
@@ -49,6 +51,7 @@ export function useTimerEngine() {
             setIsMusicPlaying: s.setIsMusicPlaying,
             autoStartBreak: s.autoStartBreak ?? true,
             autoStartFlow: s.autoStartFlow ?? true,
+            breakRatio: s.breakRatio ?? "1/5",
         }))
     );
 
@@ -87,7 +90,7 @@ export function useTimerEngine() {
                 mode: "STOPWATCH",
             });
 
-            const breakSeconds = Math.floor(duration / 5);
+            const breakSeconds = getBreakDuration(duration, breakRatio);
             if (breakSeconds > 0) {
                 setTimeLeft(breakSeconds);
                 setTimerState("BREAK");
@@ -108,6 +111,7 @@ export function useTimerEngine() {
         soundEffectEnabled,
         soundEffectVolume,
         autoStartBreak,
+        breakRatio,
     ]);
 
     const autoCompleteRef = useRef(handleAutoCompleteSession);

@@ -23,6 +23,8 @@ export function SettingsPage() {
     const setAutoStartBreak = useAppStore((s) => s.setAutoStartBreak);
     const autoStartFlow = useAppStore((s) => s.autoStartFlow ?? true);
     const setAutoStartFlow = useAppStore((s) => s.setAutoStartFlow);
+    const breakRatio = useAppStore((s) => s.breakRatio ?? "1/5");
+    const setBreakRatio = useAppStore((s) => s.setBreakRatio);
     const { theme, setTheme } = useTheme();
 
     const playTestSoundEffect = () => {
@@ -75,6 +77,35 @@ export function SettingsPage() {
                 <div className="flex items-center gap-2">
                     <Timer className="w-[18px] h-[18px] text-foreground" />
                     <h3 className="text-[15px] font-medium tracking-[-0.015em] text-foreground">Timer</h3>
+                </div>
+
+                <div className="flex flex-col gap-2 rounded-[16px] px-4 py-3 bg-surface-inset">
+                    <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-foreground">Break Ratio</span>
+                        <span className="text-[11px] text-muted-foreground font-mono tabular-nums">
+                            {breakRatio === "1/3" ? "33% of flow" : breakRatio === "1/4" ? "25% of flow" : "20% of flow"}
+                        </span>
+                    </div>
+                    <div className="flex items-center gap-2 pt-1">
+                        {(["1/5", "1/4", "1/3"] as const).map((ratio) => {
+                            const isActive = breakRatio === ratio;
+                            return (
+                                <button
+                                    key={ratio}
+                                    type="button"
+                                    onClick={() => setBreakRatio(ratio)}
+                                    className={cn(
+                                        "flex-1 px-3 py-2 rounded-[10px] text-xs font-medium transition-all border cursor-pointer tabular-nums",
+                                        isActive
+                                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                                            : "bg-surface text-muted-foreground border-transparent hover:text-foreground"
+                                    )}
+                                >
+                                    {ratio}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
 
                 <div className="flex items-center justify-between rounded-[16px] px-4 py-3 bg-surface-inset">

@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
-import { cn } from '../../lib/utils';
+import { cn, getBreakDuration } from '../../lib/utils';
 
 function formatBreakDuration(seconds: number): string {
   const mins = Math.floor(seconds / 60);
@@ -38,6 +38,7 @@ export const FocusTimer: React.FC = () => {
     setDeepFocusMode,
     autoStartBreak,
     autoStartFlow,
+    breakRatio,
     tasks,
     selectedTaskId,
     setSelectedTaskId,
@@ -112,7 +113,7 @@ export const FocusTimer: React.FC = () => {
     }
 
     const durationWorked = Math.max(1, flowTimeElapsed);
-    const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
+    const calculatedBreakSeconds = Math.max(1, getBreakDuration(durationWorked, breakRatio));
 
     const focusedTask = tasks.find((t) => t.id === selectedTaskId);
     addSession({

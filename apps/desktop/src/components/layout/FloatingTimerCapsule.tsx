@@ -5,7 +5,7 @@ import {
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
-import { cn } from '../../lib/utils';
+import { cn, getBreakDuration } from '../../lib/utils';
 
 const DISTRACTION_OPTIONS = ["Phone", "Social Media", "Bathroom", "Meeting", "Other"];
 
@@ -25,6 +25,7 @@ export const FloatingTimerCapsule: React.FC = () => {
     setDeepFocusMode,
     autoStartBreak,
     autoStartFlow,
+    breakRatio,
     tasks,
     selectedTaskId,
   } = useDesktopStore();
@@ -56,7 +57,7 @@ export const FloatingTimerCapsule: React.FC = () => {
     }
 
     const durationWorked = Math.max(1, flowTimeElapsed);
-    const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
+    const calculatedBreakSeconds = Math.max(1, getBreakDuration(durationWorked, breakRatio));
 
     const focusedTask = tasks.find((t) => t.id === selectedTaskId);
     addSession({
