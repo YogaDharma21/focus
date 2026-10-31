@@ -588,6 +588,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: '600',
     fontVariant: ['tabular-nums'],
+    letterSpacing: -0.6,
     marginTop: 4,
   },
   createCard: {
@@ -740,6 +741,7 @@ const styles = StyleSheet.create({
   },
   subtaskPreviewText: {
     fontSize: 11,
+    fontVariant: ['tabular-nums'],
   },
   subtasksContainer: {
     borderTopWidth: 1,
