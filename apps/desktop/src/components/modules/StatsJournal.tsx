@@ -3,6 +3,7 @@ import {
   Clock, Activity, Flame, BarChart2, TrendingUp
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
+import { AnnualHeatmap } from './AnnualHeatmap';
 
 export const StatsJournal: React.FC = () => {
   const { sessions, distractions } = useDesktopStore();
@@ -257,6 +258,8 @@ export const StatsJournal: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <AnnualHeatmap sessions={sessions} />
 
       <div className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-4">
         <div className="flex items-center gap-2.5">

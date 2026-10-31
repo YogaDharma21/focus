@@ -13,6 +13,7 @@ import {
     TrendingUp,
 } from "lucide-react";
 import { format } from "date-fns";
+import { AnnualHeatmap } from "./AnnualHeatmap";
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const DISTRACTION_CATEGORIES = ["Phone", "Social Media", "Bathroom", "Meeting", "Other"];
@@ -293,6 +294,8 @@ export function StatsJournal() {
                     <div className="w-full border-b border-border-subtle" />
                 </div>
             </Card>
+
+            <AnnualHeatmap sessions={sessions} liveElapsed={liveElapsed} />
 
             <Card className="p-5 bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] flex flex-col gap-4 rounded-[24px]">
                 <div className="flex items-center justify-between">
