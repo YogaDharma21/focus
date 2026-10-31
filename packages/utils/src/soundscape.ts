@@ -1,4 +1,27 @@
-import type { SoundChannelId, SoundChannelState, SoundscapePreset } from "@focus/types";
+export type SoundChannelId =
+  | "rain"
+  | "campfire"
+  | "cafe"
+  | "birds"
+  | "whitenoise"
+  | "pinknoise"
+  | "brownnoise"
+  | "binauralAlpha"
+  | "binauralTheta";
+
+export interface SoundChannelState {
+  id: SoundChannelId;
+  label: string;
+  category: "nature" | "noise" | "binaural";
+  volume: number; // 0 - 100
+  enabled: boolean;
+}
+
+export interface SoundscapePreset {
+  id: string;
+  name: string;
+  channels: Partial<Record<SoundChannelId, number>>;
+}
 
 export const DEFAULT_CHANNELS: SoundChannelState[] = [
   { id: "rain", label: "Rainfall", category: "nature", volume: 50, enabled: false },
@@ -61,9 +84,15 @@ export class ProceduralSoundscapeEngine {
 
   private getContext(): AudioContext {
     if (!this.ctx) {
+      if (typeof window === "undefined") {
+        throw new Error("AudioContext is only available in browser environments");
+      }
       const AudioCtx =
         window.AudioContext ||
         (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      if (!AudioCtx) {
+        throw new Error("AudioContext is not supported in this environment");
+      }
       this.ctx = new AudioCtx();
     }
     if (this.ctx.state === "suspended") {
@@ -223,10 +252,10 @@ export class ProceduralSoundscapeEngine {
 
     // Occasional gentle ceramic / cup clinks
     const clinkProbability = 3 / sampleRate;
-    for (let i = 0; i < size - 1000; i++) {
+    const clinkLen = Math.floor(sampleRate * 0.04);
+    for (let i = 0; i < size - clinkLen; i++) {
       if (Math.random() < clinkProbability) {
         const freq = 2200 + Math.random() * 800;
-        const clinkLen = Math.floor(sampleRate * 0.04);
         for (let j = 0; j < clinkLen; j++) {
           const env = Math.exp(-j / (sampleRate * 0.008));
           data[i + j] += Math.sin((2 * Math.PI * freq * j) / sampleRate) * 0.12 * env;
@@ -246,10 +275,10 @@ export class ProceduralSoundscapeEngine {
 
     // Periodic melodious chirps
     const chirpProbability = 2.5 / sampleRate;
-    for (let i = 0; i < size - 4000; i++) {
+    const chirpLen = Math.floor(sampleRate * 0.08);
+    for (let i = 0; i < size - chirpLen; i++) {
       if (Math.random() < chirpProbability) {
         const baseFreq = 2800 + Math.random() * 1200;
-        const chirpLen = Math.floor(sampleRate * 0.08);
         for (let j = 0; j < chirpLen; j++) {
           const progress = j / chirpLen;
           const currentFreq = baseFreq + Math.sin(progress * Math.PI * 3) * 400;

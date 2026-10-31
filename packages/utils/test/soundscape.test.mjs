@@ -109,4 +109,15 @@ assert.strictEqual(engine.isChannelActive("brownnoise"), false, "Brown channel s
 engine.sync([], 60, false, false);
 assert.strictEqual(engine.isChannelActive("rain"), false, "All channels stopped when playing is false");
 
+// SSR safety test
+const savedWindow = globalThis.window;
+delete globalThis.window;
+const ssrEngine = new ProceduralSoundscapeEngine();
+assert.doesNotThrow(() => {
+  ssrEngine.startChannel("rain", 50);
+  ssrEngine.sync([{ id: "rain", label: "Rain", category: "nature", volume: 50, enabled: true }], 50, false, true);
+  ssrEngine.stopAll();
+}, "SSR execution without window should not throw");
+globalThis.window = savedWindow;
+
 console.log("ProceduralSoundscapeEngine tests passed successfully.");
