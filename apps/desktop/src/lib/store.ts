@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { TaskItem, TaskPriority } from "@focus/types";
+import type { TaskItem, TaskPriority, SoundChannelState, SoundChannelId } from "@focus/types";
+import { DEFAULT_CHANNELS } from "@focus/utils";
 import {
   DEFAULT_SHIELD_CONFIG,
   ShieldConfig,
@@ -36,6 +37,12 @@ export interface DesktopState {
   setAlwaysOnTop: (onTop: boolean) => void;
 
   // Media Player & Audio
+  audioSourceType: "lofi" | "soundscape";
+  setAudioSourceType: (type: "lofi" | "soundscape") => void;
+  soundChannels: SoundChannelState[];
+  setChannelVolume: (id: SoundChannelId, volume: number) => void;
+  toggleChannel: (id: SoundChannelId) => void;
+  applySoundscapePreset: (channels: Partial<Record<SoundChannelId, number>>) => void;
   mediaType: "YOUTUBE" | "SPOTIFY" | "LOCAL";
   youtubeUrl: string;
   youtubePlaylist: string[];
@@ -131,6 +138,31 @@ export const useDesktopStore = create<DesktopState>()(
       setAlwaysOnTop: (onTop) => set({ isAlwaysOnTop: onTop }),
 
       // Media
+      audioSourceType: "lofi",
+      setAudioSourceType: (type) => set({ audioSourceType: type }),
+      soundChannels: DEFAULT_CHANNELS,
+      setChannelVolume: (id, volume) =>
+        set((state) => ({
+          soundChannels: state.soundChannels.map((ch) =>
+            ch.id === id ? { ...ch, volume } : ch
+          ),
+        })),
+      toggleChannel: (id) =>
+        set((state) => ({
+          soundChannels: state.soundChannels.map((ch) =>
+            ch.id === id ? { ...ch, enabled: !ch.enabled } : ch
+          ),
+        })),
+      applySoundscapePreset: (presetChannels) =>
+        set((state) => ({
+          soundChannels: state.soundChannels.map((ch) => {
+            const targetVol = presetChannels[ch.id];
+            if (targetVol !== undefined) {
+              return { ...ch, volume: targetVol, enabled: true };
+            }
+            return { ...ch, enabled: false };
+          }),
+        })),
       mediaType: "LOCAL",
       youtubeUrl: "https://www.youtube.com/watch?v=DEWzT1geuPU",
       youtubePlaylist: ["https://www.youtube.com/watch?v=DEWzT1geuPU"],

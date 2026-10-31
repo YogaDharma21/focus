@@ -1,8 +1,10 @@
 import React, { useRef, useEffect } from 'react';
-import { Music, Play, Pause, Volume2, VolumeX, BellRing, ChevronDown, Disc, Volume1 } from 'lucide-react';
+import { Music, Play, Pause, Volume2, VolumeX, BellRing, ChevronDown, Disc, Volume1, Sliders, Waves } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
 import { playTestCompletionSound } from '../../lib/sound';
+import { soundscapeEngine, SOUNDSCAPE_PRESETS } from '@focus/utils';
+import type { SoundscapePreset } from '@focus/types';
 
 // ─── Auto-Pause Timing (fixed constants) ────────────────────────────────────
 // External audio must be continuously active for this long before the music
@@ -25,7 +27,13 @@ export const MediaPlayer: React.FC = () => {
     setSoundEffectVolume,
     volume,
     setVolume,
-    autoPauseOnExternalAudio
+    autoPauseOnExternalAudio,
+    audioSourceType = "lofi",
+    setAudioSourceType,
+    soundChannels,
+    setChannelVolume,
+    toggleChannel,
+    applySoundscapePreset,
   } = useDesktopStore();
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -206,8 +214,30 @@ export const MediaPlayer: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    if (audioSourceType === "soundscape") {
+      const audio = audioRef.current;
+      if (audio && !audio.paused) {
+        audio.pause();
+      }
+      soundscapeEngine.sync(soundChannels, Math.round(volume * 100), volume === 0, isMusicPlaying);
+    } else {
+      soundscapeEngine.stopAll();
+    }
+  }, [audioSourceType, soundChannels, volume, isMusicPlaying]);
+
+  useEffect(() => {
+    return () => {
+      soundscapeEngine.stopAll();
+    };
+  }, []);
+
+  useEffect(() => {
     if (!audioRef.current) return;
     const audio = audioRef.current;
+    if (audioSourceType === "soundscape") {
+      if (!audio.paused) audio.pause();
+      return;
+    }
     if (isMusicPlaying) {
       const state = useDesktopStore.getState();
       if (state.autoPauseOnExternalAudio && externalActiveRef.current) {
@@ -225,7 +255,7 @@ export const MediaPlayer: React.FC = () => {
       autoPausedRef.current = false;
       audio.pause();
     }
-  }, [isMusicPlaying, setIsMusicPlaying]);
+  }, [isMusicPlaying, setIsMusicPlaying, audioSourceType]);
 
   const togglePlay = () => {
     setIsMusicPlaying(!isMusicPlaying);
@@ -249,57 +279,107 @@ export const MediaPlayer: React.FC = () => {
     }
   }, [autoPauseOnExternalAudio]);
 
+  const activeChannelsCount = soundChannels.filter((c) => c.enabled).length;
+
   return (
     <div className="fixed bottom-3 right-3 z-30 select-none">
       <audio
         ref={audioRef}
         src="./music1.mp3"
         loop
-        onPlay={() => setIsMusicPlaying(true)}
+        onPlay={() => {
+          if (audioSourceType === "lofi") setIsMusicPlaying(true);
+        }}
         onPause={() => {
-          if (autoPauseArmedRef.current) {
-            autoPauseArmedRef.current = false;
-            return;
+          if (audioSourceType === "lofi") {
+            if (autoPauseArmedRef.current) {
+              autoPauseArmedRef.current = false;
+              return;
+            }
+            autoPausedRef.current = false;
+            setIsMusicPlaying(false);
           }
-          autoPausedRef.current = false;
-          setIsMusicPlaying(false);
         }}
       />
 
       {mediaPlayerOpen ? (
-        <div className="w-80 bg-card border border-border p-4 rounded-2xl shadow-2xl space-y-4 animate-in zoom-in-95 duration-150">
+        <div className="w-84 max-h-[85vh] flex flex-col bg-card border border-border p-4 rounded-2xl shadow-2xl space-y-3.5 animate-in zoom-in-95 duration-150">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Music className="w-4 h-4 text-muted-foreground" />
-              <span className="text-xs font-semibold text-foreground">Lofi-Beats</span>
+              {audioSourceType === "lofi" ? (
+                <Music className="w-4 h-4 text-muted-foreground" />
+              ) : (
+                <Waves className="w-4 h-4 text-muted-foreground" />
+              )}
+              <span className="text-xs font-semibold text-foreground">
+                {audioSourceType === "lofi" ? "Lofi-Beats" : "Ambient Soundscape"}
+              </span>
             </div>
             <button
               onClick={() => setMediaPlayerOpen(false)}
-              className="p-1 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+              className="p-1 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
             >
               <ChevronDown className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Source Selector Tabs */}
+          <div className="flex bg-secondary p-1 rounded-xl border border-border text-xs font-medium">
+            <button
+              type="button"
+              onClick={() => setAudioSourceType("lofi")}
+              className={`flex-1 py-1 rounded-lg text-center transition-colors cursor-pointer ${
+                audioSourceType === "lofi"
+                  ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Lo-Fi
+            </button>
+            <button
+              type="button"
+              onClick={() => setAudioSourceType("soundscape")}
+              className={`flex-1 py-1 rounded-lg text-center transition-colors cursor-pointer ${
+                audioSourceType === "soundscape"
+                  ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Ambient Mixer
             </button>
           </div>
 
           <div className="flex items-center justify-between bg-secondary p-3 rounded-xl border border-border shadow-inner">
             <div className="flex items-center gap-3 min-w-0 flex-1 pr-2">
               <div 
-                className={`w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center text-muted-foreground shrink-0 ${
-                  isMusicPlaying ? 'animate-spin' : ''
+                className={`w-8 h-8 rounded-lg bg-muted border border-border flex items-center justify-center text-muted-foreground shrink-0 ${
+                  isMusicPlaying && audioSourceType === "lofi" ? 'animate-spin' : ''
                 }`}
                 style={{ animationDuration: '4s' }}
               >
-                <Disc className="w-4 h-4 text-muted-foreground" />
+                {audioSourceType === "lofi" ? (
+                  <Disc className="w-4 h-4 text-muted-foreground" />
+                ) : (
+                  <Waves className={`w-4 h-4 ${isMusicPlaying ? "text-primary animate-pulse" : "text-muted-foreground"}`} />
+                )}
               </div>
               <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold text-foreground truncate">Lofi-Beats</p>
-                <p className="text-[10px] text-muted-foreground truncate">Lofi-Beats</p>
+                <p className="text-xs font-semibold text-foreground truncate">
+                  {audioSourceType === "lofi"
+                    ? "Lofi-Beats"
+                    : activeChannelsCount > 0
+                      ? `${activeChannelsCount} Active Channel${activeChannelsCount > 1 ? "s" : ""}`
+                      : "Soundscape Mixer"}
+                </p>
+                <p className="text-[10px] text-muted-foreground truncate">
+                  {audioSourceType === "lofi" ? "Local Audio Loop" : "Procedural Synthesis"}
+                </p>
               </div>
             </div>
             <button
               onClick={togglePlay}
-              className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md active:scale-95 shrink-0"
-              title={isMusicPlaying ? "Pause Music" : "Play Music"}
+              className="p-2.5 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all shadow-md active:scale-95 shrink-0 cursor-pointer"
+              title={isMusicPlaying ? "Pause Audio" : "Play Audio"}
             >
               {isMusicPlaying ? <Pause className="w-4 h-4 fill-primary-foreground" /> : <Play className="w-4 h-4 fill-primary-foreground ml-0.5" />}
             </button>
@@ -307,8 +387,8 @@ export const MediaPlayer: React.FC = () => {
 
           <div className="space-y-1">
             <div className="flex items-center justify-between text-[10px] text-muted-foreground font-medium px-1">
-              <span>Music Volume</span>
-              <span>{Math.round(volume * 100)}%</span>
+              <span>Master Volume</span>
+              <span className="tabular-nums font-mono">{Math.round(volume * 100)}%</span>
             </div>
             <div className="flex items-center gap-2 px-1">
               {volume === 0 ? <VolumeX className="w-3.5 h-3.5 text-muted-foreground shrink-0" /> : <Volume2 className="w-3.5 h-3.5 text-muted-foreground shrink-0" />}
@@ -324,14 +404,100 @@ export const MediaPlayer: React.FC = () => {
             </div>
           </div>
 
+          {/* Soundscape Mixer Controls */}
+          {audioSourceType === "soundscape" && (
+            <div className="pt-2 border-t border-border space-y-2.5 overflow-hidden flex flex-col">
+              <div className="space-y-1">
+                <span className="text-[10px] uppercase tracking-[0.16em] font-semibold text-muted-foreground">
+                  Presets
+                </span>
+                <div className="flex flex-wrap gap-1">
+                  {SOUNDSCAPE_PRESETS.map((preset: SoundscapePreset) => (
+                    <button
+                      key={preset.id}
+                      type="button"
+                      onClick={() => applySoundscapePreset(preset.channels)}
+                      className="px-2 py-0.5 rounded-md text-[10px] font-medium bg-secondary hover:bg-muted text-muted-foreground hover:text-foreground border border-border transition-colors cursor-pointer"
+                    >
+                      {preset.name}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="space-y-1 overflow-hidden flex flex-col">
+                <div className="flex items-center justify-between text-[10px] uppercase tracking-[0.16em] font-semibold text-muted-foreground">
+                  <span>Channels</span>
+                  <span className="tabular-nums font-mono normal-case tracking-normal">
+                    {activeChannelsCount} active
+                  </span>
+                </div>
+
+                <div className="max-h-48 overflow-y-auto pr-1 space-y-1.5">
+                  {soundChannels.map((channel) => (
+                    <div
+                      key={channel.id}
+                      className="p-1.5 rounded-lg bg-secondary/60 border border-border space-y-1"
+                    >
+                      <div className="flex items-center justify-between text-[11px]">
+                        <button
+                          type="button"
+                          onClick={() => toggleChannel(channel.id)}
+                          className="flex items-center gap-1.5 text-foreground font-medium hover:text-primary transition-colors text-left cursor-pointer"
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                              channel.enabled ? "bg-emerald-500" : "bg-muted-foreground/30"
+                            }`}
+                          />
+                          <span className={!channel.enabled ? "text-muted-foreground" : ""}>
+                            {channel.label}
+                          </span>
+                        </button>
+                        <span className="text-[10px] font-mono tabular-nums text-muted-foreground">
+                          {channel.enabled ? `${channel.volume}%` : "Off"}
+                        </span>
+                      </div>
+
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        step="1"
+                        value={channel.enabled ? channel.volume : 0}
+                        disabled={!channel.enabled}
+                        onChange={(e) =>
+                          setChannelVolume(channel.id, parseInt(e.target.value, 10))
+                        }
+                        className={`w-full h-1 bg-muted rounded-full appearance-none cursor-pointer accent-primary ${
+                          !channel.enabled ? "opacity-30 cursor-not-allowed" : ""
+                        }`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
         </div>
       ) : (
         <button
           onClick={() => setMediaPlayerOpen(true)}
-          className="p-3 rounded-2xl bg-card border border-border text-foreground hover:text-foreground shadow-xl transition-all flex items-center gap-2 hover:scale-105"
+          className="p-3 rounded-2xl bg-card border border-border text-foreground hover:text-foreground shadow-xl transition-all flex items-center gap-2 hover:scale-105 cursor-pointer"
         >
-          <Music className={`w-4 h-4 ${isMusicPlaying ? "text-foreground animate-pulse" : "text-muted-foreground"}`} />
-          <span className="text-xs font-semibold">Lofi-Beats</span>
+          {audioSourceType === "lofi" ? (
+            <Music className={`w-4 h-4 ${isMusicPlaying ? "text-foreground animate-pulse" : "text-muted-foreground"}`} />
+          ) : (
+            <Sliders className={`w-4 h-4 ${isMusicPlaying ? "text-foreground animate-pulse" : "text-muted-foreground"}`} />
+          )}
+          <span className="text-xs font-semibold">
+            {audioSourceType === "lofi"
+              ? "Lofi-Beats"
+              : activeChannelsCount > 0
+                ? `Ambient (${activeChannelsCount})`
+                : "Ambient Mixer"}
+          </span>
         </button>
       )}
     </div>
