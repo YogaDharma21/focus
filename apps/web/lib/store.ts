@@ -9,7 +9,11 @@ import type {
     TaskItem,
     SubtaskItem,
     TaskPriority,
+    BreakRatio,
+    SoundChannelState,
+    SoundChannelId,
 } from "@focus/types";
+import { DEFAULT_CHANNELS } from "@focus/utils";
 
 export type {
     Session,
@@ -20,11 +24,21 @@ export type {
     TaskItem,
     SubtaskItem,
     TaskPriority,
+    BreakRatio,
+    SoundChannelState,
+    SoundChannelId,
 };
 
 interface AppState {
     currentView: ViewType;
     setView: (view: ViewType) => void;
+
+    audioSourceType: "lofi" | "soundscape";
+    setAudioSourceType: (type: "lofi" | "soundscape") => void;
+    soundChannels: SoundChannelState[];
+    setChannelVolume: (id: SoundChannelId, volume: number) => void;
+    toggleChannel: (id: SoundChannelId) => void;
+    applySoundscapePreset: (channels: Partial<Record<SoundChannelId, number>>) => void;
 
     localUrl: string;
     localPlaylist: PlaylistItem[];
@@ -53,6 +67,7 @@ interface AppState {
     sessionStartTime: string | null;
     autoStartBreak: boolean;
     autoStartFlow: boolean;
+    breakRatio: BreakRatio;
     setTimerMode: (mode: "STOPWATCH") => void;
     setTimerState: (state: TimerState) => void;
     setTimeLeft: (time: number | ((prev: number) => number)) => void;
@@ -60,10 +75,11 @@ interface AppState {
     setSessionStartTime: (time: string | null) => void;
     setAutoStartBreak: (enabled: boolean) => void;
     setAutoStartFlow: (enabled: boolean) => void;
+    setBreakRatio: (ratio: BreakRatio) => void;
 
     tasks: TaskItem[];
     selectedTaskId: string | null;
-    addTask: (task: { text: string; priority?: TaskPriority; deadline?: string }) => void;
+    addTask: (task: { text: string; priority?: TaskPriority; deadline?: string; estimatedMinutes?: number }) => void;
     toggleTask: (id: string) => void;
     updateTask: (id: string, updates: Partial<TaskItem>) => void;
     deleteTask: (id: string) => void;
@@ -91,6 +107,32 @@ export const useAppStore = create<AppState>()(
         (set) => ({
             currentView: "FOCUS",
             setView: (view) => set({ currentView: view }),
+
+            audioSourceType: "lofi",
+            setAudioSourceType: (type) => set({ audioSourceType: type }),
+            soundChannels: DEFAULT_CHANNELS,
+            setChannelVolume: (id, volume) =>
+                set((state) => ({
+                    soundChannels: state.soundChannels.map((ch) =>
+                        ch.id === id ? { ...ch, volume } : ch
+                    ),
+                })),
+            toggleChannel: (id) =>
+                set((state) => ({
+                    soundChannels: state.soundChannels.map((ch) =>
+                        ch.id === id ? { ...ch, enabled: !ch.enabled } : ch
+                    ),
+                })),
+            applySoundscapePreset: (presetChannels) =>
+                set((state) => ({
+                    soundChannels: state.soundChannels.map((ch) => {
+                        const targetVol = presetChannels[ch.id];
+                        if (targetVol !== undefined) {
+                            return { ...ch, volume: targetVol, enabled: true };
+                        }
+                        return { ...ch, enabled: false };
+                    }),
+                })),
 
             localUrl: "/music1.mp3",
             localPlaylist: [
@@ -137,10 +179,12 @@ export const useAppStore = create<AppState>()(
             setAutoStartBreak: (enabled) => set({ autoStartBreak: enabled }),
             autoStartFlow: true,
             setAutoStartFlow: (enabled) => set({ autoStartFlow: enabled }),
+            breakRatio: "1/5",
+            setBreakRatio: (ratio) => set({ breakRatio: ratio }),
 
             tasks: [],
             selectedTaskId: null,
-            addTask: ({ text, priority = "medium", deadline }) =>
+            addTask: ({ text, priority = "medium", deadline, estimatedMinutes }) =>
                 set((state) => ({
                     tasks: [
                         {
@@ -149,28 +193,47 @@ export const useAppStore = create<AppState>()(
                             completed: false,
                             priority,
                             deadline: deadline || undefined,
+                            estimatedMinutes: estimatedMinutes && estimatedMinutes > 0 ? estimatedMinutes : undefined,
                             subtasks: [],
                         },
                         ...state.tasks,
                     ],
                 })),
             toggleTask: (id) =>
-                set((state) => ({
-                    tasks: state.tasks.map((task) =>
-                        task.id === id
-                            ? {
-                                  ...task,
-                                  completed: !task.completed,
-                                  completedAt: !task.completed ? new Date().toISOString() : undefined,
-                              }
-                            : task,
-                    ),
-                })),
+                set((state) => {
+                    let shouldClearSelected = false;
+                    const tasks = state.tasks.map((task) => {
+                        if (task.id !== id) return task;
+                        const nextCompleted = !task.completed;
+                        if (nextCompleted && state.selectedTaskId === id) {
+                            shouldClearSelected = true;
+                        }
+                        return {
+                            ...task,
+                            completed: nextCompleted,
+                            completedAt: nextCompleted
+                                ? (task.completedAt || new Date().toISOString())
+                                : undefined,
+                            subtasks: (task.subtasks || []).map((sub) => ({
+                                ...sub,
+                                completed: nextCompleted,
+                            })),
+                        };
+                    });
+                    return {
+                        tasks,
+                        selectedTaskId: shouldClearSelected ? null : state.selectedTaskId,
+                    };
+                }),
             updateTask: (id, updates) =>
                 set((state) => ({
                     tasks: state.tasks.map((task) =>
                         task.id === id ? { ...task, ...updates } : task,
                     ),
+                    selectedTaskId:
+                        updates.completed === true && state.selectedTaskId === id
+                            ? null
+                            : state.selectedTaskId,
                 })),
             deleteTask: (id) =>
                 set((state) => ({
@@ -189,29 +252,67 @@ export const useAppStore = create<AppState>()(
                                 completed: false,
                             },
                         ];
-                        return { ...task, subtasks };
+                        return {
+                            ...task,
+                            completed: false,
+                            completedAt: undefined,
+                            subtasks,
+                        };
                     }),
                 })),
             toggleSubtask: (taskId, subtaskId) =>
-                set((state) => ({
-                    tasks: state.tasks.map((task) => {
+                set((state) => {
+                    let shouldClearSelected = false;
+                    const tasks = state.tasks.map((task) => {
                         if (task.id !== taskId) return task;
                         const subtasks = (task.subtasks || []).map((sub) =>
                             sub.id === subtaskId ? { ...sub, completed: !sub.completed } : sub,
                         );
-                        return { ...task, subtasks };
-                    }),
-                })),
-            deleteSubtask: (taskId, subtaskId) =>
-                set((state) => ({
-                    tasks: state.tasks.map((task) => {
-                        if (task.id !== taskId) return task;
+                        const allCompleted = subtasks.length > 0 && subtasks.every((sub) => sub.completed);
+                        if (allCompleted && state.selectedTaskId === taskId) {
+                            shouldClearSelected = true;
+                        }
                         return {
                             ...task,
-                            subtasks: (task.subtasks || []).filter((sub) => sub.id !== subtaskId),
+                            completed: allCompleted,
+                            completedAt: allCompleted
+                                ? (task.completed ? task.completedAt : new Date().toISOString())
+                                : undefined,
+                            subtasks,
                         };
-                    }),
-                })),
+                    });
+                    return {
+                        tasks,
+                        selectedTaskId: shouldClearSelected ? null : state.selectedTaskId,
+                    };
+                }),
+            deleteSubtask: (taskId, subtaskId) =>
+                set((state) => {
+                    let shouldClearSelected = false;
+                    const tasks = state.tasks.map((task) => {
+                        if (task.id !== taskId) return task;
+                        const subtasks = (task.subtasks || []).filter((sub) => sub.id !== subtaskId);
+                        if (subtasks.length === 0) {
+                            return { ...task, subtasks };
+                        }
+                        const allCompleted = subtasks.every((sub) => sub.completed);
+                        if (allCompleted && state.selectedTaskId === taskId) {
+                            shouldClearSelected = true;
+                        }
+                        return {
+                            ...task,
+                            completed: allCompleted,
+                            completedAt: allCompleted
+                                ? (task.completed ? task.completedAt : new Date().toISOString())
+                                : undefined,
+                            subtasks,
+                        };
+                    });
+                    return {
+                        tasks,
+                        selectedTaskId: shouldClearSelected ? null : state.selectedTaskId,
+                    };
+                }),
             setSelectedTaskId: (id) => set({ selectedTaskId: id }),
 
             sessions: [],
@@ -240,6 +341,8 @@ export const useAppStore = create<AppState>()(
                 useAppStore.persist.clearStorage();
                 set({
                     currentView: "FOCUS",
+                    audioSourceType: "lofi",
+                    soundChannels: DEFAULT_CHANNELS,
                     localUrl: "/music1.mp3",
                     localPlaylist: [
                         {
@@ -258,6 +361,7 @@ export const useAppStore = create<AppState>()(
                     sessionStartTime: null,
                     autoStartBreak: true,
                     autoStartFlow: true,
+                    breakRatio: "1/5",
                     tasks: [],
                     selectedTaskId: null,
                     sessions: [],

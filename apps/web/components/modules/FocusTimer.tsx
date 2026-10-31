@@ -5,8 +5,21 @@ import { useShallow } from "zustand/react/shallow";
 import React, { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, RotateCcw, CheckCircle2, Focus, Clock, Coffee, Target, X } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getBreakDuration } from "@/lib/utils";
 import { DistractionCounter } from "./DistractionCounter";
+import { playCompletionSound, requestNotificationPermission, registerAutoplayUnlock } from "@/lib/sound";
+
+function formatBreakDuration(seconds: number): string {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins > 0 && secs > 0) {
+        return `${mins} minute${mins === 1 ? "" : "s"} ${secs} second${secs === 1 ? "" : "s"}`;
+    }
+    if (mins > 0) {
+        return `${mins} minute${mins === 1 ? "" : "s"}`;
+    }
+    return `${secs} second${secs === 1 ? "" : "s"}`;
+}
 
 export function FocusTimer() {
     const {
@@ -23,6 +36,7 @@ export function FocusTimer() {
         soundEffectEnabled,
         soundEnabled,
         autoStartBreak,
+        breakRatio,
         tasks,
         selectedTaskId,
         setSelectedTaskId,
@@ -41,53 +55,77 @@ export function FocusTimer() {
             soundEffectEnabled: s.soundEffectEnabled,
             soundEnabled: s.soundEnabled ?? true,
             autoStartBreak: s.autoStartBreak ?? true,
+            breakRatio: s.breakRatio ?? "1/5",
             tasks: s.tasks,
             selectedTaskId: s.selectedTaskId,
             setSelectedTaskId: s.setSelectedTaskId,
         }))
     );
 
-    const audioRef = useRef<HTMLAudioElement | null>(null);
-
     const sessionStartTimeRef = useRef<number | null>(null);
+    const liveRegionRef = useRef<HTMLDivElement | null>(null);
 
-    const playSound = React.useCallback(() => {
-        if (!soundEnabled || !soundEffectEnabled) return;
-        const vol = (soundEffectVolume ?? 80) / 100;
-        try {
-            if (audioRef.current) {
-                audioRef.current.currentTime = 0;
-                audioRef.current.volume = vol;
-                audioRef.current.play().catch(() => {
-                    const fallback = new Audio("/soundeffect.mp3");
-                    fallback.volume = vol;
-                    fallback.play().catch(() => {});
-                });
-            } else {
-                const fallback = new Audio("/soundeffect.mp3");
-                fallback.volume = vol;
-                fallback.play().catch(() => {});
-            }
-        } catch {
-            // Audio play might be blocked by browser policies
-        }
-    }, [soundEnabled, soundEffectEnabled, soundEffectVolume]);
+    const prevTimerStateRef = useRef(timerState);
+    const prevIsActiveRef = useRef(isActive);
+    const isInitialMountRef = useRef(true);
+    const isResetRef = useRef(false);
 
     useEffect(() => {
-        const unlockAudio = () => {
-            if (audioRef.current) {
-                audioRef.current.load();
+        if (isInitialMountRef.current) {
+            isInitialMountRef.current = false;
+            prevTimerStateRef.current = timerState;
+            prevIsActiveRef.current = isActive;
+            return;
+        }
+
+        if (isResetRef.current) {
+            isResetRef.current = false;
+            prevTimerStateRef.current = timerState;
+            prevIsActiveRef.current = isActive;
+            return;
+        }
+
+        const prevTimerState = prevTimerStateRef.current;
+        const prevIsActive = prevIsActiveRef.current;
+        let message = "";
+
+        if (prevTimerState === "FLOW" && timerState === "BREAK") {
+            const timeStr = formatBreakDuration(timeLeft);
+            message = `Break started, ${timeStr} remaining.`;
+        } else if (prevTimerState === "BREAK" && timerState === "FLOW") {
+            message = isActive ? "Break finished. Flow session started." : "Break finished.";
+        } else if (prevIsActive !== isActive) {
+            if (isActive) {
+                message = timerState === "BREAK" ? "Break resumed." : (timeLeft > 0 ? "Flow session resumed." : "Flow session started.");
+            } else if (timeLeft > 0 || timerState === "BREAK") {
+                message = "Timer paused.";
             }
-            window.removeEventListener("click", unlockAudio);
-            window.removeEventListener("keydown", unlockAudio);
-        };
-        window.addEventListener("click", unlockAudio);
-        window.addEventListener("keydown", unlockAudio);
-        return () => {
-            window.removeEventListener("click", unlockAudio);
-            window.removeEventListener("keydown", unlockAudio);
-        };
+        }
+
+        if (message && liveRegionRef.current) {
+            liveRegionRef.current.textContent = message;
+        }
+
+        prevTimerStateRef.current = timerState;
+        prevIsActiveRef.current = isActive;
+    }, [timerState, isActive, timeLeft]);
+
+    useEffect(() => {
+        registerAutoplayUnlock();
     }, []);
+
+    const playSound = React.useCallback(() => {
+        const breakSeconds = Math.floor(timeLeft / 5);
+        const breakStr = breakSeconds > 0
+            ? `${Math.floor(breakSeconds / 60)}m`
+            : "a short";
+        playCompletionSound({
+            notification: {
+                title: "Flow Session Complete!",
+                body: `Focused for ${Math.floor(timeLeft / 60)}m. Earned ${breakStr} break!`,
+            },
+        });
+    }, [timeLeft]);
 
     useEffect(() => {
         if (isActive && !sessionStartTimeRef.current) {
@@ -133,7 +171,7 @@ export function FocusTimer() {
             }).catch(() => {});
         }
 
-        const breakSeconds = Math.floor(duration / 5);
+        const breakSeconds = getBreakDuration(duration, breakRatio);
         if (breakSeconds > 0) {
             setTimeLeft(breakSeconds);
             setTimerState("BREAK");
@@ -156,14 +194,25 @@ export function FocusTimer() {
         addSession,
         setSessionStartTime,
         autoStartBreak,
+        breakRatio,
     ]);
 
-    const toggleTimer = () => setIsActive(!isActive);
+    const toggleTimer = () => {
+        if (!isActive) {
+            registerAutoplayUnlock();
+            requestNotificationPermission();
+        }
+        setIsActive(!isActive);
+    };
 
     const resetTimer = () => {
+        isResetRef.current = true;
         setIsActive(false);
         setTimeLeft(0);
         setTimerState("FLOW");
+        if (liveRegionRef.current) {
+            liveRegionRef.current.textContent = "Timer reset.";
+        }
     };
 
     const formatTime = (seconds: number) => {
@@ -174,24 +223,33 @@ export function FocusTimer() {
 
     return (
         <div className="w-full max-w-md mx-auto flex flex-col items-center justify-center min-h-[50vh] relative">
-            <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
-
+            <div
+                ref={liveRegionRef}
+                role="status"
+                aria-live="polite"
+                aria-atomic="true"
+                className="sr-only"
+            />
             <div className="flex flex-col items-center gap-4 mb-12 w-full">
-                <div className="flex items-center justify-center gap-2 mt-1 mb-0.5">
+                <div className="flex items-center justify-center gap-1.5 mt-1 mb-0.5 text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
                     {timerState === "BREAK" ? (
-                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-mono text-muted-foreground shadow-sm">
-                            <Coffee className="w-3 h-3" />
-                            <span className="text-[10px] font-bold">Break</span>
-                        </div>
+                        <>
+                            <Coffee className="w-3.5 h-3.5" />
+                            <span>Break</span>
+                        </>
                     ) : (
-                        <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-mono text-muted-foreground shadow-sm">
-                            <Clock className="w-3 h-3" />
-                            <span className="text-[10px] font-bold">Flow</span>
-                        </div>
+                        <>
+                            <Clock className="w-3.5 h-3.5" />
+                            <span>Flow</span>
+                        </>
                     )}
                 </div>
 
-                <div className="text-[3.5rem] sm:text-[5rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow">
+                <div
+                    role="timer"
+                    aria-label={`${timerState === "BREAK" ? "Break time remaining" : "Flow time elapsed"}: ${formatTime(timeLeft)}`}
+                    className="text-[3.5rem] sm:text-[5rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground"
+                >
                     {formatTime(timeLeft)}
                 </div>
 
@@ -241,9 +299,10 @@ export function FocusTimer() {
                     <Button
                         variant="outline"
                         size="icon"
-                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-secondary hover:border-border/80 transition-all cursor-pointer"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-surface hover:border-border transition-all cursor-pointer"
                         onClick={resetTimer}
                         title="Reset Timer"
+                        aria-label="Reset timer"
                     >
                         <RotateCcw className="size-4 sm:size-5" />
                     </Button>
@@ -255,12 +314,14 @@ export function FocusTimer() {
                     <Button
                         size="icon"
                         className={cn(
-                            "w-14 h-14 sm:w-16 sm:h-16 rounded-[var(--radius)] shadow-md hover:shadow active:scale-95 transition-all duration-300 cursor-pointer",
+                            "w-14 h-14 sm:w-16 sm:h-16 rounded-[var(--radius)] shadow-xs active:scale-95 transition-all duration-300 cursor-pointer",
                             isActive
-                                ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                                ? "bg-surface text-foreground hover:bg-surface/80"
                                 : "bg-primary text-primary-foreground",
                         )}
                         onClick={toggleTimer}
+                        title={isActive ? "Pause Timer" : "Start Timer"}
+                        aria-label={isActive ? "Pause timer" : "Start timer"}
                     >
                         {isActive ? (
                             <Pause className="size-7 sm:size-8 fill-current" />
@@ -283,6 +344,7 @@ export function FocusTimer() {
                         onClick={handleCompleteSession}
                         disabled={!isActive}
                         title="Complete Session"
+                        aria-label="Complete session"
                     >
                         <CheckCircle2 className="size-4 sm:size-5" />
                     </Button>
@@ -290,9 +352,10 @@ export function FocusTimer() {
                     <Button
                         variant="outline"
                         size="icon"
-                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-secondary hover:border-border/80 transition-all cursor-pointer"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-surface hover:border-border transition-all cursor-pointer"
                         onClick={() => setDeepFocusMode(true)}
                         title="Deep Focus Mode"
+                        aria-label="Deep focus mode"
                     >
                         <Focus className="size-4 sm:size-5" />
                     </Button>

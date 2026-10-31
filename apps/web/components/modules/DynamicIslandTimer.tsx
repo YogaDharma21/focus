@@ -4,8 +4,9 @@ import React, { useState, useEffect, useRef } from "react";
 import { useAppStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
 import { Play, Pause, CheckCircle2, Clock } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getBreakDuration } from "@/lib/utils";
 import { DistractionCounter } from "./DistractionCounter";
+import { playCompletionSound } from "@/lib/sound";
 
 export function DynamicIslandTimer() {
     const {
@@ -21,6 +22,7 @@ export function DynamicIslandTimer() {
         soundEffectEnabled,
         soundEnabled,
         autoStartBreak,
+        breakRatio,
         tasks,
         selectedTaskId,
     } = useAppStore(
@@ -37,13 +39,13 @@ export function DynamicIslandTimer() {
             soundEffectEnabled: s.soundEffectEnabled,
             soundEnabled: s.soundEnabled ?? true,
             autoStartBreak: s.autoStartBreak ?? true,
+            breakRatio: s.breakRatio ?? "1/5",
             tasks: s.tasks,
             selectedTaskId: s.selectedTaskId,
         }))
     );
     const [isExpanded, setIsExpanded] = useState(false);
     const containerRef = useRef<HTMLDivElement>(null);
-    const audioRef = useRef<HTMLAudioElement | null>(null);
 
     // Close popover on outside click
     useEffect(() => {
@@ -59,26 +61,17 @@ export function DynamicIslandTimer() {
     }, [isExpanded]);
 
     const playSound = React.useCallback(() => {
-        if (!soundEnabled || !soundEffectEnabled) return;
-        const vol = (soundEffectVolume ?? 80) / 100;
-        try {
-            if (audioRef.current) {
-                audioRef.current.currentTime = 0;
-                audioRef.current.volume = vol;
-                audioRef.current.play().catch(() => {
-                    const fallback = new Audio("/soundeffect.mp3");
-                    fallback.volume = vol;
-                    fallback.play().catch(() => {});
-                });
-            } else {
-                const fallback = new Audio("/soundeffect.mp3");
-                fallback.volume = vol;
-                fallback.play().catch(() => {});
-            }
-        } catch {
-            // ignore
-        }
-    }, [soundEnabled, soundEffectEnabled, soundEffectVolume]);
+        const breakSeconds = Math.floor(timeLeft / 5);
+        const breakStr = breakSeconds > 0
+            ? `${Math.floor(breakSeconds / 60)}m`
+            : "a short";
+        playCompletionSound({
+            notification: {
+                title: "Flow Session Complete!",
+                body: `Focused for ${Math.floor(timeLeft / 60)}m. Earned ${breakStr} break!`,
+            },
+        });
+    }, [timeLeft]);
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -113,7 +106,7 @@ export function DynamicIslandTimer() {
             });
         }
 
-        const breakSeconds = Math.floor(duration / 5);
+        const breakSeconds = getBreakDuration(duration, breakRatio);
         if (breakSeconds > 0) {
             setTimeLeft(breakSeconds);
             setTimerState("BREAK");
@@ -137,8 +130,8 @@ export function DynamicIslandTimer() {
                 }}
                 className={cn(
                     "flex items-center gap-2 px-3.5 py-1.5 rounded-full",
-                    "bg-card border border-border shadow-md",
-                    "hover:bg-secondary/80 hover:border-border transition-all duration-200 active:scale-95 cursor-pointer text-xs select-none",
+                    "bg-card border border-border shadow-sm",
+                    "hover:bg-surface hover:border-border transition-all duration-200 active:scale-95 cursor-pointer text-xs select-none",
                 )}
                 title="Click to toggle timer controls"
             >
@@ -156,12 +149,10 @@ export function DynamicIslandTimer() {
                 <div
                     onClick={(e) => e.stopPropagation()}
                     className={cn(
-                        "absolute z-50 w-[330px] sm:w-[360px] bg-card border border-border rounded-2xl p-3.5 shadow-2xl space-y-3 animate-in fade-in zoom-in-95 duration-150",
+                        "absolute z-50 w-[330px] sm:w-[360px] bg-card border border-border rounded-[24px] p-3.5 shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] space-y-3 animate-in fade-in zoom-in-95 duration-150",
                         "top-full mt-2.5 left-1/2 -translate-x-1/2",
                     )}
                 >
-                    <audio ref={audioRef} src="/soundeffect.mp3" preload="auto" />
-
                     {/* Top Row: Time */}
                     <div className="flex items-center gap-2">
                         <div className="flex items-center gap-2 shrink-0">
@@ -184,24 +175,27 @@ export function DynamicIslandTimer() {
                                 setIsExpanded(false);
                             }}
                             className={cn(
-                                "flex-1 py-2 px-3 rounded-xl border text-xs font-bold flex items-center justify-center gap-1.5 transition-all",
+                                "flex-1 py-2 px-3 rounded-[12px] border text-xs font-medium flex items-center justify-center gap-1.5 transition-all",
                                 !isActive
                                     ? "bg-card border-border text-muted-foreground cursor-not-allowed opacity-50"
-                                    : "bg-secondary border-border hover:bg-accent text-foreground cursor-pointer"
+                                    : "bg-surface border-border hover:bg-surface/80 text-foreground cursor-pointer"
                             )}
                             title={isActive ? "Complete Session" : "Start timer to complete session"}
+                            aria-label={isActive ? "Complete session" : "Start timer to complete session"}
                         >
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span>Complete</span>
                         </button>
 
                         {/* Log Distraction Button */}
-                        <DistractionCounter className="w-9 h-9 sm:w-9 sm:h-9 rounded-xl border bg-secondary border-border hover:bg-accent text-muted-foreground p-0" />
+                        <DistractionCounter className="w-9 h-9 sm:w-9 sm:h-9 rounded-[12px] border bg-surface border-border hover:bg-surface/80 text-muted-foreground p-0" />
 
                         {/* Start / Pause Button */}
                         <button
                             onClick={toggleTimer}
-                            className="flex-1 py-2 px-3 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all shadow bg-primary text-primary-foreground border-primary hover:bg-primary/90 cursor-pointer"
+                            className="flex-1 py-2 px-3 rounded-[12px] border text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-xs bg-primary text-primary-foreground border-primary hover:bg-primary/90 cursor-pointer"
+                            title={isActive ? "Pause Timer" : "Start Timer"}
+                            aria-label={isActive ? "Pause timer" : "Start timer"}
                         >
                             {isActive ? (
                                 <>

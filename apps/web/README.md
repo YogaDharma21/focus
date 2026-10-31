@@ -57,10 +57,10 @@
 
 ### Development Setup
 
-1. **Navigate to website directory:**
+1. **Navigate to web directory:**
 
    ```bash
-   cd apps/website
+   cd apps/web
    ```
 
 2. **Install dependencies:**

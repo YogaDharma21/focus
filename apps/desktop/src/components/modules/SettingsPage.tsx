@@ -2,10 +2,12 @@ import React, { useEffect, useState, useRef } from 'react';
 import {
   Settings, Clock, Palette, Volume2, Volume1, VolumeX, Trash2, BellRing,
   Info, Github, ExternalLink, Check, Download,
-  Upload, ShieldAlert, Monitor, Pin, Database, Music
+  Upload, ShieldAlert, Monitor, Pin, Database, Music,
+  FileSpreadsheet, FileText
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
+import { downloadFile, sessionsToCsv, sessionsToMarkdown, validateBackupJson } from '../../lib/utils';
 import iconUrl from '../../../public/icon.png';
 
 export const SettingsPage: React.FC = () => {
@@ -27,6 +29,8 @@ export const SettingsPage: React.FC = () => {
     setAutoStartBreak,
     autoStartFlow,
     setAutoStartFlow,
+    breakRatio,
+    setBreakRatio,
     sessions,
     distractions,
   } = useDesktopStore();
@@ -80,6 +84,8 @@ export const SettingsPage: React.FC = () => {
     showFeedback(next ? 'Window pinned Always on Top.' : 'Window unpinned.');
   };
 
+  const [isDragging, setIsDragging] = useState(false);
+
   const handleExportData = () => {
     try {
       const fullState = localStorage.getItem('focus-desktop-storage-v2');
@@ -89,15 +95,12 @@ export const SettingsPage: React.FC = () => {
       }
 
       const parsed = JSON.parse(fullState);
-      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(parsed, null, 2));
-      const downloadAnchor = document.createElement('a');
       const dateStr = new Date().toISOString().slice(0, 10);
-      downloadAnchor.setAttribute('href', dataStr);
-      downloadAnchor.setAttribute('download', `focus-desktop-backup-${dateStr}.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-
+      downloadFile(
+        JSON.stringify(parsed, null, 2),
+        `focus-desktop-backup-${dateStr}.json`,
+        'application/json'
+      );
       showFeedback('Backup exported successfully.');
     } catch (err) {
       console.error('Export error:', err);
@@ -105,17 +108,64 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
-  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleExportCsv = () => {
+    try {
+      if (!sessions || sessions.length === 0) {
+        showFeedback('No sessions found to export.', 'error');
+        return;
+      }
+      const csv = sessionsToCsv(sessions);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      downloadFile(csv, `focus-desktop-sessions-${dateStr}.csv`, 'text/csv;charset=utf-8');
+      showFeedback('Sessions exported to CSV successfully.');
+    } catch (err) {
+      console.error('Export CSV error:', err);
+      showFeedback('Failed to export CSV.', 'error');
+    }
+  };
 
+  const handleExportMarkdown = () => {
+    try {
+      const md = sessionsToMarkdown(sessions, distractions);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      downloadFile(md, `focus-desktop-summary-${dateStr}.md`, 'text/markdown;charset=utf-8');
+      showFeedback('Summary exported to Markdown successfully.');
+    } catch (err) {
+      console.error('Export error:', err);
+      showFeedback('Failed to export Markdown summary.', 'error');
+    }
+  };
+
+  const processImportFile = (file: File) => {
+    if (!file.name.endsWith('.json')) {
+      showFeedback('Please select a valid .json backup file.', 'error');
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
         const content = event.target?.result as string;
-        const parsed = JSON.parse(content);
-        const stateToSave = parsed.state ? parsed : { state: parsed, version: 1 };
-        localStorage.setItem('focus-desktop-storage-v2', JSON.stringify(stateToSave));
+        const result = validateBackupJson(content);
+        if (!result.isValid || !result.data) {
+          showFeedback(result.error || 'Invalid JSON backup file format.', 'error');
+          return;
+        }
+        const currentRaw = localStorage.getItem('focus-desktop-storage-v2');
+        const current = currentRaw ? JSON.parse(currentRaw) : { state: {}, version: 1 };
+        const nextState = {
+          ...current.state,
+          ...result.data,
+          isActive: false,
+          timeLeft: 0,
+          timerState: 'FLOW',
+        };
+        localStorage.setItem(
+          'focus-desktop-storage-v2',
+          JSON.stringify({
+            state: nextState,
+            version: current.version ?? 1,
+          })
+        );
         showFeedback('Data restored successfully. Reloading workspace...');
         setTimeout(() => {
           window.location.reload();
@@ -126,6 +176,13 @@ export const SettingsPage: React.FC = () => {
       }
     };
     reader.readAsText(file);
+  };
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processImportFile(file);
+    }
     e.target.value = '';
   };
 
@@ -172,7 +229,6 @@ export const SettingsPage: React.FC = () => {
         </div>
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">Settings</h1>
-          <p className="text-xs text-muted-foreground">Configure timer intervals, themes, sound effects, and workspace preferences.</p>
         </div>
       </div>
 
@@ -185,8 +241,43 @@ export const SettingsPage: React.FC = () => {
               </div>
               <div>
                 <h2 className="text-sm font-semibold text-foreground tracking-tight">Timer & Focus</h2>
-                <p className="text-[11px] text-muted-foreground">Flow mode: open-ended stopwatch with smart break calculation.</p>
               </div>
+            </div>
+          </div>
+
+          <div className="p-4 rounded-2xl bg-secondary/70 border border-border space-y-3 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <span className="text-xs font-semibold text-foreground block">Break Ratio</span>
+                <span className="text-[11px] text-muted-foreground block leading-tight">
+                  Calculate break length based on elapsed flow duration.
+                </span>
+              </div>
+              <span className="font-mono text-xs text-muted-foreground tabular-nums">
+                {breakRatio === "1/3" ? "33% of flow" : breakRatio === "1/4" ? "25% of flow" : "20% of flow"}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              {(["1/5", "1/4", "1/3"] as const).map((ratio) => {
+                const isActive = (breakRatio ?? "1/5") === ratio;
+                return (
+                  <button
+                    key={ratio}
+                    type="button"
+                    onClick={() => {
+                      setBreakRatio(ratio);
+                      showFeedback(`Break ratio set to ${ratio}.`);
+                    }}
+                    className={`flex-1 py-1.5 rounded-xl text-xs font-semibold transition-all cursor-pointer tabular-nums ${
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-md"
+                        : "bg-secondary text-secondary-foreground hover:bg-secondary/80 border border-border"
+                    }`}
+                  >
+                    {ratio}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -245,7 +336,6 @@ export const SettingsPage: React.FC = () => {
             </div>
             <div>
               <h2 className="text-sm font-semibold text-foreground tracking-tight">Appearance</h2>
-              <p className="text-[11px] text-muted-foreground">Switch between light and dark mode.</p>
             </div>
           </div>
 
@@ -257,7 +347,7 @@ export const SettingsPage: React.FC = () => {
             <div className="flex gap-2">
               <button
                 onClick={() => { setTheme("light"); showFeedback("Switched to light mode"); }}
-                className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300 ease-out active:scale-95 cursor-pointer ${
                   theme === "light"
                     ? "bg-primary text-primary-foreground shadow-md"
                     : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
@@ -267,7 +357,7 @@ export const SettingsPage: React.FC = () => {
               </button>
               <button
                 onClick={() => { setTheme("dark"); showFeedback("Switched to dark mode"); }}
-                className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all ${
+                className={`px-4 py-1.5 rounded-xl text-xs font-semibold transition-all duration-300 ease-out active:scale-95 cursor-pointer ${
                   theme === "dark"
                     ? "bg-primary text-primary-foreground shadow-md"
                     : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
@@ -286,7 +376,6 @@ export const SettingsPage: React.FC = () => {
             </div>
             <div>
               <h2 className="text-sm font-semibold text-foreground tracking-tight">Sound & Notifications</h2>
-              <p className="text-[11px] text-muted-foreground">Configure session chime alerts, test audio feedback, and ambient levels.</p>
             </div>
           </div>
 
@@ -348,7 +437,7 @@ export const SettingsPage: React.FC = () => {
                 <button
                   onClick={playTestSound}
                   disabled={!soundEffectEnabled}
-                  className="w-full sm:w-auto px-4 py-2 bg-background hover:bg-secondary border border-border hover:border-border text-foreground hover:text-foreground rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm disabled:opacity-40"
+                  className="w-full sm:w-auto px-4 py-2 bg-background hover:bg-secondary border border-border hover:border-border text-foreground hover:text-foreground rounded-xl text-xs font-semibold transition-all duration-300 ease-out active:scale-95 cursor-pointer flex items-center justify-center gap-2 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <Volume1 className="w-3.5 h-3.5 text-muted-foreground" />
                   Play Test Chime
@@ -429,7 +518,6 @@ export const SettingsPage: React.FC = () => {
             </div>
             <div>
               <h2 className="text-sm font-semibold text-foreground tracking-tight">System & Window Preferences</h2>
-              <p className="text-[11px] text-muted-foreground">Window management and desktop notification triggers.</p>
             </div>
           </div>
 
@@ -470,7 +558,7 @@ export const SettingsPage: React.FC = () => {
               </div>
               <button
                 onClick={testDesktopNotification}
-                className="px-3 py-1.5 bg-background hover:bg-secondary border border-border hover:border-border text-foreground hover:text-foreground rounded-xl text-xs font-medium whitespace-nowrap transition-all shadow-sm"
+                className="px-3 py-1.5 bg-background hover:bg-secondary border border-border hover:border-border text-foreground hover:text-foreground rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-300 ease-out active:scale-95 cursor-pointer shadow-sm"
               >
                 Test Notification
               </button>
@@ -485,7 +573,6 @@ export const SettingsPage: React.FC = () => {
             </div>
             <div>
               <h2 className="text-sm font-semibold text-foreground tracking-tight">Data, Storage & Backup</h2>
-              <p className="text-[11px] text-muted-foreground">View real-time storage stats, export JSON backups, or safely restore data.</p>
             </div>
           </div>
 
@@ -509,34 +596,73 @@ export const SettingsPage: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <Download className="w-4 h-4 text-muted-foreground" />
-                  <h3 className="text-xs font-bold text-foreground">Export Backup</h3>
+                  <h3 className="text-xs font-bold text-foreground">Export Data</h3>
                 </div>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Download a full JSON archive containing all completed sessions, distraction logs, and custom preferences.
+                  Export your session history and logs to JSON (full backup), CSV (spreadsheets), or Markdown (summary).
                 </p>
               </div>
-              <button
-                onClick={handleExportData}
-                className="w-full px-4 py-2.5 bg-background hover:bg-secondary border border-border hover:border-border text-foreground rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm"
-              >
-                <Download className="w-3.5 h-3.5 text-muted-foreground" />
-                Download JSON Backup
-              </button>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={handleExportData}
+                  className="px-3 py-2.5 bg-background hover:bg-secondary border border-border text-foreground rounded-xl text-xs font-semibold transition-all duration-300 ease-out active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                >
+                  <Download className="w-3.5 h-3.5 text-muted-foreground" />
+                  JSON
+                </button>
+                <button
+                  onClick={handleExportCsv}
+                  className="px-3 py-2.5 bg-background hover:bg-secondary border border-border text-foreground rounded-xl text-xs font-semibold transition-all duration-300 ease-out active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-muted-foreground" />
+                  CSV
+                </button>
+                <button
+                  onClick={handleExportMarkdown}
+                  className="px-3 py-2.5 bg-background hover:bg-secondary border border-border text-foreground rounded-xl text-xs font-semibold transition-all duration-300 ease-out active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                >
+                  <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+                  Markdown
+                </button>
+              </div>
             </div>
 
-            <div className="p-5 rounded-2xl bg-secondary/70 border border-border space-y-3 flex flex-col justify-between shadow-sm">
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(true);
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(false);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(false);
+                const file = e.dataTransfer.files?.[0];
+                if (file) {
+                  processImportFile(file);
+                }
+              }}
+              className={`p-5 rounded-2xl bg-secondary/70 border transition-colors space-y-3 flex flex-col justify-between shadow-sm ${
+                isDragging ? 'border-primary bg-secondary' : 'border-border'
+              }`}
+            >
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <Upload className="w-4 h-4 text-muted-foreground" />
                   <h3 className="text-xs font-bold text-foreground">Restore Backup</h3>
                 </div>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Restore workspace data from a previously downloaded JSON backup file.
+                  Restore workspace data from a JSON backup. Drag and drop file here or click below.
                 </p>
               </div>
               <button
                 onClick={() => fileInputRef.current?.click()}
-                className="w-full px-4 py-2.5 bg-background hover:bg-secondary border border-border hover:border-border text-foreground rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center justify-center gap-2 shadow-sm"
+                className="w-full px-4 py-2.5 bg-background hover:bg-secondary border border-border hover:border-border text-foreground rounded-xl text-xs font-semibold transition-all duration-300 ease-out active:scale-95 cursor-pointer flex items-center justify-center gap-2 shadow-sm"
               >
                 <Upload className="w-3.5 h-3.5 text-muted-foreground" />
                 Select File to Restore
@@ -558,7 +684,7 @@ export const SettingsPage: React.FC = () => {
                   setResetConfirmText('');
                   setShowResetModal(true);
                 }}
-                className="px-4 py-2.5 bg-rose-600/15 hover:bg-rose-600/25 border border-rose-500/30 text-rose-400 hover:text-rose-300 rounded-xl text-xs font-semibold transition-all active:scale-95 flex items-center gap-2 shadow-sm"
+                className="px-4 py-2.5 bg-rose-600/15 hover:bg-rose-600/25 border border-rose-500/30 text-rose-400 hover:text-rose-300 rounded-xl text-xs font-semibold transition-all duration-300 ease-out active:scale-95 cursor-pointer flex items-center gap-2 shadow-sm"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 Reset All Workspace Data
@@ -574,7 +700,6 @@ export const SettingsPage: React.FC = () => {
             </div>
             <div>
               <h2 className="text-sm font-semibold text-foreground tracking-tight">About Focus Desktop</h2>
-              <p className="text-[11px] text-muted-foreground">Application architecture, release information, and open source repository.</p>
             </div>
           </div>
 
@@ -653,14 +778,14 @@ export const SettingsPage: React.FC = () => {
             <div className="flex items-center justify-end gap-2.5 pt-2 border-t border-border">
               <button
                 onClick={() => setShowResetModal(false)}
-                className="px-4 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+                className="px-4 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-all duration-300 ease-out active:scale-95 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 disabled={resetConfirmText.toLowerCase() !== 'reset'}
                 onClick={handleResetConfirmed}
-                className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 disabled:opacity-30 disabled:hover:bg-rose-600 text-white transition-all shadow-md active:scale-95"
+                className="px-4 py-2 rounded-xl text-xs font-bold bg-rose-600 hover:bg-rose-500 disabled:opacity-30 disabled:hover:bg-rose-600 text-white transition-all duration-300 ease-out shadow-md active:scale-95 cursor-pointer disabled:cursor-not-allowed"
               >
                 Permanently Clear All Data
               </button>

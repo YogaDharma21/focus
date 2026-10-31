@@ -28,6 +28,8 @@ export const DEFAULT_STATE: AppStateData = {
   timerState: "FLOW",
   previousMode: "FLOW",
   timeLeft: 0,
+  timerAnchorTimestamp: null,
+  targetEndTime: null,
   isActive: false,
   sessionStartTime: null,
   sessions: [],
@@ -245,7 +247,39 @@ function migrateState(fresh: AppStateData): AppStateData {
       autoStartTimer: fresh.timerSettings.autoStartTimer ?? false
     };
   }
+  if (fresh.timerAnchorTimestamp === undefined) {
+    fresh.timerAnchorTimestamp = null;
+  }
+  if (fresh.targetEndTime === undefined) {
+    fresh.targetEndTime = null;
+  }
+  if (fresh.isActive) {
+    if (fresh.timerState === "FLOW" && !fresh.timerAnchorTimestamp) {
+      fresh.timerAnchorTimestamp = Date.now() - ((fresh.timeLeft || 0) * 1000);
+    } else if (fresh.timerState === "BREAK" && !fresh.targetEndTime) {
+      fresh.targetEndTime = Date.now() + ((fresh.timeLeft || 0) * 1000);
+    }
+  }
   return fresh;
+}
+
+export function getEffectiveTimeLeft(state: AppStateData, now: number = Date.now()): number {
+  if (!state.isActive) {
+    return Math.max(0, state.timeLeft || 0);
+  }
+
+  if (state.timerState === "BREAK") {
+    if (state.targetEndTime) {
+      return Math.max(0, Math.round((state.targetEndTime - now) / 1000));
+    }
+    return Math.max(0, state.timeLeft || 0);
+  }
+
+  if (state.timerAnchorTimestamp) {
+    return Math.max(0, Math.floor((now - state.timerAnchorTimestamp) / 1000));
+  }
+
+  return Math.max(0, state.timeLeft || 0);
 }
 
 export async function getStoredState(): Promise<AppStateData> {

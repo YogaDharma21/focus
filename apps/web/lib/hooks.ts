@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useSyncExternalStore } from "react";
 import { useAppStore } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
+import { playCompletionSound } from "@/lib/sound";
+import { getBreakDuration } from "@/lib/utils";
 
 export function useMediaQuery(query: string): boolean {
     return useSyncExternalStore(
@@ -31,6 +33,7 @@ export function useTimerEngine() {
         setIsMusicPlaying,
         autoStartBreak,
         autoStartFlow,
+        breakRatio,
     } = useAppStore(
         useShallow((s) => ({
             isActive: s.isActive,
@@ -48,6 +51,7 @@ export function useTimerEngine() {
             setIsMusicPlaying: s.setIsMusicPlaying,
             autoStartBreak: s.autoStartBreak ?? true,
             autoStartFlow: s.autoStartFlow ?? true,
+            breakRatio: s.breakRatio ?? "1/5",
         }))
     );
 
@@ -70,15 +74,12 @@ export function useTimerEngine() {
     const handleAutoCompleteSession = React.useCallback(() => {
         setIsActive(false);
 
-        try {
-            if (soundEffectEnabled ?? true) {
-                const audio = new Audio("/soundeffect.mp3");
-                audio.volume = (soundEffectVolume ?? 80) / 100;
-                audio.play().catch(() => {});
-            }
-        } catch {
-            // ignore
-        }
+        playCompletionSound({
+            notification: {
+                title: "Flow Session Complete!",
+                body: "Great focus session! Time to take a break.",
+            },
+        });
 
         const duration = timeLeft;
         if (duration > 0) {
@@ -89,7 +90,7 @@ export function useTimerEngine() {
                 mode: "STOPWATCH",
             });
 
-            const breakSeconds = Math.floor(duration / 5);
+            const breakSeconds = getBreakDuration(duration, breakRatio);
             if (breakSeconds > 0) {
                 setTimeLeft(breakSeconds);
                 setTimerState("BREAK");
@@ -110,6 +111,7 @@ export function useTimerEngine() {
         soundEffectEnabled,
         soundEffectVolume,
         autoStartBreak,
+        breakRatio,
     ]);
 
     const autoCompleteRef = useRef(handleAutoCompleteSession);
@@ -117,23 +119,35 @@ export function useTimerEngine() {
         autoCompleteRef.current = handleAutoCompleteSession;
     }, [handleAutoCompleteSession]);
 
+    const lastTickRef = useRef<number>(0);
+
     useEffect(() => {
         if (!isActive) return;
 
-        const interval = setInterval(() => {
+        lastTickRef.current = Date.now();
+
+        const tick = () => {
+            const now = Date.now();
+            if (now < lastTickRef.current) {
+                lastTickRef.current = now;
+                return;
+            }
+
+            const delta = Math.floor((now - lastTickRef.current) / 1000);
+            if (delta <= 0) return;
+
+            lastTickRef.current += delta * 1000;
+
             setTimeLeft((prev) => {
                 if (timerState === "BREAK") {
-                    const next = prev - 1;
+                    const next = prev - delta;
                     if (next <= 0) {
-                        try {
-                            if ((soundEnabled ?? true) && (soundEffectEnabled ?? true)) {
-                                const audio = new Audio("/soundeffect.mp3");
-                                audio.volume = (soundEffectVolume ?? 80) / 100;
-                                audio.play().catch(() => {});
-                            }
-                        } catch {
-                            // ignore
-                        }
+                        playCompletionSound({
+                            notification: {
+                                title: "Break Finished!",
+                                body: "Time to get back into flow.",
+                            },
+                        });
                         setTimerState("FLOW");
                         if (autoStartFlow) {
                             setDeepFocusMode(true);
@@ -144,10 +158,36 @@ export function useTimerEngine() {
                     }
                     return next;
                 }
-                return prev + 1;
+                return prev + delta;
             });
-        }, 1000);
+        };
 
-        return () => clearInterval(interval);
-    }, [isActive, setTimeLeft, timerState, setTimerState, setIsActive, setDeepFocusMode, autoStartFlow, soundEnabled, soundEffectEnabled, soundEffectVolume]);
+        const interval = setInterval(tick, 1000);
+
+        const handleVisibilityChange = () => {
+            if (document.visibilityState === "visible") {
+                tick();
+            }
+        };
+
+        document.addEventListener("visibilitychange", handleVisibilityChange);
+        window.addEventListener("focus", tick);
+
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener("visibilitychange", handleVisibilityChange);
+            window.removeEventListener("focus", tick);
+        };
+    }, [
+        isActive,
+        setTimeLeft,
+        timerState,
+        setTimerState,
+        setIsActive,
+        setDeepFocusMode,
+        autoStartFlow,
+        soundEnabled,
+        soundEffectEnabled,
+        soundEffectVolume,
+    ]);
 }

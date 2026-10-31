@@ -2,10 +2,44 @@ import React from 'react';
 import {
   Clock, Activity, Flame, BarChart2, TrendingUp
 } from 'lucide-react';
+import { differenceInCalendarDays, format, subDays } from 'date-fns';
 import { useDesktopStore } from '../../lib/store';
+import { AnnualHeatmap } from './AnnualHeatmap';
+
+const toDateKey = (dateStr?: string) => {
+  if (!dateStr) return '';
+  if (!dateStr.includes('T') && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+    return dateStr;
+  }
+  const date = new Date(dateStr);
+  if (isNaN(date.getTime())) return '';
+  return format(date, 'yyyy-MM-dd');
+};
+
+const parseDateKey = (key: string) => {
+  const parts = key.split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) return new Date(NaN);
+  return new Date(parts[0], parts[1] - 1, parts[2]);
+};
 
 export const StatsJournal: React.FC = () => {
-  const { sessions, distractions } = useDesktopStore();
+  const { sessions, distractions, isActive, sessionStartTime } = useDesktopStore();
+  const [liveElapsed, setLiveElapsed] = React.useState(0);
+
+  React.useEffect(() => {
+    if (!isActive || !sessionStartTime) {
+      setLiveElapsed(0);
+      return;
+    }
+    const updateElapsed = () => {
+      const start = new Date(sessionStartTime).getTime();
+      const elapsed = Math.max(0, Math.floor((Date.now() - start) / 1000));
+      setLiveElapsed(elapsed);
+    };
+    updateElapsed();
+    const interval = setInterval(updateElapsed, 1000);
+    return () => clearInterval(interval);
+  }, [isActive, sessionStartTime]);
 
   const now = new Date();
   const currentMinutesPassed = now.getHours() * 60 + now.getMinutes();
@@ -14,31 +48,14 @@ export const StatsJournal: React.FC = () => {
   const hoursRemaining = Math.floor(minutesRemaining / 60);
   const minsRemainingPart = minutesRemaining % 60;
 
-  const todaySessions = sessions.filter(s => {
-    if (!s.date) return false;
-    const sDate = new Date(s.date);
-    return (
-      sDate.getFullYear() === now.getFullYear() &&
-      sDate.getMonth() === now.getMonth() &&
-      sDate.getDate() === now.getDate()
-    );
-  });
+  const todayDateStr = format(now, 'yyyy-MM-dd');
+  const todaySessions = sessions.filter(s => s && toDateKey(s.date) === todayDateStr);
   const minutesToday = Math.round(todaySessions.reduce((acc, s) => acc + s.duration, 0) / 60);
 
   const calculateStreak = () => {
     if (!sessions || sessions.length === 0) return { current: 0, best: 0 };
     const dates = Array.from(
-      new Set(
-        sessions
-          .filter(s => s && s.date)
-          .map(s => {
-            const d = new Date(s.date);
-            const y = d.getFullYear();
-            const m = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            return `${y}-${m}-${day}`;
-          })
-      )
+      new Set(sessions.map((s) => toDateKey(s?.date)).filter(Boolean))
     ).sort();
 
     if (dates.length === 0) return { current: 0, best: 0 };
@@ -47,9 +64,9 @@ export const StatsJournal: React.FC = () => {
     let tempStreak = 1;
 
     for (let i = 1; i < dates.length; i++) {
-      const prev = new Date(dates[i - 1]);
-      const curr = new Date(dates[i]);
-      const diffDays = Math.round((curr.getTime() - prev.getTime()) / (1000 * 3600 * 24));
+      const prev = parseDateKey(dates[i - 1]);
+      const curr = parseDateKey(dates[i]);
+      const diffDays = differenceInCalendarDays(curr, prev);
       if (diffDays === 1) {
         tempStreak++;
         if (tempStreak > best) best = tempStreak;
@@ -58,18 +75,8 @@ export const StatsJournal: React.FC = () => {
       }
     }
 
-    const cur = new Date();
-    const curY = cur.getFullYear();
-    const curM = String(cur.getMonth() + 1).padStart(2, '0');
-    const curD = String(cur.getDate()).padStart(2, '0');
-    const today = `${curY}-${curM}-${curD}`;
-
-    const yDate = new Date(cur.getTime() - 86400000);
-    const yY = yDate.getFullYear();
-    const yM = String(yDate.getMonth() + 1).padStart(2, '0');
-    const yD = String(yDate.getDate()).padStart(2, '0');
-    const yesterday = `${yY}-${yM}-${yD}`;
-
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const yesterday = format(subDays(new Date(), 1), 'yyyy-MM-dd');
     const lastDate = dates[dates.length - 1];
 
     let current = 0;
@@ -99,16 +106,9 @@ export const StatsJournal: React.FC = () => {
     daysOfWeek.forEach((day, index) => {
       const targetDate = new Date(sunday);
       targetDate.setDate(sunday.getDate() + index);
+      const targetStr = format(targetDate, 'yyyy-MM-dd');
 
-      const daySessions = sessions.filter((s) => {
-        if (!s.date) return false;
-        const sDate = new Date(s.date);
-        return (
-          sDate.getFullYear() === targetDate.getFullYear() &&
-          sDate.getMonth() === targetDate.getMonth() &&
-          sDate.getDate() === targetDate.getDate()
-        );
-      });
+      const daySessions = sessions.filter((s) => s && toDateKey(s.date) === targetStr);
 
       const historicalSeconds = daySessions.reduce(
         (acc, s) => acc + s.duration,
@@ -257,6 +257,8 @@ export const StatsJournal: React.FC = () => {
           </div>
         </div>
       </div>
+
+      <AnnualHeatmap sessions={sessions} liveElapsed={liveElapsed} />
 
       <div className="bg-card border border-border rounded-2xl p-5 shadow-sm space-y-4">
         <div className="flex items-center gap-2.5">

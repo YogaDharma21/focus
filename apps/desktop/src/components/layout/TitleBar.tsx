@@ -1,5 +1,5 @@
-import React from 'react';
-import { Minus, Square, Copy, X, Pin, Sparkles } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { Minus, Square, Copy, X, Pin, PictureInPicture2 } from 'lucide-react';
 import { electron } from '../../lib/electron';
 import { useDesktopStore } from '../../lib/store';
 import { FloatingTimerCapsule } from './FloatingTimerCapsule';
@@ -9,8 +9,29 @@ export const TitleBar: React.FC = () => {
   const { 
     isAlwaysOnTop, 
     setAlwaysOnTop, 
+    setMiniMode,
   } = useDesktopStore();
-  const [isMaximized, setIsMaximized] = React.useState(false);
+  const [isMaximized, setIsMaximized] = useState(false);
+
+  useEffect(() => {
+    let mounted = true;
+
+    electron
+      .isMaximized()
+      .then((maximized) => {
+        if (mounted) setIsMaximized(maximized);
+      })
+      .catch(() => {});
+
+    const unsubscribe = electron.onMaximizeChange((maximized) => {
+      if (mounted) setIsMaximized(maximized);
+    });
+
+    return () => {
+      mounted = false;
+      unsubscribe();
+    };
+  }, []);
 
   const handleTogglePin = async () => {
     const nextState = !isAlwaysOnTop;
@@ -20,7 +41,6 @@ export const TitleBar: React.FC = () => {
 
   const handleMaximize = () => {
     electron.maximizeWindow();
-    setIsMaximized(!isMaximized);
   };
 
   return (
@@ -37,6 +57,14 @@ export const TitleBar: React.FC = () => {
       </div>
 
       <div className="flex items-center gap-1 no-drag">
+        <button
+          onClick={() => setMiniMode(true)}
+          title="Mini Timer Mode (Ctrl+Alt+M)"
+          className="p-1.5 rounded-md hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+        >
+          <PictureInPicture2 className="w-3.5 h-3.5" />
+        </button>
+
         <button
           onClick={handleTogglePin}
           title={isAlwaysOnTop ? "Unpin Always on Top" : "Pin Always on Top"}
@@ -70,7 +98,7 @@ export const TitleBar: React.FC = () => {
         <button
           onClick={() => electron.closeWindow()}
           title="Close"
-          className="p-1.5 rounded-md hover:bg-rose-600 hover:text-white text-muted-foreground transition-colors"
+          className="p-1.5 rounded-md hover:bg-destructive/20 hover:text-destructive text-muted-foreground transition-colors"
         >
           <X className="w-3.5 h-3.5" />
         </button>

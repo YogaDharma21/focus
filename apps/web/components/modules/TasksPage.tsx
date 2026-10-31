@@ -13,8 +13,15 @@ import {
     ChevronDown,
     ChevronUp,
     ListChecks,
+    Clock,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import {
+    cn,
+    formatTaskDuration,
+    getTaskActualMinutes,
+    getVelocityStatus,
+    type VelocityStatus,
+} from "@/lib/utils";
 
 const PRIORITY_STYLES: Record<TaskPriority, string> = {
     urgent: "bg-crimson-bg text-crimson",
@@ -23,9 +30,17 @@ const PRIORITY_STYLES: Record<TaskPriority, string> = {
     low: "bg-surface-inset text-muted-foreground",
 };
 
+const VELOCITY_STYLES: Record<VelocityStatus, string> = {
+    "completed-on-time": "bg-emerald-bg text-emerald",
+    "on-track": "bg-surface-inset text-muted-foreground",
+    "approaching": "bg-amber-bg text-amber",
+    "exceeded": "bg-crimson-bg text-crimson",
+};
+
 export function TasksPage() {
     const {
         tasks,
+        sessions,
         selectedTaskId,
         addTask,
         toggleTask,
@@ -38,6 +53,7 @@ export function TasksPage() {
     } = useAppStore(
         useShallow((s) => ({
             tasks: s.tasks,
+            sessions: s.sessions,
             selectedTaskId: s.selectedTaskId,
             addTask: s.addTask,
             toggleTask: s.toggleTask,
@@ -54,6 +70,7 @@ export function TasksPage() {
     const [title, setTitle] = useState("");
     const [priority, setPriority] = useState<TaskPriority>("medium");
     const [deadline, setDeadline] = useState("");
+    const [estimatedMinutes, setEstimatedMinutes] = useState("");
     const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
     const [subtaskInputs, setSubtaskInputs] = useState<Record<string, string>>({});
 
@@ -61,18 +78,29 @@ export function TasksPage() {
         e.preventDefault();
         const trimmed = title.trim();
         if (!trimmed) return;
+        const parsedEst = parseInt(estimatedMinutes, 10);
         addTask({
             text: trimmed,
             priority,
             deadline: deadline || undefined,
+            estimatedMinutes: Number.isFinite(parsedEst) && parsedEst > 0 ? parsedEst : undefined,
         });
         setTitle("");
         setDeadline("");
+        setEstimatedMinutes("");
     };
 
     const handleFocusTask = (task: TaskItem) => {
+        if (task.completed) return;
         setSelectedTaskId(task.id);
         setView("FOCUS");
+    };
+
+    const handleDeleteTask = (taskId: string) => {
+        deleteTask(taskId);
+        if (expandedTaskId === taskId) {
+            setExpandedTaskId(null);
+        }
     };
 
     const handleAddSubtask = (taskId: string) => {
@@ -164,14 +192,29 @@ export function TasksPage() {
                             ))}
                         </div>
 
-                        <div className="flex items-center gap-1.5">
-                            <Calendar className="w-3.5 h-3.5" />
-                            <input
-                                type="date"
-                                value={deadline}
-                                onChange={(e) => setDeadline(e.target.value)}
-                                className="bg-transparent border-0 text-[11px] text-muted-foreground focus:outline-none cursor-pointer [color-scheme:dark]"
-                            />
+                        <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-1.5">
+                                <Clock className="w-3.5 h-3.5" />
+                                <input
+                                    type="number"
+                                    min="1"
+                                    max="1440"
+                                    placeholder="Est (m)"
+                                    value={estimatedMinutes}
+                                    onChange={(e) => setEstimatedMinutes(e.target.value)}
+                                    className="w-16 bg-transparent border-0 text-[11px] text-muted-foreground placeholder:text-subtle-foreground focus:outline-none tabular-nums"
+                                />
+                            </div>
+
+                            <div className="flex items-center gap-1.5">
+                                <Calendar className="w-3.5 h-3.5" />
+                                <input
+                                    type="date"
+                                    value={deadline}
+                                    onChange={(e) => setDeadline(e.target.value)}
+                                    className="bg-transparent border-0 text-[11px] text-muted-foreground focus:outline-none cursor-pointer [color-scheme:dark]"
+                                />
+                            </div>
                         </div>
                     </div>
                 </form>
@@ -214,6 +257,12 @@ export function TasksPage() {
                             const isExpanded = expandedTaskId === task.id;
                             const subtasks = task.subtasks || [];
                             const completedSubtasks = subtasks.filter((s) => s.completed).length;
+                            const actualMinutes = getTaskActualMinutes(sessions, task.id);
+                            const hasEstimate =
+                                typeof task.estimatedMinutes === "number" && task.estimatedMinutes > 0;
+                            const velocityStatus = hasEstimate
+                                ? getVelocityStatus(actualMinutes, task.estimatedMinutes!, task.completed)
+                                : null;
 
                             return (
                                 <div
@@ -270,6 +319,31 @@ export function TasksPage() {
                                                         </span>
                                                     )}
 
+                                                    {hasEstimate && velocityStatus && (
+                                                        <span
+                                                            className={cn(
+                                                                "text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full font-medium flex items-center gap-1",
+                                                                VELOCITY_STYLES[velocityStatus],
+                                                            )}
+                                                            title={`Velocity: ${actualMinutes}m actual of ${task.estimatedMinutes}m estimated (${velocityStatus})`}
+                                                        >
+                                                            <Clock className="w-3 h-3" />
+                                                            <span>
+                                                                {formatTaskDuration(actualMinutes)} / {formatTaskDuration(task.estimatedMinutes!)}
+                                                            </span>
+                                                        </span>
+                                                    )}
+
+                                                    {!hasEstimate && actualMinutes > 0 && (
+                                                        <span
+                                                            className="text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full font-medium flex items-center gap-1 bg-surface-inset text-muted-foreground"
+                                                            title={`Focus time: ${actualMinutes}m`}
+                                                        >
+                                                            <Clock className="w-3 h-3" />
+                                                            <span>{formatTaskDuration(actualMinutes)}</span>
+                                                        </span>
+                                                    )}
+
                                                     {subtasks.length > 0 && (
                                                         <button
                                                             onClick={() =>
@@ -304,21 +378,23 @@ export function TasksPage() {
                                                 <ListChecks className="w-3.5 h-3.5" />
                                             </button>
 
-                                            <button
-                                                onClick={() => handleFocusTask(task)}
-                                                className={cn(
-                                                    "p-1.5 rounded-[10px] transition-all duration-300 cursor-pointer active:scale-95",
-                                                    isFocused
-                                                        ? "bg-primary text-primary-foreground"
-                                                        : "text-muted-foreground hover:text-foreground hover:bg-surface",
-                                                )}
-                                                title={isFocused ? "Current focus target" : "Focus on task"}
-                                            >
-                                                <Target className="w-3.5 h-3.5" />
-                                            </button>
+                                            {!task.completed && (
+                                                <button
+                                                    onClick={() => handleFocusTask(task)}
+                                                    className={cn(
+                                                        "p-1.5 rounded-[10px] transition-all duration-300 cursor-pointer active:scale-95",
+                                                        isFocused
+                                                            ? "bg-primary text-primary-foreground"
+                                                            : "text-muted-foreground hover:text-foreground hover:bg-surface",
+                                                    )}
+                                                    title={isFocused ? "Current focus target" : "Focus on task"}
+                                                >
+                                                    <Target className="w-3.5 h-3.5" />
+                                                </button>
+                                            )}
 
                                             <button
-                                                onClick={() => deleteTask(task.id)}
+                                                onClick={() => handleDeleteTask(task.id)}
                                                 className="p-1.5 rounded-[10px] text-muted-foreground hover:text-crimson hover:bg-crimson-bg transition-all duration-300 cursor-pointer active:scale-95"
                                                 title="Delete task"
                                             >

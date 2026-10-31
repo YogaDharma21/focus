@@ -42,6 +42,8 @@ export interface AppStateData {
   timeLeft: number; // seconds
   isActive: boolean;
   sessionStartTime: string | null;
+  timerAnchorTimestamp?: number | null;
+  targetEndTime?: number | null;
   
   timerSettings?: TimerSettings;
 

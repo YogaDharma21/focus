@@ -241,7 +241,7 @@ export function SettingsPage() {
           <View style={styles.volumeGroup}>
             <View style={styles.volumeHeader}>
               <Text style={[styles.settingLabel, { color: colors.text, marginBottom: 0 }]}>Music Volume</Text>
-              <Text style={{ fontSize: 12, fontWeight: '600', color: colors.mutedText }}>
+              <Text style={{ fontSize: 12, fontWeight: '600', color: colors.mutedText, fontVariant: ['tabular-nums'] }}>
                 {Math.round((musicVolume ?? 0.8) * 100)}%
               </Text>
             </View>
@@ -262,7 +262,7 @@ export function SettingsPage() {
           <View style={styles.volumeGroup}>
             <View style={styles.volumeHeader}>
               <Text style={[styles.settingLabel, { color: colors.text, marginBottom: 0 }]}>Sound Effects Volume</Text>
-              <Text style={{ fontSize: 12, fontWeight: '600', color: colors.mutedText }}>
+              <Text style={{ fontSize: 12, fontWeight: '600', color: colors.mutedText, fontVariant: ['tabular-nums'] }}>
                 {Math.round((soundEffectVolume ?? 0.8) * 100)}%
               </Text>
             </View>

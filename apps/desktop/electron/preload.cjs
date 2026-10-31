@@ -6,6 +6,25 @@ contextBridge.exposeInMainWorld('electron', {
   closeWindow: () => ipcRenderer.send('close-window'),
   setAlwaysOnTop: (alwaysOnTop) => ipcRenderer.send('set-always-on-top', alwaysOnTop),
   isAlwaysOnTop: () => ipcRenderer.invoke('is-always-on-top'),
+  isMaximized: () => ipcRenderer.invoke('is-maximized'),
+  onMaximizeChange: (callback) => {
+    const onMax = () => callback(true);
+    const onUnmax = () => callback(false);
+    ipcRenderer.on('window-maximize', onMax);
+    ipcRenderer.on('window-unmaximize', onUnmax);
+    return () => {
+      ipcRenderer.removeListener('window-maximize', onMax);
+      ipcRenderer.removeListener('window-unmaximize', onUnmax);
+    };
+  },
+  setMiniMode: (enabled) => ipcRenderer.send('set-mini-mode', enabled),
+  isMiniMode: () => ipcRenderer.invoke('is-mini-mode'),
+  onMiniModeChange: (callback) => {
+    const handler = (_event, enabled) => callback(enabled);
+    ipcRenderer.on('mini-mode-changed', handler);
+    return () => ipcRenderer.removeListener('mini-mode-changed', handler);
+  },
+  },
   setWindowSize: (width, height) => ipcRenderer.send('set-window-size', { width, height }),
   showNotification: (title, body) => ipcRenderer.send('show-notification', { title, body }),
   onShortcut: (callback) => {
@@ -17,6 +36,11 @@ contextBridge.exposeInMainWorld('electron', {
     const handler = (_event, action) => callback(action);
     ipcRenderer.on('timer-action', handler);
     return () => ipcRenderer.removeListener('timer-action', handler);
+  },
+  onShieldAction: (callback) => {
+    const handler = (_event, action) => callback(action);
+    ipcRenderer.on('shield-action', handler);
+    return () => ipcRenderer.removeListener('shield-action', handler);
   },
   syncShieldState: (payload) => ipcRenderer.send('shield:sync', payload),
   getExternalAudioState: () => ipcRenderer.invoke('audio:get-external-state'),

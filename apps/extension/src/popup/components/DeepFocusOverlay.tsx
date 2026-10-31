@@ -170,7 +170,9 @@ export function DeepFocusOverlay({
 
         {/* Large Timer Display */}
         <div
-          className={`text-6xl font-black font-mono tracking-tighter leading-none text-foreground select-none ${
+          role="timer"
+          aria-label={`${state.timerState === "BREAK" ? "Break time remaining" : "Flow time elapsed"}: ${formatTime(state.timeLeft)}`}
+          className={`text-6xl font-black font-mono tracking-tighter leading-none tabular-nums text-foreground select-none ${
             state.isActive ? "animate-pulse" : ""
           }`}
         >
@@ -192,6 +194,7 @@ export function DeepFocusOverlay({
                   : "border-border text-muted-foreground hover:text-crimson hover:border-crimson/50 hover:bg-crimson-bg"
               }`}
               title={state.isActive ? "Log Distraction" : "Start timer first"}
+              aria-label={state.isActive ? "Log distraction" : "Start timer first"}
             >
               <AlertTriangle className="w-4.5 h-4.5" />
             </button>
@@ -218,6 +221,8 @@ export function DeepFocusOverlay({
           <button
             onClick={onToggleTimer}
             className="w-14 h-14 rounded-2xl border-2 border-border hover:border-foreground/20 hover:bg-foreground/5 flex items-center justify-center transition-all"
+            title={state.isActive ? "Pause Timer" : "Start Timer"}
+            aria-label={state.isActive ? "Pause timer" : "Start timer"}
           >
             {state.isActive ? (
               <Pause className="w-6 h-6 text-foreground" />
@@ -236,6 +241,7 @@ export function DeepFocusOverlay({
                 : "border-border text-muted-foreground opacity-50 cursor-not-allowed"
             }`}
             title={state.timerState === "BREAK" ? "Finish Break & Return to Flow" : (state.isActive ? "Complete Session" : "Start timer first")}
+            aria-label={state.timerState === "BREAK" ? "Finish break and return to flow" : (state.isActive ? "Complete session" : "Start timer first")}
           >
             <CheckCircle2 className="w-5 h-5" />
           </button>

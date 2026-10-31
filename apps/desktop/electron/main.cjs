@@ -7,6 +7,7 @@ const {
     Notification,
     globalShortcut,
     nativeImage,
+    screen,
 } = require("electron");
 const path = require("path");
 const fs = require("fs");
@@ -28,6 +29,66 @@ let shieldWindowReady = false;
 let shieldPendingViolations = [];
 let tray = null;
 let trayMinimizeHintShown = false;
+let isMiniMode = false;
+let savedNormalBounds = null;
+let savedAlwaysOnTop = false;
+
+const MINI_MODE_WIDTH = 260;
+const MINI_MODE_HEIGHT = 48;
+
+function enterMiniMode() {
+    if (!mainWindow || isMiniMode) return;
+    isMiniMode = true;
+
+    if (mainWindow.isMaximized()) {
+        mainWindow.unmaximize();
+    }
+
+    savedNormalBounds = mainWindow.getBounds();
+    savedAlwaysOnTop = mainWindow.isAlwaysOnTop();
+
+    mainWindow.setMinimumSize(MINI_MODE_WIDTH, MINI_MODE_HEIGHT);
+    mainWindow.setResizable(false);
+
+    try {
+        const currentDisplay = screen.getDisplayMatching(savedNormalBounds);
+        const workArea = currentDisplay.workArea;
+        const x = Math.round(workArea.x + workArea.width - MINI_MODE_WIDTH - 24);
+        const y = Math.round(workArea.y + workArea.height - MINI_MODE_HEIGHT - 24);
+        mainWindow.setBounds({ x, y, width: MINI_MODE_WIDTH, height: MINI_MODE_HEIGHT });
+    } catch {
+        mainWindow.setSize(MINI_MODE_WIDTH, MINI_MODE_HEIGHT);
+    }
+
+    mainWindow.setAlwaysOnTop(true, "screen-saver");
+    mainWindow.webContents.send("mini-mode-changed", true);
+}
+
+function exitMiniMode() {
+    if (!mainWindow || !isMiniMode) return;
+    isMiniMode = false;
+
+    mainWindow.setResizable(true);
+    mainWindow.setMinimumSize(380, 500);
+
+    if (savedNormalBounds) {
+        mainWindow.setBounds(savedNormalBounds);
+    } else {
+        mainWindow.setSize(1200, 800);
+        mainWindow.center();
+    }
+
+    mainWindow.setAlwaysOnTop(savedAlwaysOnTop || false);
+    mainWindow.webContents.send("mini-mode-changed", false);
+}
+
+function toggleMiniMode() {
+    if (isMiniMode) {
+        exitMiniMode();
+    } else {
+        enterMiniMode();
+    }
+}
 
 function createDummyTrayIcon() {
     // Create a 16x16 solid blue/cyan circle icon using nativeImage data URL
@@ -56,6 +117,7 @@ function createWindow() {
             contextIsolation: true,
             nodeIntegration: false,
             webSecurity: true,
+            backgroundThrottling: false,
         },
     });
 
@@ -99,6 +161,18 @@ function createWindow() {
         mainWindow.show();
     });
 
+    mainWindow.on("maximize", () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send("window-maximize");
+        }
+    });
+
+    mainWindow.on("unmaximize", () => {
+        if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.webContents.send("window-unmaximize");
+        }
+    });
+
     // The app lives in the tray: the X button hides the window instead of
     // quitting. A real quit only happens via Tray > "Quit Focus", which sets
     // app.isQuitting before closing.
@@ -118,7 +192,112 @@ function createWindow() {
 
     mainWindow.on("closed", () => {
         mainWindow = null;
+        isMiniMode = false;
+        savedNormalBounds = null;
     });
+}
+
+function formatTrayMinutes(seconds) {
+    return Math.floor(Math.max(0, seconds || 0) / 60);
+}
+
+function updateTrayMenu() {
+    if (!tray) return;
+
+    let statusLabel = "Focus Desktop - Idle";
+    let tooltip = "Focus Desktop";
+
+    if (shieldSession.isActive) {
+        if (shieldSession.timerState === "BREAK") {
+            const minutesLeft = Math.ceil(Math.max(0, shieldSession.timeLeft || 0) / 60);
+            statusLabel = `Break: ${minutesLeft}m remaining`;
+            tooltip = `Focus - Break (${minutesLeft}m left)`;
+        } else {
+            const minutes = formatTrayMinutes(shieldSession.flowTimeElapsed);
+            statusLabel = `Flow: ${minutes}m elapsed`;
+            tooltip = `Focus - Flow (${minutes}m elapsed)`;
+        }
+    } else if (shieldSession.flowTimeElapsed > 0) {
+        const minutes = formatTrayMinutes(shieldSession.flowTimeElapsed);
+        statusLabel = `Paused: ${minutes}m`;
+        tooltip = `Focus - Paused (${minutes}m)`;
+    }
+
+    try {
+        tray.setToolTip(tooltip);
+    } catch {
+        // ignore tray tooltip error if destroyed
+    }
+
+    const timerActionLabel = shieldSession.isActive
+        ? "Pause Timer"
+        : (shieldSession.flowTimeElapsed > 0 ? "Resume Timer" : "Start Timer");
+
+    const shieldActionLabel = shieldConfig.enabled ? "Mute Shield" : "Enable Shield";
+
+    const contextMenu = Menu.buildFromTemplate([
+        {
+            label: statusLabel,
+            enabled: false,
+        },
+        { type: "separator" },
+        {
+            label: "Show / Hide App",
+            click: () => {
+                if (!mainWindow) return;
+                if (mainWindow.isVisible()) {
+                    mainWindow.hide();
+                } else {
+                    mainWindow.show();
+                    mainWindow.focus();
+                }
+            },
+        },
+        {
+            label: timerActionLabel,
+            click: () => {
+                if (mainWindow) {
+                    mainWindow.webContents.send("timer-action", "toggle");
+                }
+            },
+        },
+        {
+            label: shieldActionLabel,
+            click: () => {
+                if (mainWindow) {
+                    mainWindow.webContents.send("shield-action", "toggle");
+                }
+            },
+        },
+        {
+            label: "Toggle Always On Top",
+            click: () => {
+                if (!mainWindow) return;
+                const isTop = mainWindow.isAlwaysOnTop();
+                mainWindow.setAlwaysOnTop(!isTop);
+            },
+        },
+        {
+            label: "Toggle Mini Mode",
+            click: () => {
+                toggleMiniMode();
+            },
+        },
+        { type: "separator" },
+        {
+            label: "Quit Focus",
+            click: () => {
+                app.isQuitting = true;
+                app.quit();
+            },
+        },
+    ]);
+
+    try {
+        tray.setContextMenu(contextMenu);
+    } catch (err) {
+        console.error("Failed to update tray context menu:", err);
+    }
 }
 
 function createTray() {
@@ -129,53 +308,6 @@ function createTray() {
             icon = createDummyTrayIcon();
         }
         tray = new Tray(icon);
-        tray.setToolTip("Focus Desktop");
-
-        const contextMenu = Menu.buildFromTemplate([
-            {
-                label: "Focus Desktop",
-                enabled: false,
-            },
-            { type: "separator" },
-            {
-                label: "Show / Hide App",
-                click: () => {
-                    if (!mainWindow) return;
-                    if (mainWindow.isVisible()) {
-                        mainWindow.hide();
-                    } else {
-                        mainWindow.show();
-                        mainWindow.focus();
-                    }
-                },
-            },
-            {
-                label: "Play / Pause Timer",
-                click: () => {
-                    if (mainWindow) {
-                        mainWindow.webContents.send("timer-action", "toggle");
-                    }
-                },
-            },
-            {
-                label: "Toggle Always On Top",
-                click: () => {
-                    if (!mainWindow) return;
-                    const isTop = mainWindow.isAlwaysOnTop();
-                    mainWindow.setAlwaysOnTop(!isTop);
-                },
-            },
-            { type: "separator" },
-            {
-                label: "Quit Focus",
-                click: () => {
-                    app.isQuitting = true;
-                    app.quit();
-                },
-            },
-        ]);
-
-        tray.setContextMenu(contextMenu);
         tray.on("click", () => {
             if (!mainWindow) return;
             if (mainWindow.isVisible()) {
@@ -185,6 +317,7 @@ function createTray() {
                 mainWindow.focus();
             }
         });
+        updateTrayMenu();
     } catch (err) {
         console.error("Tray creation failed:", err);
     }
@@ -216,8 +349,24 @@ function setupIPC() {
         return mainWindow ? mainWindow.isAlwaysOnTop() : false;
     });
 
+    ipcMain.handle("is-maximized", () => {
+        return mainWindow ? mainWindow.isMaximized() : false;
+    });
+
     ipcMain.on("set-window-size", (_event, { width, height }) => {
         if (mainWindow) mainWindow.setSize(width, height);
+    });
+
+    ipcMain.on("set-mini-mode", (_event, enabled) => {
+        if (enabled) {
+            enterMiniMode();
+        } else {
+            exitMiniMode();
+        }
+    });
+
+    ipcMain.handle("is-mini-mode", () => {
+        return isMiniMode;
     });
 
     ipcMain.on("show-notification", (_event, { title, body }) => {
@@ -330,7 +479,7 @@ let shieldConfig = {
     allowedSites: [],
     blockedApps: [],
 };
-let shieldSession = { isActive: false, timerState: "FLOW" };
+let shieldSession = { isActive: false, timerState: "FLOW", flowTimeElapsed: 0, timeLeft: 0 };
 let shieldPollTimer = null;
 const shieldLastNotified = new Map();
 const shieldSnoozedKeys = new Map();
@@ -369,6 +518,8 @@ function updateShieldState(payload) {
         shieldSession = {
             isActive: !!payload.session.isActive,
             timerState: payload.session.timerState === "BREAK" ? "BREAK" : "FLOW",
+            flowTimeElapsed: Number(payload.session.flowTimeElapsed) || 0,
+            timeLeft: Number(payload.session.timeLeft) || 0,
         };
     }
     if (!isShieldBlockingRequired()) {
@@ -377,7 +528,11 @@ function updateShieldState(payload) {
         // overlay back up after the user just dismissed it via pause.
         shieldCalmUntil = Date.now() + SHIELD_SETTLE_MS;
         hideShieldOverlay();
+        stopWin32ProcessMonitor();
+    } else {
+        startWin32ProcessMonitor();
     }
+    updateTrayMenu();
 }
 
 function isShieldBlockingRequired() {
@@ -483,8 +638,96 @@ function execFileAsync(file, args, env) {
     });
 }
 
+// --- Native Win32 Process & Window Monitor ----------------------------------
+// Uses a lightweight native helper binary that queries WTSEnumerateProcessesW
+// and EnumWindows. Avoids spawning PowerShell every 5 seconds, reducing CPU
+// spikes to near-zero.
+let win32ProcessHelperProc = null;
+let win32HelperBuffer = "";
+let win32ProcessSnapshot = null;
+
+function getWin32ProcessHelperPath() {
+    let helperPath = path.join(__dirname, "win32-process-helper.exe");
+    if (app.isPackaged) {
+        helperPath = helperPath.replace("app.asar", "app.asar.unpacked");
+    }
+    return fs.existsSync(helperPath) ? helperPath : null;
+}
+
+function startWin32ProcessMonitor() {
+    if (process.platform !== "win32") return;
+    if (win32ProcessHelperProc) return;
+
+    const helperPath = getWin32ProcessHelperPath();
+    if (!helperPath) return;
+
+    try {
+        const child = spawn(
+            helperPath,
+            [String(SHIELD_POLL_INTERVAL_MS)],
+            { windowsHide: true, stdio: ["pipe", "pipe", "ignore"] }
+        );
+        win32ProcessHelperProc = child;
+        win32HelperBuffer = "";
+
+        child.stdout.on("data", (chunk) => {
+            win32HelperBuffer += chunk.toString("utf8");
+            let idx;
+            while ((idx = win32HelperBuffer.indexOf("\n")) !== -1) {
+                const line = win32HelperBuffer.slice(0, idx).trim();
+                win32HelperBuffer = win32HelperBuffer.slice(idx + 1);
+                if (line) {
+                    try {
+                        const parsed = JSON.parse(line);
+                        if (parsed && Array.isArray(parsed.processes) && Array.isArray(parsed.windows)) {
+                            win32ProcessSnapshot = {
+                                processes: parsed.processes,
+                                windows: parsed.windows,
+                                timestamp: Date.now(),
+                            };
+                        }
+                    } catch (err) {
+                        console.warn("Failed to parse Win32 process helper payload:", err);
+                    }
+                }
+            }
+        });
+
+        child.on("exit", () => {
+            if (win32ProcessHelperProc === child) win32ProcessHelperProc = null;
+        });
+
+        child.on("error", () => {
+            win32ProcessHelperProc = null;
+        });
+    } catch {
+        win32ProcessHelperProc = null;
+    }
+}
+
+function stopWin32ProcessMonitor() {
+    if (win32ProcessHelperProc) {
+        try {
+            win32ProcessHelperProc.stdin.end();
+            win32ProcessHelperProc.kill();
+        } catch {}
+        win32ProcessHelperProc = null;
+    }
+}
+
 async function listRunningProcesses() {
     if (process.platform === "win32") {
+        if (win32ProcessSnapshot && Date.now() - win32ProcessSnapshot.timestamp < 15000) {
+            return win32ProcessSnapshot.processes;
+        }
+        const helperPath = getWin32ProcessHelperPath();
+        if (helperPath) {
+            const out = await execFileAsync(helperPath, ["0", "--once"]);
+            try {
+                const parsed = JSON.parse(out);
+                if (Array.isArray(parsed.processes)) return parsed.processes;
+            } catch {}
+        }
         const out = await execFileAsync("tasklist", ["/FO", "CSV", "/NH"]);
         return out
             .split(/\r?\n/)
@@ -504,6 +747,25 @@ async function listRunningProcesses() {
 async function listWindowTitles() {
     // Window-title inspection is currently implemented for Windows only.
     if (process.platform !== "win32") return [];
+    if (win32ProcessSnapshot && Date.now() - win32ProcessSnapshot.timestamp < 15000) {
+        return win32ProcessSnapshot.windows.map((w) => ({
+            process: w.process,
+            title: w.title,
+        }));
+    }
+    const helperPath = getWin32ProcessHelperPath();
+    if (helperPath) {
+        const out = await execFileAsync(helperPath, ["0", "--once"]);
+        try {
+            const parsed = JSON.parse(out);
+            if (Array.isArray(parsed.windows)) {
+                return parsed.windows.map((w) => ({
+                    process: w.process,
+                    title: w.title,
+                }));
+            }
+        } catch {}
+    }
     const script =
         "Get-Process | Where-Object { $_.MainWindowTitle } | ForEach-Object { \"$($_.ProcessName)`t$($_.MainWindowTitle)\" }";
     const out = await execFileAsync("powershell", [
@@ -577,6 +839,35 @@ function sanitizeImageName(imageName) {
 
 async function listWindowedProcessesRaw() {
     if (process.platform !== "win32") return [];
+    if (win32ProcessSnapshot && Date.now() - win32ProcessSnapshot.timestamp < 15000) {
+        return win32ProcessSnapshot.windows.map((w) => {
+            const raw = w.process || (w.path ? path.basename(w.path) : "");
+            const procName = raw.replace(/\.exe$/i, "").trim();
+            return {
+                procName,
+                exePath: w.path || "",
+                title: (w.title || "").trim(),
+            };
+        }).filter((r) => r.procName && r.title);
+    }
+    const helperPath = getWin32ProcessHelperPath();
+    if (helperPath) {
+        const out = await execFileAsync(helperPath, ["0", "--once"]);
+        try {
+            const parsed = JSON.parse(out);
+            if (Array.isArray(parsed.windows)) {
+                return parsed.windows.map((w) => {
+                    const raw = w.process || (w.path ? path.basename(w.path) : "");
+                    const procName = raw.replace(/\.exe$/i, "").trim();
+                    return {
+                        procName,
+                        exePath: w.path || "",
+                        title: (w.title || "").trim(),
+                    };
+                }).filter((r) => r.procName && r.title);
+            }
+        } catch {}
+    }
     const out = await execFileAsync("powershell", [
         "-NoProfile",
         "-NonInteractive",
@@ -779,7 +1070,11 @@ function reportShieldViolation(violation) {
 }
 
 async function pollShield() {
-    if (!isShieldBlockingRequired()) return;
+    if (!isShieldBlockingRequired()) {
+        stopWin32ProcessMonitor();
+        return;
+    }
+    startWin32ProcessMonitor();
     try {
         const violations = [];
 
@@ -825,6 +1120,9 @@ async function pollShield() {
 }
 
 function startShieldMonitor() {
+    if (isShieldBlockingRequired()) {
+        startWin32ProcessMonitor();
+    }
     if (shieldPollTimer) return;
     shieldPollTimer = setInterval(pollShield, SHIELD_POLL_INTERVAL_MS);
     if (typeof shieldPollTimer.unref === "function") shieldPollTimer.unref();
@@ -1103,6 +1401,10 @@ function registerShortcuts() {
             if (mainWindow)
                 mainWindow.webContents.send("global-shortcut", "toggle-timer");
         });
+
+        globalShortcut.register("CommandOrControl+Alt+M", () => {
+            toggleMiniMode();
+        });
     } catch (err) {
         console.error("Failed to register global shortcuts:", err);
     }
@@ -1124,6 +1426,7 @@ app.whenReady().then(() => {
 app.on("will-quit", () => {
     globalShortcut.unregisterAll();
     stopExternalAudioMonitor();
+    stopWin32ProcessMonitor();
 });
 
 app.on("window-all-closed", () => {

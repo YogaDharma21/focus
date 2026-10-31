@@ -46,7 +46,13 @@ import {
 import { DeepFocusOverlay } from "./components/DeepFocusOverlay";
 import { Progress } from "../components/ui/progress";
 import { AppStateData, ThemeMode, TaskItem, TaskPriority } from "../types";
-import { getStoredState, saveStoredState, subscribeToStateChanges, getCachedState, DEFAULT_STATE, getWeeklyMinutesFromSessions, getTodayMinutesFromSessions, calculateStreaksFromSessions, DAYS_OF_WEEK } from "../lib/storage";
+import {
+  formatTaskDuration,
+  getTaskActualMinutes,
+  getVelocityStatus,
+  type VelocityStatus,
+} from "../lib/utils";
+import { getStoredState, saveStoredState, subscribeToStateChanges, getCachedState, DEFAULT_STATE, getWeeklyMinutesFromSessions, getTodayMinutesFromSessions, calculateStreaksFromSessions, DAYS_OF_WEEK, getEffectiveTimeLeft } from "../lib/storage";
 import "../index.css";
 
 const DISTRACTION_CATEGORIES = [
@@ -57,11 +63,30 @@ const DISTRACTION_CATEGORIES = [
   "Other"
 ];
 
+function formatBreakDuration(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (mins > 0 && secs > 0) {
+    return `${mins} minute${mins === 1 ? "" : "s"} ${secs} second${secs === 1 ? "" : "s"}`;
+  }
+  if (mins > 0) {
+    return `${mins} minute${mins === 1 ? "" : "s"}`;
+  }
+  return `${secs} second${secs === 1 ? "" : "s"}`;
+}
+
 const PRIORITY_STYLES: Record<TaskPriority, string> = {
   urgent: "bg-crimson-bg text-crimson",
   high: "bg-amber-bg text-amber",
   medium: "bg-blue-bg text-blue",
   low: "bg-surface-inset text-muted-foreground",
+};
+
+const VELOCITY_STYLES: Record<VelocityStatus, string> = {
+  "completed-on-time": "bg-emerald-bg text-emerald",
+  "on-track": "bg-surface-inset text-muted-foreground",
+  "approaching": "bg-amber-bg text-amber",
+  "exceeded": "bg-crimson-bg text-crimson",
 };
 
 export function Popup() {
@@ -74,6 +99,7 @@ export function Popup() {
   const [taskTitle, setTaskTitle] = useState("");
   const [taskPriority, setTaskPriority] = useState<TaskPriority>("medium");
   const [taskDeadline, setTaskDeadline] = useState("");
+  const [taskEstimatedMinutes, setTaskEstimatedMinutes] = useState("");
   const [taskFilter, setTaskFilter] = useState<"all" | "active" | "completed">("all");
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [newSubtaskText, setNewSubtaskText] = useState("");
@@ -81,6 +107,12 @@ export function Popup() {
   // Deep Focus Mode: auto-activate when timer starts
   const prevIsActiveRef = useRef(state?.isActive ?? false);
   const isInitialLoadRef = useRef(true);
+
+  const liveRegionRef = useRef<HTMLDivElement | null>(null);
+  const prevTimerStateRef = useRef<string | null>(null);
+  const prevTimerActiveRef = useRef<boolean | null>(null);
+  const isTimerInitialMountRef = useRef(true);
+  const isResetRef = useRef(false);
 
   // Local inputs
   const [newSiteUrl, setNewSiteUrl] = useState("");
@@ -235,8 +267,63 @@ export function Popup() {
     document.body.classList.toggle("light", mode === "light");
   }, [state?.themeMode]);
 
-  // No local timer tick — the background service worker is the single source
-  // of truth. Timer state updates arrive via subscribeToStateChanges above.
+  // Local 1-second interval to update displayed timer when popup is open
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    if (!state?.isActive) return;
+    const interval = setInterval(() => {
+      setTick((t) => t + 1);
+      if (state.timerState === "BREAK" && getEffectiveTimeLeft(state) <= 0) {
+        if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+          chrome.runtime.sendMessage({ target: "background", action: "CHECK_BREAK_END" }).catch(() => {});
+        }
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [state?.isActive, state?.timerState]);
+
+  useEffect(() => {
+    if (!state) return;
+
+    if (isTimerInitialMountRef.current) {
+      isTimerInitialMountRef.current = false;
+      prevTimerStateRef.current = state.timerState;
+      prevTimerActiveRef.current = state.isActive;
+      return;
+    }
+
+    if (isResetRef.current) {
+      isResetRef.current = false;
+      prevTimerStateRef.current = state.timerState;
+      prevTimerActiveRef.current = state.isActive;
+      return;
+    }
+
+    const prevTimerState = prevTimerStateRef.current;
+    const prevIsActive = prevTimerActiveRef.current;
+    let message = "";
+
+    if (prevTimerState === "FLOW" && state.timerState === "BREAK") {
+      const timeStr = formatBreakDuration(state.timeLeft);
+      message = `Break started, ${timeStr} remaining.`;
+    } else if (prevTimerState === "BREAK" && state.timerState === "FLOW") {
+      message = state.isActive ? "Break finished. Flow session started." : "Break finished.";
+    } else if (prevIsActive !== state.isActive) {
+      if (state.isActive) {
+        message = state.timerState === "BREAK" ? "Break resumed." : (state.timeLeft > 0 ? "Flow session resumed." : "Flow session started.");
+      } else if (state.timeLeft > 0 || state.timerState === "BREAK") {
+        message = "Timer paused.";
+      }
+    }
+
+    if (message && liveRegionRef.current) {
+      liveRegionRef.current.textContent = message;
+    }
+
+    prevTimerStateRef.current = state.timerState;
+    prevTimerActiveRef.current = state.isActive;
+  }, [state?.timerState, state?.isActive, state?.timeLeft]);
 
   if (!state) {
     return (
@@ -255,19 +342,57 @@ export function Popup() {
   };
 
 
-  // Timer controls — write to storage directly, the background's
-  // chrome.storage.onChanged listener reacts to start/stop the timer.
+  // Timer controls — write timestamp anchors to storage; background
+  // handles one-shot alarm for break end and event-based wakeups.
   const toggleTimer = () => {
     const starting = !state.isActive;
-    if (starting && state.timerState === "FLOW") {
-      updateState({ isActive: true, deepFocusMode: true, isMusicPlaying: soundEnabled && musicEnabled });
+    const currentTime = getEffectiveTimeLeft(state);
+
+    if (starting) {
+      if (state.timerState === "FLOW") {
+        const anchor = Date.now() - (currentTime * 1000);
+        updateState({
+          isActive: true,
+          deepFocusMode: true,
+          isMusicPlaying: soundEnabled && musicEnabled,
+          timerAnchorTimestamp: anchor,
+          targetEndTime: null,
+        });
+      } else {
+        const targetEnd = Date.now() + (currentTime * 1000);
+        updateState({
+          isActive: true,
+          deepFocusMode: false,
+          isMusicPlaying: false,
+          targetEndTime: targetEnd,
+          timerAnchorTimestamp: null,
+        });
+      }
     } else {
-      updateState({ isActive: starting, deepFocusMode: false, isMusicPlaying: false });
+      updateState({
+        isActive: false,
+        deepFocusMode: false,
+        isMusicPlaying: false,
+        timeLeft: currentTime,
+        timerAnchorTimestamp: null,
+        targetEndTime: null,
+      });
     }
   };
 
   const resetTimer = () => {
-    updateState({ isActive: false, deepFocusMode: false, timeLeft: 0, isMusicPlaying: false });
+    isResetRef.current = true;
+    updateState({
+      isActive: false,
+      deepFocusMode: false,
+      timeLeft: 0,
+      timerAnchorTimestamp: null,
+      targetEndTime: null,
+      isMusicPlaying: false,
+    });
+    if (liveRegionRef.current) {
+      liveRegionRef.current.textContent = "Timer reset.";
+    }
   };
 
   const completeSession = () => {
@@ -282,6 +407,8 @@ export function Popup() {
         timerState: "FLOW",
         previousMode: "FLOW",
         timeLeft: 0,
+        timerAnchorTimestamp: null,
+        targetEndTime: null,
       });
       return;
     }
@@ -292,7 +419,8 @@ export function Popup() {
       chrome.runtime.sendMessage({ target: "background", action: "RESTORE_BLOCKED_TABS" });
     }
 
-    const durationLogged = state.timeLeft > 0 ? state.timeLeft : 1;
+    const currentElapsed = getEffectiveTimeLeft(state);
+    const durationLogged = currentElapsed > 0 ? currentElapsed : 1;
 
     const focusedTask = (state.tasks || []).find((t) => t.id === state.selectedTaskId);
     const newSession = {
@@ -309,7 +437,7 @@ export function Popup() {
     const updatedTodayMins = getTodayMinutesFromSessions(newSessionList);
     const streaks = calculateStreaksFromSessions(newSessionList);
 
-    const breakDuration = Math.max(1, Math.floor(state.timeLeft / 5));
+    const breakDuration = Math.max(1, Math.floor(currentElapsed / 5));
 
     const autoStartBreak = Boolean(state.timerSettings?.autoStartBreak);
 
@@ -321,6 +449,8 @@ export function Popup() {
       timerState: "BREAK",
       previousMode: "FLOW",
       timeLeft: breakDuration,
+      timerAnchorTimestamp: null,
+      targetEndTime: autoStartBreak ? Date.now() + (breakDuration * 1000) : null,
       sessions: newSessionList,
       stats: {
         ...state.stats,
@@ -339,9 +469,13 @@ export function Popup() {
       timestamp: new Date().toISOString(),
       category
     };
+    const currentElapsed = getEffectiveTimeLeft(state);
     updateState({
       isActive: false,
       isMusicPlaying: false,
+      timeLeft: currentElapsed,
+      timerAnchorTimestamp: null,
+      targetEndTime: null,
       distractions: [...state.distractions, entry]
     });
     setShowDistractionPicker(false);
@@ -406,12 +540,14 @@ export function Popup() {
     e.preventDefault();
     const trimmed = taskTitle.trim();
     if (!trimmed) return;
+    const parsedEst = parseInt(taskEstimatedMinutes, 10);
     const newTask: TaskItem = {
       id: crypto.randomUUID(),
       text: trimmed,
       completed: false,
       priority: taskPriority,
       deadline: taskDeadline || undefined,
+      estimatedMinutes: Number.isFinite(parsedEst) && parsedEst > 0 ? parsedEst : undefined,
       subtasks: [],
     };
     updateState({
@@ -419,6 +555,7 @@ export function Popup() {
     });
     setTaskTitle("");
     setTaskDeadline("");
+    setTaskEstimatedMinutes("");
   };
 
   const handleToggleTask = (id: string) => {
@@ -497,8 +634,9 @@ export function Popup() {
   };
 
   // Time calculations
-  const mins = Math.floor(state.timeLeft / 60);
-  const secs = state.timeLeft % 60;
+  const effectiveTimeLeft = getEffectiveTimeLeft(state);
+  const mins = Math.floor(effectiveTimeLeft / 60);
+  const secs = effectiveTimeLeft % 60;
   const timeFormatted = `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   const totalDuration = 0;
   const progressValue = state.timerState === "FLOW" ? 100 : 0;
@@ -522,7 +660,7 @@ export function Popup() {
     return (
       <div className="w-[420px] h-[580px] bg-background text-foreground relative flex flex-col overflow-hidden select-none font-sans">
         <DeepFocusOverlay
-          state={state}
+          state={{ ...state, timeLeft: effectiveTimeLeft }}
           onToggleTimer={toggleTimer}
           onCompleteSession={() => {
             completeSession();
@@ -565,7 +703,7 @@ export function Popup() {
               onClick={() => {
                 setShowFloatingTimerCard(!showFloatingTimerCard);
               }}
-              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold transition-all shadow-sm ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-bold transition-all duration-300 ease-out active:scale-95 cursor-pointer shadow-sm ${
                 showFloatingTimerCard
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-card border-border text-foreground hover:bg-secondary"
@@ -575,7 +713,7 @@ export function Popup() {
               <span className="flex items-center">
                 {state.timerState === "BREAK" ? <Coffee className="w-3 h-3" /> : <Clock className="w-3 h-3" />}
               </span>
-              <span className="font-extrabold font-mono text-[11px] tracking-tight">
+              <span className="font-extrabold font-mono text-[11px] tracking-tight tabular-nums">
                 {timeFormatted}
               </span>
               {state.isActive && (
@@ -589,7 +727,7 @@ export function Popup() {
         <div className="flex-1 flex justify-end">
           <button
             onClick={() => setActiveTab(activeTab === "settings" ? "timer" : "settings")}
-            className={`p-1.5 rounded-lg transition-all ${
+            className={`p-1.5 rounded-lg transition-all duration-300 ease-out active:scale-95 cursor-pointer ${
               activeTab === "settings"
                 ? "bg-primary text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-secondary"
@@ -734,7 +872,7 @@ export function Popup() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as typeof activeTab)}
-                className={`flex-1 flex items-center justify-center gap-1.5 rounded-full transition-all duration-200 relative text-[11px] font-bold py-1.5 ${
+                className={`flex-1 flex items-center justify-center gap-1.5 rounded-full transition-all duration-300 ease-out active:scale-95 cursor-pointer relative text-[11px] font-bold py-1.5 ${
                   isActive
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground hover:bg-surface"
@@ -866,7 +1004,7 @@ export function Popup() {
             <div className={`mt-2 pt-2 border-t border-border space-y-1 ${!soundEnabled || !musicEnabled ? "opacity-40" : ""}`}>
               <div className="flex items-center justify-between text-[10px] opacity-60">
                 <span>Music Volume</span>
-                <span className="font-mono">{Math.round(musicVolume * 100)}%</span>
+                <span className="font-mono tabular-nums">{Math.round(musicVolume * 100)}%</span>
               </div>
               <div className="flex items-center gap-2">
                 <Volume2 className="w-3.5 h-3.5 opacity-60 shrink-0" />
@@ -892,24 +1030,36 @@ export function Popup() {
         {/* TIMER TAB */}
         {activeTab === "timer" && (
           <div className="flex flex-col items-center justify-between min-h-full pb-1 pt-1 gap-2">
+            <div
+              ref={liveRegionRef}
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+              className="sr-only"
+            />
+
             {/* Timer Label */}
-            <div className="flex items-center justify-center gap-2 mt-1 mb-0.5">
+            <div className="flex items-center justify-center gap-1.5 mt-1 mb-0.5 text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
               {state.timerState === "BREAK" ? (
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-mono text-muted-foreground shadow-sm">
-                  <Coffee className="w-3 h-3" />
-                  <span className="text-[10px] font-bold">Break</span>
-                </div>
+                <>
+                  <Coffee className="w-3.5 h-3.5" />
+                  <span>Break</span>
+                </>
               ) : (
-                <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-card border border-border text-xs font-mono text-muted-foreground shadow-sm">
-                  <Clock className="w-3 h-3" />
-                  <span className="text-[10px] font-bold">Flow</span>
-                </div>
+                <>
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>Flow</span>
+                </>
               )}
             </div>
 
             {/* Timer Display - Big Number */}
             <div className="flex flex-col items-center justify-center my-2 py-3">
-              <span className="text-7xl font-black font-mono tracking-tighter leading-none">
+              <span
+                role="timer"
+                aria-label={`${state.timerState === "BREAK" ? "Break time remaining" : "Flow time elapsed"}: ${timeFormatted}`}
+                className="text-7xl font-black font-mono tracking-tighter leading-none tabular-nums"
+              >
                 {timeFormatted}
               </span>
             </div>
@@ -963,6 +1113,7 @@ export function Popup() {
                   "bg-card border-border hover:bg-secondary text-foreground"
                 }`}
                 title="Reset Timer"
+                aria-label="Reset timer"
               >
                 <RotateCcw className="w-4 h-4" />
               </button>
@@ -980,6 +1131,7 @@ export function Popup() {
                     : "bg-card border-border hover:bg-secondary text-foreground"
                 }`}
                 title={state.isActive ? "Log Distraction" : "Start timer to log distraction"}
+                aria-label={state.isActive ? "Log distraction" : "Start timer to log distraction"}
               >
                 <AlertTriangle className="w-4 h-4" />
               </button>
@@ -990,6 +1142,8 @@ export function Popup() {
                 className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold transition-all shadow-lg active:scale-95 ${
                   "bg-primary text-primary-foreground hover:bg-accent"
                 }`}
+                title={state.isActive ? "Pause Timer" : "Start Timer"}
+                aria-label={state.isActive ? "Pause timer" : "Start timer"}
               >
                 {state.isActive ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
               </button>
@@ -1007,6 +1161,7 @@ export function Popup() {
                     : "bg-card border-border hover:bg-secondary text-foreground cursor-pointer"
                 }`}
                 title={state.timerState === "BREAK" ? "Finish Break & Return to Flow" : (state.isActive ? "Complete Session" : "Start timer to complete session")}
+                aria-label={state.timerState === "BREAK" ? "Finish break and return to flow" : (state.isActive ? "Complete session" : "Start timer to complete session")}
               >
                 <CheckCircle className="w-4 h-4" />
               </button>
@@ -1020,6 +1175,7 @@ export function Popup() {
                     : "bg-card border-border hover:bg-secondary text-foreground"
                 }`}
                 title="Deep Focus Mode"
+                aria-label="Deep focus mode"
               >
                 <Focus className="w-4 h-4" />
               </button>
@@ -1099,14 +1255,29 @@ export function Popup() {
                   ))}
                 </div>
 
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  <input
-                    type="date"
-                    value={taskDeadline}
-                    onChange={(e) => setTaskDeadline(e.target.value)}
-                    className="bg-transparent border-0 text-[10px] text-muted-foreground focus:outline-none cursor-pointer [color-scheme:dark]"
-                  />
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-muted-foreground" />
+                    <input
+                      type="number"
+                      min="1"
+                      max="1440"
+                      placeholder="Est (m)"
+                      value={taskEstimatedMinutes}
+                      onChange={(e) => setTaskEstimatedMinutes(e.target.value)}
+                      className="w-12 bg-transparent border-0 text-[10px] text-muted-foreground placeholder:text-subtle-foreground focus:outline-none tabular-nums"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    <input
+                      type="date"
+                      value={taskDeadline}
+                      onChange={(e) => setTaskDeadline(e.target.value)}
+                      className="bg-transparent border-0 text-[10px] text-muted-foreground focus:outline-none cursor-pointer [color-scheme:dark]"
+                    />
+                  </div>
                 </div>
               </div>
             </form>
@@ -1163,6 +1334,12 @@ export function Popup() {
                       const isExpanded = expandedTaskId === task.id;
                       const subtasks = task.subtasks || [];
                       const completedSubtasks = subtasks.filter((s) => s.completed).length;
+                      const actualMinutes = getTaskActualMinutes(state.sessions || [], task.id);
+                      const hasEstimate =
+                        typeof task.estimatedMinutes === "number" && task.estimatedMinutes > 0;
+                      const velocityStatus = hasEstimate
+                        ? getVelocityStatus(actualMinutes, task.estimatedMinutes!, task.completed)
+                        : null;
 
                       return (
                         <div
@@ -1213,6 +1390,30 @@ export function Popup() {
                                     <span className="text-[9px] font-mono tabular-nums text-muted-foreground flex items-center gap-0.5">
                                       <Calendar className="w-2.5 h-2.5" />
                                       {task.deadline}
+                                    </span>
+                                  )}
+
+                                  {hasEstimate && velocityStatus && (
+                                    <span
+                                      className={`text-[9px] font-mono tabular-nums px-1.5 py-0.2 rounded-full font-medium flex items-center gap-0.5 ${
+                                        VELOCITY_STYLES[velocityStatus]
+                                      }`}
+                                      title={`Velocity: ${actualMinutes}m actual of ${task.estimatedMinutes}m estimated (${velocityStatus})`}
+                                    >
+                                      <Clock className="w-2.5 h-2.5" />
+                                      <span>
+                                        {formatTaskDuration(actualMinutes)} / {formatTaskDuration(task.estimatedMinutes!)}
+                                      </span>
+                                    </span>
+                                  )}
+
+                                  {!hasEstimate && actualMinutes > 0 && (
+                                    <span
+                                      className="text-[9px] font-mono tabular-nums px-1.5 py-0.2 rounded-full font-medium flex items-center gap-0.5 bg-surface-inset text-muted-foreground"
+                                      title={`Focus time: ${actualMinutes}m`}
+                                    >
+                                      <Clock className="w-2.5 h-2.5" />
+                                      <span>{formatTaskDuration(actualMinutes)}</span>
                                     </span>
                                   )}
 
@@ -1495,12 +1696,12 @@ export function Popup() {
                       </div>
                       <span className="text-xs font-bold font-sans">Day Progress</span>
                     </div>
-                    <span className="text-xs font-extrabold font-mono">{dayPercent}%</span>
+                    <span className="text-xs font-extrabold font-mono tabular-nums">{dayPercent}%</span>
                   </div>
 
                   <Progress value={dayPercent} className="h-2 rounded-full" />
 
-                  <div className="text-[10px] font-mono opacity-60">
+                  <div className="text-[10px] font-mono opacity-60 tabular-nums">
                     {remH}h {remM}m remaining today
                   </div>
                 </div>
@@ -1517,7 +1718,7 @@ export function Popup() {
                 }`}>
                   <Activity className="w-4 h-4" />
                 </div>
-                <span className="text-lg font-extrabold font-mono">{dynamicTodayMinutes}</span>
+                <span className="text-lg font-extrabold font-mono tracking-[-0.03em] tabular-nums">{dynamicTodayMinutes}</span>
                 <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">MINUTES TODAY</span>
               </div>
             </div>
@@ -1534,11 +1735,11 @@ export function Popup() {
                   <span className="text-xs font-bold font-sans mb-1">Longest Streak</span>
                   <div className="text-[11px] font-mono">
                     <span className={"text-muted-foreground"}>Current</span>
-                    <span className="font-bold ml-2">{dynamicStreaks.current} Days</span>
+                    <span className="font-bold ml-2 tabular-nums">{dynamicStreaks.current} Days</span>
                   </div>
                   <div className="text-[11px] font-mono">
                     <span className={"text-muted-foreground"}>Best</span>
-                    <span className="font-bold ml-2">{dynamicStreaks.best} Days</span>
+                    <span className="font-bold ml-2 tabular-nums">{dynamicStreaks.best} Days</span>
                   </div>
                 </div>
               </div>
@@ -1563,13 +1764,13 @@ export function Popup() {
                       key={day}
                       className="flex-1 flex flex-col items-center gap-1 h-full justify-end group relative cursor-pointer"
                     >
-                      <div className={`absolute -top-7 px-2 py-1 rounded text-[9px] font-mono font-bold border pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap shadow-lg ${
+                      <div className={`absolute -top-7 px-2 py-1 rounded text-[9px] font-mono font-bold border pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity z-20 whitespace-nowrap shadow-lg tabular-nums ${
                         "bg-primary text-primary-foreground border-primary"
                       }`}>
                         {day}: {minsLogged} mins
                       </div>
 
-                      <span className="text-[8px] font-mono opacity-60">{minsLogged}m</span>
+                      <span className="text-[8px] font-mono opacity-60 tabular-nums">{minsLogged}m</span>
                       <div
                         className={`w-full rounded-t transition-all duration-300 ${
                           minsLogged > 0
@@ -1605,7 +1806,7 @@ export function Popup() {
                     const mostCommonPercent = mostCommon ? Math.round((mostCommon[1] / totalDistractions) * 100) : 0;
                     return (
                       <div className={`text-[11px] font-mono ${"text-muted-foreground"}`}>
-                        Most common: <span className="font-bold text-foreground">{mostCommon?.[0]}</span> ({mostCommonPercent}%)
+                        Most common: <span className="font-bold text-foreground">{mostCommon?.[0]}</span> <span className="tabular-nums">({mostCommonPercent}%)</span>
                       </div>
                     );
                   })()}
@@ -1618,7 +1819,7 @@ export function Popup() {
                         <div key={cat} className="space-y-1">
                           <div className="flex items-center justify-between text-[11px] font-mono">
                             <span className="font-bold">{cat}</span>
-                            <span className="opacity-70">{count} ({percent}%)</span>
+                            <span className="opacity-70 tabular-nums">{count} ({percent}%)</span>
                           </div>
                           <div className={`w-full h-1.5 rounded-full overflow-hidden ${
                             "bg-secondary"
@@ -1717,7 +1918,7 @@ export function Popup() {
                     <button
                       key={mode}
                       onClick={() => updateState({ themeMode: mode })}
-                      className={`flex-1 px-3 py-2.5 rounded-xl text-xs font-bold transition-all border ${
+                      className={`flex-1 px-3 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 ease-out active:scale-95 cursor-pointer border ${
                         isActive
                           ? "bg-primary text-primary-foreground border-primary"
                           : "bg-secondary text-muted-foreground border-border hover:bg-secondary hover:text-foreground"
@@ -1839,7 +2040,7 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
                     <div className="flex flex-col w-full gap-2">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold text-foreground">Sound Effects Volume</span>
-                        <span className="font-mono text-xs">{Math.round(soundEffectVolume * 100)}%</span>
+                        <span className="font-mono text-xs tabular-nums">{Math.round(soundEffectVolume * 100)}%</span>
                       </div>
                       <input
                         type="range"
@@ -1857,9 +2058,9 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
                 <button
                   onClick={() => playTestSoundEffect()}
                   disabled={!soundEnabled || !soundEffectEnabled}
-                  className={`w-full py-2.5 rounded-xl font-bold text-xs border transition-all flex items-center justify-center gap-2 ${
+                  className={`w-full py-2.5 rounded-xl font-bold text-xs border transition-all duration-300 ease-out flex items-center justify-center gap-2 ${
                     soundEnabled && soundEffectEnabled
-                      ? "border-border bg-secondary text-foreground hover:bg-accent cursor-pointer"
+                      ? "border-border bg-secondary text-foreground hover:bg-accent cursor-pointer active:scale-95"
                       : "border-border/50 bg-card/30 text-muted-foreground cursor-not-allowed opacity-50"
                   }`}
                 >
@@ -1883,7 +2084,7 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
                     resetAllData();
                   }
                 }}
-                className="w-full py-2.5 rounded-xl font-bold text-xs border border-destructive/30 bg-destructive/15 text-destructive hover:bg-destructive/25 transition-all"
+                className="w-full py-2.5 rounded-xl font-bold text-xs border border-destructive/30 bg-destructive/15 text-destructive hover:bg-destructive/25 transition-all duration-300 ease-out active:scale-95 cursor-pointer"
               >
                 Reset All Extension Data
               </button>
@@ -1909,7 +2110,7 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
 
                 <button
                   onClick={openGithubLink}
-                  className="w-full py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-between border border-border bg-secondary hover:bg-secondary text-white transition-all cursor-pointer"
+                  className="w-full py-2.5 px-3 rounded-xl font-bold text-xs flex items-center justify-between border border-border bg-secondary hover:bg-secondary text-white transition-all duration-300 ease-out active:scale-95 cursor-pointer"
                 >
                   <div className="flex items-center gap-2">
                     <Github className="w-4 h-4" />

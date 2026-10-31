@@ -10,6 +10,8 @@ export interface ShieldSyncPayload {
   session: {
     isActive: boolean;
     timerState: "FLOW" | "BREAK";
+    flowTimeElapsed?: number;
+    timeLeft?: number;
   };
 }
 
@@ -61,10 +63,16 @@ export interface ElectronAPI {
   closeWindow: () => void;
   setAlwaysOnTop: (alwaysOnTop: boolean) => void;
   isAlwaysOnTop: () => Promise<boolean>;
+  isMaximized: () => Promise<boolean>;
+  onMaximizeChange: (callback: (isMaximized: boolean) => void) => () => void;
+  setMiniMode: (enabled: boolean) => void;
+  isMiniMode: () => Promise<boolean>;
+  onMiniModeChange: (callback: (enabled: boolean) => void) => () => void;
   setWindowSize: (width: number, height: number) => void;
   showNotification: (title: string, body: string) => void;
   onShortcut: (callback: (command: string) => void) => () => void;
   onTimerAction: (callback: (action: string) => void) => () => void;
+  onShieldAction: (callback: (action: string) => void) => () => void;
   syncShieldState: (payload: ShieldSyncPayload) => void;
   getExternalAudioState: () => Promise<ExternalAudioState>;
   onExternalAudioState: (callback: (state: ExternalAudioState) => void) => () => void;
@@ -102,6 +110,29 @@ export const electron = {
     if (window.electron) return await window.electron.isAlwaysOnTop();
     return false;
   },
+  isMaximized: async (): Promise<boolean> => {
+    try {
+      if (window.electron) return await window.electron.isMaximized();
+    } catch {
+      return false;
+    }
+    return false;
+  },
+  onMaximizeChange: (callback: (isMaximized: boolean) => void) => {
+    if (window.electron) return window.electron.onMaximizeChange(callback);
+    return () => {};
+  },
+  setMiniMode: (enabled: boolean) => {
+    if (window.electron) window.electron.setMiniMode(enabled);
+  },
+  isMiniMode: async (): Promise<boolean> => {
+    if (window.electron) return await window.electron.isMiniMode();
+    return false;
+  },
+  onMiniModeChange: (callback: (enabled: boolean) => void) => {
+    if (window.electron) return window.electron.onMiniModeChange(callback);
+    return () => {};
+  },
   setWindowSize: (width: number, height: number) => {
     if (window.electron) window.electron.setWindowSize(width, height);
   },
@@ -118,6 +149,12 @@ export const electron = {
   },
   onTimerAction: (callback: (action: string) => void) => {
     if (window.electron) return window.electron.onTimerAction(callback);
+    return () => {};
+  },
+  onShieldAction: (callback: (action: string) => void) => {
+    if (window.electron && window.electron.onShieldAction) {
+      return window.electron.onShieldAction(callback);
+    }
     return () => {};
   },
   syncShieldState: (payload: ShieldSyncPayload) => {
