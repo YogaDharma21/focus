@@ -188,9 +188,11 @@ export function StatsJournal() {
                 </div>
                 <Progress value={dayProgress} className="h-2 bg-surface-inset" />
                 <p className="text-[11px] text-muted-foreground mt-2">
-                    {Math.floor((totalMinutesInDay - totalMinutesPassed) / 60)}h{" "}
-                    {(totalMinutesInDay - totalMinutesPassed) % 60}m remaining
-                    today
+                    <span className="tabular-nums">
+                        {Math.floor((totalMinutesInDay - totalMinutesPassed) / 60)}h{" "}
+                        {(totalMinutesInDay - totalMinutesPassed) % 60}m
+                    </span>{" "}
+                    remaining today
                 </p>
             </Card>
 
@@ -303,7 +305,7 @@ export function StatsJournal() {
                         <h2 className="font-semibold text-lg">Distraction Analysis</h2>
                     </div>
                     {totalDistractions > 0 && (
-                        <span className="text-xs text-muted-foreground font-medium">
+                        <span className="text-xs text-muted-foreground font-medium tabular-nums">
                             {totalDistractions} total
                         </span>
                     )}
@@ -314,8 +316,11 @@ export function StatsJournal() {
                     <span className="font-medium text-foreground">
                         {totalDistractions > 0 ? mostCommon?.[0] : "None"}
                     </span>{" "}
-                    {totalDistractions > 0 &&
-                        `(${Math.round(((mostCommon?.[1] || 0) / totalDistractions) * 100)}%)`}
+                    {totalDistractions > 0 && (
+                        <span className="tabular-nums">
+                            ({Math.round(((mostCommon?.[1] || 0) / totalDistractions) * 100)}%)
+                        </span>
+                    )}
                 </div>
 
                 {totalDistractions === 0 ? (
@@ -332,7 +337,7 @@ export function StatsJournal() {
                                 <div key={cat} className="space-y-1">
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="font-medium">{cat}</span>
-                                        <span className="text-muted-foreground">
+                                        <span className="text-muted-foreground tabular-nums">
                                             {count} ({percentage}%)
                                         </span>
                                     </div>

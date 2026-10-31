@@ -140,7 +140,7 @@ export function SettingsPage() {
                             <div className="flex flex-col w-full gap-2">
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs font-bold text-foreground">Music Volume</span>
-                                    <span className="font-mono text-xs text-foreground">{musicVolume}%</span>
+                                    <span className="font-mono text-xs text-foreground tabular-nums">{musicVolume}%</span>
                                 </div>
                                 <input
                                     type="range"
@@ -177,7 +177,7 @@ export function SettingsPage() {
                             <div className="flex flex-col w-full gap-2">
                                 <div className="flex items-center justify-between">
                                     <span className="text-xs font-bold text-foreground">Sound Effects Volume</span>
-                                    <span className="font-mono text-xs text-foreground">{soundEffectVolume}%</span>
+                                    <span className="font-mono text-xs text-foreground tabular-nums">{soundEffectVolume}%</span>
                                 </div>
                                 <input
                                     type="range"
