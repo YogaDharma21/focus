@@ -9,6 +9,7 @@ import { SettingsPage } from './components/modules/SettingsPage';
 import { ShieldPage } from './components/modules/ShieldPage';
 import { ShieldBlockOverlay } from './components/modules/ShieldBlockOverlay';
 import { DeepFocusOverlay } from './components/modules/DeepFocusOverlay';
+import { MiniTimerCapsule } from './components/layout/MiniTimerCapsule';
 import { GlobalTimerEngine } from './components/layout/GlobalTimerEngine';
 import { useDesktopStore } from './lib/store';
 import { electron } from './lib/electron';
@@ -27,6 +28,8 @@ export const App: React.FC = () => {
     shield,
     timerState,
     shieldViolations,
+    isMiniMode,
+    setMiniMode,
   } = useDesktopStore();
 
   const shieldSnoozedUntil = useRef(new Map<string, number>());
@@ -68,10 +71,15 @@ export const App: React.FC = () => {
       }
     });
 
+    const cleanupMini = electron.onMiniModeChange((enabled) => {
+      useDesktopStore.setState({ isMiniMode: enabled });
+    });
+
     return () => {
       cleanupShortcut();
       cleanupAction();
       cleanupShieldAction();
+      cleanupMini();
     };
   }, [deepFocusMode, isActive]);
 
@@ -203,37 +211,43 @@ export const App: React.FC = () => {
       {/* Global Background Timer Ticker Engine */}
       <GlobalTimerEngine />
       
-      {/* Frameless Custom Window Titlebar (hosts the timer capsule center slot) */}
-      <TitleBar />
+      {isMiniMode ? (
+        <MiniTimerCapsule />
+      ) : (
+        <>
+          {/* Frameless Custom Window Titlebar (hosts the timer capsule center slot) */}
+          <TitleBar />
 
-      {/* Main Workspace Body */}
-      <div className="flex-1 flex overflow-hidden z-10 relative">
-        <SidebarNav />
+          {/* Main Workspace Body */}
+          <div className="flex-1 flex overflow-hidden z-10 relative">
+            <SidebarNav />
 
-        <main className="flex-1 overflow-y-auto py-6 pr-6 pl-24 relative">
-          {currentView === 'FOCUS' && <FocusTimer />}
-          {currentView === 'TASKS' && <TasksPage />}
-          {currentView === 'JOURNAL' && <StatsJournal />}
-          {currentView === 'SHIELD' && <ShieldPage />}
-          {currentView === 'SETTINGS' && <SettingsPage />}
-        </main>
-      </div>
+            <main className="flex-1 overflow-y-auto py-6 pr-6 pl-24 relative">
+              {currentView === 'FOCUS' && <FocusTimer />}
+              {currentView === 'TASKS' && <TasksPage />}
+              {currentView === 'JOURNAL' && <StatsJournal />}
+              {currentView === 'SHIELD' && <ShieldPage />}
+              {currentView === 'SETTINGS' && <SettingsPage />}
+            </main>
+          </div>
 
-      {/* Shield block overlay (explicit dismiss snoozes for 10 minutes;
-          pause/disable clear without snoozing so resume re-triggers) */}
-      {shieldViolations.length > 0 && (
-        <ShieldBlockOverlay
-          onSnooze={handleSnoozeShieldViolations}
-          onSnoozeOne={handleSnoozeOneShieldViolation}
-          onClear={handleClearShieldViolations}
-        />
+          {/* Shield block overlay (explicit dismiss snoozes for 10 minutes;
+              pause/disable clear without snoozing so resume re-triggers) */}
+          {shieldViolations.length > 0 && (
+            <ShieldBlockOverlay
+              onSnooze={handleSnoozeShieldViolations}
+              onSnoozeOne={handleSnoozeOneShieldViolation}
+              onClear={handleClearShieldViolations}
+            />
+          )}
+
+          {/* Persistent Audio Media Player */}
+          <MediaPlayer />
+
+          {/* Fullscreen Zen Overlay */}
+          <DeepFocusOverlay />
+        </>
       )}
-
-      {/* Persistent Audio Media Player */}
-      <MediaPlayer />
-
-      {/* Fullscreen Zen Overlay */}
-      <DeepFocusOverlay />
     </div>
   );
 };

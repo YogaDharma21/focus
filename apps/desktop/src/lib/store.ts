@@ -8,6 +8,7 @@ import {
   normalizeAppName,
   normalizeSite,
 } from "./shield";
+import { electron } from "./electron";
 
 export type ViewType = "FOCUS" | "TASKS" | "JOURNAL" | "SHIELD" | "SETTINGS";
 
@@ -34,6 +35,8 @@ export interface DesktopState {
   setView: (view: ViewType) => void;
   isAlwaysOnTop: boolean;
   setAlwaysOnTop: (onTop: boolean) => void;
+  isMiniMode: boolean;
+  setMiniMode: (mini: boolean) => void;
 
   // Media Player & Audio
   mediaType: "YOUTUBE" | "SPOTIFY" | "LOCAL";
@@ -131,6 +134,11 @@ export const useDesktopStore = create<DesktopState>()(
       setView: (view) => set({ currentView: view }),
       isAlwaysOnTop: false,
       setAlwaysOnTop: (onTop) => set({ isAlwaysOnTop: onTop }),
+      isMiniMode: false,
+      setMiniMode: (mini) => {
+        set({ isMiniMode: mini });
+        electron.setMiniMode(mini);
+      },
 
       // Media
       mediaType: "LOCAL",
@@ -506,7 +514,7 @@ export const useDesktopStore = create<DesktopState>()(
         };
       },
       partialize: (state) => {
-        const { shieldViolations: _omit, ...persisted } = state;
+        const { shieldViolations: _omit, isMiniMode: _omitMini, ...persisted } = state;
         return persisted;
       },
     }

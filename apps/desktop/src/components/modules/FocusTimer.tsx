@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { playCompletionSound } from '../../lib/sound';
 import {
   Play, Pause, RotateCcw, AlertTriangle, Focus, CheckCircle2,
-  Clock, Coffee, Target, X
+  Clock, Coffee, Target, X, PictureInPicture2
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
@@ -36,6 +36,7 @@ export const FocusTimer: React.FC = () => {
     addDistraction,
     soundEffectEnabled,
     setDeepFocusMode,
+    setMiniMode,
     autoStartBreak,
     autoStartFlow,
     breakRatio,
@@ -319,6 +320,14 @@ export const FocusTimer: React.FC = () => {
           aria-label="Deep focus mode"
         >
           <Focus className="w-4 h-4" />
+        </button>
+
+        <button
+          onClick={() => setMiniMode(true)}
+          className="w-12 h-12 rounded-2xl bg-card border border-border hover:bg-secondary text-muted-foreground hover:text-foreground transition-all flex items-center justify-center shadow-md active:scale-95"
+          title="Floating Mini Timer (Ctrl+Alt+M)"
+        >
+          <PictureInPicture2 className="w-4 h-4" />
         </button>
 
       </div>
