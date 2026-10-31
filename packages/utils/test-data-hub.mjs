@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { sessionsToCsv, sessionsToMarkdown, validateBackupJson } from "./src/index.ts";
+import { sessionsToCsv, sessionsToMarkdown, validateBackupJson } from "./src/data-hub.ts";
 
 const mockSessions = [
   {

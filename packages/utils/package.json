@@ -10,7 +10,7 @@
   },
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "test": "node --experimental-strip-types src/audio.test.ts && node --experimental-strip-types test-data-hub.mjs"
+    "test": "node --experimental-strip-types src/audio.test.ts && node --experimental-strip-types test-data-hub.mjs && node --experimental-strip-types src/heatmap.test.ts && node --experimental-strip-types src/velocity.test.mjs && node test/soundscape.test.mjs"
   },
   "dependencies": {
     "clsx": "^2.1.1",
