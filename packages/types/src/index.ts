@@ -58,3 +58,29 @@ export interface TimerSettings {
   autoStartTimer?: boolean;
   autoStartFlow?: boolean;
 }
+
+export type SoundChannelId =
+  | "rain"
+  | "whitenoise"
+  | "pinknoise"
+  | "brownnoise"
+  | "cafe"
+  | "campfire"
+  | "birds"
+  | "binauralAlpha"
+  | "binauralTheta";
+
+export interface SoundChannelState {
+  id: SoundChannelId;
+  label: string;
+  category: "nature" | "noise" | "binaural";
+  volume: number; // 0 - 100
+  enabled: boolean;
+}
+
+export interface SoundscapePreset {
+  id: string;
+  name: string;
+  channels: Partial<Record<SoundChannelId, number>>;
+}
+
