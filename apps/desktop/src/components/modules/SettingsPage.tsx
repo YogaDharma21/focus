@@ -153,6 +153,9 @@ export const SettingsPage: React.FC = () => {
         const nextState = {
           ...current.state,
           ...result.data,
+          isActive: false,
+          timeLeft: 0,
+          timerState: 'FLOW',
         };
         localStorage.setItem(
           'focus-desktop-storage-v2',
