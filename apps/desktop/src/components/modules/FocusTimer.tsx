@@ -188,6 +188,7 @@ export const FocusTimer: React.FC = () => {
           )}
         </div>
         <h1
+          role="timer"
           aria-label={`${timerState === "BREAK" ? "Break time remaining" : "Flow time elapsed"}: ${formatDisplayTime(activeSeconds)}`}
           className="text-[100px] md:text-[120px] font-extrabold tracking-tighter text-foreground leading-none font-sans select-none"
         >

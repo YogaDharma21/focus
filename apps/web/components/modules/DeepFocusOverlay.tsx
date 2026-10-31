@@ -12,6 +12,7 @@ export function DeepFocusOverlay() {
     const {
         timeLeft,
         isActive,
+        timerState,
         setIsActive,
         setDeepFocusMode,
         setTimeLeft,
@@ -32,6 +33,7 @@ export function DeepFocusOverlay() {
         useShallow((s) => ({
             timeLeft: s.timeLeft,
             isActive: s.isActive,
+            timerState: s.timerState,
             setIsActive: s.setIsActive,
             setDeepFocusMode: s.setDeepFocusMode,
             setTimeLeft: s.setTimeLeft,
@@ -284,7 +286,8 @@ export function DeepFocusOverlay() {
                 })()}
 
                 <div
-                    aria-label={`Flow time elapsed: ${formatTime(timeLeft)}`}
+                    role="timer"
+                    aria-label={`${timerState === "BREAK" ? "Break time remaining" : "Flow time elapsed"}: ${formatTime(timeLeft)}`}
                     className="text-[4rem] sm:text-[6rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground select-none"
                 >
                     {formatTime(timeLeft)}

@@ -982,6 +982,7 @@ export function Popup() {
             {/* Timer Display - Big Number */}
             <div className="flex flex-col items-center justify-center my-2 py-3">
               <span
+                role="timer"
                 aria-label={`${state.timerState === "BREAK" ? "Break time remaining" : "Flow time elapsed"}: ${timeFormatted}`}
                 className="text-7xl font-black font-mono tracking-tighter leading-none"
               >

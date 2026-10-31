@@ -194,7 +194,8 @@ export const DeepFocusOverlay: React.FC = () => {
         })()}
 
         <h1
-          aria-label={`Flow time elapsed: ${timeString}`}
+          role="timer"
+          aria-label={`${timerState === "BREAK" ? "Break time remaining" : "Flow time elapsed"}: ${timeString}`}
           className="text-[120px] md:text-[150px] font-extrabold tracking-tight text-foreground leading-none font-sans select-none"
         >
           {timeString}

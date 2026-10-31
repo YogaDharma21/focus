@@ -170,6 +170,7 @@ export function DeepFocusOverlay({
 
         {/* Large Timer Display */}
         <div
+          role="timer"
           aria-label={`${state.timerState === "BREAK" ? "Break time remaining" : "Flow time elapsed"}: ${formatTime(state.timeLeft)}`}
           className={`text-6xl font-black font-mono tracking-tighter leading-none text-foreground select-none ${
             state.isActive ? "animate-pulse" : ""

@@ -261,6 +261,7 @@ export function FocusTimer() {
                 </div>
 
                 <div
+                    role="timer"
                     aria-label={`${timerState === "BREAK" ? "Break time remaining" : "Flow time elapsed"}: ${formatTime(timeLeft)}`}
                     className="text-[3.5rem] sm:text-[5rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow"
                 >
