@@ -377,6 +377,9 @@ function updateShieldState(payload) {
         // overlay back up after the user just dismissed it via pause.
         shieldCalmUntil = Date.now() + SHIELD_SETTLE_MS;
         hideShieldOverlay();
+        stopWin32ProcessMonitor();
+    } else {
+        startWin32ProcessMonitor();
     }
 }
 
@@ -483,8 +486,94 @@ function execFileAsync(file, args, env) {
     });
 }
 
+// --- Native Win32 Process & Window Monitor ----------------------------------
+// Uses a lightweight native helper binary that queries WTSEnumerateProcessesW
+// and EnumWindows. Avoids spawning PowerShell every 5 seconds, reducing CPU
+// spikes to near-zero.
+let win32ProcessHelperProc = null;
+let win32HelperBuffer = "";
+let win32ProcessSnapshot = null;
+
+function getWin32ProcessHelperPath() {
+    let helperPath = path.join(__dirname, "win32-process-helper.exe");
+    if (app.isPackaged) {
+        helperPath = helperPath.replace("app.asar", "app.asar.unpacked");
+    }
+    return fs.existsSync(helperPath) ? helperPath : null;
+}
+
+function startWin32ProcessMonitor() {
+    if (process.platform !== "win32") return;
+    if (win32ProcessHelperProc) return;
+
+    const helperPath = getWin32ProcessHelperPath();
+    if (!helperPath) return;
+
+    try {
+        const child = spawn(
+            helperPath,
+            [String(SHIELD_POLL_INTERVAL_MS)],
+            { windowsHide: true, stdio: ["pipe", "pipe", "ignore"] }
+        );
+        win32ProcessHelperProc = child;
+        win32HelperBuffer = "";
+
+        child.stdout.on("data", (chunk) => {
+            win32HelperBuffer += chunk.toString("utf8");
+            let idx;
+            while ((idx = win32HelperBuffer.indexOf("\n")) !== -1) {
+                const line = win32HelperBuffer.slice(0, idx).trim();
+                win32HelperBuffer = win32HelperBuffer.slice(idx + 1);
+                if (line) {
+                    try {
+                        const parsed = JSON.parse(line);
+                        if (parsed && Array.isArray(parsed.processes) && Array.isArray(parsed.windows)) {
+                            win32ProcessSnapshot = {
+                                processes: parsed.processes,
+                                windows: parsed.windows,
+                                timestamp: Date.now(),
+                            };
+                        }
+                    } catch {}
+                }
+            }
+        });
+
+        child.on("exit", () => {
+            if (win32ProcessHelperProc === child) win32ProcessHelperProc = null;
+        });
+
+        child.on("error", () => {
+            win32ProcessHelperProc = null;
+        });
+    } catch {
+        win32ProcessHelperProc = null;
+    }
+}
+
+function stopWin32ProcessMonitor() {
+    if (win32ProcessHelperProc) {
+        try {
+            win32ProcessHelperProc.stdin.end();
+            win32ProcessHelperProc.kill();
+        } catch {}
+        win32ProcessHelperProc = null;
+    }
+}
+
 async function listRunningProcesses() {
     if (process.platform === "win32") {
+        if (win32ProcessSnapshot && Date.now() - win32ProcessSnapshot.timestamp < 15000 && win32ProcessSnapshot.processes.length > 0) {
+            return win32ProcessSnapshot.processes;
+        }
+        const helperPath = getWin32ProcessHelperPath();
+        if (helperPath) {
+            const out = await execFileAsync(helperPath, ["0", "--once"]);
+            try {
+                const parsed = JSON.parse(out);
+                if (Array.isArray(parsed.processes)) return parsed.processes;
+            } catch {}
+        }
         const out = await execFileAsync("tasklist", ["/FO", "CSV", "/NH"]);
         return out
             .split(/\r?\n/)
@@ -504,6 +593,25 @@ async function listRunningProcesses() {
 async function listWindowTitles() {
     // Window-title inspection is currently implemented for Windows only.
     if (process.platform !== "win32") return [];
+    if (win32ProcessSnapshot && Date.now() - win32ProcessSnapshot.timestamp < 15000 && win32ProcessSnapshot.windows.length > 0) {
+        return win32ProcessSnapshot.windows.map((w) => ({
+            process: w.process,
+            title: w.title,
+        }));
+    }
+    const helperPath = getWin32ProcessHelperPath();
+    if (helperPath) {
+        const out = await execFileAsync(helperPath, ["0", "--once"]);
+        try {
+            const parsed = JSON.parse(out);
+            if (Array.isArray(parsed.windows)) {
+                return parsed.windows.map((w) => ({
+                    process: w.process,
+                    title: w.title,
+                }));
+            }
+        } catch {}
+    }
     const script =
         "Get-Process | Where-Object { $_.MainWindowTitle } | ForEach-Object { \"$($_.ProcessName)`t$($_.MainWindowTitle)\" }";
     const out = await execFileAsync("powershell", [
@@ -577,6 +685,35 @@ function sanitizeImageName(imageName) {
 
 async function listWindowedProcessesRaw() {
     if (process.platform !== "win32") return [];
+    if (win32ProcessSnapshot && Date.now() - win32ProcessSnapshot.timestamp < 15000 && win32ProcessSnapshot.windows.length > 0) {
+        return win32ProcessSnapshot.windows.map((w) => {
+            const raw = w.process || (w.path ? path.basename(w.path) : "");
+            const procName = raw.replace(/\.exe$/i, "").trim();
+            return {
+                procName,
+                exePath: w.path || "",
+                title: (w.title || "").trim(),
+            };
+        }).filter((r) => r.procName && r.title);
+    }
+    const helperPath = getWin32ProcessHelperPath();
+    if (helperPath) {
+        const out = await execFileAsync(helperPath, ["0", "--once"]);
+        try {
+            const parsed = JSON.parse(out);
+            if (Array.isArray(parsed.windows) && parsed.windows.length > 0) {
+                return parsed.windows.map((w) => {
+                    const raw = w.process || (w.path ? path.basename(w.path) : "");
+                    const procName = raw.replace(/\.exe$/i, "").trim();
+                    return {
+                        procName,
+                        exePath: w.path || "",
+                        title: (w.title || "").trim(),
+                    };
+                }).filter((r) => r.procName && r.title);
+            }
+        } catch {}
+    }
     const out = await execFileAsync("powershell", [
         "-NoProfile",
         "-NonInteractive",
@@ -779,7 +916,11 @@ function reportShieldViolation(violation) {
 }
 
 async function pollShield() {
-    if (!isShieldBlockingRequired()) return;
+    if (!isShieldBlockingRequired()) {
+        stopWin32ProcessMonitor();
+        return;
+    }
+    startWin32ProcessMonitor();
     try {
         const violations = [];
 
@@ -825,6 +966,9 @@ async function pollShield() {
 }
 
 function startShieldMonitor() {
+    if (isShieldBlockingRequired()) {
+        startWin32ProcessMonitor();
+    }
     if (shieldPollTimer) return;
     shieldPollTimer = setInterval(pollShield, SHIELD_POLL_INTERVAL_MS);
     if (typeof shieldPollTimer.unref === "function") shieldPollTimer.unref();
@@ -1124,6 +1268,7 @@ app.whenReady().then(() => {
 app.on("will-quit", () => {
     globalShortcut.unregisterAll();
     stopExternalAudioMonitor();
+    stopWin32ProcessMonitor();
 });
 
 app.on("window-all-closed", () => {
