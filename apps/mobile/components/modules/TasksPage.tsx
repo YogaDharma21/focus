@@ -74,10 +74,19 @@ export function TasksPage() {
   };
 
   const handleFocusTask = (task: TaskItem) => {
+    if (task.completed) return;
     triggerHaptic();
     setSelectedTaskId(task.id);
     setView('FOCUS');
     router.navigate('/(tabs)');
+  };
+
+  const handleDeleteTask = (taskId: string) => {
+    triggerHaptic();
+    deleteTask(taskId);
+    if (expandedTaskId === taskId) {
+      setExpandedTaskId(null);
+    }
   };
 
   const handleAddSubtask = (taskId: string) => {
@@ -429,10 +438,7 @@ export function TasksPage() {
                     </TouchableOpacity>
 
                     <TouchableOpacity
-                      onPress={() => {
-                        triggerHaptic();
-                        deleteTask(task.id);
-                      }}
+                      onPress={() => handleDeleteTask(task.id)}
                       activeOpacity={0.7}
                       style={[styles.actionIconBtn, { backgroundColor: colors.surfaceInset }]}
                     >

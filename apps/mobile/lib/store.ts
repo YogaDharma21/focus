@@ -210,22 +210,40 @@ export const useAppStore = create<AppState>()(
           ],
         })),
       toggleTask: (id) =>
-        set((state) => ({
-          tasks: (state.tasks || []).map((task) =>
-            task.id === id
-              ? {
-                  ...task,
-                  completed: !task.completed,
-                  completedAt: !task.completed ? new Date().toISOString() : undefined,
-                }
-              : task
-          ),
-        })),
+        set((state) => {
+          let shouldClearSelected = false;
+          const tasks = (state.tasks || []).map((task) => {
+            if (task.id !== id) return task;
+            const nextCompleted = !task.completed;
+            if (nextCompleted && state.selectedTaskId === id) {
+              shouldClearSelected = true;
+            }
+            return {
+              ...task,
+              completed: nextCompleted,
+              completedAt: nextCompleted
+                ? (task.completedAt || new Date().toISOString())
+                : undefined,
+              subtasks: (task.subtasks || []).map((sub) => ({
+                ...sub,
+                completed: nextCompleted,
+              })),
+            };
+          });
+          return {
+            tasks,
+            selectedTaskId: shouldClearSelected ? null : state.selectedTaskId,
+          };
+        }),
       updateTask: (id, updates) =>
         set((state) => ({
           tasks: (state.tasks || []).map((task) =>
             task.id === id ? { ...task, ...updates } : task
           ),
+          selectedTaskId:
+            updates.completed === true && state.selectedTaskId === id
+              ? null
+              : state.selectedTaskId,
         })),
       deleteTask: (id) =>
         set((state) => ({
@@ -244,29 +262,67 @@ export const useAppStore = create<AppState>()(
                 completed: false,
               },
             ];
-            return { ...task, subtasks };
+            return {
+              ...task,
+              completed: false,
+              completedAt: undefined,
+              subtasks,
+            };
           }),
         })),
       toggleSubtask: (taskId, subtaskId) =>
-        set((state) => ({
-          tasks: (state.tasks || []).map((task) => {
+        set((state) => {
+          let shouldClearSelected = false;
+          const tasks = (state.tasks || []).map((task) => {
             if (task.id !== taskId) return task;
             const subtasks = (task.subtasks || []).map((sub) =>
               sub.id === subtaskId ? { ...sub, completed: !sub.completed } : sub
             );
-            return { ...task, subtasks };
-          }),
-        })),
-      deleteSubtask: (taskId, subtaskId) =>
-        set((state) => ({
-          tasks: (state.tasks || []).map((task) => {
-            if (task.id !== taskId) return task;
+            const allCompleted = subtasks.length > 0 && subtasks.every((sub) => sub.completed);
+            if (allCompleted && state.selectedTaskId === taskId) {
+              shouldClearSelected = true;
+            }
             return {
               ...task,
-              subtasks: (task.subtasks || []).filter((sub) => sub.id !== subtaskId),
+              completed: allCompleted,
+              completedAt: allCompleted
+                ? (task.completed ? task.completedAt : new Date().toISOString())
+                : undefined,
+              subtasks,
             };
-          }),
-        })),
+          });
+          return {
+            tasks,
+            selectedTaskId: shouldClearSelected ? null : state.selectedTaskId,
+          };
+        }),
+      deleteSubtask: (taskId, subtaskId) =>
+        set((state) => {
+          let shouldClearSelected = false;
+          const tasks = (state.tasks || []).map((task) => {
+            if (task.id !== taskId) return task;
+            const subtasks = (task.subtasks || []).filter((sub) => sub.id !== subtaskId);
+            if (subtasks.length === 0) {
+              return { ...task, subtasks };
+            }
+            const allCompleted = subtasks.every((sub) => sub.completed);
+            if (allCompleted && state.selectedTaskId === taskId) {
+              shouldClearSelected = true;
+            }
+            return {
+              ...task,
+              completed: allCompleted,
+              completedAt: allCompleted
+                ? (task.completed ? task.completedAt : new Date().toISOString())
+                : undefined,
+              subtasks,
+            };
+          });
+          return {
+            tasks,
+            selectedTaskId: shouldClearSelected ? null : state.selectedTaskId,
+          };
+        }),
       setSelectedTaskId: (id) => set({ selectedTaskId: id }),
 
       sessions: [],
