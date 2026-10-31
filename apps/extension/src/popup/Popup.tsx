@@ -46,6 +46,12 @@ import {
 import { DeepFocusOverlay } from "./components/DeepFocusOverlay";
 import { Progress } from "../components/ui/progress";
 import { AppStateData, ThemeMode, TaskItem, TaskPriority } from "../types";
+import {
+  formatTaskDuration,
+  getTaskActualMinutes,
+  getVelocityStatus,
+  type VelocityStatus,
+} from "../lib/utils";
 import { getStoredState, saveStoredState, subscribeToStateChanges, getCachedState, DEFAULT_STATE, getWeeklyMinutesFromSessions, getTodayMinutesFromSessions, calculateStreaksFromSessions, DAYS_OF_WEEK, getEffectiveTimeLeft } from "../lib/storage";
 import "../index.css";
 
@@ -76,6 +82,13 @@ const PRIORITY_STYLES: Record<TaskPriority, string> = {
   low: "bg-surface-inset text-muted-foreground",
 };
 
+const VELOCITY_STYLES: Record<VelocityStatus, string> = {
+  "completed-on-time": "bg-emerald-bg text-emerald",
+  "on-track": "bg-surface-inset text-muted-foreground",
+  "approaching": "bg-amber-bg text-amber",
+  "exceeded": "bg-crimson-bg text-crimson",
+};
+
 export function Popup() {
   const [state, setState] = useState<AppStateData | null>(getCachedState());
   const [activeTab, setActiveTab] = useState<"timer" | "tasks" | "shield" | "stats" | "settings">("timer");
@@ -86,6 +99,7 @@ export function Popup() {
   const [taskTitle, setTaskTitle] = useState("");
   const [taskPriority, setTaskPriority] = useState<TaskPriority>("medium");
   const [taskDeadline, setTaskDeadline] = useState("");
+  const [taskEstimatedMinutes, setTaskEstimatedMinutes] = useState("");
   const [taskFilter, setTaskFilter] = useState<"all" | "active" | "completed">("all");
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [newSubtaskText, setNewSubtaskText] = useState("");
@@ -526,12 +540,14 @@ export function Popup() {
     e.preventDefault();
     const trimmed = taskTitle.trim();
     if (!trimmed) return;
+    const parsedEst = parseInt(taskEstimatedMinutes, 10);
     const newTask: TaskItem = {
       id: crypto.randomUUID(),
       text: trimmed,
       completed: false,
       priority: taskPriority,
       deadline: taskDeadline || undefined,
+      estimatedMinutes: Number.isFinite(parsedEst) && parsedEst > 0 ? parsedEst : undefined,
       subtasks: [],
     };
     updateState({
@@ -539,6 +555,7 @@ export function Popup() {
     });
     setTaskTitle("");
     setTaskDeadline("");
+    setTaskEstimatedMinutes("");
   };
 
   const handleToggleTask = (id: string) => {
@@ -1238,14 +1255,29 @@ export function Popup() {
                   ))}
                 </div>
 
-                <div className="flex items-center gap-1">
-                  <Calendar className="w-3 h-3" />
-                  <input
-                    type="date"
-                    value={taskDeadline}
-                    onChange={(e) => setTaskDeadline(e.target.value)}
-                    className="bg-transparent border-0 text-[10px] text-muted-foreground focus:outline-none cursor-pointer [color-scheme:dark]"
-                  />
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1">
+                    <Clock className="w-3 h-3 text-muted-foreground" />
+                    <input
+                      type="number"
+                      min="1"
+                      max="1440"
+                      placeholder="Est (m)"
+                      value={taskEstimatedMinutes}
+                      onChange={(e) => setTaskEstimatedMinutes(e.target.value)}
+                      className="w-12 bg-transparent border-0 text-[10px] text-muted-foreground placeholder:text-subtle-foreground focus:outline-none tabular-nums"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    <Calendar className="w-3 h-3" />
+                    <input
+                      type="date"
+                      value={taskDeadline}
+                      onChange={(e) => setTaskDeadline(e.target.value)}
+                      className="bg-transparent border-0 text-[10px] text-muted-foreground focus:outline-none cursor-pointer [color-scheme:dark]"
+                    />
+                  </div>
                 </div>
               </div>
             </form>
@@ -1302,6 +1334,12 @@ export function Popup() {
                       const isExpanded = expandedTaskId === task.id;
                       const subtasks = task.subtasks || [];
                       const completedSubtasks = subtasks.filter((s) => s.completed).length;
+                      const actualMinutes = getTaskActualMinutes(state.sessions || [], task.id);
+                      const hasEstimate =
+                        typeof task.estimatedMinutes === "number" && task.estimatedMinutes > 0;
+                      const velocityStatus = hasEstimate
+                        ? getVelocityStatus(actualMinutes, task.estimatedMinutes!, task.completed)
+                        : null;
 
                       return (
                         <div
@@ -1352,6 +1390,30 @@ export function Popup() {
                                     <span className="text-[9px] font-mono tabular-nums text-muted-foreground flex items-center gap-0.5">
                                       <Calendar className="w-2.5 h-2.5" />
                                       {task.deadline}
+                                    </span>
+                                  )}
+
+                                  {hasEstimate && velocityStatus && (
+                                    <span
+                                      className={`text-[9px] font-mono tabular-nums px-1.5 py-0.2 rounded-full font-medium flex items-center gap-0.5 ${
+                                        VELOCITY_STYLES[velocityStatus]
+                                      }`}
+                                      title={`Velocity: ${actualMinutes}m actual of ${task.estimatedMinutes}m estimated (${velocityStatus})`}
+                                    >
+                                      <Clock className="w-2.5 h-2.5" />
+                                      <span>
+                                        {formatTaskDuration(actualMinutes)} / {formatTaskDuration(task.estimatedMinutes!)}
+                                      </span>
+                                    </span>
+                                  )}
+
+                                  {!hasEstimate && actualMinutes > 0 && (
+                                    <span
+                                      className="text-[9px] font-mono tabular-nums px-1.5 py-0.2 rounded-full font-medium flex items-center gap-0.5 bg-surface-inset text-muted-foreground"
+                                      title={`Focus time: ${actualMinutes}m`}
+                                    >
+                                      <Clock className="w-2.5 h-2.5" />
+                                      <span>{formatTaskDuration(actualMinutes)}</span>
                                     </span>
                                   )}
 

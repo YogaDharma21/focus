@@ -94,7 +94,7 @@ export interface DesktopState {
   // Tasks
   tasks: TaskItem[];
   selectedTaskId: string | null;
-  addTask: (task: { text: string; priority?: TaskPriority; deadline?: string }) => void;
+  addTask: (task: { text: string; priority?: TaskPriority; deadline?: string; estimatedMinutes?: number }) => void;
   toggleTask: (id: string) => void;
   updateTask: (id: string, updates: Partial<TaskItem>) => void;
   deleteTask: (id: string) => void;
@@ -257,7 +257,7 @@ export const useDesktopStore = create<DesktopState>()(
       // Tasks
       tasks: [],
       selectedTaskId: null,
-      addTask: ({ text, priority = "medium", deadline }) =>
+      addTask: ({ text, priority = "medium", deadline, estimatedMinutes }) =>
         set((state) => ({
           tasks: [
             {
@@ -266,6 +266,7 @@ export const useDesktopStore = create<DesktopState>()(
               completed: false,
               priority,
               deadline: deadline || undefined,
+              estimatedMinutes: estimatedMinutes && estimatedMinutes > 0 ? estimatedMinutes : undefined,
               subtasks: [],
             },
             ...state.tasks,

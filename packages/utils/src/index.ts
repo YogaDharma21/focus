@@ -11,6 +11,7 @@ export function cn(...inputs: ClassValue[]): string {
 export * from "./audio";
 export * from "./break-ratio";
 export * from "./soundscape";
+export * from "./velocity";
 
 export interface SessionRecord {
   id: string;
