@@ -93,10 +93,9 @@ jobs:
         with:
           node-version: 22
           cache: 'pnpm'
-          cache-dependency-path: 'apps/mobile/pnpm-lock.yaml'
+          cache-dependency-path: 'pnpm-lock.yaml'
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-        working-directory: apps/mobile
+        run: pnpm install --filter @focus/mobile... --frozen-lockfile
 
   build-desktop:
     needs: detect-changes
