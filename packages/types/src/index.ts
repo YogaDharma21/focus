@@ -17,6 +17,7 @@ export interface TaskItem {
   completed: boolean;
   priority?: TaskPriority;
   deadline?: string;
+  estimatedMinutes?: number;
   subtasks?: SubtaskItem[];
   completedAt?: string;
 }
