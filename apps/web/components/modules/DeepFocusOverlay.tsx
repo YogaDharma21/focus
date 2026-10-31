@@ -283,7 +283,10 @@ export function DeepFocusOverlay() {
                     );
                 })()}
 
-                <div className="text-[4rem] sm:text-[6rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground select-none">
+                <div
+                    aria-label={`Flow time elapsed: ${formatTime(timeLeft)}`}
+                    className="text-[4rem] sm:text-[6rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground select-none"
+                >
                     {formatTime(timeLeft)}
                 </div>
 
@@ -295,6 +298,8 @@ export function DeepFocusOverlay() {
                         size="icon"
                         className="w-14 h-14 rounded-[var(--radius)] border-2 hover:bg-secondary/50 hover:border-border transition-all"
                         onClick={toggleTimer}
+                        title={isActive ? "Pause Timer" : "Start Timer"}
+                        aria-label={isActive ? "Pause timer" : "Start timer"}
                     >
                         {isActive ? (
                             <Pause className="size-7" />
@@ -315,6 +320,7 @@ export function DeepFocusOverlay() {
                         onClick={handleCompleteSession}
                         disabled={!isActive}
                         title="Complete Session"
+                        aria-label="Complete session"
                     >
                         <CheckCircle2 className="size-7" />
                     </Button>

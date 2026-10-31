@@ -190,6 +190,7 @@ export function DynamicIslandTimer() {
                                     : "bg-secondary border-border hover:bg-accent text-foreground cursor-pointer"
                             )}
                             title={isActive ? "Complete Session" : "Start timer to complete session"}
+                            aria-label={isActive ? "Complete session" : "Start timer to complete session"}
                         >
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             <span>Complete</span>
@@ -202,6 +203,8 @@ export function DynamicIslandTimer() {
                         <button
                             onClick={toggleTimer}
                             className="flex-1 py-2 px-3 rounded-xl border text-xs font-extrabold flex items-center justify-center gap-1.5 transition-all shadow bg-primary text-primary-foreground border-primary hover:bg-primary/90 cursor-pointer"
+                            title={isActive ? "Pause Timer" : "Start Timer"}
+                            aria-label={isActive ? "Pause timer" : "Start timer"}
                         >
                             {isActive ? (
                                 <>
