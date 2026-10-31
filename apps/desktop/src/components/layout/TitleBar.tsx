@@ -15,9 +15,12 @@ export const TitleBar: React.FC = () => {
   useEffect(() => {
     let mounted = true;
 
-    electron.isMaximized().then((maximized) => {
-      if (mounted) setIsMaximized(maximized);
-    });
+    electron
+      .isMaximized()
+      .then((maximized) => {
+        if (mounted) setIsMaximized(maximized);
+      })
+      .catch(() => {});
 
     const unsubscribe = electron.onMaximizeChange((maximized) => {
       if (mounted) setIsMaximized(maximized);
@@ -36,10 +39,6 @@ export const TitleBar: React.FC = () => {
   };
 
   const handleMaximize = () => {
-    if (!window.electron) {
-      setIsMaximized((prev) => !prev);
-      return;
-    }
     electron.maximizeWindow();
   };
 

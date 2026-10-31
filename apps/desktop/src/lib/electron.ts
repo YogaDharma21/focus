@@ -105,7 +105,11 @@ export const electron = {
     return false;
   },
   isMaximized: async (): Promise<boolean> => {
-    if (window.electron) return await window.electron.isMaximized();
+    try {
+      if (window.electron) return await window.electron.isMaximized();
+    } catch {
+      return false;
+    }
     return false;
   },
   onMaximizeChange: (callback: (isMaximized: boolean) => void) => {
