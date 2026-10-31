@@ -89,7 +89,7 @@ export const TitleBar: React.FC = () => {
         <button
           onClick={() => electron.closeWindow()}
           title="Close"
-          className="p-1.5 rounded-md hover:bg-rose-600 hover:text-white text-muted-foreground transition-colors"
+          className="p-1.5 rounded-md hover:bg-destructive/20 hover:text-destructive text-muted-foreground transition-colors"
         >
           <X className="w-3.5 h-3.5" />
         </button>
