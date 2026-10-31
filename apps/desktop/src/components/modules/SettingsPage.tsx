@@ -2,10 +2,12 @@ import React, { useEffect, useState, useRef } from 'react';
 import {
   Settings, Clock, Palette, Volume2, Volume1, VolumeX, Trash2, BellRing,
   Info, Github, ExternalLink, Check, Download,
-  Upload, ShieldAlert, Monitor, Pin, Database, Music
+  Upload, ShieldAlert, Monitor, Pin, Database, Music,
+  FileSpreadsheet, FileText
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
+import { downloadFile, sessionsToCsv, sessionsToMarkdown, validateBackupJson } from '../../lib/utils';
 import iconUrl from '../../../public/icon.png';
 
 export const SettingsPage: React.FC = () => {
@@ -82,6 +84,8 @@ export const SettingsPage: React.FC = () => {
     showFeedback(next ? 'Window pinned Always on Top.' : 'Window unpinned.');
   };
 
+  const [isDragging, setIsDragging] = useState(false);
+
   const handleExportData = () => {
     try {
       const fullState = localStorage.getItem('focus-desktop-storage-v2');
@@ -91,15 +95,12 @@ export const SettingsPage: React.FC = () => {
       }
 
       const parsed = JSON.parse(fullState);
-      const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(parsed, null, 2));
-      const downloadAnchor = document.createElement('a');
       const dateStr = new Date().toISOString().slice(0, 10);
-      downloadAnchor.setAttribute('href', dataStr);
-      downloadAnchor.setAttribute('download', `focus-desktop-backup-${dateStr}.json`);
-      document.body.appendChild(downloadAnchor);
-      downloadAnchor.click();
-      downloadAnchor.remove();
-
+      downloadFile(
+        JSON.stringify(parsed, null, 2),
+        `focus-desktop-backup-${dateStr}.json`,
+        'application/json'
+      );
       showFeedback('Backup exported successfully.');
     } catch (err) {
       console.error('Export error:', err);
@@ -107,17 +108,64 @@ export const SettingsPage: React.FC = () => {
     }
   };
 
-  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleExportCsv = () => {
+    try {
+      if (!sessions || sessions.length === 0) {
+        showFeedback('No sessions found to export.', 'error');
+        return;
+      }
+      const csv = sessionsToCsv(sessions);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      downloadFile(csv, `focus-desktop-sessions-${dateStr}.csv`, 'text/csv;charset=utf-8');
+      showFeedback('Sessions exported to CSV successfully.');
+    } catch (err) {
+      console.error('Export CSV error:', err);
+      showFeedback('Failed to export CSV.', 'error');
+    }
+  };
 
+  const handleExportMarkdown = () => {
+    try {
+      const md = sessionsToMarkdown(sessions, distractions);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      downloadFile(md, `focus-desktop-summary-${dateStr}.md`, 'text/markdown;charset=utf-8');
+      showFeedback('Summary exported to Markdown successfully.');
+    } catch (err) {
+      console.error('Export error:', err);
+      showFeedback('Failed to export Markdown summary.', 'error');
+    }
+  };
+
+  const processImportFile = (file: File) => {
+    if (!file.name.endsWith('.json')) {
+      showFeedback('Please select a valid .json backup file.', 'error');
+      return;
+    }
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
         const content = event.target?.result as string;
-        const parsed = JSON.parse(content);
-        const stateToSave = parsed.state ? parsed : { state: parsed, version: 1 };
-        localStorage.setItem('focus-desktop-storage-v2', JSON.stringify(stateToSave));
+        const result = validateBackupJson(content);
+        if (!result.isValid || !result.data) {
+          showFeedback(result.error || 'Invalid JSON backup file format.', 'error');
+          return;
+        }
+        const currentRaw = localStorage.getItem('focus-desktop-storage-v2');
+        const current = currentRaw ? JSON.parse(currentRaw) : { state: {}, version: 1 };
+        const nextState = {
+          ...current.state,
+          ...result.data,
+          isActive: false,
+          timeLeft: 0,
+          timerState: 'FLOW',
+        };
+        localStorage.setItem(
+          'focus-desktop-storage-v2',
+          JSON.stringify({
+            state: nextState,
+            version: current.version ?? 1,
+          })
+        );
         showFeedback('Data restored successfully. Reloading workspace...');
         setTimeout(() => {
           window.location.reload();
@@ -128,6 +176,13 @@ export const SettingsPage: React.FC = () => {
       }
     };
     reader.readAsText(file);
+  };
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processImportFile(file);
+    }
     e.target.value = '';
   };
 
@@ -541,29 +596,68 @@ export const SettingsPage: React.FC = () => {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <Download className="w-4 h-4 text-muted-foreground" />
-                  <h3 className="text-xs font-bold text-foreground">Export Backup</h3>
+                  <h3 className="text-xs font-bold text-foreground">Export Data</h3>
                 </div>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Download a full JSON archive containing all completed sessions, distraction logs, and custom preferences.
+                  Export your session history and logs to JSON (full backup), CSV (spreadsheets), or Markdown (summary).
                 </p>
               </div>
-              <button
-                onClick={handleExportData}
-                className="w-full px-4 py-2.5 bg-background hover:bg-secondary border border-border hover:border-border text-foreground rounded-xl text-xs font-semibold transition-all duration-300 ease-out active:scale-95 cursor-pointer flex items-center justify-center gap-2 shadow-sm"
-              >
-                <Download className="w-3.5 h-3.5 text-muted-foreground" />
-                Download JSON Backup
-              </button>
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={handleExportData}
+                  className="px-3 py-2.5 bg-background hover:bg-secondary border border-border text-foreground rounded-xl text-xs font-semibold transition-all duration-300 ease-out active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                >
+                  <Download className="w-3.5 h-3.5 text-muted-foreground" />
+                  JSON
+                </button>
+                <button
+                  onClick={handleExportCsv}
+                  className="px-3 py-2.5 bg-background hover:bg-secondary border border-border text-foreground rounded-xl text-xs font-semibold transition-all duration-300 ease-out active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                >
+                  <FileSpreadsheet className="w-3.5 h-3.5 text-muted-foreground" />
+                  CSV
+                </button>
+                <button
+                  onClick={handleExportMarkdown}
+                  className="px-3 py-2.5 bg-background hover:bg-secondary border border-border text-foreground rounded-xl text-xs font-semibold transition-all duration-300 ease-out active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 shadow-sm"
+                >
+                  <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+                  Markdown
+                </button>
+              </div>
             </div>
 
-            <div className="p-5 rounded-2xl bg-secondary/70 border border-border space-y-3 flex flex-col justify-between shadow-sm">
+            <div
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(true);
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(false);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDragging(false);
+                const file = e.dataTransfer.files?.[0];
+                if (file) {
+                  processImportFile(file);
+                }
+              }}
+              className={`p-5 rounded-2xl bg-secondary/70 border transition-colors space-y-3 flex flex-col justify-between shadow-sm ${
+                isDragging ? 'border-primary bg-secondary' : 'border-border'
+              }`}
+            >
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <Upload className="w-4 h-4 text-muted-foreground" />
                   <h3 className="text-xs font-bold text-foreground">Restore Backup</h3>
                 </div>
                 <p className="text-[11px] text-muted-foreground leading-relaxed">
-                  Restore workspace data from a previously downloaded JSON backup file.
+                  Restore workspace data from a JSON backup. Drag and drop file here or click below.
                 </p>
               </div>
               <button

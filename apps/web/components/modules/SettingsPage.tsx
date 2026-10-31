@@ -1,11 +1,34 @@
 "use client";
 
 import { useAppStore } from "@/lib/store";
-import { cn } from "@/lib/utils";
+import {
+    cn,
+    downloadFile,
+    sessionsToCsv,
+    sessionsToMarkdown,
+    validateBackupJson,
+} from "@/lib/utils";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
-import { Settings, Volume1, Volume2, Github, ExternalLink, Timer, Palette, Database, Info } from "lucide-react";
+import {
+    Settings,
+    Volume1,
+    Volume2,
+    Github,
+    ExternalLink,
+    Timer,
+    Palette,
+    Database,
+    Info,
+    Upload,
+    Download,
+    FileSpreadsheet,
+    FileText,
+    Check,
+    AlertCircle,
+} from "lucide-react";
 import { useTheme } from "next-themes";
+import { useState, useRef } from "react";
 
 export function SettingsPage() {
     const soundEnabled = useAppStore((s) => s.soundEnabled ?? true);
@@ -25,7 +48,140 @@ export function SettingsPage() {
     const setAutoStartFlow = useAppStore((s) => s.setAutoStartFlow);
     const breakRatio = useAppStore((s) => s.breakRatio ?? "1/5");
     const setBreakRatio = useAppStore((s) => s.setBreakRatio);
+    const sessions = useAppStore((s) => s.sessions || []);
+    const distractions = useAppStore((s) => s.distractions || []);
     const { theme, setTheme } = useTheme();
+
+    const [isDragging, setIsDragging] = useState(false);
+    const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const showFeedback = (text: string, type: "success" | "error" = "success") => {
+        setStatusMessage({ text, type });
+        setTimeout(() => {
+            setStatusMessage(null);
+        }, 3500);
+    };
+
+    const handleExportJson = () => {
+        try {
+            const raw = localStorage.getItem("focus-app-storage-v2");
+            const payload = raw ? JSON.parse(raw) : { state: { sessions, distractions }, version: 0 };
+            const dateStr = new Date().toISOString().slice(0, 10);
+            downloadFile(
+                JSON.stringify(payload, null, 2),
+                `focus-backup-${dateStr}.json`,
+                "application/json"
+            );
+            showFeedback("Backup exported successfully.");
+        } catch (err) {
+            console.error("Export JSON error:", err);
+            showFeedback("Failed to export JSON backup.", "error");
+        }
+    };
+
+    const handleExportCsv = () => {
+        try {
+            if (!sessions || sessions.length === 0) {
+                showFeedback("No sessions to export.", "error");
+                return;
+            }
+            const csv = sessionsToCsv(sessions);
+            const dateStr = new Date().toISOString().slice(0, 10);
+            downloadFile(csv, `focus-sessions-${dateStr}.csv`, "text/csv;charset=utf-8");
+            showFeedback("Sessions exported to CSV.");
+        } catch (err) {
+            console.error("Export CSV error:", err);
+            showFeedback("Failed to export CSV.", "error");
+        }
+    };
+
+    const handleExportMarkdown = () => {
+        try {
+            const md = sessionsToMarkdown(sessions, distractions);
+            const dateStr = new Date().toISOString().slice(0, 10);
+            downloadFile(md, `focus-summary-${dateStr}.md`, "text/markdown;charset=utf-8");
+            showFeedback("Summary exported to Markdown.");
+        } catch (err) {
+            console.error("Export Markdown error:", err);
+            showFeedback("Failed to export Markdown summary.", "error");
+        }
+    };
+
+    const processImportFile = (file: File) => {
+        if (!file.name.endsWith(".json")) {
+            showFeedback("Please select a valid .json backup file.", "error");
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            try {
+                const content = e.target?.result as string;
+                const result = validateBackupJson(content);
+                if (!result.isValid || !result.data) {
+                    showFeedback(result.error || "Invalid backup file structure.", "error");
+                    return;
+                }
+
+                const currentRaw = localStorage.getItem("focus-app-storage-v2");
+                const current = currentRaw ? JSON.parse(currentRaw) : { state: {}, version: 0 };
+                const nextState = {
+                    ...current.state,
+                    ...result.data,
+                    isActive: false,
+                    timeLeft: 0,
+                    timerState: "FLOW",
+                };
+
+                localStorage.setItem(
+                    "focus-app-storage-v2",
+                    JSON.stringify({
+                        state: nextState,
+                        version: current.version ?? 0,
+                    })
+                );
+
+                showFeedback("Data restored successfully. Reloading workspace...");
+                setTimeout(() => {
+                    window.location.reload();
+                }, 800);
+            } catch (err) {
+                console.error("Import error:", err);
+                showFeedback("Failed to restore backup file.", "error");
+            }
+        };
+        reader.readAsText(file);
+    };
+
+    const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            processImportFile(file);
+        }
+        e.target.value = "";
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(true);
+    };
+
+    const handleDragLeave = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setIsDragging(false);
+        const file = e.dataTransfer.files?.[0];
+        if (file) {
+            processImportFile(file);
+        }
+    };
 
     const playTestSoundEffect = () => {
         if (!soundEnabled || !soundEffectEnabled) return;
@@ -239,22 +395,106 @@ export function SettingsPage() {
                 </div>
             </Card>
 
-            {/* Data Section */}
-            <Card className="p-5 bg-card border border-border flex flex-col gap-3 rounded-[24px]">
-                <div className="flex items-center gap-2">
-                    <Database className="w-[18px] h-[18px] text-destructive" />
-                    <h3 className="text-[15px] font-medium tracking-[-0.015em] text-destructive">Data</h3>
+            {/* Data Hub Section */}
+            <Card className="p-5 bg-card border border-border flex flex-col gap-4 rounded-[24px]">
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <Database className="w-[18px] h-[18px] text-foreground" />
+                        <h3 className="text-[15px] font-medium tracking-[-0.015em] text-foreground">Data Hub</h3>
+                    </div>
+                    <span className="text-[11px] text-muted-foreground font-mono tabular-nums">
+                        {sessions.length} sessions
+                    </span>
                 </div>
-                <button
-                    onClick={() => {
-                        if (window.confirm("Are you sure you want to reset all data to defaults? This action cannot be undone.")) {
-                            resetAllData();
-                        }
-                    }}
-                    className="w-full py-2.5 rounded-[10px] font-medium text-xs border border-destructive/30 bg-destructive/15 text-destructive hover:bg-destructive/25 transition-all duration-300 ease-out active:scale-95 cursor-pointer"
+                {/* Import Dropzone */}
+                <div
+                    onDragOver={handleDragOver}
+                    onDragLeave={handleDragLeave}
+                    onDrop={handleDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={cn(
+                        "p-4 rounded-[16px] border border-dashed transition-all flex flex-col items-center justify-center gap-1.5 cursor-pointer text-center",
+                        isDragging
+                            ? "border-primary bg-surface text-foreground"
+                            : "border-border bg-surface-inset hover:bg-surface text-muted-foreground hover:text-foreground"
+                    )}
                 >
-                    Reset All Data
-                </button>
+                    <Upload className="w-5 h-5 mb-0.5 text-muted-foreground" />
+                    <span className="text-xs font-medium text-foreground">Import JSON Backup</span>
+                    <span className="text-[11px] text-muted-foreground">
+                        Drop JSON backup file here or click to browse
+                    </span>
+                    <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".json"
+                        onChange={handleFileInput}
+                        className="hidden"
+                    />
+                </div>
+
+                {/* Export Buttons */}
+                <div className="flex flex-col gap-2">
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
+                        Export Records
+                    </span>
+                    <div className="grid grid-cols-3 gap-2">
+                        <button
+                            onClick={handleExportJson}
+                            className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-[10px] text-xs font-medium bg-surface-inset border border-border hover:bg-surface text-foreground transition-all cursor-pointer"
+                        >
+                            <Download className="w-3.5 h-3.5 text-muted-foreground" />
+                            JSON
+                        </button>
+                        <button
+                            onClick={handleExportCsv}
+                            className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-[10px] text-xs font-medium bg-surface-inset border border-border hover:bg-surface text-foreground transition-all cursor-pointer"
+                        >
+                            <FileSpreadsheet className="w-3.5 h-3.5 text-muted-foreground" />
+                            CSV
+                        </button>
+                        <button
+                            onClick={handleExportMarkdown}
+                            className="flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-[10px] text-xs font-medium bg-surface-inset border border-border hover:bg-surface text-foreground transition-all cursor-pointer"
+                        >
+                            <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+                            Markdown
+                        </button>
+                    </div>
+                </div>
+
+                {/* Status Feedback */}
+                {statusMessage && (
+                    <div
+                        className={cn(
+                            "px-3 py-2 rounded-[10px] text-xs border font-medium flex items-center gap-2",
+                            statusMessage.type === "success"
+                                ? "bg-surface-inset text-foreground border-border"
+                                : "bg-destructive/15 text-destructive border-destructive/30"
+                        )}
+                    >
+                        {statusMessage.type === "success" ? (
+                            <Check className="w-3.5 h-3.5 text-foreground" />
+                        ) : (
+                            <AlertCircle className="w-3.5 h-3.5 text-destructive" />
+                        )}
+                        <span>{statusMessage.text}</span>
+                    </div>
+                )}
+
+                {/* Reset All Data (Danger) */}
+                <div className="pt-2 border-t border-border">
+                    <button
+                        onClick={() => {
+                            if (window.confirm("Are you sure you want to reset all data to defaults? This action cannot be undone.")) {
+                                resetAllData();
+                            }
+                        }}
+                        className="w-full py-2.5 rounded-[10px] font-medium text-xs border border-destructive/30 bg-destructive/15 text-destructive hover:bg-destructive/25 transition-all cursor-pointer"
+                    >
+                        Reset All Data
+                    </button>
+                </div>
             </Card>
 
             {/* About Section */}
