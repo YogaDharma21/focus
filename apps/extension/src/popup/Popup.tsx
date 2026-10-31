@@ -57,6 +57,18 @@ const DISTRACTION_CATEGORIES = [
   "Other"
 ];
 
+function formatBreakDuration(seconds: number): string {
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  if (mins > 0 && secs > 0) {
+    return `${mins} minute${mins === 1 ? "" : "s"} ${secs} second${secs === 1 ? "" : "s"}`;
+  }
+  if (mins > 0) {
+    return `${mins} minute${mins === 1 ? "" : "s"}`;
+  }
+  return `${secs} second${secs === 1 ? "" : "s"}`;
+}
+
 const PRIORITY_STYLES: Record<TaskPriority, string> = {
   urgent: "bg-crimson-bg text-crimson",
   high: "bg-amber-bg text-amber",
@@ -81,6 +93,12 @@ export function Popup() {
   // Deep Focus Mode: auto-activate when timer starts
   const prevIsActiveRef = useRef(state?.isActive ?? false);
   const isInitialLoadRef = useRef(true);
+
+  const liveRegionRef = useRef<HTMLDivElement | null>(null);
+  const prevTimerStateRef = useRef<string | null>(null);
+  const prevTimerActiveRef = useRef<boolean | null>(null);
+  const isTimerInitialMountRef = useRef(true);
+  const isResetRef = useRef(false);
 
   // Local inputs
   const [newSiteUrl, setNewSiteUrl] = useState("");
@@ -251,6 +269,48 @@ export function Popup() {
     return () => clearInterval(interval);
   }, [state?.isActive, state?.timerState]);
 
+  useEffect(() => {
+    if (!state) return;
+
+    if (isTimerInitialMountRef.current) {
+      isTimerInitialMountRef.current = false;
+      prevTimerStateRef.current = state.timerState;
+      prevTimerActiveRef.current = state.isActive;
+      return;
+    }
+
+    if (isResetRef.current) {
+      isResetRef.current = false;
+      prevTimerStateRef.current = state.timerState;
+      prevTimerActiveRef.current = state.isActive;
+      return;
+    }
+
+    const prevTimerState = prevTimerStateRef.current;
+    const prevIsActive = prevTimerActiveRef.current;
+    let message = "";
+
+    if (prevTimerState === "FLOW" && state.timerState === "BREAK") {
+      const timeStr = formatBreakDuration(state.timeLeft);
+      message = `Break started, ${timeStr} remaining.`;
+    } else if (prevTimerState === "BREAK" && state.timerState === "FLOW") {
+      message = state.isActive ? "Break finished. Flow session started." : "Break finished.";
+    } else if (prevIsActive !== state.isActive) {
+      if (state.isActive) {
+        message = state.timerState === "BREAK" ? "Break resumed." : (state.timeLeft > 0 ? "Flow session resumed." : "Flow session started.");
+      } else if (state.timeLeft > 0 || state.timerState === "BREAK") {
+        message = "Timer paused.";
+      }
+    }
+
+    if (message && liveRegionRef.current) {
+      liveRegionRef.current.textContent = message;
+    }
+
+    prevTimerStateRef.current = state.timerState;
+    prevTimerActiveRef.current = state.isActive;
+  }, [state?.timerState, state?.isActive, state?.timeLeft]);
+
   if (!state) {
     return (
       <div className="w-[420px] h-[580px] bg-background text-foreground flex items-center justify-center font-mono text-xs">
@@ -307,6 +367,7 @@ export function Popup() {
   };
 
   const resetTimer = () => {
+    isResetRef.current = true;
     updateState({
       isActive: false,
       deepFocusMode: false,
@@ -315,6 +376,9 @@ export function Popup() {
       targetEndTime: null,
       isMusicPlaying: false,
     });
+    if (liveRegionRef.current) {
+      liveRegionRef.current.textContent = "Timer reset.";
+    }
   };
 
   const completeSession = () => {
@@ -949,6 +1013,14 @@ export function Popup() {
         {/* TIMER TAB */}
         {activeTab === "timer" && (
           <div className="flex flex-col items-center justify-between min-h-full pb-1 pt-1 gap-2">
+            <div
+              ref={liveRegionRef}
+              role="status"
+              aria-live="polite"
+              aria-atomic="true"
+              className="sr-only"
+            />
+
             {/* Timer Label */}
             <div className="flex items-center justify-center gap-1.5 mt-1 mb-0.5 text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
               {state.timerState === "BREAK" ? (
@@ -966,7 +1038,11 @@ export function Popup() {
 
             {/* Timer Display - Big Number */}
             <div className="flex flex-col items-center justify-center my-2 py-3">
-              <span className="text-7xl font-black font-mono tracking-tighter leading-none tabular-nums">
+              <span
+                role="timer"
+                aria-label={`${state.timerState === "BREAK" ? "Break time remaining" : "Flow time elapsed"}: ${timeFormatted}`}
+                className="text-7xl font-black font-mono tracking-tighter leading-none tabular-nums"
+              >
                 {timeFormatted}
               </span>
             </div>
@@ -1020,6 +1096,7 @@ export function Popup() {
                   "bg-card border-border hover:bg-secondary text-foreground"
                 }`}
                 title="Reset Timer"
+                aria-label="Reset timer"
               >
                 <RotateCcw className="w-4 h-4" />
               </button>
@@ -1037,6 +1114,7 @@ export function Popup() {
                     : "bg-card border-border hover:bg-secondary text-foreground"
                 }`}
                 title={state.isActive ? "Log Distraction" : "Start timer to log distraction"}
+                aria-label={state.isActive ? "Log distraction" : "Start timer to log distraction"}
               >
                 <AlertTriangle className="w-4 h-4" />
               </button>
@@ -1047,6 +1125,8 @@ export function Popup() {
                 className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold transition-all shadow-lg active:scale-95 ${
                   "bg-primary text-primary-foreground hover:bg-accent"
                 }`}
+                title={state.isActive ? "Pause Timer" : "Start Timer"}
+                aria-label={state.isActive ? "Pause timer" : "Start timer"}
               >
                 {state.isActive ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
               </button>
@@ -1064,6 +1144,7 @@ export function Popup() {
                     : "bg-card border-border hover:bg-secondary text-foreground cursor-pointer"
                 }`}
                 title={state.timerState === "BREAK" ? "Finish Break & Return to Flow" : (state.isActive ? "Complete Session" : "Start timer to complete session")}
+                aria-label={state.timerState === "BREAK" ? "Finish break and return to flow" : (state.isActive ? "Complete session" : "Start timer to complete session")}
               >
                 <CheckCircle className="w-4 h-4" />
               </button>
@@ -1077,6 +1158,7 @@ export function Popup() {
                     : "bg-card border-border hover:bg-secondary text-foreground"
                 }`}
                 title="Deep Focus Mode"
+                aria-label="Deep focus mode"
               >
                 <Focus className="w-4 h-4" />
               </button>

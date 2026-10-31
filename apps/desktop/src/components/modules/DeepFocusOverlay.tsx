@@ -193,7 +193,11 @@ export const DeepFocusOverlay: React.FC = () => {
           );
         })()}
 
-        <h1 className="text-[120px] md:text-[150px] font-extrabold tracking-tight text-foreground leading-none font-sans select-none">
+        <h1
+          role="timer"
+          aria-label={`${timerState === "BREAK" ? "Break time remaining" : "Flow time elapsed"}: ${timeString}`}
+          className="text-[120px] md:text-[150px] font-extrabold tracking-tight text-foreground leading-none font-sans select-none"
+        >
           {timeString}
         </h1>
 
@@ -207,6 +211,7 @@ export const DeepFocusOverlay: React.FC = () => {
                 !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
               )}
               title={isActive ? "Log Distraction" : "Start timer to log distraction"}
+              aria-label={isActive ? "Log distraction" : "Start timer to log distraction"}
             >
               <AlertTriangle className="w-4 h-4" />
             </button>
@@ -233,6 +238,7 @@ export const DeepFocusOverlay: React.FC = () => {
             onClick={() => setIsActive(!isActive)}
             className="w-11 h-11 flex items-center justify-center text-foreground hover:scale-110 transition-transform"
             title={isActive ? "Pause" : "Start"}
+            aria-label={isActive ? "Pause timer" : "Start timer"}
           >
             {isActive ? (
               <Pause className="w-5 h-5 fill-foreground text-foreground" />
@@ -249,6 +255,7 @@ export const DeepFocusOverlay: React.FC = () => {
               !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
             )}
             title={isActive ? "Complete Session" : "Start timer to complete session"}
+            aria-label={isActive ? "Complete session" : "Start timer to complete session"}
           >
             <CheckCircle2 className="w-4 h-4" />
           </button>
