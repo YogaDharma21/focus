@@ -12,7 +12,20 @@ import {
     BarChart3,
     TrendingUp,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, differenceInCalendarDays, subDays } from "date-fns";
+
+const toDateKey = (dateStr?: string) => {
+    if (!dateStr) return "";
+    if (!dateStr.includes("T") && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return dateStr;
+    }
+    return format(new Date(dateStr), "yyyy-MM-dd");
+};
+
+const parseDateKey = (key: string) => {
+    const [y, m, d] = key.split("-").map(Number);
+    return new Date(y, m - 1, d);
+};
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const DISTRACTION_CATEGORIES = ["Phone", "Social Media", "Bathroom", "Meeting", "Other"];
@@ -73,7 +86,7 @@ export function StatsJournal() {
 
     const historicalSeconds = useMemo(() => {
         const todaysSessions = sessions.filter((s) =>
-            s.date && s.date.startsWith(todayStr)
+            s.date && toDateKey(s.date) === todayStr
         );
         return todaysSessions.reduce((acc, s) => acc + s.duration, 0);
     }, [sessions, todayStr]);
@@ -84,37 +97,21 @@ export function StatsJournal() {
 
     // Calculate streaks
     const { currentStreak, bestStreak } = useMemo(() => {
-        if (sessions.length === 0) return { currentStreak: 0, bestStreak: 0 };
+        if (!sessions || sessions.length === 0) return { currentStreak: 0, bestStreak: 0 };
 
         const uniqueDates = Array.from(
-            new Set(sessions.map((s) => s.date.split("T")[0])),
-        ).sort().reverse();
+            new Set(sessions.map((s) => toDateKey(s.date)).filter(Boolean)),
+        ).sort();
 
-        let streak = 0;
-        const currentDate = new Date();
-        currentDate.setHours(0, 0, 0, 0);
+        if (uniqueDates.length === 0) return { currentStreak: 0, bestStreak: 0 };
 
-        for (const dateStr of uniqueDates) {
-            const sessionDate = new Date(dateStr);
-            sessionDate.setHours(0, 0, 0, 0);
-
-            const diffDays = Math.floor((currentDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24));
-
-            if (diffDays === streak) {
-                streak++;
-            } else if (diffDays > streak) {
-                break;
-            }
-        }
-
-        const sortedAsc = [...uniqueDates].sort();
         let best = 1;
         let currentRun = 1;
 
-        for (let i = 1; i < sortedAsc.length; i++) {
-            const prev = new Date(sortedAsc[i - 1]);
-            const curr = new Date(sortedAsc[i]);
-            const diffDays = Math.floor((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
+        for (let i = 1; i < uniqueDates.length; i++) {
+            const prev = parseDateKey(uniqueDates[i - 1]);
+            const curr = parseDateKey(uniqueDates[i]);
+            const diffDays = differenceInCalendarDays(curr, prev);
 
             if (diffDays === 1) {
                 currentRun++;
@@ -124,7 +121,13 @@ export function StatsJournal() {
             }
         }
 
-        return { currentStreak: streak, bestStreak: best };
+        const todayKey = format(new Date(), "yyyy-MM-dd");
+        const yesterdayKey = format(subDays(new Date(), 1), "yyyy-MM-dd");
+        const lastDate = uniqueDates[uniqueDates.length - 1];
+
+        const current = (lastDate === todayKey || lastDate === yesterdayKey) ? currentRun : 0;
+
+        return { currentStreak: current, bestStreak: Math.max(best, current) };
     }, [sessions]);
 
     // Calculate weekly minutes (Sun - Sat)
@@ -144,7 +147,7 @@ export function StatsJournal() {
             const targetStr = format(targetDate, "yyyy-MM-dd");
 
             const daySessions = sessions.filter(
-                (s) => s.date && s.date.startsWith(targetStr)
+                (s) => s.date && toDateKey(s.date) === targetStr
             );
             const histSecs = daySessions.reduce(
                 (acc, s) => acc + s.duration,
