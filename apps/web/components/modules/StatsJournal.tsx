@@ -196,7 +196,7 @@ export function StatsJournal() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Card
-                    className="p-5 flex flex-col justify-between bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-[24px] cursor-pointer hover:bg-surface/50 transition-colors"
+                    className="p-5 flex flex-col justify-between bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-[24px] cursor-pointer hover:bg-surface transition-colors"
                     onClick={() => setShowHours(!showHours)}
                 >
                     <div className="flex items-center justify-between">
@@ -319,7 +319,7 @@ export function StatsJournal() {
                 </div>
 
                 {totalDistractions === 0 ? (
-                    <div className="p-4 border border-dashed rounded-[var(--radius)] text-center text-sm text-muted-foreground bg-muted/10">
+                    <div className="p-4 border border-dashed border-border rounded-[16px] text-center text-sm text-muted-foreground bg-surface-inset">
                         No distractions logged yet. Keep up the deep focus!
                     </div>
                 ) : (

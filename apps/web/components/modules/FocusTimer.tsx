@@ -191,7 +191,7 @@ export function FocusTimer() {
                     )}
                 </div>
 
-                <div className="text-[3.5rem] sm:text-[5rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground drop-shadow">
+                <div className="text-[3.5rem] sm:text-[5rem] md:text-[8rem] font-bold leading-none tracking-tighter tabular-nums text-foreground">
                     {formatTime(timeLeft)}
                 </div>
 
@@ -241,7 +241,7 @@ export function FocusTimer() {
                     <Button
                         variant="outline"
                         size="icon"
-                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-secondary hover:border-border/80 transition-all cursor-pointer"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-surface hover:border-border transition-all cursor-pointer"
                         onClick={resetTimer}
                         title="Reset Timer"
                     >
@@ -255,9 +255,9 @@ export function FocusTimer() {
                     <Button
                         size="icon"
                         className={cn(
-                            "w-14 h-14 sm:w-16 sm:h-16 rounded-[var(--radius)] shadow-md hover:shadow active:scale-95 transition-all duration-300 cursor-pointer",
+                            "w-14 h-14 sm:w-16 sm:h-16 rounded-[var(--radius)] shadow-xs active:scale-95 transition-all duration-300 cursor-pointer",
                             isActive
-                                ? "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+                                ? "bg-surface text-foreground hover:bg-surface/80"
                                 : "bg-primary text-primary-foreground",
                         )}
                         onClick={toggleTimer}
@@ -290,7 +290,7 @@ export function FocusTimer() {
                     <Button
                         variant="outline"
                         size="icon"
-                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-secondary hover:border-border/80 transition-all cursor-pointer"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-[var(--radius)] border-2 hover:bg-surface hover:border-border transition-all cursor-pointer"
                         onClick={() => setDeepFocusMode(true)}
                         title="Deep Focus Mode"
                     >

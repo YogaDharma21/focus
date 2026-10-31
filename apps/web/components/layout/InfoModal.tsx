@@ -53,7 +53,7 @@ export function InfoModal() {
                                     href={link.url}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className="flex items-center gap-2 p-2 rounded-[var(--radius)] hover:bg-secondary transition-colors text-sm"
+                                    className="flex items-center gap-2 p-2 rounded-[12px] hover:bg-surface transition-colors text-sm"
                                 >
                                     <link.icon className="w-4 h-4" />
                                     <span>{link.label}</span>
@@ -75,7 +75,7 @@ export function InfoButton() {
         <>
             <button
                 onClick={() => setOpen(true)}
-                className="flex flex-col items-center justify-center w-12 h-11 sm:w-16 sm:h-14 rounded-[var(--radius)] transition-all duration-300 ease-out group text-muted-foreground hover:text-foreground hover:bg-white/5"
+                className="flex flex-col items-center justify-center w-12 h-11 sm:w-16 sm:h-14 rounded-[12px] transition-all duration-300 ease-out group text-muted-foreground hover:text-foreground hover:bg-surface"
                 title="Project Info"
             >
                 <span className="transform transition-transform duration-300 group-hover:scale-105">
@@ -107,7 +107,7 @@ export function InfoButton() {
                                         href={link.url}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="flex items-center gap-2 p-2 rounded-[var(--radius)] hover:bg-secondary transition-colors text-sm"
+                                        className="flex items-center gap-2 p-2 rounded-[12px] hover:bg-surface transition-colors text-sm"
                                     >
                                         <link.icon className="w-4 h-4" />
                                         <span>{link.label}</span>

@@ -123,10 +123,10 @@ export function SettingsPage() {
                 <div className={cn("flex flex-col gap-2 transition-opacity", !soundEnabled && "opacity-50")}>
                     <span className="px-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Music</span>
 
-                    <div className="flex items-center justify-between rounded-[10px] px-4 py-3 border bg-secondary border-border">
+                    <div className="flex items-center justify-between rounded-[16px] px-4 py-3 bg-surface-inset">
                         <div className="flex flex-col">
-                            <span className="text-xs font-bold text-foreground">Music</span>
-                            <span className="text-[10px] text-muted-foreground">Enable or disable background music</span>
+                            <span className="text-xs font-medium text-foreground">Music</span>
+                            <span className="text-[11px] text-muted-foreground">Enable or disable background music</span>
                         </div>
                         <Switch
                             disabled={!soundEnabled}
@@ -136,11 +136,11 @@ export function SettingsPage() {
                     </div>
 
                     {soundEnabled && musicEnabled && (
-                        <div className="flex items-center justify-between rounded-[10px] px-4 py-3 border bg-secondary border-border">
+                        <div className="flex items-center justify-between rounded-[16px] px-4 py-3 bg-surface-inset">
                             <div className="flex flex-col w-full gap-2">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold text-foreground">Music Volume</span>
-                                    <span className="font-mono text-xs text-foreground">{musicVolume}%</span>
+                                    <span className="text-xs font-medium text-foreground">Music Volume</span>
+                                    <span className="font-mono text-xs tabular-nums text-foreground">{musicVolume}%</span>
                                 </div>
                                 <input
                                     type="range"
@@ -149,7 +149,7 @@ export function SettingsPage() {
                                     step="1"
                                     value={musicVolume}
                                     onChange={(e) => setMusicVolume(parseInt(e.target.value, 10))}
-                                    className="w-full h-1 rounded bg-secondary accent-current cursor-pointer"
+                                    className="w-full h-1.5 rounded-full bg-surface-inset accent-foreground cursor-pointer"
                                 />
                             </div>
                         </div>
@@ -157,13 +157,13 @@ export function SettingsPage() {
                 </div>
 
                 {/* Sound Effects Subsection */}
-                <div className={cn("flex flex-col gap-2 pt-1 border-t border-border/80 transition-opacity", !soundEnabled && "opacity-50")}>
-                    <span className="px-1 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Sound Effects</span>
+                <div className={cn("flex flex-col gap-2 pt-1 border-t border-border-subtle transition-opacity", !soundEnabled && "opacity-50")}>
+                    <span className="px-1 text-[10px] font-medium text-muted-foreground uppercase tracking-[0.16em]">Sound Effects</span>
 
-                    <div className="flex items-center justify-between rounded-[10px] px-4 py-3 border bg-secondary border-border">
+                    <div className="flex items-center justify-between rounded-[16px] px-4 py-3 bg-surface-inset">
                         <div className="flex flex-col">
-                            <span className="text-xs font-bold text-foreground">Sound Effects</span>
-                            <span className="text-[10px] text-muted-foreground">Enable or disable timer sound effects</span>
+                            <span className="text-xs font-medium text-foreground">Sound Effects</span>
+                            <span className="text-[11px] text-muted-foreground">Enable or disable timer sound effects</span>
                         </div>
                         <Switch
                             disabled={!soundEnabled}
@@ -173,11 +173,11 @@ export function SettingsPage() {
                     </div>
 
                     {soundEnabled && soundEffectEnabled && (
-                        <div className="flex items-center justify-between rounded-[10px] px-4 py-3 border bg-secondary border-border">
+                        <div className="flex items-center justify-between rounded-[16px] px-4 py-3 bg-surface-inset">
                             <div className="flex flex-col w-full gap-2">
                                 <div className="flex items-center justify-between">
-                                    <span className="text-xs font-bold text-foreground">Sound Effects Volume</span>
-                                    <span className="font-mono text-xs text-foreground">{soundEffectVolume}%</span>
+                                    <span className="text-xs font-medium text-foreground">Sound Effects Volume</span>
+                                    <span className="font-mono text-xs tabular-nums text-foreground">{soundEffectVolume}%</span>
                                 </div>
                                 <input
                                     type="range"
@@ -186,7 +186,7 @@ export function SettingsPage() {
                                     step="1"
                                     value={soundEffectVolume ?? 80}
                                     onChange={(e) => setSoundEffectVolume(parseInt(e.target.value, 10))}
-                                    className="w-full h-1 rounded bg-secondary accent-current cursor-pointer"
+                                    className="w-full h-1.5 rounded-full bg-surface-inset accent-foreground cursor-pointer"
                                 />
                             </div>
                         </div>
@@ -196,10 +196,10 @@ export function SettingsPage() {
                         onClick={playTestSoundEffect}
                         disabled={!soundEnabled || !soundEffectEnabled}
                         className={cn(
-                            "w-full py-2.5 rounded-[10px] font-bold text-xs border transition-all flex items-center justify-center gap-2",
+                            "w-full py-2.5 rounded-[12px] font-medium text-xs border transition-all flex items-center justify-center gap-2",
                             soundEnabled && soundEffectEnabled
-                                ? "border-border bg-secondary text-foreground hover:bg-accent cursor-pointer"
-                                : "border-border/50 bg-card/30 text-muted-foreground cursor-not-allowed opacity-50"
+                                ? "border-border bg-surface text-foreground hover:bg-surface/80 cursor-pointer"
+                                : "border-border/50 bg-surface-inset text-muted-foreground cursor-not-allowed opacity-50"
                         )}
                     >
                         <Volume1 className="w-4 h-4" />
@@ -238,7 +238,7 @@ export function SettingsPage() {
                         <span className="font-mono text-muted-foreground tabular-nums">v0.0.1</span>
                     </div>
 
-                    <div className="bg-secondary border border-border rounded-[10px] p-3.5 text-muted-foreground leading-relaxed">
+                    <div className="bg-surface-inset rounded-[16px] p-3.5 text-muted-foreground leading-relaxed">
                         Focus is a minimalist, monochrome productivity suite designed to keep you in flow state. Features a count-up flow timer, productivity analytics, and ambient audio.
                     </div>
 
@@ -246,7 +246,7 @@ export function SettingsPage() {
                         href="https://github.com/YogaDharma21/focus"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="w-full py-2.5 px-3 rounded-[10px] font-bold text-xs flex items-center justify-between border border-border bg-secondary hover:bg-secondary text-foreground transition-all cursor-pointer"
+                        className="w-full py-2.5 px-3 rounded-[12px] font-medium text-xs flex items-center justify-between border border-border bg-surface hover:bg-surface/80 text-foreground transition-all cursor-pointer"
                     >
                         <div className="flex items-center gap-2">
                             <Github className="w-4 h-4" />
