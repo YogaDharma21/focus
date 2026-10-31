@@ -10,7 +10,10 @@ import type {
     SubtaskItem,
     TaskPriority,
     BreakRatio,
+    SoundChannelState,
+    SoundChannelId,
 } from "@focus/types";
+import { DEFAULT_CHANNELS } from "@focus/utils";
 
 export type {
     Session,
@@ -22,11 +25,20 @@ export type {
     SubtaskItem,
     TaskPriority,
     BreakRatio,
+    SoundChannelState,
+    SoundChannelId,
 };
 
 interface AppState {
     currentView: ViewType;
     setView: (view: ViewType) => void;
+
+    audioSourceType: "lofi" | "soundscape";
+    setAudioSourceType: (type: "lofi" | "soundscape") => void;
+    soundChannels: SoundChannelState[];
+    setChannelVolume: (id: SoundChannelId, volume: number) => void;
+    toggleChannel: (id: SoundChannelId) => void;
+    applySoundscapePreset: (channels: Partial<Record<SoundChannelId, number>>) => void;
 
     localUrl: string;
     localPlaylist: PlaylistItem[];
@@ -95,6 +107,32 @@ export const useAppStore = create<AppState>()(
         (set) => ({
             currentView: "FOCUS",
             setView: (view) => set({ currentView: view }),
+
+            audioSourceType: "lofi",
+            setAudioSourceType: (type) => set({ audioSourceType: type }),
+            soundChannels: DEFAULT_CHANNELS,
+            setChannelVolume: (id, volume) =>
+                set((state) => ({
+                    soundChannels: state.soundChannels.map((ch) =>
+                        ch.id === id ? { ...ch, volume } : ch
+                    ),
+                })),
+            toggleChannel: (id) =>
+                set((state) => ({
+                    soundChannels: state.soundChannels.map((ch) =>
+                        ch.id === id ? { ...ch, enabled: !ch.enabled } : ch
+                    ),
+                })),
+            applySoundscapePreset: (presetChannels) =>
+                set((state) => ({
+                    soundChannels: state.soundChannels.map((ch) => {
+                        const targetVol = presetChannels[ch.id];
+                        if (targetVol !== undefined) {
+                            return { ...ch, volume: targetVol, enabled: true };
+                        }
+                        return { ...ch, enabled: false };
+                    }),
+                })),
 
             localUrl: "/music1.mp3",
             localPlaylist: [
@@ -302,6 +340,8 @@ export const useAppStore = create<AppState>()(
                 useAppStore.persist.clearStorage();
                 set({
                     currentView: "FOCUS",
+                    audioSourceType: "lofi",
+                    soundChannels: DEFAULT_CHANNELS,
                     localUrl: "/music1.mp3",
                     localPlaylist: [
                         {
