@@ -24,7 +24,6 @@ contextBridge.exposeInMainWorld('electron', {
     ipcRenderer.on('mini-mode-changed', handler);
     return () => ipcRenderer.removeListener('mini-mode-changed', handler);
   },
-  },
   setWindowSize: (width, height) => ipcRenderer.send('set-window-size', { width, height }),
   showNotification: (title, body) => ipcRenderer.send('show-notification', { title, body }),
   onShortcut: (callback) => {
