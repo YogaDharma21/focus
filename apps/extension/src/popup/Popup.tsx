@@ -42,6 +42,12 @@ import {
   Square,
   Target,
   ListChecks,
+  Upload,
+  Download,
+  FileSpreadsheet,
+  FileText,
+  Check,
+  AlertCircle,
 } from "lucide-react";
 import { DeepFocusOverlay } from "./components/DeepFocusOverlay";
 import { Progress } from "../components/ui/progress";
@@ -51,8 +57,24 @@ import {
   getTaskActualMinutes,
   getVelocityStatus,
   type VelocityStatus,
+  downloadFile,
+  sessionsToCsv,
+  sessionsToMarkdown,
 } from "../lib/utils";
-import { getStoredState, saveStoredState, subscribeToStateChanges, getCachedState, DEFAULT_STATE, getWeeklyMinutesFromSessions, getTodayMinutesFromSessions, calculateStreaksFromSessions, DAYS_OF_WEEK, getEffectiveTimeLeft } from "../lib/storage";
+import {
+  getStoredState,
+  saveStoredState,
+  subscribeToStateChanges,
+  getCachedState,
+  DEFAULT_STATE,
+  getWeeklyMinutesFromSessions,
+  getTodayMinutesFromSessions,
+  calculateStreaksFromSessions,
+  DAYS_OF_WEEK,
+  getEffectiveTimeLeft,
+  exportFullBackup,
+  restoreFullBackup,
+} from "../lib/storage";
 import "../index.css";
 
 const DISTRACTION_CATEGORIES = [
@@ -479,6 +501,98 @@ export function Popup() {
       distractions: [...state.distractions, entry]
     });
     setShowDistractionPicker(false);
+  };
+
+  // Data Hub State & Handlers
+  const [isDragging, setIsDragging] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const showFeedback = (text: string, type: "success" | "error" = "success") => {
+    if (feedbackTimeoutRef.current) {
+      clearTimeout(feedbackTimeoutRef.current);
+    }
+    setStatusMessage({ text, type });
+    feedbackTimeoutRef.current = setTimeout(() => {
+      setStatusMessage(null);
+      feedbackTimeoutRef.current = null;
+    }, 3500);
+  };
+
+  const handleExportJson = async () => {
+    try {
+      const json = await exportFullBackup();
+      const dateStr = new Date().toISOString().slice(0, 10);
+      downloadFile(json, `focus-extension-backup-${dateStr}.json`, "application/json");
+      showFeedback("Backup exported successfully.");
+    } catch (err) {
+      console.error("Export JSON error:", err);
+      showFeedback("Failed to export JSON backup.", "error");
+    }
+  };
+
+  const handleExportCsv = () => {
+    try {
+      if (!state.sessions || state.sessions.length === 0) {
+        showFeedback("No sessions to export.", "error");
+        return;
+      }
+      const csv = sessionsToCsv(state.sessions);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      downloadFile(csv, `focus-extension-sessions-${dateStr}.csv`, "text/csv;charset=utf-8");
+      showFeedback("Sessions exported to CSV.");
+    } catch (err) {
+      console.error("Export CSV error:", err);
+      showFeedback("Failed to export CSV.", "error");
+    }
+  };
+
+  const handleExportMarkdown = () => {
+    try {
+      const md = sessionsToMarkdown(state.sessions || [], state.distractions || []);
+      const dateStr = new Date().toISOString().slice(0, 10);
+      downloadFile(md, `focus-extension-summary-${dateStr}.md`, "text/markdown;charset=utf-8");
+      showFeedback("Summary exported to Markdown.");
+    } catch (err) {
+      console.error("Export Markdown error:", err);
+      showFeedback("Failed to export Markdown summary.", "error");
+    }
+  };
+
+  const processImportFile = (file: File) => {
+    if (!file.name.endsWith(".json")) {
+      showFeedback("Please select a valid .json backup file.", "error");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const content = e.target?.result as string;
+        const result = await restoreFullBackup(content);
+        if (!result.success || !result.state) {
+          showFeedback(result.error || "Failed to restore backup.", "error");
+          return;
+        }
+        setState(result.state);
+        showFeedback("Data restored successfully.");
+      } catch (err) {
+        console.error("Import error:", err);
+        showFeedback("Failed to restore backup file.", "error");
+      }
+    };
+    reader.onerror = () => {
+      showFeedback("Error reading file.", "error");
+    };
+    reader.readAsText(file);
+  };
+
+  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processImportFile(file);
+    }
+    e.target.value = "";
   };
 
   // Reset All Extension Data to Factory Defaults
@@ -2070,24 +2184,140 @@ soundEnabled ? "left-[22px] bg-background" : "left-[2px] bg-[#9ca3af]"
               </div>
             </div>
 
-            {/* Data Section */}
+            {/* Data Hub Section */}
             <div className={`p-4 rounded-[16px] border flex flex-col gap-3 ${
               "bg-card border-border"
             }`}>
               <div className="flex items-center gap-2">
-                <Database className="w-[18px] h-[18px] text-destructive" />
-                <span className="text-base font-bold text-destructive">Data</span>
+                <Database className="w-[18px] h-[18px] text-foreground" />
+                <span className="text-base font-bold text-foreground">Data Hub</span>
               </div>
-              <button
-                onClick={() => {
-                  if (window.confirm("Are you sure you want to reset all extension data to defaults? This will clear all sessions and stats.")) {
-                    resetAllData();
-                  }
-                }}
-                className="w-full py-2.5 rounded-xl font-bold text-xs border border-destructive/30 bg-destructive/15 text-destructive hover:bg-destructive/25 transition-all duration-300 ease-out active:scale-95 cursor-pointer"
-              >
-                Reset All Extension Data
-              </button>
+
+              {/* Data Summary Stats */}
+              <div className="grid grid-cols-3 gap-2 text-center">
+                <div className="p-2.5 rounded-xl bg-secondary border border-border">
+                  <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider block mb-0.5">Sessions</span>
+                  <span className="text-sm font-bold font-mono text-foreground tabular-nums">{state.sessions?.length || 0}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-secondary border border-border">
+                  <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider block mb-0.5">Minutes</span>
+                  <span className="text-sm font-bold font-mono text-foreground tabular-nums">{Math.round((state.sessions || []).reduce((acc, s) => acc + (s.duration || 0), 0) / 60)}</span>
+                </div>
+                <div className="p-2.5 rounded-xl bg-secondary border border-border">
+                  <span className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider block mb-0.5">Distractions</span>
+                  <span className="text-sm font-bold font-mono text-foreground tabular-nums">{state.distractions?.length || 0}</span>
+                </div>
+              </div>
+
+              {/* Export Records */}
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.16em] px-0.5">
+                  Export Records
+                </span>
+                <div className="grid grid-cols-3 gap-2">
+                  <button
+                    onClick={handleExportJson}
+                    className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold bg-secondary hover:bg-surface border border-border text-foreground transition-all duration-300 ease-out active:scale-95 cursor-pointer shadow-sm"
+                    title="Export full JSON backup"
+                  >
+                    <Download className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span>JSON</span>
+                  </button>
+                  <button
+                    onClick={handleExportCsv}
+                    className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold bg-secondary hover:bg-surface border border-border text-foreground transition-all duration-300 ease-out active:scale-95 cursor-pointer shadow-sm"
+                    title="Export session history to CSV"
+                  >
+                    <FileSpreadsheet className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span>CSV</span>
+                  </button>
+                  <button
+                    onClick={handleExportMarkdown}
+                    className="flex items-center justify-center gap-1.5 px-2.5 py-2 rounded-xl text-xs font-semibold bg-secondary hover:bg-surface border border-border text-foreground transition-all duration-300 ease-out active:scale-95 cursor-pointer shadow-sm"
+                    title="Export summary to Markdown"
+                  >
+                    <FileText className="w-3.5 h-3.5 text-muted-foreground" />
+                    <span>Markdown</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Import Backup */}
+              <div className="flex flex-col gap-1.5">
+                <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-[0.16em] px-0.5">
+                  Import Backup
+                </span>
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDragging(true);
+                  }}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDragging(false);
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDragging(false);
+                    const file = e.dataTransfer.files?.[0];
+                    if (file) {
+                      processImportFile(file);
+                    }
+                  }}
+                  className={`p-3.5 rounded-xl border border-dashed text-center flex flex-col items-center justify-center gap-1 cursor-pointer transition-all duration-200 ${
+                    isDragging
+                      ? "border-primary bg-secondary/80 ring-2 ring-primary/20"
+                      : "border-border bg-secondary/40 hover:bg-secondary/70"
+                  }`}
+                >
+                  <Upload className="w-4 h-4 text-muted-foreground" />
+                  <span className="text-xs font-bold text-foreground">Import & Restore JSON</span>
+                  <span className="text-[10px] text-muted-foreground">Drop backup file here or click to browse</span>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json"
+                    onChange={handleFileInput}
+                    className="hidden"
+                  />
+                </div>
+              </div>
+
+              {/* Status Message Alert */}
+              {statusMessage && (
+                <div
+                  className={`px-3 py-2 rounded-xl text-xs border font-medium flex items-center gap-2 animate-in fade-in duration-200 ${
+                    statusMessage.type === "success"
+                      ? "bg-secondary text-foreground border-border"
+                      : "bg-destructive/15 text-destructive border-destructive/30"
+                  }`}
+                >
+                  {statusMessage.type === "success" ? (
+                    <Check className="w-3.5 h-3.5 text-foreground shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-3.5 h-3.5 text-destructive shrink-0" />
+                  )}
+                  <span className="flex-1">{statusMessage.text}</span>
+                </div>
+              )}
+
+              {/* Reset All Data (Danger) */}
+              <div className="pt-2 border-t border-border">
+                <button
+                  onClick={() => {
+                    if (window.confirm("Are you sure you want to reset all extension data to defaults? This will clear all sessions and stats.")) {
+                      resetAllData();
+                    }
+                  }}
+                  className="w-full py-2.5 rounded-xl font-bold text-xs border border-destructive/30 bg-destructive/15 text-destructive hover:bg-destructive/25 transition-all duration-300 ease-out active:scale-95 cursor-pointer"
+                >
+                  Reset All Extension Data
+                </button>
+              </div>
             </div>
 
             {/* About Section */}

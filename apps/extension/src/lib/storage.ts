@@ -1,4 +1,5 @@
 import { AppStateData } from "../types";
+import { validateBackupJson } from "@focus/utils";
 
 const STORAGE_KEY = "focus_extension_state_v6";
 const THEME_MIRROR_KEY = "focus_extension_theme";
@@ -343,6 +344,102 @@ export async function saveStoredState(state: Partial<AppStateData>): Promise<App
     console.error("Failed saving to localStorage", e);
   }
   return nextState;
+}
+
+export async function replaceStoredState(state: AppStateData): Promise<AppStateData> {
+  const nextState = migrateState(state);
+  cachedState = nextState;
+  rememberTheme(nextState.themeMode);
+
+  if (typeof chrome !== "undefined" && chrome.storage && chrome.storage.local) {
+    return new Promise((resolve) => {
+      chrome.storage.local.set({ [STORAGE_KEY]: nextState }, () => {
+        resolve(nextState);
+      });
+    });
+  }
+
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(nextState));
+  } catch (e) {
+    console.error("Failed saving to localStorage", e);
+  }
+  return nextState;
+}
+
+export async function exportFullBackup(): Promise<string> {
+  const currentState = await getStoredState();
+  const payload = {
+    version: 6,
+    exportedAt: new Date().toISOString(),
+    state: currentState,
+  };
+  return JSON.stringify(payload, null, 2);
+}
+
+export async function restoreFullBackup(
+  jsonData: string | Record<string, unknown>
+): Promise<{ success: boolean; error?: string; state?: AppStateData }> {
+  try {
+    const raw = typeof jsonData === "string" ? jsonData : JSON.stringify(jsonData);
+    const validation = validateBackupJson(raw);
+    if (!validation.isValid || !validation.data) {
+      return {
+        success: false,
+        error: validation.error || "Invalid backup file structure.",
+      };
+    }
+
+    const restoredData = validation.data as Partial<AppStateData>;
+
+    const sanitizedSessions = Array.isArray(restoredData.sessions)
+      ? restoredData.sessions.filter(
+          (s) => s && typeof s === "object" && typeof s.id === "string"
+        )
+      : [];
+
+    const sanitizedTasks = Array.isArray(restoredData.tasks)
+      ? restoredData.tasks.filter(
+          (t) => t && typeof t === "object" && typeof t.id === "string"
+        )
+      : [];
+
+    const sanitizedDistractions = Array.isArray(restoredData.distractions)
+      ? restoredData.distractions.filter(
+          (d) => d && typeof d === "object" && typeof d.id === "string"
+        )
+      : [];
+
+    const targetState: AppStateData = {
+      ...DEFAULT_STATE,
+      ...restoredData,
+      sessions: sanitizedSessions,
+      tasks: sanitizedTasks,
+      distractions: sanitizedDistractions,
+      isActive: false,
+      timeLeft: 0,
+      timerAnchorTimestamp: null,
+      targetEndTime: null,
+      timerState: "FLOW",
+      sessionStartTime: null,
+    };
+
+    const weeklyMinutes = getWeeklyMinutesFromSessions(targetState.sessions);
+    const todayMinutes = getTodayMinutesFromSessions(targetState.sessions);
+    const streaks = calculateStreaksFromSessions(targetState.sessions);
+    targetState.stats = {
+      todayMinutes,
+      weeklyMinutes,
+      streakDays: streaks.current,
+      longestStreak: streaks.best,
+    };
+
+    const saved = await replaceStoredState(targetState);
+    return { success: true, state: saved };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : "Failed to restore backup.";
+    return { success: false, error: msg };
+  }
 }
 
 export function subscribeToStateChanges(callback: (newState: AppStateData) => void): () => void {
