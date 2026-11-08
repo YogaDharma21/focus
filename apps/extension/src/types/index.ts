@@ -22,10 +22,21 @@ export interface Distraction {
   website?: string;
 }
 
+export interface ShieldSchedule {
+  id: string;
+  name: string;
+  days: number[];
+  startTime: string;
+  endTime: string;
+  enabled: boolean;
+}
+
 export interface ShieldConfig {
   enabled: boolean;
   blockedSites: string[];
   allowedSites: string[];
+  strictMode?: boolean;
+  schedules?: ShieldSchedule[];
 }
 
 export interface PomodoroSettings {

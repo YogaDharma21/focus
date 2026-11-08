@@ -5,11 +5,13 @@ import {
   getWeeklyMinutesFromSessions,
   getTodayMinutesFromSessions,
   calculateStreaksFromSessions,
+  isShieldEnforcing,
 } from "../lib/storage";
 import { AppStateData, Session } from "../types";
 
 const BREAK_ALARM = "focus-break-end";
 const POMODORO_WORK_ALARM = "focus-pomodoro-work-end";
+const SCHEDULE_CHECK_ALARM = "focus-schedule-check";
 const OFFSCREEN_DOCUMENT_PATH = "offscreen.html";
 
 // ─── Auto-Pause State Persistence ─────────────────────────────────────────
@@ -341,10 +343,7 @@ async function enforceTabBlocking(state?: AppStateData) {
   if (typeof chrome === "undefined" || !chrome.tabs) return;
 
   const currentState = state || (await getStoredState());
-  const isBlockingRequired =
-    currentState.shield.enabled &&
-    currentState.isActive &&
-    currentState.timerState === "FLOW";
+  const isBlockingRequired = isShieldEnforcing(currentState);
 
   if (!isBlockingRequired) return;
 
@@ -511,7 +510,11 @@ async function handlePomodoroFinished() {
     sendToOffscreen("PLAY_SOUND_EFFECT", { volume: state.soundEffectVolume ?? 0.8 });
   }
 
-  restoreBlockedTabs();
+  if (isShieldEnforcing(nextState)) {
+    enforceTabBlocking(nextState);
+  } else {
+    restoreBlockedTabs();
+  }
 
   if (typeof chrome !== "undefined" && chrome.notifications) {
     const iconUrl = typeof chrome.runtime?.getURL === "function"
@@ -582,7 +585,7 @@ async function handleBreakFinished() {
     sendToOffscreen("PLAY_SOUND_EFFECT", { volume: state.soundEffectVolume ?? 0.8 });
   }
 
-  if (autoStart && nextState.shield.enabled) {
+  if (isShieldEnforcing(nextState)) {
     enforceTabBlocking(nextState);
   } else {
     restoreBlockedTabs();
@@ -751,7 +754,7 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
     const url = changeInfo.url || tab.url;
     const state = await getStoredState();
     if (url) {
-      if (state.shield.enabled && state.isActive && state.timerState === "FLOW") {
+      if (isShieldEnforcing(state)) {
         if (isUrlBlocked(url, state.shield.blockedSites, state.shield.allowedSites)) {
           const blockedPageUrl = chrome.runtime.getURL(
             `blocked.html?target=${encodeURIComponent(url)}`
@@ -768,7 +771,7 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
 
   chrome.tabs.onActivated.addListener(async (activeInfo) => {
     const state = await getStoredState();
-    if (state.shield.enabled && state.isActive && state.timerState === "FLOW") {
+    if (isShieldEnforcing(state)) {
       chrome.tabs.get(activeInfo.tabId, (tab) => {
         if (tab?.id && tab.url && isUrlBlocked(tab.url, state.shield.blockedSites, state.shield.allowedSites)) {
           const blockedPageUrl = chrome.runtime.getURL(
@@ -812,6 +815,13 @@ if (typeof chrome !== "undefined" && chrome.alarms) {
       await handleBreakFinished();
     } else if (alarm.name === POMODORO_WORK_ALARM) {
       await handlePomodoroFinished();
+    } else if (alarm.name === SCHEDULE_CHECK_ALARM) {
+      const state = await getStoredState();
+      if (isShieldEnforcing(state)) {
+        enforceTabBlocking(state);
+      } else if (!state.isActive || state.timerState !== "FLOW") {
+        restoreBlockedTabs();
+      }
     }
   });
 }
@@ -825,25 +835,15 @@ if (typeof chrome !== "undefined" && chrome.storage) {
       const oldState: AppStateData | undefined = changes.focus_extension_state_v6.oldValue;
       if (!newState) return;
 
-      const wasActive = Boolean(oldState?.isActive);
-      const isNowActive = Boolean(newState.isActive);
-
       await syncTimerAlarms(newState);
 
-      if (isNowActive) {
-        const oldShield = oldState ? JSON.stringify(oldState.shield) : "";
-        const newShield = JSON.stringify(newState.shield);
-        const shieldOrStateChanged =
-          !wasActive ||
-          oldShield !== newShield ||
-          oldState?.timerState !== newState.timerState;
-        if (shieldOrStateChanged && newState.shield.enabled && newState.timerState === "FLOW") {
-          enforceTabBlocking(newState);
-        }
-      } else {
-        if (wasActive) {
-          restoreBlockedTabs();
-        }
+      const oldEnforcing = oldState ? isShieldEnforcing(oldState) : false;
+      const newEnforcing = isShieldEnforcing(newState);
+
+      if (newEnforcing) {
+        enforceTabBlocking(newState);
+      } else if (oldEnforcing && !newEnforcing) {
+        restoreBlockedTabs();
       }
 
       await updateBadgeForState(newState);
@@ -889,15 +889,16 @@ if (typeof chrome !== "undefined" && chrome.runtime) {
 getStoredState().then(async (state) => {
   if (typeof chrome !== "undefined" && chrome.alarms) {
     chrome.alarms.clear("focus-keepalive").catch(() => {});
+    chrome.alarms.create(SCHEDULE_CHECK_ALARM, { periodInMinutes: 1 });
   }
 
-  if (state.isActive) {
-    if (state.shield.enabled && state.timerState === "FLOW") {
-      enforceTabBlocking(state);
-    }
-    await syncTimerAlarms(state);
+  if (isShieldEnforcing(state)) {
+    enforceTabBlocking(state);
   } else {
     restoreBlockedTabs();
+  }
+  if (state.isActive) {
+    await syncTimerAlarms(state);
   }
   await updateBadgeForState(state);
   scheduleSyncExternalAudioState("init");

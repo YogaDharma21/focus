@@ -48,11 +48,12 @@ import {
   FileText,
   Check,
   AlertCircle,
+  Lock,
 } from "lucide-react";
 import { DeepFocusOverlay } from "./components/DeepFocusOverlay";
 import { AnnualHeatmap } from "./components/AnnualHeatmap";
 import { Progress } from "../components/ui/progress";
-import { AppStateData, ThemeMode, TaskItem, TaskPriority, BreakRatio } from "../types";
+import { AppStateData, ThemeMode, TaskItem, TaskPriority, BreakRatio, ShieldSchedule } from "../types";
 import { getBreakDuration } from "@focus/utils";
 import {
   formatTaskDuration,
@@ -76,6 +77,9 @@ import {
   getEffectiveTimeLeft,
   exportFullBackup,
   restoreFullBackup,
+  isShieldEnforcing,
+  isScheduleActive,
+  isAnyScheduleActive,
 } from "../lib/storage";
 import "../index.css";
 
@@ -141,6 +145,12 @@ export function Popup() {
   // Local inputs
   const [newSiteUrl, setNewSiteUrl] = useState("");
   const [shieldListTab, setShieldListTab] = useState<"blocked" | "unblocked">("blocked");
+  const [shieldSubTab, setShieldSubTab] = useState<"rules" | "schedules">("rules");
+  const [newScheduleName, setNewScheduleName] = useState("");
+  const [newScheduleStartTime, setNewScheduleStartTime] = useState("09:00");
+  const [newScheduleEndTime, setNewScheduleEndTime] = useState("17:00");
+  const [newScheduleDays, setNewScheduleDays] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [isAddingSchedule, setIsAddingSchedule] = useState(false);
 
   // Settings inputs
 
@@ -718,9 +728,16 @@ export function Popup() {
     }
   };
 
+  const isStrictLocked = Boolean(
+    state?.shield?.strictMode &&
+    state?.isActive &&
+    state?.timerState === "FLOW"
+  );
+
   // Shield Handlers
   const addShieldSite = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isStrictLocked || !state) return;
     if (!newSiteUrl.trim()) return;
     let clean = newSiteUrl.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "");
     if (!clean) return;
@@ -746,6 +763,7 @@ export function Popup() {
   };
 
   const removeBlockedSite = (site: string) => {
+    if (isStrictLocked || !state) return;
     updateState({
       shield: {
         ...state.shield,
@@ -755,11 +773,74 @@ export function Popup() {
   };
 
   const removeAllowedSite = (site: string) => {
+    if (isStrictLocked || !state) return;
     updateState({
       shield: {
         ...state.shield,
         allowedSites: state.shield.allowedSites.filter(s => s !== site)
       }
+    });
+  };
+
+  const handleToggleScheduleDay = (dayIndex: number) => {
+    if (isStrictLocked) return;
+    if (newScheduleDays.includes(dayIndex)) {
+      setNewScheduleDays(newScheduleDays.filter((d) => d !== dayIndex));
+    } else {
+      setNewScheduleDays([...newScheduleDays, dayIndex].sort());
+    }
+  };
+
+  const handleAddSchedule = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (isStrictLocked || !state) return;
+    const name = newScheduleName.trim() || "Work Hours";
+    if (!newScheduleStartTime || !newScheduleEndTime || newScheduleDays.length === 0) return;
+
+    const newSchedule: ShieldSchedule = {
+      id: crypto.randomUUID(),
+      name,
+      startTime: newScheduleStartTime,
+      endTime: newScheduleEndTime,
+      days: [...newScheduleDays],
+      enabled: true,
+    };
+
+    updateState({
+      shield: {
+        ...state.shield,
+        schedules: [...(state.shield.schedules || []), newSchedule],
+      },
+    });
+
+    setNewScheduleName("");
+    setIsAddingSchedule(false);
+  };
+
+  const handleToggleSchedule = (scheduleId: string) => {
+    if (isStrictLocked || !state) return;
+    const updated = (state.shield.schedules || []).map((s) => {
+      if (s.id === scheduleId) {
+        return { ...s, enabled: !s.enabled };
+      }
+      return s;
+    });
+    updateState({
+      shield: {
+        ...state.shield,
+        schedules: updated,
+      },
+    });
+  };
+
+  const handleDeleteSchedule = (scheduleId: string) => {
+    if (isStrictLocked || !state) return;
+    const updated = (state.shield.schedules || []).filter((s) => s.id !== scheduleId);
+    updateState({
+      shield: {
+        ...state.shield,
+        schedules: updated,
+      },
     });
   };
 
@@ -1789,126 +1870,452 @@ export function Popup() {
         )}
 
         {/* SHIELD TAB */}
-        {activeTab === "shield" && (
-          <div className="flex flex-col gap-3">
-            <div className={`p-3 rounded-xl border flex items-center justify-between ${
-              state.shield.enabled
-                ? "bg-card border-border text-foreground"
-                : "bg-background border-border text-muted-foreground"
-            }`}>
-              <div className="flex items-center gap-2.5">
-                {state.shield.enabled ? <ShieldCheck className="w-5 h-5" /> : <ShieldAlert className="w-5 h-5" />}
-                <div>
-                  <h3 className="text-xs font-bold font-mono">SITE BLOCKER SHIELD</h3>
-                  <p className="text-[10px] opacity-70">
-                    {state.shield.enabled
-                      ? (state.isActive && state.timerState === "FLOW"
-                          ? "Active during Flow sessions"
-                          : "Paused (Active during Flow sessions)")
-                      : "Shield currently OFF"}
-                  </p>
-                </div>
-              </div>
+        {activeTab === "shield" && (() => {
+          const isEnforcing = isShieldEnforcing(state);
+          const isScheduleActiveNow = isAnyScheduleActive(state.shield.schedules);
 
-              <button
-                onClick={() => updateState({ shield: { ...state.shield, enabled: !state.shield.enabled } })}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                  state.shield.enabled
-                    ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-secondary text-secondary-foreground border-border"
-                }`}
-              >
-                {state.shield.enabled ? "ENABLED" : "ENABLE"}
-              </button>
-            </div>
-
-            <form onSubmit={addShieldSite} className="flex gap-2">
-              <input
-                type="text"
-                value={newSiteUrl}
-                onChange={(e) => setNewSiteUrl(e.target.value)}
-                placeholder={shieldListTab === "blocked" ? "Block domain (e.g. twitter.com)..." : "Allow domain (e.g. music.youtube.com)..."}
-                className={`flex-1 px-3 py-2 rounded-xl text-xs font-mono border focus:outline-none ${
-                  "bg-card border-border text-foreground placeholder-muted-foreground focus:border-foreground"
-                }`}
-              />
-              <button
-                type="submit"
-                className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all ${
-                  "bg-secondary border-border text-foreground hover:bg-accent"
-                }`}
-              >
-                {shieldListTab === "blocked" ? "Block" : "Allow"}
-              </button>
-            </form>
-
-            <div className="flex-1 flex flex-col overflow-hidden">
-              <div className="flex gap-1 p-1 rounded-xl bg-card border border-border mb-2">
-                <button
-                  onClick={() => setShieldListTab("blocked")}
-                  className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono uppercase transition-all ${
-                    shieldListTab === "blocked"
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Blocked ({state.shield.blockedSites.length})
-                </button>
-                <button
-                  onClick={() => setShieldListTab("unblocked")}
-                  className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono uppercase transition-all ${
-                    shieldListTab === "unblocked"
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  Unblocked ({state.shield.allowedSites.length})
-                </button>
-              </div>
-
-              {shieldListTab === "blocked" && (
-                <div className="max-h-56 overflow-y-auto overflow-x-hidden space-y-1.5 pr-1">
-                  {state.shield.blockedSites.map((site) => (
-                    <div
-                      key={site}
-                      className={`px-3 py-2 rounded-xl border flex items-center justify-between text-xs font-mono ${
-                        "bg-card/60 border-border text-foreground"
-                      }`}
-                    >
-                      <span className="text-[11px]">{site}</span>
-                      <button onClick={() => removeBlockedSite(site)} className={`p-1 ${"text-muted-foreground hover:text-foreground"}`}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  ))}
+          return (
+            <div className="flex flex-col gap-3">
+              {/* Lock Alert Banner */}
+              {isStrictLocked && (
+                <div className="p-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-500 flex items-center gap-2 text-xs">
+                  <Lock className="w-4 h-4 shrink-0" />
+                  <span className="text-[11px] font-mono leading-tight">
+                    Strict Mode active: Shield toggle and rules are locked while focus timer is running.
+                  </span>
                 </div>
               )}
 
-              {shieldListTab === "unblocked" && (
-                <div className="max-h-56 overflow-y-auto overflow-x-hidden space-y-1.5 pr-1">
-                  {state.shield.allowedSites.length === 0 && (
-                    <p className="text-[10px] text-muted-foreground mb-1">
-                      No unblocked domains yet.
-                    </p>
+              {/* Master Shield Card */}
+              <div className={`p-3 rounded-xl border flex items-center justify-between ${
+                isEnforcing || state.shield.enabled
+                  ? "bg-card border-border text-foreground"
+                  : "bg-background border-border text-muted-foreground"
+              }`}>
+                <div className="flex items-center gap-2.5">
+                  {isStrictLocked ? (
+                    <Lock className="w-5 h-5 text-amber-500" />
+                  ) : isEnforcing ? (
+                    <ShieldCheck className="w-5 h-5 text-emerald" />
+                  ) : state.shield.enabled ? (
+                    <Shield className="w-5 h-5" />
+                  ) : (
+                    <ShieldAlert className="w-5 h-5" />
                   )}
-                  {state.shield.allowedSites.map((site) => (
-                    <div
-                      key={site}
-                      className={`px-3 py-2 rounded-xl border flex items-center justify-between text-xs font-mono ${
-                        "bg-card/60 border-border text-foreground"
+                  <div>
+                    <h3 className="text-xs font-bold font-mono">SITE BLOCKER SHIELD</h3>
+                    <p className="text-[10px] opacity-70">
+                      {isEnforcing
+                        ? (isScheduleActiveNow ? "Active (Scheduled Window)" : "Active during Flow session")
+                        : state.shield.enabled
+                          ? "Paused (Active during Flow or Schedules)"
+                          : "Shield currently OFF"}
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    if (isStrictLocked) return;
+                    updateState({ shield: { ...state.shield, enabled: !state.shield.enabled } });
+                  }}
+                  disabled={isStrictLocked}
+                  title={isStrictLocked ? "Locked by Strict Mode during active focus session" : undefined}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all flex items-center gap-1.5 ${
+                    isStrictLocked
+                      ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border"
+                      : state.shield.enabled
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-secondary text-secondary-foreground border-border"
+                  }`}
+                >
+                  {isStrictLocked && <Lock className="w-3 h-3" />}
+                  {state.shield.enabled ? "ENABLED" : "ENABLE"}
+                </button>
+              </div>
+
+              {/* Strict Mode Toggle Card */}
+              <div className="p-2.5 rounded-xl border bg-card border-border flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className={`p-1.5 rounded-lg border flex items-center justify-center ${
+                    state.shield.strictMode
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-secondary text-muted-foreground border-border"
+                  }`}>
+                    <Lock className="w-3.5 h-3.5" />
+                  </div>
+                  <div>
+                    <div className="text-xs font-bold font-mono flex items-center gap-1.5">
+                      STRICT MODE
+                      {state.shield.strictMode && (
+                        <span className="text-[9px] px-1 rounded bg-primary/20 text-primary font-sans font-medium">LOCKED WHEN FOCUSING</span>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-muted-foreground">
+                      Locks shield toggle & rules while focus timer is running
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  disabled={isStrictLocked}
+                  onClick={() => {
+                    if (isStrictLocked) return;
+                    updateState({
+                      shield: {
+                        ...state.shield,
+                        strictMode: !state.shield.strictMode,
+                      },
+                    });
+                  }}
+                  title={isStrictLocked ? "Cannot change Strict Mode while focus timer is running" : undefined}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
+                    isStrictLocked
+                      ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border"
+                      : state.shield.strictMode
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-secondary text-secondary-foreground border-border"
+                  }`}
+                >
+                  {state.shield.strictMode ? "ON" : "OFF"}
+                </button>
+              </div>
+
+              {/* Sub-view Navigation (Rules vs Schedules) */}
+              <div className="flex gap-1 p-1 rounded-xl bg-card border border-border">
+                <button
+                  onClick={() => setShieldSubTab("rules")}
+                  className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono uppercase transition-all ${
+                    shieldSubTab === "rules"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Rules ({state.shield.blockedSites.length + state.shield.allowedSites.length})
+                </button>
+                <button
+                  onClick={() => setShieldSubTab("schedules")}
+                  className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono uppercase transition-all flex items-center justify-center gap-1.5 ${
+                    shieldSubTab === "schedules"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Clock className="w-3 h-3" />
+                  Schedules ({(state.shield.schedules || []).length})
+                </button>
+              </div>
+
+              {/* RULES SUB-TAB */}
+              {shieldSubTab === "rules" && (
+                <div className="flex flex-col gap-2.5">
+                  <form onSubmit={addShieldSite} className="flex gap-2">
+                    <input
+                      type="text"
+                      disabled={isStrictLocked}
+                      value={newSiteUrl}
+                      onChange={(e) => setNewSiteUrl(e.target.value)}
+                      placeholder={
+                        isStrictLocked
+                          ? "Rule editing locked during focus session..."
+                          : shieldListTab === "blocked"
+                            ? "Block domain (e.g. twitter.com)..."
+                            : "Allow domain (e.g. music.youtube.com)..."
+                      }
+                      className={`flex-1 px-3 py-2 rounded-xl text-xs font-mono border focus:outline-none ${
+                        isStrictLocked
+                          ? "opacity-60 cursor-not-allowed bg-muted/40 border-border text-muted-foreground"
+                          : "bg-card border-border text-foreground placeholder-muted-foreground focus:border-foreground"
+                      }`}
+                    />
+                    <button
+                      type="submit"
+                      disabled={isStrictLocked}
+                      className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all flex items-center justify-center gap-1 ${
+                        isStrictLocked
+                          ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border"
+                          : "bg-secondary border-border text-foreground hover:bg-accent"
                       }`}
                     >
-                      <span className="text-[11px]">{site}</span>
-                      <button onClick={() => removeAllowedSite(site)} className={`p-1 ${"text-muted-foreground hover:text-foreground"}`}>
-                        <Trash2 className="w-3.5 h-3.5" />
+                      {isStrictLocked && <Lock className="w-3 h-3" />}
+                      {shieldListTab === "blocked" ? "Block" : "Allow"}
+                    </button>
+                  </form>
+
+                  <div className="flex-1 flex flex-col overflow-hidden">
+                    <div className="flex gap-1 p-1 rounded-xl bg-card border border-border mb-2">
+                      <button
+                        onClick={() => setShieldListTab("blocked")}
+                        className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono uppercase transition-all ${
+                          shieldListTab === "blocked"
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        Blocked ({state.shield.blockedSites.length})
+                      </button>
+                      <button
+                        onClick={() => setShieldListTab("unblocked")}
+                        className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono uppercase transition-all ${
+                          shieldListTab === "unblocked"
+                            ? "bg-primary text-primary-foreground"
+                            : "text-muted-foreground hover:text-foreground"
+                        }`}
+                      >
+                        Unblocked ({state.shield.allowedSites.length})
                       </button>
                     </div>
-                  ))}
+
+                    {shieldListTab === "blocked" && (
+                      <div className="max-h-48 overflow-y-auto overflow-x-hidden space-y-1.5 pr-1">
+                        {state.shield.blockedSites.length === 0 && (
+                          <p className="text-[10px] text-muted-foreground p-2">
+                            No blocked domains configured.
+                          </p>
+                        )}
+                        {state.shield.blockedSites.map((site) => (
+                          <div
+                            key={site}
+                            className="px-3 py-2 rounded-xl border flex items-center justify-between text-xs font-mono bg-card/60 border-border text-foreground"
+                          >
+                            <span className="text-[11px] truncate mr-2">{site}</span>
+                            <button
+                              onClick={() => removeBlockedSite(site)}
+                              disabled={isStrictLocked}
+                              title={isStrictLocked ? "Locked by Strict Mode" : "Remove"}
+                              className={`p-1 transition-opacity ${
+                                isStrictLocked
+                                  ? "opacity-40 cursor-not-allowed text-muted-foreground"
+                                  : "text-muted-foreground hover:text-foreground"
+                              }`}
+                            >
+                              {isStrictLocked ? <Lock className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {shieldListTab === "unblocked" && (
+                      <div className="max-h-48 overflow-y-auto overflow-x-hidden space-y-1.5 pr-1">
+                        {state.shield.allowedSites.length === 0 && (
+                          <p className="text-[10px] text-muted-foreground p-2">
+                            No unblocked domains yet.
+                          </p>
+                        )}
+                        {state.shield.allowedSites.map((site) => (
+                          <div
+                            key={site}
+                            className="px-3 py-2 rounded-xl border flex items-center justify-between text-xs font-mono bg-card/60 border-border text-foreground"
+                          >
+                            <span className="text-[11px] truncate mr-2">{site}</span>
+                            <button
+                              onClick={() => removeAllowedSite(site)}
+                              disabled={isStrictLocked}
+                              title={isStrictLocked ? "Locked by Strict Mode" : "Remove"}
+                              className={`p-1 transition-opacity ${
+                                isStrictLocked
+                                  ? "opacity-40 cursor-not-allowed text-muted-foreground"
+                                  : "text-muted-foreground hover:text-foreground"
+                              }`}
+                            >
+                              {isStrictLocked ? <Lock className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* SCHEDULES SUB-TAB */}
+              {shieldSubTab === "schedules" && (
+                <div className="flex flex-col gap-2.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-mono font-bold uppercase text-muted-foreground">
+                      Scheduled Windows ({(state.shield.schedules || []).length})
+                    </span>
+                    <button
+                      type="button"
+                      disabled={isStrictLocked}
+                      onClick={() => setIsAddingSchedule(!isAddingSchedule)}
+                      className={`px-2.5 py-1 rounded-lg text-[10px] font-bold border transition-all flex items-center gap-1 ${
+                        isStrictLocked
+                          ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border"
+                          : isAddingSchedule
+                            ? "bg-secondary text-foreground border-border"
+                            : "bg-primary text-primary-foreground border-primary"
+                      }`}
+                    >
+                      {isStrictLocked ? (
+                        <Lock className="w-3 h-3" />
+                      ) : isAddingSchedule ? (
+                        <X className="w-3 h-3" />
+                      ) : (
+                        <Plus className="w-3 h-3" />
+                      )}
+                      {isAddingSchedule ? "Cancel" : "Add Window"}
+                    </button>
+                  </div>
+
+                  {/* Add Schedule Form */}
+                  {isAddingSchedule && (
+                    <form onSubmit={handleAddSchedule} className="p-3 rounded-xl border bg-card border-border flex flex-col gap-2.5">
+                      <div>
+                        <label className="text-[10px] font-mono text-muted-foreground mb-1 block">Window Name</label>
+                        <input
+                          type="text"
+                          placeholder="e.g. Work Hours"
+                          value={newScheduleName}
+                          onChange={(e) => setNewScheduleName(e.target.value)}
+                          className="w-full px-2.5 py-1.5 rounded-lg text-xs font-mono border bg-background border-border text-foreground placeholder-muted-foreground focus:outline-none focus:border-foreground"
+                        />
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[10px] font-mono text-muted-foreground mb-1 block">Start Time</label>
+                          <input
+                            type="time"
+                            value={newScheduleStartTime}
+                            onChange={(e) => setNewScheduleStartTime(e.target.value)}
+                            className="w-full px-2.5 py-1.5 rounded-lg text-xs font-mono border bg-background border-border text-foreground focus:outline-none focus:border-foreground"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] font-mono text-muted-foreground mb-1 block">End Time</label>
+                          <input
+                            type="time"
+                            value={newScheduleEndTime}
+                            onChange={(e) => setNewScheduleEndTime(e.target.value)}
+                            className="w-full px-2.5 py-1.5 rounded-lg text-xs font-mono border bg-background border-border text-foreground focus:outline-none focus:border-foreground"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="text-[10px] font-mono text-muted-foreground mb-1 block">Active Days</label>
+                        <div className="flex gap-1">
+                          {DAYS_OF_WEEK.map((dayName, idx) => {
+                            const isSelected = newScheduleDays.includes(idx);
+                            return (
+                              <button
+                                key={dayName}
+                                type="button"
+                                onClick={() => handleToggleScheduleDay(idx)}
+                                className={`flex-1 py-1 rounded text-[10px] font-mono font-bold transition-all ${
+                                  isSelected
+                                    ? "bg-primary text-primary-foreground shadow-sm"
+                                    : "bg-secondary text-muted-foreground hover:text-foreground border border-border"
+                                }`}
+                              >
+                                {dayName}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={newScheduleDays.length === 0}
+                        className="w-full py-2 rounded-lg text-xs font-bold bg-primary text-primary-foreground transition-all hover:bg-accent disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                      >
+                        Save Schedule
+                      </button>
+                    </form>
+                  )}
+
+                  {/* Schedule List */}
+                  <div className="max-h-52 overflow-y-auto overflow-x-hidden space-y-2 pr-1">
+                    {(!state.shield.schedules || state.shield.schedules.length === 0) && !isAddingSchedule && (
+                      <div className="p-4 rounded-xl border border-dashed border-border text-center text-muted-foreground">
+                        <Clock className="w-6 h-6 mx-auto mb-1.5 opacity-50" />
+                        <p className="text-xs font-medium">No scheduled windows</p>
+                        <p className="text-[10px] opacity-70 mt-0.5">
+                          Configure recurring hours to enforce website blocking automatically.
+                        </p>
+                      </div>
+                    )}
+
+                    {(state.shield.schedules || []).map((schedule) => {
+                      const isActiveNow = isScheduleActive(schedule);
+                      return (
+                        <div
+                          key={schedule.id}
+                          className="p-2.5 rounded-xl border flex flex-col gap-2 bg-card/60 border-border"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs font-bold font-mono text-foreground">{schedule.name}</span>
+                              {isActiveNow && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-bold bg-emerald-bg text-emerald border border-emerald/20">
+                                  ACTIVE
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                              <button
+                                onClick={() => handleToggleSchedule(schedule.id)}
+                                disabled={isStrictLocked}
+                                title={isStrictLocked ? "Locked by Strict Mode" : undefined}
+                                className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border transition-all flex items-center gap-1 ${
+                                  isStrictLocked
+                                    ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border"
+                                    : schedule.enabled
+                                      ? "bg-primary text-primary-foreground border-primary"
+                                      : "bg-secondary text-secondary-foreground border-border"
+                                }`}
+                              >
+                                {isStrictLocked && <Lock className="w-2.5 h-2.5" />}
+                                {schedule.enabled ? "ON" : "OFF"}
+                              </button>
+                              <button
+                                onClick={() => handleDeleteSchedule(schedule.id)}
+                                disabled={isStrictLocked}
+                                title={isStrictLocked ? "Locked by Strict Mode" : "Delete"}
+                                className={`p-1 transition-opacity ${
+                                  isStrictLocked
+                                    ? "opacity-40 cursor-not-allowed text-muted-foreground"
+                                    : "text-muted-foreground hover:text-foreground"
+                                }`}
+                              >
+                                {isStrictLocked ? <Lock className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="text-[11px] font-mono text-muted-foreground">
+                            {schedule.startTime} - {schedule.endTime}
+                          </div>
+
+                          <div className="flex gap-1">
+                            {DAYS_OF_WEEK.map((dayName, idx) => {
+                              const isSelected = schedule.days.includes(idx);
+                              return (
+                                <span
+                                  key={dayName}
+                                  className={`w-5 h-5 rounded flex items-center justify-center text-[9px] font-mono font-bold ${
+                                    isSelected
+                                      ? "bg-primary text-primary-foreground"
+                                      : "bg-muted/40 text-muted-foreground/40"
+                                  }`}
+                                >
+                                  {dayName[0]}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
             </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* STATS TAB */}
         {activeTab === "stats" && (

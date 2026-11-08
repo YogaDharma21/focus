@@ -1,4 +1,4 @@
-import { AppStateData } from "../types";
+import { AppStateData, ShieldSchedule } from "../types";
 import { validateBackupJson } from "@focus/utils";
 
 const STORAGE_KEY = "focus_extension_state_v6";
@@ -37,6 +37,8 @@ export const DEFAULT_STATE: AppStateData = {
   distractions: [],
   shield: {
     enabled: true,
+    strictMode: false,
+    schedules: [],
     blockedSites: [
       "facebook.com",
       "twitter.com",
@@ -236,8 +238,16 @@ function migrateState(fresh: AppStateData): AppStateData {
       return s;
     });
   }
-  if (fresh.shield && !('allowedSites' in fresh.shield)) {
-    fresh.shield = Object.assign({}, fresh.shield, { allowedSites: [] });
+  if (fresh.shield) {
+    if (!('allowedSites' in fresh.shield)) {
+      fresh.shield = Object.assign({}, fresh.shield, { allowedSites: [] });
+    }
+    if (fresh.shield.strictMode === undefined) {
+      fresh.shield.strictMode = false;
+    }
+    if (!Array.isArray(fresh.shield.schedules)) {
+      fresh.shield.schedules = [];
+    }
   }
   if (!Array.isArray(fresh.tasks)) {
     fresh.tasks = [];
@@ -312,6 +322,51 @@ export function getEffectiveTimeLeft(state: AppStateData, now: number = Date.now
   }
 
   return Math.max(0, state.timeLeft || 0);
+}
+
+export function isScheduleActive(schedule: ShieldSchedule, now: Date = new Date()): boolean {
+  if (!schedule || !schedule.enabled) return false;
+  if (!schedule.startTime || !schedule.endTime) return false;
+  if (!Array.isArray(schedule.days) || schedule.days.length === 0) return false;
+
+  const [startH, startM] = schedule.startTime.split(":").map(Number);
+  const [endH, endM] = schedule.endTime.split(":").map(Number);
+  if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) return false;
+
+  const currentDay = now.getDay();
+  const currentMinutes = now.getHours() * 60 + now.getMinutes();
+  const startMinutes = startH * 60 + startM;
+  const endMinutes = endH === 23 && endM === 59 ? 1440 : endH * 60 + endM;
+
+  if (startMinutes <= endMinutes) {
+    if (!schedule.days.includes(currentDay)) return false;
+    return currentMinutes >= startMinutes && currentMinutes < endMinutes;
+  } else {
+    // Overnight window (e.g. 22:00 to 06:00)
+    if (schedule.days.includes(currentDay) && currentMinutes >= startMinutes) {
+      return true;
+    }
+    const prevDay = (currentDay + 6) % 7;
+    if (schedule.days.includes(prevDay) && currentMinutes < endMinutes) {
+      return true;
+    }
+    return false;
+  }
+}
+
+export function isAnyScheduleActive(schedules?: ShieldSchedule[], now: Date = new Date()): boolean {
+  if (!schedules || !Array.isArray(schedules) || schedules.length === 0) return false;
+  return schedules.some((s) => isScheduleActive(s, now));
+}
+
+export function isShieldEnforcing(state: AppStateData, now: Date = new Date()): boolean {
+  if (!state || !state.shield) return false;
+
+  if (isAnyScheduleActive(state.shield.schedules, now)) {
+    return true;
+  }
+
+  return Boolean(state.shield.enabled && state.isActive && state.timerState === "FLOW");
 }
 
 export async function getStoredState(): Promise<AppStateData> {
