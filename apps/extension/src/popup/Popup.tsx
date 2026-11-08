@@ -50,6 +50,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { DeepFocusOverlay } from "./components/DeepFocusOverlay";
+import { AnnualHeatmap } from "./components/AnnualHeatmap";
 import { Progress } from "../components/ui/progress";
 import { AppStateData, ThemeMode, TaskItem, TaskPriority, BreakRatio } from "../types";
 import { getBreakDuration } from "@focus/utils";
@@ -869,6 +870,12 @@ export function Popup() {
   const progressValue = state.timerState === "FLOW" ? 100 : 0;
 
   // Stats Calculations
+  const liveElapsed =
+    state.isActive && state.timerState === "FLOW"
+      ? isPomodoro
+        ? Math.max(0, (state.timerSettings?.pomodoro?.workDuration ?? 25) * 60 - effectiveTimeLeft)
+        : effectiveTimeLeft
+      : 0;
   const dynamicWeeklyMinutes = getWeeklyMinutesFromSessions(state.sessions);
   const dynamicTodayMinutes = getTodayMinutesFromSessions(state.sessions);
   const dynamicStreaks = calculateStreaksFromSessions(state.sessions);
@@ -2017,6 +2024,9 @@ export function Popup() {
                 })}
               </div>
             </div>
+
+            {/* Annual 52-Week Focus Heatmap */}
+            <AnnualHeatmap sessions={state.sessions} liveElapsed={liveElapsed} />
 
             {/* Distraction Analysis Section */}
             <div className={`p-3 rounded-xl border ${
