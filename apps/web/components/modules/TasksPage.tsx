@@ -1,41 +1,16 @@
 "use client";
 
 import React, { useState } from "react";
-import { useAppStore, TaskItem, TaskPriority } from "@/lib/store";
+import { useAppStore, TaskItem } from "@/lib/store";
 import { useShallow } from "zustand/react/shallow";
 import {
     CheckSquare,
     Square,
-    Plus,
     Trash2,
-    Calendar,
-    Target,
-    ChevronDown,
-    ChevronUp,
     ListChecks,
-    Clock,
 } from "lucide-react";
-import {
-    cn,
-    formatTaskDuration,
-    getTaskActualMinutes,
-    getVelocityStatus,
-    type VelocityStatus,
-} from "@/lib/utils";
-
-const PRIORITY_STYLES: Record<TaskPriority, string> = {
-    urgent: "bg-crimson-bg text-crimson",
-    high: "bg-amber-bg text-amber",
-    medium: "bg-blue-bg text-blue",
-    low: "bg-surface-inset text-muted-foreground",
-};
-
-const VELOCITY_STYLES: Record<VelocityStatus, string> = {
-    "completed-on-time": "bg-emerald-bg text-emerald",
-    "on-track": "bg-surface-inset text-muted-foreground",
-    "approaching": "bg-amber-bg text-amber",
-    "exceeded": "bg-crimson-bg text-crimson",
-};
+import { cn, getTaskActualMinutes } from "@/lib/utils";
+import { TaskQuickAdd, TaskRow, type TaskQuickAddPayload } from "@focus/ui";
 
 export function TasksPage() {
     const {
@@ -67,27 +42,16 @@ export function TasksPage() {
     );
 
     const [filter, setFilter] = useState<"all" | "active" | "completed">("all");
-    const [title, setTitle] = useState("");
-    const [priority, setPriority] = useState<TaskPriority>("medium");
-    const [deadline, setDeadline] = useState("");
-    const [estimatedMinutes, setEstimatedMinutes] = useState("");
     const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
     const [subtaskInputs, setSubtaskInputs] = useState<Record<string, string>>({});
 
-    const handleAddTask = (e: React.FormEvent) => {
-        e.preventDefault();
-        const trimmed = title.trim();
-        if (!trimmed) return;
-        const parsedEst = parseInt(estimatedMinutes, 10);
+    const handleAddTask = (payload: TaskQuickAddPayload) => {
         addTask({
-            text: trimmed,
-            priority,
-            deadline: deadline || undefined,
-            estimatedMinutes: Number.isFinite(parsedEst) && parsedEst > 0 ? parsedEst : undefined,
+            text: payload.text,
+            priority: payload.priority,
+            deadline: payload.deadline,
+            estimatedMinutes: payload.estimatedMinutes,
         });
-        setTitle("");
-        setDeadline("");
-        setEstimatedMinutes("");
     };
 
     const handleFocusTask = (task: TaskItem) => {
@@ -152,73 +116,11 @@ export function TasksPage() {
                 </div>
             </div>
 
-            {/* Task Creation Card */}
-            <div className="p-5 bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-[24px]">
-                <form onSubmit={handleAddTask} className="flex flex-col gap-3">
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="text"
-                            placeholder="Add a new task..."
-                            value={title}
-                            onChange={(e) => setTitle(e.target.value)}
-                            className="flex-1 bg-surface-inset border-0 rounded-[12px] px-4 h-11 text-sm text-foreground placeholder:text-subtle-foreground focus:outline-none"
-                        />
-                        <button
-                            type="submit"
-                            className="h-11 px-5 rounded-[12px] bg-primary text-primary-foreground text-sm font-medium shadow-md hover:shadow active:scale-95 transition-all duration-300 cursor-pointer flex items-center gap-1.5 shrink-0"
-                        >
-                            <Plus className="w-4 h-4" />
-                            <span>Add</span>
-                        </button>
-                    </div>
-
-                    <div className="flex items-center justify-between flex-wrap gap-2 pt-1 text-xs text-muted-foreground">
-                        <div className="flex items-center gap-2">
-                            <span className="text-[11px]">Priority:</span>
-                            {(["low", "medium", "high", "urgent"] as TaskPriority[]).map((p) => (
-                                <button
-                                    key={p}
-                                    type="button"
-                                    onClick={() => setPriority(p)}
-                                    className={cn(
-                                        "px-2.5 py-1 rounded-full capitalize text-[11px] font-medium transition-all duration-300 cursor-pointer active:scale-95",
-                                        priority === p
-                                            ? PRIORITY_STYLES[p]
-                                            : "bg-surface-inset text-muted-foreground hover:text-foreground",
-                                    )}
-                                >
-                                    {p}
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="flex items-center gap-3">
-                            <div className="flex items-center gap-1.5">
-                                <Clock className="w-3.5 h-3.5" />
-                                <input
-                                    type="number"
-                                    min="1"
-                                    max="1440"
-                                    placeholder="Est (m)"
-                                    value={estimatedMinutes}
-                                    onChange={(e) => setEstimatedMinutes(e.target.value)}
-                                    className="w-16 bg-transparent border-0 text-[11px] text-muted-foreground placeholder:text-subtle-foreground focus:outline-none tabular-nums"
-                                />
-                            </div>
-
-                            <div className="flex items-center gap-1.5">
-                                <Calendar className="w-3.5 h-3.5" />
-                                <input
-                                    type="date"
-                                    value={deadline}
-                                    onChange={(e) => setDeadline(e.target.value)}
-                                    className="bg-transparent border-0 text-[11px] text-muted-foreground focus:outline-none cursor-pointer [color-scheme:dark]"
-                                />
-                            </div>
-                        </div>
-                    </div>
-                </form>
-            </div>
+            {/* Quick Add Bar */}
+            <TaskQuickAdd
+                onAdd={handleAddTask}
+                className="border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)]"
+            />
 
             {/* Filter Tabs & Task List */}
             <div className="p-5 bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-[24px]">
@@ -227,6 +129,7 @@ export function TasksPage() {
                         {(["all", "active", "completed"] as const).map((tab) => (
                             <button
                                 key={tab}
+                                type="button"
                                 onClick={() => setFilter(tab)}
                                 className={cn(
                                     "px-3 py-1 rounded-full text-xs font-medium capitalize transition-all duration-300 cursor-pointer active:scale-95",
@@ -256,225 +159,101 @@ export function TasksPage() {
                             const isFocused = selectedTaskId === task.id;
                             const isExpanded = expandedTaskId === task.id;
                             const subtasks = task.subtasks || [];
-                            const completedSubtasks = subtasks.filter((s) => s.completed).length;
                             const actualMinutes = getTaskActualMinutes(sessions, task.id);
-                            const hasEstimate =
-                                typeof task.estimatedMinutes === "number" && task.estimatedMinutes > 0;
-                            const velocityStatus = hasEstimate
-                                ? getVelocityStatus(actualMinutes, task.estimatedMinutes!, task.completed)
-                                : null;
 
                             return (
-                                <div
+                                <TaskRow
                                     key={task.id}
-                                    className={cn(
-                                        "p-3.5 rounded-[16px] border transition-all duration-300",
-                                        isFocused
-                                            ? "bg-surface border-foreground/30"
-                                            : "bg-surface-inset border-border hover:border-border/80",
-                                    )}
+                                    task={task}
+                                    isFocused={isFocused}
+                                    actualMinutes={actualMinutes}
+                                    isExpanded={isExpanded}
+                                    onToggle={toggleTask}
+                                    onFocus={handleFocusTask}
+                                    onDelete={handleDeleteTask}
+                                    onToggleExpand={(id) =>
+                                        setExpandedTaskId(expandedTaskId === id ? null : id)
+                                    }
                                 >
-                                    <div className="flex items-center justify-between gap-3">
-                                        <div className="flex items-center gap-3 flex-1 min-w-0">
-                                            <button
-                                                onClick={() => toggleTask(task.id)}
-                                                className="text-muted-foreground hover:text-foreground transition-all duration-300 cursor-pointer active:scale-95 shrink-0"
-                                                title={task.completed ? "Mark incomplete" : "Mark complete"}
+                                    <div className="flex flex-col gap-2 pt-0.5">
+                                        {subtasks.map((sub) => (
+                                            <div
+                                                key={sub.id}
+                                                className="flex items-center justify-between gap-2 pl-6 pr-1 text-xs"
                                             >
-                                                {task.completed ? (
-                                                    <CheckSquare className="w-4 h-4 text-emerald" />
-                                                ) : (
-                                                    <Square className="w-4 h-4" />
-                                                )}
-                                            </button>
-
-                                            <div className="flex flex-col min-w-0 flex-1">
-                                                <span
-                                                    className={cn(
-                                                        "text-xs font-medium truncate",
-                                                        task.completed
-                                                            ? "line-through text-muted-foreground"
-                                                            : "text-foreground",
-                                                    )}
-                                                >
-                                                    {task.text}
-                                                </span>
-
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    {task.priority && (
-                                                        <span
-                                                            className={cn(
-                                                                "text-[10px] px-2 py-0.5 rounded-full font-medium capitalize",
-                                                                PRIORITY_STYLES[task.priority],
-                                                            )}
-                                                        >
-                                                            {task.priority}
-                                                        </span>
-                                                    )}
-
-                                                    {task.deadline && (
-                                                        <span className="text-[10px] font-mono tabular-nums text-muted-foreground flex items-center gap-1">
-                                                            <Calendar className="w-3 h-3" />
-                                                            {task.deadline}
-                                                        </span>
-                                                    )}
-
-                                                    {hasEstimate && velocityStatus && (
-                                                        <span
-                                                            className={cn(
-                                                                "text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full font-medium flex items-center gap-1",
-                                                                VELOCITY_STYLES[velocityStatus],
-                                                            )}
-                                                            title={`Velocity: ${actualMinutes}m actual of ${task.estimatedMinutes}m estimated (${velocityStatus})`}
-                                                        >
-                                                            <Clock className="w-3 h-3" />
-                                                            <span>
-                                                                {formatTaskDuration(actualMinutes)} / {formatTaskDuration(task.estimatedMinutes!)}
-                                                            </span>
-                                                        </span>
-                                                    )}
-
-                                                    {!hasEstimate && actualMinutes > 0 && (
-                                                        <span
-                                                            className="text-[10px] font-mono tabular-nums px-2 py-0.5 rounded-full font-medium flex items-center gap-1 bg-surface-inset text-muted-foreground"
-                                                            title={`Focus time: ${actualMinutes}m`}
-                                                        >
-                                                            <Clock className="w-3 h-3" />
-                                                            <span>{formatTaskDuration(actualMinutes)}</span>
-                                                        </span>
-                                                    )}
-
-                                                    {subtasks.length > 0 && (
-                                                        <button
-                                                            onClick={() =>
-                                                                setExpandedTaskId(
-                                                                    isExpanded ? null : task.id,
-                                                                )
-                                                            }
-                                                            className="text-[10px] font-mono tabular-nums text-muted-foreground hover:text-foreground flex items-center gap-0.5 cursor-pointer"
-                                                        >
-                                                            <span>
-                                                                {completedSubtasks}/{subtasks.length}
-                                                            </span>
-                                                            {isExpanded ? (
-                                                                <ChevronUp className="w-3 h-3" />
-                                                            ) : (
-                                                                <ChevronDown className="w-3 h-3" />
-                                                            )}
-                                                        </button>
-                                                    )}
+                                                <div className="flex items-center gap-2 flex-1 min-w-0">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            toggleSubtask(task.id, sub.id)
+                                                        }
+                                                        className="text-muted-foreground hover:text-foreground cursor-pointer active:scale-95 shrink-0"
+                                                        title={
+                                                            sub.completed
+                                                                ? "Mark incomplete"
+                                                                : "Mark complete"
+                                                        }
+                                                    >
+                                                        {sub.completed ? (
+                                                            <CheckSquare className="w-3.5 h-3.5 text-emerald" />
+                                                        ) : (
+                                                            <Square className="w-3.5 h-3.5" />
+                                                        )}
+                                                    </button>
+                                                    <span
+                                                        className={cn(
+                                                            "truncate",
+                                                            sub.completed
+                                                                ? "line-through text-muted-foreground"
+                                                                : "text-foreground",
+                                                        )}
+                                                    >
+                                                        {sub.text}
+                                                    </span>
                                                 </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-1.5 shrink-0">
-                                            <button
-                                                onClick={() =>
-                                                    setExpandedTaskId(isExpanded ? null : task.id)
-                                                }
-                                                className="p-1.5 rounded-[10px] text-muted-foreground hover:text-foreground hover:bg-surface transition-all duration-300 cursor-pointer active:scale-95"
-                                                title="Subtasks"
-                                            >
-                                                <ListChecks className="w-3.5 h-3.5" />
-                                            </button>
-
-                                            {!task.completed && (
                                                 <button
-                                                    onClick={() => handleFocusTask(task)}
-                                                    className={cn(
-                                                        "p-1.5 rounded-[10px] transition-all duration-300 cursor-pointer active:scale-95",
-                                                        isFocused
-                                                            ? "bg-primary text-primary-foreground"
-                                                            : "text-muted-foreground hover:text-foreground hover:bg-surface",
-                                                    )}
-                                                    title={isFocused ? "Current focus target" : "Focus on task"}
+                                                    type="button"
+                                                    onClick={() =>
+                                                        deleteSubtask(task.id, sub.id)
+                                                    }
+                                                    className="text-muted-foreground hover:text-crimson transition-colors p-1 shrink-0 cursor-pointer"
+                                                    title="Delete subtask"
                                                 >
-                                                    <Target className="w-3.5 h-3.5" />
+                                                    <Trash2 className="w-3 h-3" />
                                                 </button>
-                                            )}
+                                            </div>
+                                        ))}
 
+                                        <div className="flex items-center gap-2 pl-6 mt-1">
+                                            <input
+                                                type="text"
+                                                placeholder="Add subtask..."
+                                                value={subtaskInputs[task.id] || ""}
+                                                onChange={(e) =>
+                                                    setSubtaskInputs((prev) => ({
+                                                        ...prev,
+                                                        [task.id]: e.target.value,
+                                                    }))
+                                                }
+                                                onKeyDown={(e) => {
+                                                    if (e.key === "Enter") {
+                                                        e.preventDefault();
+                                                        handleAddSubtask(task.id);
+                                                    }
+                                                }}
+                                                className="flex-1 bg-surface border border-border rounded-[10px] px-3 py-1.5 text-xs text-foreground placeholder:text-subtle-foreground focus:outline-none"
+                                            />
                                             <button
-                                                onClick={() => handleDeleteTask(task.id)}
-                                                className="p-1.5 rounded-[10px] text-muted-foreground hover:text-crimson hover:bg-crimson-bg transition-all duration-300 cursor-pointer active:scale-95"
-                                                title="Delete task"
+                                                type="button"
+                                                onClick={() => handleAddSubtask(task.id)}
+                                                disabled={!(subtaskInputs[task.id] || "").trim()}
+                                                className="px-3 py-1.5 rounded-[10px] bg-primary text-primary-foreground text-xs font-medium active:scale-95 transition-all duration-300 cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
                                             >
-                                                <Trash2 className="w-3.5 h-3.5" />
+                                                Add
                                             </button>
                                         </div>
                                     </div>
-
-                                    {/* Expanded Subtasks */}
-                                    {isExpanded && (
-                                        <div className="mt-3 pt-3 border-t border-border flex flex-col gap-2">
-                                            {subtasks.map((sub) => (
-                                                <div
-                                                    key={sub.id}
-                                                    className="flex items-center justify-between gap-2 pl-6 pr-1 text-xs"
-                                                >
-                                                    <div className="flex items-center gap-2 flex-1 min-w-0">
-                                                        <button
-                                                            onClick={() =>
-                                                                toggleSubtask(task.id, sub.id)
-                                                            }
-                                                            className="text-muted-foreground hover:text-foreground cursor-pointer active:scale-95"
-                                                        >
-                                                            {sub.completed ? (
-                                                                <CheckSquare className="w-3.5 h-3.5 text-emerald" />
-                                                            ) : (
-                                                                <Square className="w-3.5 h-3.5" />
-                                                            )}
-                                                        </button>
-                                                        <span
-                                                            className={cn(
-                                                                "truncate",
-                                                                sub.completed
-                                                                    ? "line-through text-muted-foreground"
-                                                                    : "text-foreground",
-                                                            )}
-                                                        >
-                                                            {sub.text}
-                                                        </span>
-                                                    </div>
-                                                    <button
-                                                        onClick={() =>
-                                                            deleteSubtask(task.id, sub.id)
-                                                        }
-                                                        className="text-muted-foreground hover:text-crimson transition-colors p-1"
-                                                    >
-                                                        <Trash2 className="w-3 h-3" />
-                                                    </button>
-                                                </div>
-                                            ))}
-
-                                            <div className="flex items-center gap-2 pl-6 mt-1">
-                                                <input
-                                                    type="text"
-                                                    placeholder="Add subtask..."
-                                                    value={subtaskInputs[task.id] || ""}
-                                                    onChange={(e) =>
-                                                        setSubtaskInputs((prev) => ({
-                                                            ...prev,
-                                                            [task.id]: e.target.value,
-                                                        }))
-                                                    }
-                                                    onKeyDown={(e) => {
-                                                        if (e.key === "Enter") {
-                                                            e.preventDefault();
-                                                            handleAddSubtask(task.id);
-                                                        }
-                                                    }}
-                                                    className="flex-1 bg-surface border border-border rounded-[10px] px-3 py-1.5 text-xs text-foreground placeholder:text-subtle-foreground focus:outline-none"
-                                                />
-                                                <button
-                                                    onClick={() => handleAddSubtask(task.id)}
-                                                    className="px-3 py-1.5 rounded-[10px] bg-primary text-primary-foreground text-xs font-medium active:scale-95 transition-all duration-300 cursor-pointer"
-                                                >
-                                                    Add
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
+                                </TaskRow>
                             );
                         })}
                     </div>
