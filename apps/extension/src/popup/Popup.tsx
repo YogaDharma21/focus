@@ -1059,6 +1059,25 @@ export function Popup() {
   const dynamicStreaks = calculateStreaksFromSessions(state.sessions);
   const maxWeeklyMins = Math.max(120, ...Object.values(dynamicWeeklyMinutes));
 
+  const now = new Date();
+  const todaySessions = (state.sessions || []).filter((s) => {
+    if (!s || !s.date) return false;
+    const sDate = new Date(s.date);
+    return (
+      sDate.getFullYear() === now.getFullYear() &&
+      sDate.getMonth() === now.getMonth() &&
+      sDate.getDate() === now.getDate()
+    );
+  });
+  const todaySessionCount = todaySessions.length;
+  const completedTodaySeconds = todaySessions.reduce((acc, s) => acc + (s.duration || 0), 0);
+  const totalFocusSeconds = completedTodaySeconds + liveElapsed;
+  const totalFocusMinutes = Math.floor(totalFocusSeconds / 60);
+  const formattedFocusToday =
+    totalFocusMinutes < 60
+      ? `${totalFocusMinutes}m`
+      : `${Math.floor(totalFocusMinutes / 60)}h ${totalFocusMinutes % 60}m`;
+
   // Distraction Analysis Breakdown
   const distractionCounts: { [cat: string]: number } = {};
   state.distractions.forEach(d => {
@@ -2365,40 +2384,42 @@ export function Popup() {
               );
             })()}
 
-            {/* Top Metric Card */}
-            <div className="grid grid-cols-1 gap-2">
-              <div className={`p-3 rounded-xl border flex flex-col items-center text-center ${
-                "bg-card border-border"
-              }`}>
-                <div className={`w-8 h-8 rounded-lg border flex items-center justify-center mb-1.5 ${
-                  "bg-secondary border-border text-foreground"
-                }`}>
-                  <Activity className="w-4 h-4" />
+            {/* 2-Column KPI Grid */}
+            <div className="grid grid-cols-2 gap-2.5">
+              {/* Focus Today Card */}
+              <div className="p-3.5 flex flex-col justify-between bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-[20px]">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                    FOCUS TODAY
+                  </span>
+                  <div className="p-1.5 bg-surface-inset rounded-[10px] text-muted-foreground">
+                    <Activity className="w-4 h-4" />
+                  </div>
                 </div>
-                <span className="text-lg font-extrabold font-mono tracking-[-0.03em] tabular-nums">{dynamicTodayMinutes}</span>
-                <span className="text-[9px] uppercase tracking-wider font-mono opacity-60">MINUTES TODAY</span>
+                <div className="text-[20px] font-medium tabular-nums tracking-[-0.03em] text-foreground my-1">
+                  {formattedFocusToday}
+                </div>
+                <span className="text-[11px] text-muted-foreground">
+                  {todaySessionCount} {todaySessionCount === 1 ? "session" : "sessions"}
+                </span>
               </div>
-            </div>
 
-            {/* Longest Streak */}
-            <div className="grid grid-cols-1 gap-2">
-              <div className={`p-3 rounded-xl border flex items-start gap-3 ${
-                "bg-card border-border"
-              }`}>
-                <div className="w-8 h-8 rounded-lg bg-secondary border border-border text-foreground flex items-center justify-center flex-shrink-0 mt-0.5">
-                  <Flame className="w-4 h-4 text-foreground" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-xs font-bold font-sans mb-1">Longest Streak</span>
-                  <div className="text-[11px] font-mono">
-                    <span className={"text-muted-foreground"}>Current</span>
-                    <span className="font-bold ml-2 tabular-nums">{dynamicStreaks.current} Days</span>
-                  </div>
-                  <div className="text-[11px] font-mono">
-                    <span className={"text-muted-foreground"}>Best</span>
-                    <span className="font-bold ml-2 tabular-nums">{dynamicStreaks.best} Days</span>
+              {/* Streak Card */}
+              <div className="p-3.5 flex flex-col justify-between bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-[20px]">
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                    STREAK
+                  </span>
+                  <div className="p-1.5 bg-surface-inset rounded-[10px] text-muted-foreground">
+                    <Flame className="w-4 h-4" />
                   </div>
                 </div>
+                <div className="text-[20px] font-medium tabular-nums tracking-[-0.03em] text-foreground my-1">
+                  {dynamicStreaks.current} days
+                </div>
+                <span className="text-[11px] text-muted-foreground">
+                  Best: {dynamicStreaks.best} days
+                </span>
               </div>
             </div>
 
