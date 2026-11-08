@@ -69,7 +69,7 @@ import {
 } from "../types";
 import { SOUNDSCAPE_PRESETS, DEFAULT_CHANNELS } from "../lib/soundscape";
 import { getBreakDuration } from "@focus/utils";
-import { TaskQuickAdd, TaskRow, type TaskQuickAddPayload } from "@focus/ui";
+import { TaskQuickAdd, TaskRow, TaskSelectPopover, type TaskQuickAddPayload } from "@focus/ui";
 import {
   formatTaskDuration,
   getTaskActualMinutes,
@@ -1414,18 +1414,12 @@ export function Popup() {
               if (activeTasks.length > 0) {
                 return (
                   <div className="flex items-center gap-1.5">
-                    <select
-                      value=""
-                      onChange={(e) => updateState({ selectedTaskId: e.target.value || null })}
-                      className="bg-card border border-border text-[11px] text-muted-foreground rounded-full px-2.5 py-1 focus:outline-none cursor-pointer max-w-[200px] truncate"
-                    >
-                      <option value="" disabled>Link a task...</option>
-                      {activeTasks.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.text}
-                        </option>
-                      ))}
-                    </select>
+                    <TaskSelectPopover
+                      tasks={activeTasks}
+                      selectedTaskId={state.selectedTaskId}
+                      onSelectTask={(taskId) => updateState({ selectedTaskId: taskId })}
+                      placeholder="Link a task..."
+                    />
                   </div>
                 );
               }
