@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ShieldAlert, X, Pause, XCircle, Loader2 } from 'lucide-react';
+import { ShieldAlert, X, Pause, XCircle, Loader2, Lock } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
 import type { ShieldViolation } from '../../lib/shield';
@@ -17,6 +17,8 @@ export interface ShieldBlockCardProps {
   onDismiss: () => void;
   /** Snooze a single item (row X). Falls back to onDismiss when omitted. */
   onSnoozeOne?: (kind: "app" | "site", match: string) => void;
+  /** When true, strict mode prevents snoozing or disabling shield during Flow. */
+  isStrictLocked?: boolean;
 }
 
 export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
@@ -29,11 +31,24 @@ export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
   onDisableShield,
   onDismiss,
   onSnoozeOne,
+  isStrictLocked = false,
 }) => {
   const handleSnoozeOne = (kind: "app" | "site", match: string) => {
+    if (isStrictLocked) return;
     if (onSnoozeOne) onSnoozeOne(kind, match);
     else onDismiss();
   };
+
+  const handleDismiss = () => {
+    if (isStrictLocked) return;
+    onDismiss();
+  };
+
+  const handleDisableShield = () => {
+    if (isStrictLocked) return;
+    onDisableShield();
+  };
+
   return (
     <div className="max-w-md w-full bg-card border border-border rounded-2xl shadow-2xl p-6 space-y-5 animate-in zoom-in-95 duration-150 max-h-[85vh] overflow-y-auto">
       <div className="flex items-start justify-between">
@@ -50,13 +65,27 @@ export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
             </h3>
           </div>
         </div>
-        <button
-          onClick={onDismiss}
-          className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          title="Snooze for 10 minutes"
-        >
-          <X className="w-4 h-4" />
-        </button>
+        {isStrictLocked ? (
+          <button
+            type="button"
+            disabled
+            className="p-1.5 rounded-lg text-muted-foreground/40 border border-border/40 bg-secondary/30 cursor-not-allowed flex items-center justify-center"
+            title="Locked during active flow session"
+            aria-label="Locked during active flow session"
+          >
+            <Lock className="w-4 h-4" />
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={handleDismiss}
+            className="p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-all duration-300 active:scale-95 cursor-pointer"
+            title="Snooze for 10 minutes"
+            aria-label="Snooze for 10 minutes"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {timeString && (
@@ -93,9 +122,10 @@ export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
             </div>
             {v.kind === "app" && (
               <button
+                type="button"
                 onClick={() => onTerminate(v.kind, v.match, v.process)}
                 disabled={terminatingMatch === v.match}
-                className="shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-rose-600/15 hover:bg-rose-600/25 border border-rose-500/30 text-rose-400 hover:text-rose-300 transition-all active:scale-95 flex items-center gap-1.5 disabled:opacity-50"
+                className="shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-rose-600/15 hover:bg-rose-600/25 border border-rose-500/30 text-rose-400 hover:text-rose-300 transition-all duration-300 active:scale-95 cursor-pointer flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100"
               >
                 {terminatingMatch === v.match ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -105,13 +135,27 @@ export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
                 Close app
               </button>
             )}
-            <button
-              onClick={() => handleSnoozeOne(v.kind, v.match)}
-              className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-              title={`Snooze ${v.match} for 10 minutes`}
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
+            {isStrictLocked ? (
+              <button
+                type="button"
+                disabled
+                className="shrink-0 p-1.5 rounded-lg text-muted-foreground/40 border border-border/40 bg-secondary/30 cursor-not-allowed flex items-center justify-center"
+                title="Locked during active flow session"
+                aria-label="Locked during active flow session"
+              >
+                <Lock className="w-3.5 h-3.5" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => handleSnoozeOne(v.kind, v.match)}
+                className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-all duration-300 active:scale-95 cursor-pointer"
+                title={`Snooze ${v.match} for 10 minutes`}
+                aria-label={`Snooze ${v.match} for 10 minutes`}
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
         ))}
       </div>
@@ -123,31 +167,54 @@ export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
       )}
 
       <p className="text-[11px] text-muted-foreground leading-relaxed">
-        These items are on your Shield blocklist. Detections are logged as
-        distractions for your stats review.
+        {isStrictLocked
+          ? "Shield is locked during Flow. Close the app or site, or pause your timer to continue."
+          : "These items are on your Shield blocklist. Detections are logged as distractions for your stats review."}
       </p>
 
       <div className="flex flex-col gap-2 pt-1 border-t border-border mt-1">
         <div className="flex items-center justify-end gap-2.5 pt-3">
+          {isStrictLocked ? (
+            <button
+              type="button"
+              disabled
+              title="Locked during active flow session"
+              aria-label="Locked during active flow session"
+              className="px-4 py-2 rounded-xl text-xs font-medium text-muted-foreground/40 bg-secondary/30 border border-border/50 cursor-not-allowed flex items-center gap-1.5 transition-all duration-300"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              Disable Shield
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleDisableShield}
+              className="px-4 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-all duration-300 active:scale-95 cursor-pointer"
+            >
+              Disable Shield
+            </button>
+          )}
           <button
-            onClick={onDisableShield}
-            className="px-4 py-2 rounded-xl text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-          >
-            Disable Shield
-          </button>
-          <button
+            type="button"
             onClick={onPauseTimer}
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-secondary hover:bg-muted border border-border text-foreground transition-all active:scale-95 flex items-center gap-1.5"
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all duration-300 active:scale-95 cursor-pointer flex items-center gap-1.5 ${
+              isStrictLocked
+                ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-sm"
+                : "bg-secondary hover:bg-muted border border-border text-foreground"
+            }`}
           >
             <Pause className="w-3.5 h-3.5" />
             Pause Timer
           </button>
-          <button
-            onClick={onDismiss}
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all active:scale-95"
-          >
-            Keep Focusing
-          </button>
+          {!isStrictLocked && (
+            <button
+              type="button"
+              onClick={handleDismiss}
+              className="px-4 py-2 rounded-xl text-xs font-bold bg-primary hover:bg-primary/90 text-primary-foreground transition-all duration-300 active:scale-95 cursor-pointer"
+            >
+              Keep Focusing
+            </button>
+          )}
         </div>
       </div>
     </div>
@@ -173,10 +240,13 @@ export const ShieldBlockOverlay: React.FC<ShieldBlockOverlayProps> = ({ onSnooze
     flowTimeElapsed,
     timeLeft,
     timerState,
+    isActive,
   } = useDesktopStore();
 
   const [terminating, setTerminating] = useState<string | null>(null);
   const [terminateError, setTerminateError] = useState<string | null>(null);
+
+  const isStrictLocked = Boolean(isActive && timerState === "FLOW");
 
   if (shieldViolations.length === 0) return null;
 
@@ -209,8 +279,19 @@ export const ShieldBlockOverlay: React.FC<ShieldBlockOverlayProps> = ({ onSnooze
   };
 
   const handleDisableShield = () => {
+    if (isStrictLocked) return;
     setShieldEnabled(false);
     onClear();
+  };
+
+  const handleSnooze = () => {
+    if (isStrictLocked) return;
+    onSnooze();
+  };
+
+  const handleSnoozeOneItem = (kind: "app" | "site", match: string) => {
+    if (isStrictLocked) return;
+    onSnoozeOne(kind, match);
   };
 
   return (
@@ -223,8 +304,9 @@ export const ShieldBlockOverlay: React.FC<ShieldBlockOverlayProps> = ({ onSnooze
         terminateError={terminateError}
         onPauseTimer={handlePauseTimer}
         onDisableShield={handleDisableShield}
-        onDismiss={onSnooze}
-        onSnoozeOne={onSnoozeOne}
+        onDismiss={handleSnooze}
+        onSnoozeOne={handleSnoozeOneItem}
+        isStrictLocked={isStrictLocked}
       />
     </div>
   );
