@@ -371,7 +371,10 @@ export function Popup() {
       document.body.classList.toggle("light", mode === "light");
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+      if (feedbackTimeoutRef.current) clearTimeout(feedbackTimeoutRef.current);
+    };
   }, []);
 
   // Auto-activate deep focus when timer starts, auto-exit when timer stops/finishes
