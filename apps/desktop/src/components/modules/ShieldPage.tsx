@@ -8,6 +8,7 @@ import {
   AppWindow,
   Check,
   Info,
+  Lock,
 } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { isBlockingRequired } from '../../lib/shield';
@@ -55,6 +56,8 @@ export const ShieldPage: React.FC = () => {
     timerState,
   } = useDesktopStore();
 
+  const isStrictLocked = isActive && timerState === "FLOW";
+
   const [listTab, setListTab] = useState<ShieldListTab>("blocked");
   const [input, setInput] = useState("");
   const [feedback, setFeedback] = useState<string | null>(null);
@@ -74,6 +77,7 @@ export const ShieldPage: React.FC = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (isStrictLocked) return;
     if (!input.trim()) return;
     if (listTab === "blocked") addBlockedSite(input);
     else if (listTab === "allowed") addAllowedSite(input);
@@ -82,6 +86,7 @@ export const ShieldPage: React.FC = () => {
   };
 
   const handleQuickAdd = (value: string, kind: "site" | "app") => {
+    if (isStrictLocked) return;
     if (kind === "site") {
       if (listTab === "allowed") addAllowedSite(value);
       else addBlockedSite(value);
@@ -92,6 +97,7 @@ export const ShieldPage: React.FC = () => {
   };
 
   const handleBlockRunningApp = (image: string) => {
+    if (isStrictLocked) return;
     addBlockedApp(image);
     showFeedback(`Blocked ${image}.`);
   };
@@ -119,7 +125,7 @@ export const ShieldPage: React.FC = () => {
       <div className="space-y-6">
         <section
           className={cn(
-            "p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center gap-4 justify-between shadow-sm",
+            "p-5 rounded-2xl border flex flex-col sm:flex-row sm:items-center gap-4 justify-between shadow-sm transition-colors duration-300",
             shield.enabled
               ? "bg-secondary/70 border-border"
               : "bg-secondary/40 border-border"
@@ -136,13 +142,15 @@ export const ShieldPage: React.FC = () => {
                 SITE & APP BLOCKER SHIELD
               </h2>
               <p className="text-[11px] text-muted-foreground">
-                {shield.enabled
-                  ? blocking
-                    ? "Enforcing now — Flow session is active"
-                    : isActive
-                      ? "Paused — resumes when you return to Flow"
-                      : "Armed — activates when you start a Flow session"
-                  : "Shield currently OFF"}
+                {isStrictLocked
+                  ? "Locked during active flow session"
+                  : shield.enabled
+                    ? blocking
+                      ? "Enforcing now - Flow session is active"
+                      : isActive
+                        ? "Paused - resumes when you return to Flow"
+                        : "Armed - activates when you start a Flow session"
+                    : "Shield currently OFF"}
               </p>
             </div>
           </div>
@@ -159,16 +167,32 @@ export const ShieldPage: React.FC = () => {
                 {blocking ? "Enforcing" : "Armed"}
               </span>
             )}
+            {isStrictLocked && (
+              <span
+                title="Locked during active flow session"
+                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border border-border bg-secondary text-muted-foreground"
+              >
+                <Lock className="w-3 h-3 text-muted-foreground" />
+                <span className="hidden sm:inline">Locked during active flow session</span>
+                <span className="sm:hidden">Locked</span>
+              </span>
+            )}
             <button
+              type="button"
               onClick={() => {
+                if (isStrictLocked) return;
                 setShieldEnabled(!shield.enabled);
                 showFeedback(!shield.enabled ? "Shield enabled." : "Shield disabled.");
               }}
+              disabled={isStrictLocked}
+              title={isStrictLocked ? "Locked during active flow session" : undefined}
               className={cn(
-                "px-4 py-2 rounded-xl text-xs font-bold border transition-all active:scale-95",
-                shield.enabled
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-secondary text-secondary-foreground border-border hover:bg-secondary/80"
+                "px-4 py-2 rounded-xl text-xs font-bold border transition-all duration-300",
+                isStrictLocked
+                  ? "opacity-50 cursor-not-allowed bg-secondary text-muted-foreground border-border"
+                  : shield.enabled
+                    ? "bg-primary text-primary-foreground border-primary active:scale-95 cursor-pointer"
+                    : "bg-secondary text-secondary-foreground border-border hover:bg-secondary/80 active:scale-95 cursor-pointer"
               )}
             >
               {shield.enabled ? "ENABLED" : "ENABLE"}
@@ -181,15 +205,34 @@ export const ShieldPage: React.FC = () => {
             <input
               type="text"
               value={input}
+              disabled={isStrictLocked}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={activeTab.placeholder}
-              className="flex-1 px-4 py-2.5 rounded-xl text-xs font-mono bg-secondary/70 border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:border-muted-foreground transition-colors"
+              placeholder={isStrictLocked ? "Locked during active flow session" : activeTab.placeholder}
+              title={isStrictLocked ? "Locked during active flow session" : undefined}
+              className={cn(
+                "flex-1 px-4 py-2.5 rounded-xl text-xs font-mono bg-secondary/70 border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:border-muted-foreground transition-colors",
+                isStrictLocked && "opacity-50 cursor-not-allowed"
+              )}
             />
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-xl text-xs font-bold bg-primary text-primary-foreground hover:bg-primary/90 transition-all active:scale-95 shadow-sm"
+              disabled={isStrictLocked || !input.trim()}
+              title={isStrictLocked ? "Locked during active flow session" : undefined}
+              className={cn(
+                "px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-sm",
+                isStrictLocked || !input.trim()
+                  ? "opacity-50 cursor-not-allowed bg-secondary text-muted-foreground border border-border"
+                  : "bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95 cursor-pointer"
+              )}
             >
-              {activeTab.submitLabel}
+              {isStrictLocked ? (
+                <span className="inline-flex items-center gap-1.5">
+                  <Lock className="w-3.5 h-3.5" />
+                  <span>{activeTab.submitLabel}</span>
+                </span>
+              ) : (
+                activeTab.submitLabel
+              )}
             </button>
           </form>
 
@@ -197,9 +240,10 @@ export const ShieldPage: React.FC = () => {
             {TAB_CONFIG.map((tab) => (
               <button
                 key={tab.id}
+                type="button"
                 onClick={() => setListTab(tab.id)}
                 className={cn(
-                  "flex-1 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all flex items-center justify-center gap-1.5",
+                  "flex-1 py-2 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all duration-300 flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer",
                   listTab === tab.id
                     ? "bg-primary text-primary-foreground shadow-sm"
                     : "text-muted-foreground hover:text-foreground"
@@ -219,7 +263,7 @@ export const ShieldPage: React.FC = () => {
             <div className="space-y-1.5">
               {shield.blockedSites.length === 0 && (
                 <p className="text-[11px] text-muted-foreground px-1">
-                  No blocked sites yet — add domains above to block them during Flow sessions.
+                  No blocked sites yet - add domains above to block them during Flow sessions.
                 </p>
               )}
               {shield.blockedSites.map((site) => (
@@ -232,11 +276,22 @@ export const ShieldPage: React.FC = () => {
                     <span className="truncate">{site}</span>
                   </span>
                   <button
-                    onClick={() => removeBlockedSite(site)}
-                    className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-400 hover:bg-secondary transition-colors"
-                    title={`Unblock ${site}`}
+                    type="button"
+                    disabled={isStrictLocked}
+                    onClick={() => {
+                      if (isStrictLocked) return;
+                      removeBlockedSite(site);
+                    }}
+                    className={cn(
+                      "p-1.5 rounded-lg text-muted-foreground transition-all duration-300",
+                      isStrictLocked
+                        ? "opacity-40 cursor-not-allowed"
+                        : "hover:text-rose-400 hover:bg-secondary active:scale-95 cursor-pointer"
+                    )}
+                    title={isStrictLocked ? "Locked during active flow session" : `Unblock ${site}`}
+                    aria-label={isStrictLocked ? "Locked during active flow session" : `Unblock ${site}`}
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    {isStrictLocked ? <Lock className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
                   </button>
                 </div>
               ))}
@@ -247,8 +302,16 @@ export const ShieldPage: React.FC = () => {
                 {QUICK_ADD_SITES.filter((s) => !shield.blockedSites.includes(s)).map((site) => (
                   <button
                     key={site}
+                    type="button"
+                    disabled={isStrictLocked}
                     onClick={() => handleQuickAdd(site, "site")}
-                    className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-secondary border border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground transition-colors"
+                    title={isStrictLocked ? "Locked during active flow session" : undefined}
+                    className={cn(
+                      "px-2.5 py-1 rounded-full text-[10px] font-mono bg-secondary border border-border text-muted-foreground transition-all duration-300",
+                      isStrictLocked
+                        ? "opacity-40 cursor-not-allowed"
+                        : "hover:text-foreground hover:border-muted-foreground active:scale-95 cursor-pointer"
+                    )}
                   >
                     + {site}
                   </button>
@@ -261,7 +324,7 @@ export const ShieldPage: React.FC = () => {
             <div className="space-y-1.5">
               {shield.allowedSites.length === 0 && (
                 <p className="text-[11px] text-muted-foreground px-1">
-                  Allowed domains always bypass the blocker — useful for subdomains such as
+                  Allowed domains always bypass the blocker - useful for subdomains such as
                   music players on an otherwise blocked site.
                 </p>
               )}
@@ -275,11 +338,22 @@ export const ShieldPage: React.FC = () => {
                     <span className="truncate">{site}</span>
                   </span>
                   <button
-                    onClick={() => removeAllowedSite(site)}
-                    className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-400 hover:bg-secondary transition-colors"
-                    title={`Remove ${site} from allowed list`}
+                    type="button"
+                    disabled={isStrictLocked}
+                    onClick={() => {
+                      if (isStrictLocked) return;
+                      removeAllowedSite(site);
+                    }}
+                    className={cn(
+                      "p-1.5 rounded-lg text-muted-foreground transition-all duration-300",
+                      isStrictLocked
+                        ? "opacity-40 cursor-not-allowed"
+                        : "hover:text-rose-400 hover:bg-secondary active:scale-95 cursor-pointer"
+                    )}
+                    title={isStrictLocked ? "Locked during active flow session" : `Remove ${site} from allowed list`}
+                    aria-label={isStrictLocked ? "Locked during active flow session" : `Remove ${site} from allowed list`}
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    {isStrictLocked ? <Lock className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
                   </button>
                 </div>
               ))}
@@ -290,7 +364,7 @@ export const ShieldPage: React.FC = () => {
             <div className="space-y-1.5">
               {shield.blockedApps.length === 0 && (
                 <p className="text-[11px] text-muted-foreground px-1">
-                  No blocked apps yet — pick a running app below or type a process
+                  No blocked apps yet - pick a running app below or type a process
                   name (e.g. discord.exe).
                 </p>
               )}
@@ -304,22 +378,50 @@ export const ShieldPage: React.FC = () => {
                     <span className="truncate">{app}</span>
                   </span>
                   <button
-                    onClick={() => removeBlockedApp(app)}
-                    className="p-1.5 rounded-lg text-muted-foreground hover:text-rose-400 hover:bg-secondary transition-colors"
-                    title={`Unblock ${app}`}
+                    type="button"
+                    disabled={isStrictLocked}
+                    onClick={() => {
+                      if (isStrictLocked) return;
+                      removeBlockedApp(app);
+                    }}
+                    className={cn(
+                      "p-1.5 rounded-lg text-muted-foreground transition-all duration-300",
+                      isStrictLocked
+                        ? "opacity-40 cursor-not-allowed"
+                        : "hover:text-rose-400 hover:bg-secondary active:scale-95 cursor-pointer"
+                    )}
+                    title={isStrictLocked ? "Locked during active flow session" : `Unblock ${app}`}
+                    aria-label={isStrictLocked ? "Locked during active flow session" : `Unblock ${app}`}
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    {isStrictLocked ? <Lock className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
                   </button>
                 </div>
               ))}
               <div className="pt-3 space-y-2">
-                <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-1">
-                  Choose from your apps — click + to block
-                </p>
-                <RunningAppsPicker
-                  blockedApps={shield.blockedApps}
-                  onBlock={handleBlockRunningApp}
-                />
+                <div className="flex items-center justify-between px-1">
+                  <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                    Choose from your apps - click + to block
+                  </p>
+                  {isStrictLocked && (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
+                      <Lock className="w-3 h-3 text-muted-foreground" />
+                      <span>Locked during active flow session</span>
+                    </span>
+                  )}
+                </div>
+                <div
+                  className={cn(
+                    "transition-opacity duration-300",
+                    isStrictLocked && "opacity-50 pointer-events-none select-none cursor-not-allowed"
+                  )}
+                  title={isStrictLocked ? "Locked during active flow session" : undefined}
+                >
+                  <RunningAppsPicker
+                    blockedApps={shield.blockedApps}
+                    onBlock={handleBlockRunningApp}
+                    disabled={isStrictLocked}
+                  />
+                </div>
               </div>
               <div className="flex flex-wrap items-center gap-2 pt-2">
                 <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
@@ -328,8 +430,16 @@ export const ShieldPage: React.FC = () => {
                 {QUICK_ADD_APPS.filter((a) => !shield.blockedApps.includes(a)).map((app) => (
                   <button
                     key={app}
+                    type="button"
+                    disabled={isStrictLocked}
                     onClick={() => handleQuickAdd(app, "app")}
-                    className="px-2.5 py-1 rounded-full text-[10px] font-mono bg-secondary border border-border text-muted-foreground hover:text-foreground hover:border-muted-foreground transition-colors"
+                    title={isStrictLocked ? "Locked during active flow session" : undefined}
+                    className={cn(
+                      "px-2.5 py-1 rounded-full text-[10px] font-mono bg-secondary border border-border text-muted-foreground transition-all duration-300",
+                      isStrictLocked
+                        ? "opacity-40 cursor-not-allowed"
+                        : "hover:text-foreground hover:border-muted-foreground active:scale-95 cursor-pointer"
+                    )}
                   >
                     + {app}
                   </button>
@@ -344,7 +454,7 @@ export const ShieldPage: React.FC = () => {
           <p className="text-[11px] text-muted-foreground leading-relaxed">
             While a Flow session runs, Focus watches the OS process list for blocked apps
             and visible window titles for blocked sites. Detections raise a fullscreen
-            block overlay and are logged as distractions — apps are only
+            block overlay and are logged as distractions, apps are only
             closed when you choose to terminate them. Dismissing the overlay snoozes that
             item for 10 minutes; pausing the timer does not. Allowed domains always bypass
             site blocking.
