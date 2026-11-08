@@ -17,6 +17,9 @@ importers:
       '@focus/types':
         specifier: workspace:*
         version: link:../../packages/types
+      '@focus/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@focus/utils':
         specifier: workspace:*
         version: link:../../packages/utils
