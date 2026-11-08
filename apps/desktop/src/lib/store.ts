@@ -543,7 +543,9 @@ export const useDesktopStore = create<DesktopState>()(
               storedShield.allowedSites ?? DEFAULT_SHIELD_CONFIG.allowedSites,
             blockedApps:
               storedShield.blockedApps ?? DEFAULT_SHIELD_CONFIG.blockedApps,
-          },
+            strictMode:
+              storedShield.strictMode ?? DEFAULT_SHIELD_CONFIG.strictMode ?? true,
+          } as ShieldConfig,
         };
       },
       partialize: (state) => {

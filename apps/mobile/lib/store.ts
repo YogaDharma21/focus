@@ -412,7 +412,14 @@ export const useAppStore = create<AppState>()(
             ? (state.shield as Record<string, unknown>)
             : {};
         // Field-merge so new shield options backfill onto existing installs.
-        state.shield = { ...DEFAULT_SHIELD_CONFIG, ...storedShield };
+        state.shield = {
+          ...DEFAULT_SHIELD_CONFIG,
+          ...storedShield,
+          strictMode:
+            typeof storedShield.strictMode === 'boolean'
+              ? storedShield.strictMode
+              : (DEFAULT_SHIELD_CONFIG.strictMode ?? true),
+        };
         if (!Array.isArray(state.tasks)) {
           state.tasks = [];
         }

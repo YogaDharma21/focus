@@ -37,7 +37,7 @@ export const DEFAULT_STATE: AppStateData = {
   distractions: [],
   shield: {
     enabled: true,
-    strictMode: false,
+    strictMode: true,
     schedules: [],
     blockedSites: [
       "facebook.com",
@@ -261,7 +261,7 @@ function migrateState(fresh: AppStateData): AppStateData {
       fresh.shield.schedules = [];
     }
     if (fresh.shield.strictMode === undefined) {
-      fresh.shield.strictMode = false;
+      fresh.shield.strictMode = true;
     }
     if (fresh.shield.enabled === undefined) {
       fresh.shield.enabled = true;
