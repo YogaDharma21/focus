@@ -165,6 +165,12 @@ export function Popup() {
   const [newScheduleDays, setNewScheduleDays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [isAddingSchedule, setIsAddingSchedule] = useState(false);
 
+  // Data Hub State
+  const [isDragging, setIsDragging] = useState(false);
+  const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Settings inputs
 
   // Music Player State & Controls
@@ -719,12 +725,7 @@ export function Popup() {
     setShowDistractionPicker(false);
   };
 
-  // Data Hub State & Handlers
-  const [isDragging, setIsDragging] = useState(false);
-  const [statusMessage, setStatusMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const feedbackTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
+  // Data Hub Handlers
   const showFeedback = (text: string, type: "success" | "error" = "success") => {
     if (feedbackTimeoutRef.current) {
       clearTimeout(feedbackTimeoutRef.current);

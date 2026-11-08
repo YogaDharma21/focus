@@ -234,24 +234,37 @@ function migrateState(fresh: AppStateData): AppStateData {
   if (stats && typeof stats === "object") {
     delete stats.completedTasksCount;
   }
-  if (Array.isArray(legacy.sessions)) {
-    legacy.sessions = (legacy.sessions as Array<Record<string, unknown>>).map((s) => {
+  if (!Array.isArray(fresh.sessions)) {
+    fresh.sessions = [];
+  } else {
+    fresh.sessions = (fresh.sessions as unknown as Array<Record<string, unknown>>).map((s) => {
       if (s && typeof s === "object" && ("todoId" in s || "sessionName" in s)) {
         const { todoId: _dropped, sessionName: _droppedName, ...rest } = s;
         return rest;
       }
       return s;
-    });
+    }) as unknown as typeof fresh.sessions;
   }
-  if (fresh.shield) {
-    if (!('allowedSites' in fresh.shield)) {
-      fresh.shield = Object.assign({}, fresh.shield, { allowedSites: [] });
+  if (!Array.isArray(fresh.distractions)) {
+    fresh.distractions = [];
+  }
+  if (!fresh.shield || typeof fresh.shield !== "object") {
+    fresh.shield = { ...DEFAULT_STATE.shield };
+  } else {
+    if (!Array.isArray(fresh.shield.blockedSites)) {
+      fresh.shield.blockedSites = [...DEFAULT_STATE.shield.blockedSites];
+    }
+    if (!Array.isArray(fresh.shield.allowedSites)) {
+      fresh.shield.allowedSites = [];
+    }
+    if (!Array.isArray(fresh.shield.schedules)) {
+      fresh.shield.schedules = [];
     }
     if (fresh.shield.strictMode === undefined) {
       fresh.shield.strictMode = false;
     }
-    if (!Array.isArray(fresh.shield.schedules)) {
-      fresh.shield.schedules = [];
+    if (fresh.shield.enabled === undefined) {
+      fresh.shield.enabled = true;
     }
   }
   if (!Array.isArray(fresh.tasks)) {

@@ -4,7 +4,7 @@ import { buildAnnualHeatmapGrid, toDateKey, cn } from "@focus/utils";
 import type { Session } from "../../types";
 
 interface AnnualHeatmapProps {
-  sessions: Session[];
+  sessions?: Session[];
   liveElapsed?: number;
 }
 
@@ -25,7 +25,7 @@ export const AnnualHeatmap: React.FC<AnnualHeatmapProps> = ({
 
   const dailyMinutes = useMemo(() => {
     const map: Record<string, number> = {};
-    for (const s of sessions) {
+    for (const s of (sessions || [])) {
       if (!s || !s.date) continue;
       const d = new Date(s.date);
       if (isNaN(d.getTime())) continue;
