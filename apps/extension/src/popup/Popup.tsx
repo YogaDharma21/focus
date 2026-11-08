@@ -807,7 +807,6 @@ export function Popup() {
   };
 
   const isStrictLocked = Boolean(
-    state?.shield?.strictMode &&
     state?.isActive &&
     state?.timerState === "FLOW"
   );
@@ -1761,53 +1760,6 @@ export function Popup() {
                 >
                   {isStrictLocked && <Lock className="w-3 h-3" />}
                   {state.shield.enabled ? "ENABLED" : "ENABLE"}
-                </button>
-              </div>
-
-              {/* Strict Mode Toggle Card */}
-              <div className="p-2.5 rounded-xl border bg-card border-border flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className={`p-1.5 rounded-lg border flex items-center justify-center ${
-                    state.shield.strictMode
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-secondary text-muted-foreground border-border"
-                  }`}>
-                    <Lock className="w-3.5 h-3.5" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold font-mono flex items-center gap-1.5">
-                      STRICT MODE
-                      {state.shield.strictMode && (
-                        <span className="text-[9px] px-1 rounded bg-primary/20 text-primary font-sans font-medium">LOCKED WHEN FOCUSING</span>
-                      )}
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">
-                      Locks shield toggle & rules while focus timer is running
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  disabled={isStrictLocked}
-                  onClick={() => {
-                    if (isStrictLocked) return;
-                    updateState({
-                      shield: {
-                        ...state.shield,
-                        strictMode: !state.shield.strictMode,
-                      },
-                    });
-                  }}
-                  title={isStrictLocked ? "Cannot change Strict Mode while focus timer is running" : undefined}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                    isStrictLocked
-                      ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border"
-                      : state.shield.strictMode
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-secondary text-secondary-foreground border-border"
-                  }`}
-                >
-                  {state.shield.strictMode ? "ON" : "OFF"}
                 </button>
               </div>
 

@@ -84,7 +84,6 @@ export function Blocked() {
   }, [state, targetUrl]);
 
   const isStrictLocked = Boolean(
-    state?.shield?.strictMode &&
     state?.isActive &&
     state?.timerState === "FLOW"
   );
