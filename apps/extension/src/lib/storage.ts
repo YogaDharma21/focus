@@ -1,5 +1,5 @@
 import { AppStateData, ShieldSchedule } from "../types";
-import { validateBackupJson } from "@focus/utils";
+import { validateBackupJson, DEFAULT_CHANNELS } from "@focus/utils";
 
 const STORAGE_KEY = "focus_extension_state_v6";
 const THEME_MIRROR_KEY = "focus_extension_theme";
@@ -84,7 +84,12 @@ export const DEFAULT_STATE: AppStateData = {
   soundEffectVolume: 0.8,
   soundEffectEnabled: true,
   autoPauseOnExternalAudio: false,
-  autoPauseFadeDuration: 2
+  autoPauseFadeDuration: 2,
+  audioSourceType: "lofi",
+  isSoundscapePlaying: false,
+  soundscapeMasterVolume: 60,
+  soundChannels: DEFAULT_CHANNELS,
+  soundscapeActivePreset: null
 };
 
 export const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"] as const;
@@ -293,6 +298,27 @@ function migrateState(fresh: AppStateData): AppStateData {
     } else if (fresh.timerState === "BREAK" && !fresh.targetEndTime) {
       fresh.targetEndTime = Date.now() + ((fresh.timeLeft || 0) * 1000);
     }
+  }
+  if (!Array.isArray(fresh.soundChannels) || fresh.soundChannels.length === 0) {
+    fresh.soundChannels = DEFAULT_CHANNELS;
+  } else {
+    const existingIds = new Set(fresh.soundChannels.map((c) => c.id));
+    const missing = DEFAULT_CHANNELS.filter((c) => !existingIds.has(c.id));
+    if (missing.length > 0) {
+      fresh.soundChannels = [...fresh.soundChannels, ...missing];
+    }
+  }
+  if (typeof fresh.soundscapeMasterVolume !== "number") {
+    fresh.soundscapeMasterVolume = 60;
+  }
+  if (typeof fresh.isSoundscapePlaying !== "boolean") {
+    fresh.isSoundscapePlaying = false;
+  }
+  if (fresh.audioSourceType !== "lofi" && fresh.audioSourceType !== "soundscape") {
+    fresh.audioSourceType = "lofi";
+  }
+  if (fresh.soundscapeActivePreset === undefined) {
+    fresh.soundscapeActivePreset = null;
   }
   return fresh;
 }

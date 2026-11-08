@@ -1,6 +1,22 @@
-import type { TaskItem, TaskPriority, SubtaskItem, BreakRatio } from "@focus/types";
+import type {
+  TaskItem,
+  TaskPriority,
+  SubtaskItem,
+  BreakRatio,
+  SoundChannelId,
+  SoundChannelState,
+  SoundscapePreset,
+} from "@focus/types";
 
-export type { TaskItem, TaskPriority, SubtaskItem, BreakRatio };
+export type {
+  TaskItem,
+  TaskPriority,
+  SubtaskItem,
+  BreakRatio,
+  SoundChannelId,
+  SoundChannelState,
+  SoundscapePreset,
+};
 
 export type TimerMode = "STOPWATCH" | "FLOW" | "flow" | "pomodoro";
 export type TimerState = "FLOW" | "BREAK";
@@ -92,4 +108,10 @@ export interface AppStateData {
   soundEffectEnabled?: boolean;
   autoPauseOnExternalAudio?: boolean;
   autoPauseFadeDuration?: number;
+
+  audioSourceType?: "lofi" | "soundscape";
+  isSoundscapePlaying?: boolean;
+  soundscapeMasterVolume?: number; // 0 - 100
+  soundChannels?: SoundChannelState[];
+  soundscapeActivePreset?: string | null;
 }
