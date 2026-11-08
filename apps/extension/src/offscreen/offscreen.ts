@@ -1,7 +1,18 @@
+import {
+  soundscapeEngine,
+  DEFAULT_CHANNELS,
+  type SoundChannelId,
+  type SoundChannelState,
+} from "@focus/utils";
+
 let musicAudio: HTMLAudioElement | null = null;
 let currentFadeInterval: ReturnType<typeof setInterval> | null = null;
 let targetMusicVolume = 0.8;
 let playPromise: Promise<void> | null = null;
+
+let currentSoundChannels: SoundChannelState[] = [...DEFAULT_CHANNELS];
+let currentSoundscapeMasterVolume = 60;
+let isSoundscapeRunning = false;
 
 function getAudio(): HTMLAudioElement {
   if (!musicAudio) {
@@ -52,6 +63,11 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
 
     switch (message.action) {
       case "PLAY_MUSIC": {
+        if (isSoundscapeRunning && message.stopSoundscape !== false) {
+          isSoundscapeRunning = false;
+          soundscapeEngine.stopAll();
+        }
+
         const audio = getAudio();
         if (typeof message.volume === "number") {
           targetMusicVolume = Math.max(0, Math.min(1, message.volume));
@@ -164,6 +180,126 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
         }
         sendResponse({ status: "sfx_triggered" });
         break;
+      }
+
+      case "START_SOUNDSCAPE": {
+        if (musicAudio && !musicAudio.paused) {
+          clearFade();
+          void safePause(musicAudio);
+        }
+
+        if (Array.isArray(message.channels)) {
+          currentSoundChannels = message.channels;
+        }
+        if (typeof message.masterVolume === "number") {
+          currentSoundscapeMasterVolume = Math.max(0, Math.min(100, Math.round(message.masterVolume)));
+        }
+
+        isSoundscapeRunning = true;
+        soundscapeEngine.sync(
+          currentSoundChannels,
+          currentSoundscapeMasterVolume,
+          currentSoundscapeMasterVolume === 0,
+          true
+        );
+        sendResponse({
+          status: "soundscape_started",
+          channels: currentSoundChannels,
+          masterVolume: currentSoundscapeMasterVolume,
+        });
+        return true;
+      }
+
+      case "STOP_SOUNDSCAPE": {
+        isSoundscapeRunning = false;
+        soundscapeEngine.stopAll();
+        sendResponse({ status: "soundscape_stopped" });
+        return true;
+      }
+
+      case "SET_SOUNDSCAPE_CHANNEL_VOLUME": {
+        const { id, volume, enabled } = message;
+        const numVol = typeof volume === "number" ? Math.max(0, Math.min(100, Math.round(volume))) : 50;
+        currentSoundChannels = currentSoundChannels.map((ch) => {
+          if (ch.id === id) {
+            const isEnabled = typeof enabled === "boolean" ? enabled : (numVol > 0 ? (ch.enabled || true) : ch.enabled);
+            return { ...ch, volume: numVol, enabled: isEnabled };
+          }
+          return ch;
+        });
+
+        if (isSoundscapeRunning) {
+          const ch = currentSoundChannels.find((c) => c.id === id);
+          if (ch && ch.enabled && numVol > 0) {
+            soundscapeEngine.startChannel(id as SoundChannelId, numVol);
+          } else {
+            soundscapeEngine.stopChannel(id as SoundChannelId);
+          }
+        }
+        sendResponse({ status: "channel_volume_set", id, volume: numVol });
+        return true;
+      }
+
+      case "TOGGLE_SOUNDSCAPE_CHANNEL": {
+        const { id, enabled } = message;
+        currentSoundChannels = currentSoundChannels.map((ch) => {
+          if (ch.id === id) {
+            const nextEnabled = typeof enabled === "boolean" ? enabled : !ch.enabled;
+            return { ...ch, enabled: nextEnabled };
+          }
+          return ch;
+        });
+
+        if (isSoundscapeRunning) {
+          const ch = currentSoundChannels.find((c) => c.id === id);
+          if (ch && ch.enabled && ch.volume > 0) {
+            soundscapeEngine.startChannel(id as SoundChannelId, ch.volume);
+          } else {
+            soundscapeEngine.stopChannel(id as SoundChannelId);
+          }
+        }
+        sendResponse({ status: "channel_toggled", id });
+        return true;
+      }
+
+      case "SET_SOUNDSCAPE_MASTER_VOLUME": {
+        const vol = typeof message.volume === "number" ? Math.max(0, Math.min(100, Math.round(message.volume))) : 60;
+        currentSoundscapeMasterVolume = vol;
+        soundscapeEngine.setMasterVolume(vol, vol === 0);
+        sendResponse({ status: "master_volume_set", volume: vol });
+        return true;
+      }
+
+      case "APPLY_SOUNDSCAPE_PRESET": {
+        const presetChannels: Partial<Record<SoundChannelId, number>> = message.channels || {};
+        currentSoundChannels = currentSoundChannels.map((ch) => {
+          const targetVol = presetChannels[ch.id];
+          if (targetVol !== undefined) {
+            return { ...ch, volume: targetVol, enabled: targetVol > 0 };
+          }
+          return { ...ch, enabled: false };
+        });
+
+        if (isSoundscapeRunning) {
+          soundscapeEngine.sync(
+            currentSoundChannels,
+            currentSoundscapeMasterVolume,
+            currentSoundscapeMasterVolume === 0,
+            true
+          );
+        }
+        sendResponse({ status: "preset_applied", channels: currentSoundChannels });
+        return true;
+      }
+
+      case "GET_SOUNDSCAPE_STATUS": {
+        sendResponse({
+          status: "ok",
+          isRunning: isSoundscapeRunning,
+          masterVolume: currentSoundscapeMasterVolume,
+          channels: currentSoundChannels,
+        });
+        return true;
       }
     }
   });

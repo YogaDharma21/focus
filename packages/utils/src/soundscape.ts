@@ -374,6 +374,15 @@ export class ProceduralSoundscapeEngine {
     }, 50);
 
     this.activeNodes.delete(id);
+    if (this.activeNodes.size === 0) {
+      this.suspend();
+    }
+  }
+
+  public suspend(): void {
+    if (this.ctx && typeof this.ctx.suspend === "function" && this.ctx.state === "running") {
+      void this.ctx.suspend();
+    }
   }
 
   public sync(channels: SoundChannelState[], masterVol: number, muted: boolean, playing: boolean): void {
@@ -388,6 +397,7 @@ export class ProceduralSoundscapeEngine {
       for (const [id] of this.activeNodes) {
         this.stopChannel(id);
       }
+      this.suspend();
       return;
     }
 
@@ -405,6 +415,7 @@ export class ProceduralSoundscapeEngine {
       this.stopChannel(id);
     }
     this.isRunning = false;
+    this.suspend();
   }
 
   public isChannelActive(id: SoundChannelId): boolean {
