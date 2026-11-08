@@ -9,10 +9,12 @@ export interface DurationPopoverProps {
   className?: string;
   align?: "left" | "right";
   disabled?: boolean;
+  compact?: boolean;
+  presets?: number[];
   trigger?: React.ReactNode;
 }
 
-const PRESETS = [15, 25, 45, 60, 90];
+const DEFAULT_PRESETS = [15, 25, 45, 60];
 
 export function DurationPopover({
   value,
@@ -21,6 +23,8 @@ export function DurationPopover({
   className,
   align = "right",
   disabled = false,
+  compact = false,
+  presets = DEFAULT_PRESETS,
   trigger,
 }: DurationPopoverProps) {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -91,6 +95,7 @@ export function DurationPopover({
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
             "flex items-center gap-1.5 h-8 px-2.5 rounded-[10px] text-xs font-medium transition-all duration-300 cursor-pointer active:scale-95 border select-none",
+            compact && (value ? "h-7 px-2 rounded-[8px] text-[11px]" : "h-7 w-7 p-0 justify-center rounded-[8px]"),
             value
               ? "bg-surface-inset text-foreground border-white/10"
               : "bg-surface-inset text-muted-foreground hover:text-foreground border-transparent"
@@ -98,9 +103,11 @@ export function DurationPopover({
           title={value ? `Estimate: ${formatTaskDuration(value)}` : "Set duration"}
         >
           <Clock className="w-3.5 h-3.5 shrink-0" />
-          <span className="font-mono tabular-nums">
-            {value ? formatTaskDuration(value) : placeholder}
-          </span>
+          {(!compact || value) && (
+            <span className="font-mono tabular-nums">
+              {value ? formatTaskDuration(value) : placeholder}
+            </span>
+          )}
           {value && (
             <span
               onClick={handleClear}
@@ -116,7 +123,7 @@ export function DurationPopover({
       {isOpen && (
         <div
           className={cn(
-            "absolute top-full mt-2 z-50 w-52 p-3 bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-[16px] text-foreground select-none",
+            "absolute top-full mt-2 z-50 w-56 p-3 bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-[16px] text-foreground select-none",
             align === "right" ? "right-0" : "left-0"
           )}
         >
@@ -136,8 +143,8 @@ export function DurationPopover({
           </div>
 
           {/* Preset Buttons Grid */}
-          <div className="grid grid-cols-3 gap-1.5 mb-3">
-            {PRESETS.map((m) => {
+          <div className={cn("grid gap-1.5 mb-3", presets.length === 4 ? "grid-cols-4" : "grid-cols-3")}>
+            {presets.map((m) => {
               const isSelected = value === m;
               return (
                 <button

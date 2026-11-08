@@ -37,7 +37,7 @@ const PRIORITY_BADGES: Record<TaskPriority, string> = {
   urgent: "bg-crimson-bg text-crimson",
   high: "bg-amber-bg text-amber",
   medium: "bg-blue-bg text-blue",
-  low: "bg-surface-inset text-muted-foreground",
+  low: "bg-emerald-bg text-emerald",
 };
 
 const VELOCITY_BADGES: Record<VelocityStatus, string> = {

@@ -10,6 +10,7 @@ export interface PriorityPopoverProps {
   className?: string;
   align?: "left" | "right";
   disabled?: boolean;
+  compact?: boolean;
   trigger?: React.ReactNode;
 }
 
@@ -37,9 +38,9 @@ export const PRIORITY_CONFIG: Record<
   },
   low: {
     label: "Low",
-    bg: "bg-surface-inset",
-    text: "text-muted-foreground",
-    dot: "bg-muted-foreground",
+    bg: "bg-emerald-bg",
+    text: "text-emerald",
+    dot: "bg-emerald",
   },
 };
 
@@ -52,6 +53,7 @@ export function PriorityPopover({
   className,
   align = "left",
   disabled = false,
+  compact = false,
   trigger,
 }: PriorityPopoverProps) {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -125,6 +127,7 @@ export function PriorityPopover({
           onClick={handleCycle}
           className={cn(
             "flex items-center gap-1.5 h-8 px-2.5 rounded-[10px] text-xs font-medium transition-all duration-300 cursor-pointer active:scale-95 border select-none",
+            compact && (currentConfig ? "h-7 px-2 rounded-[8px] text-[11px]" : "h-7 w-7 p-0 justify-center rounded-[8px]"),
             currentConfig
               ? cn(currentConfig.bg, currentConfig.text, "border-transparent")
               : "bg-surface-inset text-muted-foreground hover:text-foreground border-transparent"
@@ -140,7 +143,9 @@ export function PriorityPopover({
           ) : (
             <Flag className="w-3.5 h-3.5 shrink-0" />
           )}
-          <span className="capitalize">{currentConfig ? currentConfig.label : placeholder}</span>
+          {(!compact || currentConfig) && (
+            <span className="capitalize">{currentConfig ? currentConfig.label : placeholder}</span>
+          )}
         </button>
       )}
 

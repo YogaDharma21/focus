@@ -19,6 +19,7 @@ export interface TaskQuickAddProps {
   defaultPriority?: TaskPriority;
   autoFocus?: boolean;
   disabled?: boolean;
+  compact?: boolean;
   className?: string;
   inputClassName?: string;
 }
@@ -29,6 +30,7 @@ export function TaskQuickAdd({
   defaultPriority,
   autoFocus = false,
   disabled = false,
+  compact = false,
   className,
   inputClassName,
 }: TaskQuickAddProps) {
@@ -77,6 +79,7 @@ export function TaskQuickAdd({
     <div
       className={cn(
         "relative flex items-center gap-2 bg-surface-inset border-0 rounded-xl px-3 py-1.5 min-h-[46px] transition-all duration-300",
+        compact && "px-2.5 py-1 min-h-[40px] gap-1.5",
         className
       )}
     >
@@ -91,6 +94,7 @@ export function TaskQuickAdd({
         autoFocus={autoFocus}
         className={cn(
           "flex-1 bg-transparent border-0 text-sm text-foreground placeholder:text-subtle-foreground focus:outline-none min-w-[140px]",
+          compact && "text-xs min-w-[80px]",
           inputClassName
         )}
       />
@@ -102,6 +106,7 @@ export function TaskQuickAdd({
           onChange={setPriority}
           disabled={disabled || isSubmitting}
           align="right"
+          compact={compact}
         />
 
         <DurationPopover
@@ -109,6 +114,8 @@ export function TaskQuickAdd({
           onChange={setEstimatedMinutes}
           disabled={disabled || isSubmitting}
           align="right"
+          compact={compact}
+          presets={[15, 25, 45, 60]}
         />
 
         <DatePickerPopover
@@ -116,6 +123,7 @@ export function TaskQuickAdd({
           onChange={setDeadline}
           disabled={disabled || isSubmitting}
           align="right"
+          compact={compact}
         />
 
         {/* Action Button */}
@@ -123,11 +131,14 @@ export function TaskQuickAdd({
           type="button"
           onClick={() => handleSubmit()}
           disabled={!text.trim() || isSubmitting || disabled}
-          className="h-8 px-3 rounded-[10px] bg-primary text-primary-foreground text-xs font-medium shadow-sm hover:opacity-90 active:scale-95 transition-all duration-300 cursor-pointer disabled:opacity-30 disabled:pointer-events-none flex items-center gap-1 select-none"
+          className={cn(
+            "h-8 px-3 rounded-[10px] bg-primary text-primary-foreground text-xs font-medium shadow-sm hover:opacity-90 active:scale-95 transition-all duration-300 cursor-pointer disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center gap-1 select-none",
+            compact && "h-7 w-7 px-0 rounded-[8px]"
+          )}
           title="Add task (Enter)"
         >
           <Plus className="w-3.5 h-3.5" />
-          <span className="hidden sm:inline">Add</span>
+          {!compact && <span className="hidden sm:inline">Add</span>}
         </button>
       </div>
     </div>
