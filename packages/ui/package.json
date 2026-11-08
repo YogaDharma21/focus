@@ -11,7 +11,9 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@focus/utils": "workspace:*"
+    "@focus/types": "workspace:*",
+    "@focus/utils": "workspace:*",
+    "lucide-react": "^0.563.0"
   },
   "peerDependencies": {
     "react": "^19.0.0",
