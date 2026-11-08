@@ -143,7 +143,10 @@ export function DurationPopover({
           </div>
 
           {/* Preset Buttons Grid */}
-          <div className={cn("grid gap-1.5 mb-3", presets.length === 4 ? "grid-cols-4" : "grid-cols-3")}>
+          <div
+            className={cn("grid gap-1.5 mb-3", presets.length === 4 ? "grid-cols-4" : "grid-cols-3")}
+            style={{ display: "grid", gridTemplateColumns: `repeat(${presets.length === 4 ? 4 : 3}, minmax(0, 1fr))` }}
+          >
             {presets.map((m) => {
               const isSelected = value === m;
               return (

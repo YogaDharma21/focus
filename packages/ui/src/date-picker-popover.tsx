@@ -312,7 +312,10 @@ export function DatePickerPopover({
           </div>
 
           {/* Weekday Labels */}
-          <div className="grid grid-cols-7 gap-1 mb-1 text-center">
+          <div
+            className="grid grid-cols-7 gap-1 mb-1 text-center"
+            style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))" }}
+          >
             {WEEKDAYS.map((day) => (
               <span
                 key={day}
@@ -324,7 +327,10 @@ export function DatePickerPopover({
           </div>
 
           {/* Days Grid */}
-          <div className="grid grid-cols-7 gap-1">
+          <div
+            className="grid grid-cols-7 gap-1"
+            style={{ display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))" }}
+          >
             {calendarCells.map((cell, idx) => {
               const cellStr = formatISODate(cell.date);
               const isSelected = value === cellStr;
