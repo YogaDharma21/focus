@@ -1,7 +1,15 @@
-import { getStoredState, saveStoredState, getEffectiveTimeLeft } from "../lib/storage";
-import { AppStateData } from "../types";
+import {
+  getStoredState,
+  saveStoredState,
+  getEffectiveTimeLeft,
+  getWeeklyMinutesFromSessions,
+  getTodayMinutesFromSessions,
+  calculateStreaksFromSessions,
+} from "../lib/storage";
+import { AppStateData, Session } from "../types";
 
 const BREAK_ALARM = "focus-break-end";
+const POMODORO_WORK_ALARM = "focus-pomodoro-work-end";
 const OFFSCREEN_DOCUMENT_PATH = "offscreen.html";
 
 // ─── Auto-Pause State Persistence ─────────────────────────────────────────
@@ -273,6 +281,15 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
           sendResponse({ success: true });
         });
         return true;
+      } else if (message.action === "CHECK_POMODORO_END") {
+        getStoredState().then(async (state) => {
+          const isPomo = state.timerSettings?.timerMode === "pomodoro" || state.timerMode === "pomodoro";
+          if (isPomo && state.isActive && state.timerState === "FLOW" && state.targetEndTime && state.targetEndTime <= Date.now()) {
+            await handlePomodoroFinished();
+          }
+          sendResponse({ success: true });
+        });
+        return true;
       } else if (message.action === "SET_AUTO_PAUSE_ON_EXTERNAL_AUDIO") {
         const enabled = Boolean(message.enabled);
         saveStoredState({ autoPauseOnExternalAudio: enabled }).then(async () => {
@@ -391,7 +408,14 @@ async function updateBadgeForState(state?: AppStateData) {
   const timeLeft = getEffectiveTimeLeft(currentState);
   const mins = Math.floor(timeLeft / 60);
   const secs = timeLeft % 60;
-  const badgeText = currentState.timerState === "FLOW" ? `${mins}m` : (mins > 0 ? `${mins}m` : `${secs}s`);
+  const isPomo = currentState.timerSettings?.timerMode === "pomodoro" || currentState.timerMode === "pomodoro";
+
+  let badgeText = "";
+  if (currentState.timerState === "FLOW") {
+    badgeText = isPomo ? (mins > 0 ? `${mins}m` : `${secs}s`) : `${mins}m`;
+  } else {
+    badgeText = mins > 0 ? `${mins}m` : `${secs}s`;
+  }
 
   chrome.action.setBadgeText({ text: badgeText });
   chrome.action.setBadgeBackgroundColor({
@@ -399,10 +423,12 @@ async function updateBadgeForState(state?: AppStateData) {
   });
 }
 
-// ─── Break Handling & Alarms ───────────────────────────────────────────
+// ─── Break & Pomodoro Handling & Alarms ───────────────────────────────────
 
-async function syncBreakAlarm(state: AppStateData) {
+async function syncTimerAlarms(state: AppStateData) {
   if (typeof chrome === "undefined" || !chrome.alarms) return;
+
+  const isPomo = state.timerSettings?.timerMode === "pomodoro" || state.timerMode === "pomodoro";
 
   if (state.isActive && state.timerState === "BREAK" && state.targetEndTime) {
     if (state.targetEndTime <= Date.now()) {
@@ -410,9 +436,97 @@ async function syncBreakAlarm(state: AppStateData) {
     } else {
       await chrome.alarms.create(BREAK_ALARM, { when: state.targetEndTime });
     }
+    await chrome.alarms.clear(POMODORO_WORK_ALARM);
+  } else if (isPomo && state.isActive && state.timerState === "FLOW" && state.targetEndTime) {
+    if (state.targetEndTime <= Date.now()) {
+      await handlePomodoroFinished();
+    } else {
+      await chrome.alarms.create(POMODORO_WORK_ALARM, { when: state.targetEndTime });
+    }
+    await chrome.alarms.clear(BREAK_ALARM);
   } else {
     await chrome.alarms.clear(BREAK_ALARM);
+    await chrome.alarms.clear(POMODORO_WORK_ALARM);
   }
+}
+
+async function handlePomodoroFinished() {
+  if (typeof chrome !== "undefined" && chrome.alarms) {
+    await chrome.alarms.clear(POMODORO_WORK_ALARM);
+  }
+
+  const state = await getStoredState();
+  const isPomo = state.timerSettings?.timerMode === "pomodoro" || state.timerMode === "pomodoro";
+  if (!state.isActive || state.timerState !== "FLOW" || !isPomo) {
+    return;
+  }
+
+  const workMins = state.timerSettings?.pomodoro?.workDuration ?? 25;
+  const workSecs = workMins * 60;
+  const breakMins = state.timerSettings?.pomodoro?.breakDuration ?? 5;
+  const breakSecs = breakMins * 60;
+
+  const focusedTask = (state.tasks || []).find((t) => t.id === state.selectedTaskId);
+  const newSession: Session = {
+    id: crypto.randomUUID(),
+    date: new Date().toISOString(),
+    duration: workSecs,
+    mode: "pomodoro",
+    taskId: focusedTask?.id,
+    taskName: focusedTask?.text,
+  };
+  const newSessions = [newSession, ...(state.sessions || [])];
+  const updatedWeekly = getWeeklyMinutesFromSessions(newSessions);
+  const updatedToday = getTodayMinutesFromSessions(newSessions);
+  const streaks = calculateStreaksFromSessions(newSessions);
+
+  const autoStartBreak = Boolean(state.timerSettings?.autoStartBreak);
+  const soundEnabled = state.soundEnabled ?? true;
+  const musicEnabled = state.musicEnabled ?? true;
+  const sfxEnabled = state.soundEffectEnabled ?? true;
+
+  const targetEnd = autoStartBreak ? Date.now() + (breakSecs * 1000) : null;
+
+  const nextState = await saveStoredState({
+    isActive: autoStartBreak,
+    isMusicPlaying: false,
+    deepFocusMode: false,
+    timerState: "BREAK",
+    timeLeft: breakSecs,
+    timerAnchorTimestamp: null,
+    targetEndTime: targetEnd,
+    sessions: newSessions,
+    stats: {
+      ...state.stats,
+      todayMinutes: updatedToday,
+      weeklyMinutes: updatedWeekly,
+      streakDays: streaks.current,
+      longestStreak: streaks.best,
+    },
+  });
+
+  await updateBadgeForState(nextState);
+
+  if (soundEnabled && sfxEnabled) {
+    sendToOffscreen("PLAY_SOUND_EFFECT", { volume: state.soundEffectVolume ?? 0.8 });
+  }
+
+  restoreBlockedTabs();
+
+  if (typeof chrome !== "undefined" && chrome.notifications) {
+    const iconUrl = typeof chrome.runtime?.getURL === "function"
+      ? chrome.runtime.getURL("icons/icon128.png")
+      : "icons/icon128.png";
+    chrome.notifications.create({
+      type: "basic",
+      iconUrl,
+      title: "Pomodoro Finished!",
+      message: `Focus session complete. Time for a ${breakMins}-minute break.`,
+      priority: 2,
+    });
+  }
+
+  scheduleSyncExternalAudioState("pomodoro.finished");
 }
 
 async function handleBreakFinished() {
@@ -425,21 +539,41 @@ async function handleBreakFinished() {
     return;
   }
 
+  const isPomo = state.timerSettings?.timerMode === "pomodoro" || state.timerMode === "pomodoro";
   const autoStart = Boolean(state.timerSettings?.autoStartTimer);
   const soundEnabled = state.soundEnabled ?? true;
   const musicEnabled = state.musicEnabled ?? true;
   const sfxEnabled = state.soundEffectEnabled ?? true;
 
+  const workMins = state.timerSettings?.pomodoro?.workDuration ?? 25;
+  const workSecs = workMins * 60;
+
+  let timeLeft = 0;
+  let anchor: number | null = null;
+  let targetEnd: number | null = null;
+
+  if (isPomo) {
+    timeLeft = workSecs;
+    if (autoStart) {
+      targetEnd = Date.now() + (workSecs * 1000);
+    }
+  } else {
+    timeLeft = 0;
+    if (autoStart) {
+      anchor = Date.now();
+    }
+  }
+
   const nextState = await saveStoredState({
     isActive: autoStart,
     isMusicPlaying: autoStart && soundEnabled && musicEnabled,
     deepFocusMode: false,
-    timerMode: "FLOW",
+    timerMode: isPomo ? "pomodoro" : "FLOW",
     timerState: "FLOW",
     previousMode: "FLOW",
-    timeLeft: 0,
-    timerAnchorTimestamp: autoStart ? Date.now() : null,
-    targetEndTime: null,
+    timeLeft,
+    timerAnchorTimestamp: anchor,
+    targetEndTime: targetEnd,
   });
 
   await updateBadgeForState(nextState);
@@ -670,12 +804,14 @@ if (typeof chrome !== "undefined" && chrome.windows && chrome.windows.onFocusCha
   });
 }
 
-// ─── Alarm Listener (one-shot break timer) ─────────────────────────────
+// ─── Alarm Listener (break & pomodoro timers) ───────────────────────────
 
 if (typeof chrome !== "undefined" && chrome.alarms) {
   chrome.alarms.onAlarm.addListener(async (alarm) => {
     if (alarm.name === BREAK_ALARM) {
       await handleBreakFinished();
+    } else if (alarm.name === POMODORO_WORK_ALARM) {
+      await handlePomodoroFinished();
     }
   });
 }
@@ -692,7 +828,7 @@ if (typeof chrome !== "undefined" && chrome.storage) {
       const wasActive = Boolean(oldState?.isActive);
       const isNowActive = Boolean(newState.isActive);
 
-      await syncBreakAlarm(newState);
+      await syncTimerAlarms(newState);
 
       if (isNowActive) {
         const oldShield = oldState ? JSON.stringify(oldState.shield) : "";
@@ -759,7 +895,7 @@ getStoredState().then(async (state) => {
     if (state.shield.enabled && state.timerState === "FLOW") {
       enforceTabBlocking(state);
     }
-    await syncBreakAlarm(state);
+    await syncTimerAlarms(state);
   } else {
     restoreBlockedTabs();
   }

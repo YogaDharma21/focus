@@ -1,8 +1,8 @@
-import type { TaskItem, TaskPriority, SubtaskItem } from "@focus/types";
+import type { TaskItem, TaskPriority, SubtaskItem, BreakRatio } from "@focus/types";
 
-export type { TaskItem, TaskPriority, SubtaskItem };
+export type { TaskItem, TaskPriority, SubtaskItem, BreakRatio };
 
-export type TimerMode = "STOPWATCH" | "FLOW";
+export type TimerMode = "STOPWATCH" | "FLOW" | "flow" | "pomodoro";
 export type TimerState = "FLOW" | "BREAK";
 export type ThemeMode = "light" | "dark";
 
@@ -10,7 +10,7 @@ export interface Session {
   id: string;
   date: string;
   duration: number; // in seconds
-  mode: TimerMode;
+  mode: TimerMode | string;
   taskId?: string;
   taskName?: string;
 }
@@ -28,9 +28,19 @@ export interface ShieldConfig {
   allowedSites: string[];
 }
 
+export interface PomodoroSettings {
+  workDuration: number; // in minutes
+  breakDuration: number; // in minutes
+}
+
 export interface TimerSettings {
   autoStartBreak?: boolean;
   autoStartTimer?: boolean;
+  breakRatio?: BreakRatio;
+  timerMode?: "flow" | "pomodoro";
+  pomodoro?: PomodoroSettings;
+  workDuration?: number;
+  breakDuration?: number;
 }
 
 export interface AppStateData {

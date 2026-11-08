@@ -65,7 +65,13 @@ export const DEFAULT_STATE: AppStateData = {
   deepFocusMode: false,
   timerSettings: {
     autoStartBreak: false,
-    autoStartTimer: false
+    autoStartTimer: false,
+    breakRatio: "1/5",
+    timerMode: "flow",
+    pomodoro: {
+      workDuration: 25,
+      breakDuration: 5,
+    },
   },
   tasks: [],
   selectedTaskId: null,
@@ -240,12 +246,24 @@ function migrateState(fresh: AppStateData): AppStateData {
   if (!fresh.timerSettings) {
     fresh.timerSettings = {
       autoStartBreak: false,
-      autoStartTimer: false
+      autoStartTimer: false,
+      breakRatio: "1/5",
+      timerMode: "flow",
+      pomodoro: {
+        workDuration: 25,
+        breakDuration: 5,
+      },
     };
   } else {
     fresh.timerSettings = {
       autoStartBreak: fresh.timerSettings.autoStartBreak ?? false,
-      autoStartTimer: fresh.timerSettings.autoStartTimer ?? false
+      autoStartTimer: fresh.timerSettings.autoStartTimer ?? false,
+      breakRatio: fresh.timerSettings.breakRatio ?? "1/5",
+      timerMode: fresh.timerSettings.timerMode ?? (fresh.timerMode === "pomodoro" ? "pomodoro" : "flow"),
+      pomodoro: {
+        workDuration: fresh.timerSettings.pomodoro?.workDuration ?? fresh.timerSettings.workDuration ?? 25,
+        breakDuration: fresh.timerSettings.pomodoro?.breakDuration ?? fresh.timerSettings.breakDuration ?? 5,
+      },
     };
   }
   if (fresh.timerAnchorTimestamp === undefined) {
@@ -255,8 +273,13 @@ function migrateState(fresh: AppStateData): AppStateData {
     fresh.targetEndTime = null;
   }
   if (fresh.isActive) {
-    if (fresh.timerState === "FLOW" && !fresh.timerAnchorTimestamp) {
-      fresh.timerAnchorTimestamp = Date.now() - ((fresh.timeLeft || 0) * 1000);
+    const isPomodoro = fresh.timerSettings?.timerMode === "pomodoro" || fresh.timerMode === "pomodoro";
+    if (fresh.timerState === "FLOW") {
+      if (isPomodoro && !fresh.targetEndTime) {
+        fresh.targetEndTime = Date.now() + ((fresh.timeLeft || 0) * 1000);
+      } else if (!isPomodoro && !fresh.timerAnchorTimestamp) {
+        fresh.timerAnchorTimestamp = Date.now() - ((fresh.timeLeft || 0) * 1000);
+      }
     } else if (fresh.timerState === "BREAK" && !fresh.targetEndTime) {
       fresh.targetEndTime = Date.now() + ((fresh.timeLeft || 0) * 1000);
     }
@@ -270,6 +293,14 @@ export function getEffectiveTimeLeft(state: AppStateData, now: number = Date.now
   }
 
   if (state.timerState === "BREAK") {
+    if (state.targetEndTime) {
+      return Math.max(0, Math.round((state.targetEndTime - now) / 1000));
+    }
+    return Math.max(0, state.timeLeft || 0);
+  }
+
+  const isPomodoro = state.timerSettings?.timerMode === "pomodoro" || state.timerMode === "pomodoro";
+  if (isPomodoro) {
     if (state.targetEndTime) {
       return Math.max(0, Math.round((state.targetEndTime - now) / 1000));
     }
@@ -410,6 +441,10 @@ export async function restoreFullBackup(
         )
       : [];
 
+    const isRestoredPomo =
+      restoredData.timerSettings?.timerMode === "pomodoro" || restoredData.timerMode === "pomodoro";
+    const defaultPomoWork = (restoredData.timerSettings?.pomodoro?.workDuration ?? 25) * 60;
+
     const targetState: AppStateData = {
       ...DEFAULT_STATE,
       ...restoredData,
@@ -417,7 +452,7 @@ export async function restoreFullBackup(
       tasks: sanitizedTasks,
       distractions: sanitizedDistractions,
       isActive: false,
-      timeLeft: 0,
+      timeLeft: isRestoredPomo ? defaultPomoWork : 0,
       timerAnchorTimestamp: null,
       targetEndTime: null,
       timerState: "FLOW",

@@ -51,7 +51,8 @@ import {
 } from "lucide-react";
 import { DeepFocusOverlay } from "./components/DeepFocusOverlay";
 import { Progress } from "../components/ui/progress";
-import { AppStateData, ThemeMode, TaskItem, TaskPriority } from "../types";
+import { AppStateData, ThemeMode, TaskItem, TaskPriority, BreakRatio } from "../types";
+import { getBreakDuration } from "@focus/utils";
 import {
   formatTaskDuration,
   getTaskActualMinutes,
@@ -296,14 +297,19 @@ export function Popup() {
     if (!state?.isActive) return;
     const interval = setInterval(() => {
       setTick((t) => t + 1);
+      const isPomo = state.timerSettings?.timerMode === "pomodoro" || state.timerMode === "pomodoro";
       if (state.timerState === "BREAK" && getEffectiveTimeLeft(state) <= 0) {
         if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
           chrome.runtime.sendMessage({ target: "background", action: "CHECK_BREAK_END" }).catch(() => {});
         }
+      } else if (isPomo && state.timerState === "FLOW" && getEffectiveTimeLeft(state) <= 0) {
+        if (typeof chrome !== "undefined" && chrome.runtime?.sendMessage) {
+          chrome.runtime.sendMessage({ target: "background", action: "CHECK_POMODORO_END" }).catch(() => {});
+        }
       }
     }, 1000);
     return () => clearInterval(interval);
-  }, [state?.isActive, state?.timerState]);
+  }, [state?.isActive, state?.timerState, state?.timerSettings?.timerMode, state?.timerMode]);
 
   useEffect(() => {
     if (!state) return;
@@ -330,10 +336,10 @@ export function Popup() {
       const timeStr = formatBreakDuration(state.timeLeft);
       message = `Break started, ${timeStr} remaining.`;
     } else if (prevTimerState === "BREAK" && state.timerState === "FLOW") {
-      message = state.isActive ? "Break finished. Flow session started." : "Break finished.";
+      message = state.isActive ? "Break finished. Focus session started." : "Break finished.";
     } else if (prevIsActive !== state.isActive) {
       if (state.isActive) {
-        message = state.timerState === "BREAK" ? "Break resumed." : (state.timeLeft > 0 ? "Flow session resumed." : "Flow session started.");
+        message = state.timerState === "BREAK" ? "Break resumed." : (state.timeLeft > 0 ? "Focus session resumed." : "Focus session started.");
       } else if (state.timeLeft > 0 || state.timerState === "BREAK") {
         message = "Timer paused.";
       }
@@ -364,24 +370,115 @@ export function Popup() {
   };
 
 
+  const isPomodoro =
+    (state?.timerSettings?.timerMode === "pomodoro") || (state?.timerMode === "pomodoro");
+
+  const handleTimerModeChange = (newMode: "flow" | "pomodoro") => {
+    if (!state) return;
+    const isNowPomo = newMode === "pomodoro";
+    const workDuration = state.timerSettings?.pomodoro?.workDuration ?? 25;
+    const breakDuration = state.timerSettings?.pomodoro?.breakDuration ?? 5;
+    const newTimerSettings = {
+      ...state.timerSettings,
+      timerMode: newMode,
+      pomodoro: {
+        workDuration,
+        breakDuration,
+      },
+    };
+
+    if (!state.isActive) {
+      const newTimeLeft = isNowPomo
+        ? (state.timerState === "BREAK" ? breakDuration * 60 : workDuration * 60)
+        : 0;
+      updateState({
+        timerMode: isNowPomo ? "pomodoro" : "FLOW",
+        timerSettings: newTimerSettings,
+        timeLeft: newTimeLeft,
+        timerAnchorTimestamp: null,
+        targetEndTime: null,
+      });
+    } else {
+      updateState({
+        timerMode: isNowPomo ? "pomodoro" : "FLOW",
+        timerSettings: newTimerSettings,
+      });
+    }
+  };
+
+  const handlePomodoroWorkDurationChange = (minutes: number) => {
+    if (!state) return;
+    const currentPomodoro = state.timerSettings?.pomodoro ?? { workDuration: 25, breakDuration: 5 };
+    const updatedPomodoro = { ...currentPomodoro, workDuration: minutes };
+    const updatedSettings = { ...state.timerSettings, pomodoro: updatedPomodoro };
+    const isPomo = (state.timerSettings?.timerMode === "pomodoro") || (state.timerMode === "pomodoro");
+    if (!state.isActive && isPomo && state.timerState === "FLOW") {
+      updateState({
+        timerSettings: updatedSettings,
+        timeLeft: minutes * 60,
+      });
+    } else {
+      updateState({
+        timerSettings: updatedSettings,
+      });
+    }
+  };
+
+  const handlePomodoroBreakDurationChange = (minutes: number) => {
+    if (!state) return;
+    const currentPomodoro = state.timerSettings?.pomodoro ?? { workDuration: 25, breakDuration: 5 };
+    const updatedPomodoro = { ...currentPomodoro, breakDuration: minutes };
+    const updatedSettings = { ...state.timerSettings, pomodoro: updatedPomodoro };
+    const isPomo = (state.timerSettings?.timerMode === "pomodoro") || (state.timerMode === "pomodoro");
+    if (!state.isActive && isPomo && state.timerState === "BREAK") {
+      updateState({
+        timerSettings: updatedSettings,
+        timeLeft: minutes * 60,
+      });
+    } else {
+      updateState({
+        timerSettings: updatedSettings,
+      });
+    }
+  };
+
   // Timer controls — write timestamp anchors to storage; background
   // handles one-shot alarm for break end and event-based wakeups.
   const toggleTimer = () => {
     const starting = !state.isActive;
     const currentTime = getEffectiveTimeLeft(state);
+    const isPomo = (state.timerSettings?.timerMode === "pomodoro") || (state.timerMode === "pomodoro");
 
     if (starting) {
       if (state.timerState === "FLOW") {
-        const anchor = Date.now() - (currentTime * 1000);
-        updateState({
-          isActive: true,
-          deepFocusMode: true,
-          isMusicPlaying: soundEnabled && musicEnabled,
-          timerAnchorTimestamp: anchor,
-          targetEndTime: null,
-        });
+        if (isPomo) {
+          const workSecs = (state.timerSettings?.pomodoro?.workDuration ?? 25) * 60;
+          const durationToRun = currentTime > 0 ? currentTime : workSecs;
+          const targetEnd = Date.now() + (durationToRun * 1000);
+          updateState({
+            isActive: true,
+            deepFocusMode: true,
+            isMusicPlaying: soundEnabled && musicEnabled,
+            timeLeft: durationToRun,
+            targetEndTime: targetEnd,
+            timerAnchorTimestamp: null,
+          });
+        } else {
+          const anchor = Date.now() - (currentTime * 1000);
+          updateState({
+            isActive: true,
+            deepFocusMode: true,
+            isMusicPlaying: soundEnabled && musicEnabled,
+            timerAnchorTimestamp: anchor,
+            targetEndTime: null,
+          });
+        }
       } else {
-        const targetEnd = Date.now() + (currentTime * 1000);
+        const breakSecs = isPomo
+          ? (state.timerSettings?.pomodoro?.breakDuration ?? 5) * 60
+          : (currentTime > 0 ? currentTime : 300);
+        const durationToRun = currentTime > 0 ? currentTime : breakSecs;
+        const targetEnd = Date.now() + (durationToRun * 1000);
         updateState({
           isActive: true,
           deepFocusMode: false,
@@ -404,10 +501,17 @@ export function Popup() {
 
   const resetTimer = () => {
     isResetRef.current = true;
+    const isPomo = (state.timerSettings?.timerMode === "pomodoro") || (state.timerMode === "pomodoro");
+    const defaultTime = (isPomo && state.timerState === "FLOW")
+      ? (state.timerSettings?.pomodoro?.workDuration ?? 25) * 60
+      : (isPomo && state.timerState === "BREAK")
+        ? (state.timerSettings?.pomodoro?.breakDuration ?? 5) * 60
+        : 0;
+
     updateState({
       isActive: false,
       deepFocusMode: false,
-      timeLeft: 0,
+      timeLeft: defaultTime,
       timerAnchorTimestamp: null,
       targetEndTime: null,
       isMusicPlaying: false,
@@ -418,17 +522,20 @@ export function Popup() {
   };
 
   const completeSession = () => {
-    // If in BREAK mode, finishing session concludes the break immediately and returns to Flow
+    const isPomo = (state.timerSettings?.timerMode === "pomodoro") || (state.timerMode === "pomodoro");
+
+    // If in BREAK mode, finishing session concludes the break immediately and returns to Flow / Pomodoro
     if (state.timerState === "BREAK") {
       playSoundEffect();
+      const workSecs = isPomo ? (state.timerSettings?.pomodoro?.workDuration ?? 25) * 60 : 0;
       updateState({
         isActive: false,
         isMusicPlaying: false,
         deepFocusMode: false,
-        timerMode: "FLOW",
+        timerMode: isPomo ? "pomodoro" : "FLOW",
         timerState: "FLOW",
         previousMode: "FLOW",
-        timeLeft: 0,
+        timeLeft: workSecs,
         timerAnchorTimestamp: null,
         targetEndTime: null,
       });
@@ -441,15 +548,18 @@ export function Popup() {
       chrome.runtime.sendMessage({ target: "background", action: "RESTORE_BLOCKED_TABS" });
     }
 
-    const currentElapsed = getEffectiveTimeLeft(state);
-    const durationLogged = currentElapsed > 0 ? currentElapsed : 1;
+    const currentRemaining = getEffectiveTimeLeft(state);
+    const workSecs = (state.timerSettings?.pomodoro?.workDuration ?? 25) * 60;
+    const durationLogged = isPomo
+      ? Math.max(1, workSecs - currentRemaining)
+      : (currentRemaining > 0 ? currentRemaining : 1);
 
     const focusedTask = (state.tasks || []).find((t) => t.id === state.selectedTaskId);
     const newSession = {
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
       duration: durationLogged,
-      mode: state.timerMode,
+      mode: isPomo ? "pomodoro" : state.timerMode,
       taskId: focusedTask?.id,
       taskName: focusedTask?.text,
     };
@@ -459,7 +569,10 @@ export function Popup() {
     const updatedTodayMins = getTodayMinutesFromSessions(newSessionList);
     const streaks = calculateStreaksFromSessions(newSessionList);
 
-    const breakDuration = Math.max(1, Math.floor(currentElapsed / 5));
+    const ratio = state.timerSettings?.breakRatio ?? "1/5";
+    const breakDuration = isPomo
+      ? ((state.timerSettings?.pomodoro?.breakDuration ?? 5) * 60)
+      : Math.max(1, getBreakDuration(durationLogged, ratio));
 
     const autoStartBreak = Boolean(state.timerSettings?.autoStartBreak);
 
@@ -467,7 +580,7 @@ export function Popup() {
       isActive: autoStartBreak,
       isMusicPlaying: false,
       deepFocusMode: false,
-      timerMode: "FLOW",
+      timerMode: isPomo ? "pomodoro" : "FLOW",
       timerState: "BREAK",
       previousMode: "FLOW",
       timeLeft: breakDuration,
@@ -1158,6 +1271,11 @@ export function Popup() {
                 <>
                   <Coffee className="w-3.5 h-3.5" />
                   <span>Break</span>
+                </>
+              ) : isPomodoro ? (
+                <>
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>Pomodoro</span>
                 </>
               ) : (
                 <>
@@ -1964,6 +2082,127 @@ export function Popup() {
                 <span className="text-base font-bold text-foreground">Timer</span>
               </div>
 
+              {/* Timer Mode Selection */}
+              <div className="flex flex-col gap-2 rounded-xl px-4 py-3 bg-secondary border border-border">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold text-foreground">Timer Mode</span>
+                  <span className="text-[10px] text-muted-foreground uppercase font-mono tracking-wider">
+                    {(state.timerSettings?.timerMode ?? "flow") === "pomodoro" ? "Pomodoro" : "Flow"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  {(["flow", "pomodoro"] as const).map((mode) => {
+                    const isActive = (state.timerSettings?.timerMode ?? "flow") === mode;
+                    return (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => handleTimerModeChange(mode)}
+                        className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all border cursor-pointer capitalize ${
+                          isActive
+                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                            : "bg-card text-muted-foreground border-transparent hover:text-foreground"
+                        }`}
+                      >
+                        {mode}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Break Ratio (Flow Mode) */}
+              <div className="flex flex-col gap-2 rounded-xl px-4 py-3 bg-secondary border border-border">
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-foreground">Break Ratio</span>
+                    <span className="text-[10px] text-muted-foreground">Flow mode break duration</span>
+                  </div>
+                  <span className="text-[11px] text-muted-foreground font-mono tabular-nums">
+                    {(state.timerSettings?.breakRatio ?? "1/5") === "1/3"
+                      ? "33% of flow"
+                      : (state.timerSettings?.breakRatio ?? "1/5") === "1/4"
+                        ? "25% of flow"
+                        : "20% of flow"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 pt-1">
+                  {(["1/5", "1/4", "1/3"] as const).map((ratio) => {
+                    const isActive = (state.timerSettings?.breakRatio ?? "1/5") === ratio;
+                    return (
+                      <button
+                        key={ratio}
+                        type="button"
+                        onClick={() =>
+                          updateState({
+                            timerSettings: {
+                              ...state.timerSettings,
+                              breakRatio: ratio,
+                            },
+                          })
+                        }
+                        className={`flex-1 px-3 py-2 rounded-lg text-xs font-bold transition-all border cursor-pointer tabular-nums ${
+                          isActive
+                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                            : "bg-card text-muted-foreground border-transparent hover:text-foreground"
+                        }`}
+                      >
+                        {ratio}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Pomodoro Intervals */}
+              {(state.timerSettings?.timerMode ?? "flow") === "pomodoro" && (
+                <div className="flex flex-col gap-3 rounded-xl px-4 py-3 bg-secondary border border-border">
+                  <span className="text-xs font-bold text-foreground">Pomodoro Intervals</span>
+
+                  <div className="flex items-center justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-xs text-foreground">Work Duration</span>
+                      <span className="text-[10px] text-muted-foreground">Minutes per focus session</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="number"
+                        min="1"
+                        max="120"
+                        value={state.timerSettings?.pomodoro?.workDuration ?? 25}
+                        onChange={(e) => {
+                          const val = Math.max(1, Math.min(120, parseInt(e.target.value, 10) || 25));
+                          handlePomodoroWorkDurationChange(val);
+                        }}
+                        className="w-14 px-2 py-1 bg-card border border-border rounded-lg text-xs font-mono text-center text-foreground focus:outline-none"
+                      />
+                      <span className="text-xs text-muted-foreground font-mono">min</span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 border-t border-border/60">
+                    <div className="flex flex-col">
+                      <span className="text-xs text-foreground">Break Duration</span>
+                      <span className="text-[10px] text-muted-foreground">Minutes per break</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        type="number"
+                        min="1"
+                        max="60"
+                        value={state.timerSettings?.pomodoro?.breakDuration ?? 5}
+                        onChange={(e) => {
+                          const val = Math.max(1, Math.min(60, parseInt(e.target.value, 10) || 5));
+                          handlePomodoroBreakDurationChange(val);
+                        }}
+                        className="w-14 px-2 py-1 bg-card border border-border rounded-lg text-xs font-mono text-center text-foreground focus:outline-none"
+                      />
+                      <span className="text-xs text-muted-foreground font-mono">min</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className={`flex items-center justify-between rounded-xl px-4 py-3 border ${
                 "bg-secondary border-border"
               }`}>
@@ -1974,8 +2213,8 @@ export function Popup() {
                 <div
                   onClick={() => updateState({
                     timerSettings: {
+                      ...state.timerSettings,
                       autoStartBreak: !(state.timerSettings?.autoStartBreak ?? false),
-                      autoStartTimer: state.timerSettings?.autoStartTimer ?? false,
                     }
                   })}
                   className={`relative w-11 h-6 rounded-full cursor-pointer transition-colors flex items-center ${
@@ -1994,13 +2233,15 @@ export function Popup() {
                 "bg-secondary border-border"
               }`}>
                 <div className="flex flex-col">
-                  <span className="text-xs font-bold text-foreground">Auto-start Flow Timer</span>
-                  <span className="text-[10px] text-muted-foreground">Start next flow session when break ends</span>
+                  <span className="text-xs font-bold text-foreground">
+                    {(state.timerSettings?.timerMode ?? "flow") === "pomodoro" ? "Auto-start Pomodoro Timer" : "Auto-start Flow Timer"}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground">Start next focus session when break ends</span>
                 </div>
                 <div
                   onClick={() => updateState({
                     timerSettings: {
-                      autoStartBreak: state.timerSettings?.autoStartBreak ?? false,
+                      ...state.timerSettings,
                       autoStartTimer: !(state.timerSettings?.autoStartTimer ?? false),
                     }
                   })}
