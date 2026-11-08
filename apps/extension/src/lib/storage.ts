@@ -357,7 +357,13 @@ export function isScheduleActive(schedule: ShieldSchedule, now: Date = new Date(
 
   const [startH, startM] = schedule.startTime.split(":").map(Number);
   const [endH, endM] = schedule.endTime.split(":").map(Number);
-  if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) return false;
+  if (
+    isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM) ||
+    startH < 0 || startH > 23 || startM < 0 || startM > 59 ||
+    endH < 0 || endH > 23 || endM < 0 || endM > 59
+  ) {
+    return false;
+  }
 
   const currentDay = now.getDay();
   const currentMinutes = now.getHours() * 60 + now.getMinutes();

@@ -545,7 +545,7 @@ export function Popup() {
     }
   };
 
-  // Timer controls — write timestamp anchors to storage; background
+  // Timer controls: write timestamp anchors to storage; background
   // handles one-shot alarm for break end and event-based wakeups.
   const toggleTimer = () => {
     const starting = !state.isActive;

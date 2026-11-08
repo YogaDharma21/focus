@@ -458,7 +458,13 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
 // ─── URL Blocking Helpers ──────────────────────────────────────────────
 
 function isUrlBlocked(targetUrl: string, blockedSites: string[], allowedSites: string[] = []): boolean {
-  if (!targetUrl || targetUrl.startsWith("chrome://") || targetUrl.startsWith("chrome-extension://") || targetUrl.startsWith("about:")) {
+  if (
+    !targetUrl ||
+    targetUrl.startsWith("chrome://") ||
+    targetUrl.startsWith("chrome-extension://") ||
+    targetUrl.startsWith("about:") ||
+    targetUrl.startsWith("edge://")
+  ) {
     return false;
   }
 

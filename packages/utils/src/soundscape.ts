@@ -374,6 +374,9 @@ export class ProceduralSoundscapeEngine {
     }, 50);
 
     this.activeNodes.delete(id);
+    if (this.activeNodes.size === 0 && this.ctx && this.ctx.state === "running") {
+      void this.ctx.suspend();
+    }
   }
 
   public sync(channels: SoundChannelState[], masterVol: number, muted: boolean, playing: boolean): void {
@@ -387,6 +390,9 @@ export class ProceduralSoundscapeEngine {
     if (!playing) {
       for (const [id] of this.activeNodes) {
         this.stopChannel(id);
+      }
+      if (this.ctx && this.ctx.state === "running") {
+        void this.ctx.suspend();
       }
       return;
     }
@@ -405,6 +411,9 @@ export class ProceduralSoundscapeEngine {
       this.stopChannel(id);
     }
     this.isRunning = false;
+    if (this.ctx && this.ctx.state === "running") {
+      void this.ctx.suspend();
+    }
   }
 
   public isChannelActive(id: SoundChannelId): boolean {
