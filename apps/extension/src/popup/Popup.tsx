@@ -1055,7 +1055,6 @@ export function Popup() {
         : effectiveTimeLeft
       : 0;
   const dynamicWeeklyMinutes = getWeeklyMinutesFromSessions(state.sessions);
-  const dynamicTodayMinutes = getTodayMinutesFromSessions(state.sessions);
   const dynamicStreaks = calculateStreaksFromSessions(state.sessions);
   const maxWeeklyMins = Math.max(120, ...Object.values(dynamicWeeklyMinutes));
 
