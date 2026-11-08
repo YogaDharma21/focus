@@ -5,14 +5,14 @@ export { DEFAULT_CHANNELS };
 
 export const SOUNDSCAPE_PRESETS: SoundscapePreset[] = [
   {
+    id: "deepFocus",
+    name: "Deep Focus",
+    channels: { brownnoise: 55, binauralAlpha: 35 },
+  },
+  {
     id: "focusRain",
     name: "Focus Rain",
     channels: { rain: 65, brownnoise: 35 },
-  },
-  {
-    id: "deepSpace",
-    name: "Deep Space",
-    channels: { brownnoise: 50, binauralAlpha: 40 },
   },
   {
     id: "cafeBuzz",
@@ -28,11 +28,6 @@ export const SOUNDSCAPE_PRESETS: SoundscapePreset[] = [
     id: "rainyNight",
     name: "Rain & Fire",
     channels: { rain: 60, campfire: 45 },
-  },
-  {
-    id: "meditation",
-    name: "Meditation",
-    channels: { binauralTheta: 45, pinknoise: 30 },
   },
   {
     id: "reset",

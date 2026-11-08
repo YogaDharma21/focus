@@ -239,7 +239,7 @@ export function Popup() {
       }
       return ch;
     });
-    updateState({ soundChannels: nextChannels });
+    updateState({ soundChannels: nextChannels, soundscapeActivePreset: null });
     if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.sendMessage) {
       chrome.runtime.sendMessage({ target: "background", action: "TOGGLE_SOUNDSCAPE_CHANNEL", id });
     }
@@ -1295,228 +1295,26 @@ export function Popup() {
       <AudioDrawer
         isOpen={isAudioDrawerOpen}
         onClose={() => setIsAudioDrawerOpen(false)}
-      >
-        {/* Audio Source Selector */}
-        <div className="flex items-center gap-1 p-0.5 rounded-lg bg-secondary/80 border border-border">
-          <button
-            type="button"
-            onClick={() => handleAudioSourceTypeChange("lofi")}
-            className={`flex-1 py-1 px-2 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
-              audioSourceType === "lofi"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Lofi-Beats
-          </button>
-          <button
-            type="button"
-            onClick={() => handleAudioSourceTypeChange("soundscape")}
-            className={`flex-1 py-1 px-2 rounded-md text-[11px] font-semibold transition-all cursor-pointer ${
-              audioSourceType === "soundscape"
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            Soundscape {activeChannelsCount > 0 && `(${activeChannelsCount})`}
-          </button>
-        </div>
-
-        {!soundEnabled && (
-          <div className="p-2 rounded-lg bg-secondary/50 border border-border/50 text-center">
-            <span className="text-[10px] text-muted-foreground font-medium">Sound is disabled. Enable it in Settings.</span>
-          </div>
-        )}
-
-        {/* LOFI PLAYER VIEW */}
-        {audioSourceType === "lofi" && (
-          <>
-            {soundEnabled && !musicEnabled && (
-              <div className="p-2 rounded-lg bg-secondary/50 border border-border/50 text-center">
-                <span className="text-[10px] text-muted-foreground font-medium">Music is disabled. Enable it in Settings.</span>
-              </div>
-            )}
-
-            <div
-              onClick={soundEnabled && musicEnabled ? toggleMusicPlay : undefined}
-              className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
-                !soundEnabled || !musicEnabled
-                  ? "bg-background/30 border-border/30 opacity-50 cursor-not-allowed"
-                  : isMusicPlaying
-                    ? "bg-secondary border-border cursor-pointer"
-                    : "bg-background/50 border-border/50 cursor-pointer"
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <Music className={`w-4 h-4 ${soundEnabled && musicEnabled && isMusicPlaying ? "text-primary animate-pulse" : "opacity-50"}`} />
-                <div>
-                  <div className="text-xs font-bold">Lofi-Beats</div>
-                </div>
-              </div>
-
-              {isMusicPlaying && (
-                <div className="flex items-end gap-0.5 h-3">
-                  <span className="w-0.5 h-3 rounded-full bg-foreground animate-pulse" />
-                  <span className="w-0.5 h-2 rounded-full bg-foreground animate-pulse delay-75" />
-                  <span className="w-0.5 h-3.5 rounded-full bg-foreground animate-pulse delay-150" />
-                </div>
-              )}
-            </div>
-
-            {/* Music Volume Slider */}
-            <div className={`mt-2 pt-2 border-t border-border space-y-1 ${!soundEnabled || !musicEnabled ? "opacity-40" : ""}`}>
-              <div className="flex items-center justify-between text-[10px] opacity-60">
-                <span>Music Volume</span>
-                <span className="font-mono tabular-nums">{Math.round(musicVolume * 100)}%</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Volume2 className="w-3.5 h-3.5 opacity-60 shrink-0" />
-                <input
-                  type="range"
-                  min="0"
-                  max="1"
-                  step="0.01"
-                  value={musicVolume}
-                  onChange={(e) => handleMusicVolumeChange(parseFloat(e.target.value))}
-                  disabled={!soundEnabled}
-                  className="w-full h-1 rounded bg-secondary accent-current cursor-pointer disabled:cursor-not-allowed"
-                />
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* SOUNDSCAPE MIXER VIEW */}
-        {audioSourceType === "soundscape" && (
-          <div className="space-y-2.5">
-            {/* Play/Pause Soundscape Bar */}
-            <div
-              onClick={soundEnabled ? toggleSoundscapePlay : undefined}
-              className={`flex items-center justify-between p-2.5 rounded-xl border transition-all ${
-                !soundEnabled
-                  ? "bg-background/30 border-border/30 opacity-50 cursor-not-allowed"
-                  : isSoundscapePlaying
-                    ? "bg-secondary border-border cursor-pointer"
-                    : "bg-background/50 border-border/50 cursor-pointer"
-              }`}
-            >
-              <div className="flex items-center gap-2.5">
-                <Sliders className={`w-4 h-4 ${soundEnabled && isSoundscapePlaying ? "text-emerald animate-pulse" : "opacity-50"}`} />
-                <div>
-                  <div className="text-xs font-bold">Ambient Soundscape</div>
-                  <div className="text-[10px] text-muted-foreground font-mono tabular-nums">
-                    {activeChannelsCount} active channel{activeChannelsCount === 1 ? "" : "s"}
-                  </div>
-                </div>
-              </div>
-
-              {isSoundscapePlaying && (
-                <div className="flex items-end gap-0.5 h-3">
-                  <span className="w-0.5 h-3 rounded-full bg-emerald animate-pulse" />
-                  <span className="w-0.5 h-2 rounded-full bg-emerald animate-pulse delay-75" />
-                  <span className="w-0.5 h-3.5 rounded-full bg-emerald animate-pulse delay-150" />
-                </div>
-              )}
-            </div>
-
-            {/* Master Volume */}
-            <div className={`space-y-1 ${!soundEnabled ? "opacity-40" : ""}`}>
-              <div className="flex items-center justify-between text-[10px] opacity-60">
-                <span>Master Volume</span>
-                <span className="font-mono tabular-nums">{soundscapeMasterVolume}%</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Volume2 className="w-3.5 h-3.5 opacity-60 shrink-0" />
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  step="1"
-                  value={soundscapeMasterVolume}
-                  onChange={(e) => handleSoundscapeMasterVolumeChange(parseInt(e.target.value, 10))}
-                  disabled={!soundEnabled}
-                  className="w-full h-1 rounded bg-secondary accent-primary cursor-pointer disabled:cursor-not-allowed"
-                />
-              </div>
-            </div>
-
-            {/* Presets */}
-            <div className="space-y-1 pt-1.5 border-t border-border">
-              <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider block">
-                Presets
-              </span>
-              <div className="flex flex-wrap gap-1">
-                {SOUNDSCAPE_PRESETS.map((preset) => (
-                  <button
-                    key={preset.id}
-                    type="button"
-                    onClick={() => handleApplySoundscapePreset(preset)}
-                    disabled={!soundEnabled}
-                    className={`px-2 py-0.5 rounded-md text-[10px] font-medium border transition-colors cursor-pointer ${
-                      soundscapeActivePreset === preset.id
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-secondary hover:bg-muted text-muted-foreground hover:text-foreground border-border"
-                    }`}
-                  >
-                    {preset.name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Channels */}
-            <div className="space-y-1 pt-1.5 border-t border-border">
-              <div className="flex items-center justify-between text-[9px] font-bold text-muted-foreground uppercase tracking-wider">
-                <span>Channels</span>
-                <span className="font-mono tabular-nums normal-case">{activeChannelsCount} on</span>
-              </div>
-              <div className="max-h-40 overflow-y-auto pr-1 space-y-1">
-                {soundChannels.map((channel) => (
-                  <div
-                    key={channel.id}
-                    className="p-1.5 rounded-lg bg-secondary/50 border border-border space-y-1"
-                  >
-                    <div className="flex items-center justify-between text-[11px]">
-                      <button
-                        type="button"
-                        onClick={() => toggleSoundscapeChannel(channel.id)}
-                        disabled={!soundEnabled}
-                        className="flex items-center gap-1.5 text-foreground font-medium hover:text-primary transition-colors text-left cursor-pointer"
-                      >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                            channel.enabled ? "bg-emerald" : "bg-muted-foreground/30"
-                          }`}
-                        />
-                        <span className={!channel.enabled ? "text-muted-foreground" : ""}>
-                          {channel.label}
-                        </span>
-                      </button>
-                      <span className="text-[10px] font-mono tabular-nums text-muted-foreground">
-                        {channel.enabled ? `${channel.volume}%` : "Off"}
-                      </span>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      step="1"
-                      value={channel.enabled ? channel.volume : 0}
-                      disabled={!soundEnabled || !channel.enabled}
-                      onChange={(e) =>
-                        handleSoundscapeChannelVolumeChange(channel.id, parseInt(e.target.value, 10))
-                      }
-                      className={`w-full h-1 bg-muted rounded-full appearance-none cursor-pointer accent-primary ${
-                        !channel.enabled ? "opacity-30 cursor-not-allowed" : ""
-                      }`}
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-      </AudioDrawer>
+        audioSourceType={audioSourceType}
+        onAudioSourceTypeChange={handleAudioSourceTypeChange}
+        soundEnabled={soundEnabled}
+        musicEnabled={musicEnabled}
+        isMusicPlaying={isMusicPlaying}
+        musicVolume={musicVolume}
+        onToggleMusicPlay={toggleMusicPlay}
+        onMusicVolumeChange={handleMusicVolumeChange}
+        autoPauseOnExternalAudio={autoPauseOnExternalAudio}
+        onToggleAutoPause={toggleAutoPauseOnExternalAudio}
+        isSoundscapePlaying={isSoundscapePlaying}
+        soundscapeMasterVolume={soundscapeMasterVolume}
+        onToggleSoundscapePlay={toggleSoundscapePlay}
+        onSoundscapeMasterVolumeChange={handleSoundscapeMasterVolumeChange}
+        soundChannels={soundChannels}
+        soundscapeActivePreset={soundscapeActivePreset}
+        onToggleSoundscapeChannel={toggleSoundscapeChannel}
+        onSoundscapeChannelVolumeChange={handleSoundscapeChannelVolumeChange}
+        onApplySoundscapePreset={handleApplySoundscapePreset}
+      />
 
       {/* Main Navigation Bar */}
       <nav className="flex items-center justify-center px-4 py-2 z-10 bg-background shrink-0">
