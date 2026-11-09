@@ -143,7 +143,7 @@ export const ShieldPage: React.FC = () => {
               </h2>
               <p className="text-[11px] text-muted-foreground">
                 {isStrictLocked
-                  ? "Locked during active flow session"
+                  ? "Locked while a focus session is active"
                   : shield.enabled
                     ? blocking
                       ? "Enforcing now - Flow session is active"
@@ -169,11 +169,11 @@ export const ShieldPage: React.FC = () => {
             )}
             {isStrictLocked && (
               <span
-                title="Locked during active flow session"
+                title="Locked while a focus session is active"
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-medium border border-border bg-secondary text-muted-foreground"
               >
                 <Lock className="w-3 h-3 text-muted-foreground" />
-                <span className="hidden sm:inline">Locked during active flow session</span>
+                <span className="hidden sm:inline">Locked while a focus session is active</span>
                 <span className="sm:hidden">Locked</span>
               </span>
             )}
@@ -185,7 +185,7 @@ export const ShieldPage: React.FC = () => {
                 showFeedback(!shield.enabled ? "Shield enabled." : "Shield disabled.");
               }}
               disabled={isStrictLocked}
-              title={isStrictLocked ? "Locked during active flow session" : undefined}
+              title={isStrictLocked ? "Locked while focusing" : undefined}
               className={cn(
                 "px-4 py-2 rounded-xl text-xs font-bold border transition-all duration-300",
                 isStrictLocked
@@ -207,8 +207,8 @@ export const ShieldPage: React.FC = () => {
               value={input}
               disabled={isStrictLocked}
               onChange={(e) => setInput(e.target.value)}
-              placeholder={isStrictLocked ? "Locked during active flow session" : activeTab.placeholder}
-              title={isStrictLocked ? "Locked during active flow session" : undefined}
+              placeholder={isStrictLocked ? "Locked while focusing" : activeTab.placeholder}
+              title={isStrictLocked ? "Locked while focusing" : undefined}
               className={cn(
                 "flex-1 px-4 py-2.5 rounded-xl text-xs font-mono bg-secondary/70 border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:border-muted-foreground transition-colors",
                 isStrictLocked && "opacity-50 cursor-not-allowed"
@@ -217,7 +217,7 @@ export const ShieldPage: React.FC = () => {
             <button
               type="submit"
               disabled={isStrictLocked || !input.trim()}
-              title={isStrictLocked ? "Locked during active flow session" : undefined}
+              title={isStrictLocked ? "Locked while focusing" : undefined}
               className={cn(
                 "px-5 py-2.5 rounded-xl text-xs font-bold transition-all duration-300 shadow-sm",
                 isStrictLocked || !input.trim()
@@ -288,8 +288,8 @@ export const ShieldPage: React.FC = () => {
                         ? "opacity-40 cursor-not-allowed"
                         : "hover:text-rose-400 hover:bg-secondary active:scale-95 cursor-pointer"
                     )}
-                    title={isStrictLocked ? "Locked during active flow session" : `Unblock ${site}`}
-                    aria-label={isStrictLocked ? "Locked during active flow session" : `Unblock ${site}`}
+                    title={isStrictLocked ? "Locked while focusing" : `Unblock ${site}`}
+                    aria-label={isStrictLocked ? "Locked while focusing" : `Unblock ${site}`}
                   >
                     {isStrictLocked ? <Lock className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
                   </button>
@@ -305,7 +305,7 @@ export const ShieldPage: React.FC = () => {
                     type="button"
                     disabled={isStrictLocked}
                     onClick={() => handleQuickAdd(site, "site")}
-                    title={isStrictLocked ? "Locked during active flow session" : undefined}
+                    title={isStrictLocked ? "Locked while focusing" : undefined}
                     className={cn(
                       "px-2.5 py-1 rounded-full text-[10px] font-mono bg-secondary border border-border text-muted-foreground transition-all duration-300",
                       isStrictLocked
@@ -350,8 +350,8 @@ export const ShieldPage: React.FC = () => {
                         ? "opacity-40 cursor-not-allowed"
                         : "hover:text-rose-400 hover:bg-secondary active:scale-95 cursor-pointer"
                     )}
-                    title={isStrictLocked ? "Locked during active flow session" : `Remove ${site} from allowed list`}
-                    aria-label={isStrictLocked ? "Locked during active flow session" : `Remove ${site} from allowed list`}
+                    title={isStrictLocked ? "Locked while focusing" : `Remove ${site} from allowed list`}
+                    aria-label={isStrictLocked ? "Locked while focusing" : `Remove ${site} from allowed list`}
                   >
                     {isStrictLocked ? <Lock className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
                   </button>
@@ -390,8 +390,8 @@ export const ShieldPage: React.FC = () => {
                         ? "opacity-40 cursor-not-allowed"
                         : "hover:text-rose-400 hover:bg-secondary active:scale-95 cursor-pointer"
                     )}
-                    title={isStrictLocked ? "Locked during active flow session" : `Unblock ${app}`}
-                    aria-label={isStrictLocked ? "Locked during active flow session" : `Unblock ${app}`}
+                    title={isStrictLocked ? "Locked while focusing" : `Unblock ${app}`}
+                    aria-label={isStrictLocked ? "Locked while focusing" : `Unblock ${app}`}
                   >
                     {isStrictLocked ? <Lock className="w-3.5 h-3.5" /> : <Trash2 className="w-3.5 h-3.5" />}
                   </button>
@@ -405,7 +405,7 @@ export const ShieldPage: React.FC = () => {
                   {isStrictLocked && (
                     <span className="inline-flex items-center gap-1 text-[10px] text-muted-foreground">
                       <Lock className="w-3 h-3 text-muted-foreground" />
-                      <span>Locked during active flow session</span>
+                      <span>Locked while focusing</span>
                     </span>
                   )}
                 </div>
@@ -414,7 +414,7 @@ export const ShieldPage: React.FC = () => {
                     "transition-opacity duration-300",
                     isStrictLocked && "opacity-50 pointer-events-none select-none cursor-not-allowed"
                   )}
-                  title={isStrictLocked ? "Locked during active flow session" : undefined}
+                  title={isStrictLocked ? "Locked while focusing" : undefined}
                 >
                   <RunningAppsPicker
                     blockedApps={shield.blockedApps}
@@ -433,7 +433,7 @@ export const ShieldPage: React.FC = () => {
                     type="button"
                     disabled={isStrictLocked}
                     onClick={() => handleQuickAdd(app, "app")}
-                    title={isStrictLocked ? "Locked during active flow session" : undefined}
+                    title={isStrictLocked ? "Locked while focusing" : undefined}
                     className={cn(
                       "px-2.5 py-1 rounded-full text-[10px] font-mono bg-secondary border border-border text-muted-foreground transition-all duration-300",
                       isStrictLocked

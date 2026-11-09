@@ -1707,10 +1707,12 @@ export function Popup() {
             <div className="flex flex-col gap-3">
               {/* Lock Alert Banner */}
               {isStrictLocked && (
-                <div className="p-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-500 flex items-center gap-2 text-xs">
-                  <Lock className="w-4 h-4 shrink-0" />
-                  <span className="text-[11px] font-mono leading-tight">
-                    Strict Mode active: Shield toggle and rules are locked while focus timer is running.
+                <div className="p-2.5 rounded-[12px] bg-amber-bg border border-amber/20 flex items-center gap-2.5 text-xs">
+                  <div className="p-1 bg-amber-bg rounded-[8px] text-amber shrink-0">
+                    <Lock className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-[11px] text-muted-foreground leading-snug">
+                    Shield controls and rules are locked while focusing.
                   </span>
                 </div>
               )}
@@ -1723,7 +1725,7 @@ export function Popup() {
               }`}>
                 <div className="flex items-center gap-2.5">
                   {isStrictLocked ? (
-                    <Lock className="w-5 h-5 text-amber-500" />
+                    <Lock className="w-5 h-5 text-amber" />
                   ) : isEnforcing ? (
                     <ShieldCheck className="w-5 h-5 text-emerald" />
                   ) : state.shield.enabled ? (
@@ -1749,7 +1751,7 @@ export function Popup() {
                     updateState({ shield: { ...state.shield, enabled: !state.shield.enabled } });
                   }}
                   disabled={isStrictLocked}
-                  title={isStrictLocked ? "Locked by Strict Mode during active focus session" : undefined}
+                  title={isStrictLocked ? "Locked while focusing" : undefined}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all flex items-center gap-1.5 ${
                     isStrictLocked
                       ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border"
@@ -1864,7 +1866,7 @@ export function Popup() {
                             <button
                               onClick={() => removeBlockedSite(site)}
                               disabled={isStrictLocked}
-                              title={isStrictLocked ? "Locked by Strict Mode" : "Remove"}
+                              title={isStrictLocked ? "Locked while focusing" : "Remove"}
                               className={`p-1 transition-opacity ${
                                 isStrictLocked
                                   ? "opacity-40 cursor-not-allowed text-muted-foreground"
@@ -1894,7 +1896,7 @@ export function Popup() {
                             <button
                               onClick={() => removeAllowedSite(site)}
                               disabled={isStrictLocked}
-                              title={isStrictLocked ? "Locked by Strict Mode" : "Remove"}
+                              title={isStrictLocked ? "Locked while focusing" : "Remove"}
                               className={`p-1 transition-opacity ${
                                 isStrictLocked
                                   ? "opacity-40 cursor-not-allowed text-muted-foreground"
@@ -2041,7 +2043,7 @@ export function Popup() {
                               <button
                                 onClick={() => handleToggleSchedule(schedule.id)}
                                 disabled={isStrictLocked}
-                                title={isStrictLocked ? "Locked by Strict Mode" : undefined}
+                                title={isStrictLocked ? "Locked while focusing" : undefined}
                                 className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border transition-all flex items-center gap-1 ${
                                   isStrictLocked
                                     ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border"
@@ -2056,7 +2058,7 @@ export function Popup() {
                               <button
                                 onClick={() => handleDeleteSchedule(schedule.id)}
                                 disabled={isStrictLocked}
-                                title={isStrictLocked ? "Locked by Strict Mode" : "Delete"}
+                                title={isStrictLocked ? "Locked while focusing" : "Delete"}
                                 className={`p-1 transition-opacity ${
                                   isStrictLocked
                                     ? "opacity-40 cursor-not-allowed text-muted-foreground"

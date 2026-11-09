@@ -17,7 +17,7 @@ export interface ShieldBlockCardProps {
   onDismiss: () => void;
   /** Snooze a single item (row X). Falls back to onDismiss when omitted. */
   onSnoozeOne?: (kind: "app" | "site", match: string) => void;
-  /** When true, strict mode prevents snoozing or disabling shield during Flow. */
+  /** When true, prevents snoozing or disabling shield while focusing. */
   isStrictLocked?: boolean;
 }
 
@@ -70,8 +70,8 @@ export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
             type="button"
             disabled
             className="p-1.5 rounded-lg text-muted-foreground/40 border border-border/40 bg-secondary/30 cursor-not-allowed flex items-center justify-center"
-            title="Locked during active flow session"
-            aria-label="Locked during active flow session"
+            title="Locked while focusing"
+            aria-label="Locked while focusing"
           >
             <Lock className="w-4 h-4" />
           </button>
@@ -140,8 +140,8 @@ export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
                 type="button"
                 disabled
                 className="shrink-0 p-1.5 rounded-lg text-muted-foreground/40 border border-border/40 bg-secondary/30 cursor-not-allowed flex items-center justify-center"
-                title="Locked during active flow session"
-                aria-label="Locked during active flow session"
+                title="Locked while focusing"
+                aria-label="Locked while focusing"
               >
                 <Lock className="w-3.5 h-3.5" />
               </button>
@@ -168,7 +168,7 @@ export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
 
       <p className="text-[11px] text-muted-foreground leading-relaxed">
         {isStrictLocked
-          ? "Shield is locked during Flow. Close the app or site, or pause your timer to continue."
+          ? "Shield is locked while focusing. Close the app or site, or pause your timer to continue."
           : "These items are on your Shield blocklist. Detections are logged as distractions for your stats review."}
       </p>
 
@@ -178,8 +178,8 @@ export const ShieldBlockCard: React.FC<ShieldBlockCardProps> = ({
             <button
               type="button"
               disabled
-              title="Locked during active flow session"
-              aria-label="Locked during active flow session"
+              title="Locked while focusing"
+              aria-label="Locked while focusing"
               className="px-4 py-2 rounded-xl text-xs font-medium text-muted-foreground/40 bg-secondary/30 border border-border/50 cursor-not-allowed flex items-center gap-1.5 transition-all duration-300"
             >
               <Lock className="w-3.5 h-3.5" />
