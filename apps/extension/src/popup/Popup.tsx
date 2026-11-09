@@ -1769,12 +1769,13 @@ export function Popup() {
               <div className="flex gap-1 p-1 rounded-xl bg-card border border-border">
                 <button
                   onClick={() => setShieldSubTab("rules")}
-                  className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono uppercase transition-all ${
+                  className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono uppercase transition-all flex items-center justify-center gap-1.5 ${
                     shieldSubTab === "rules"
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
+                  <Shield className="w-3 h-3" />
                   Rules ({state.shield.blockedSites.length + state.shield.allowedSites.length})
                 </button>
                 <button
