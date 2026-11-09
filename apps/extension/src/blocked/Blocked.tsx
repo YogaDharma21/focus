@@ -84,7 +84,6 @@ export function Blocked() {
   }, [state, targetUrl]);
 
   const isStrictLocked = Boolean(
-    state?.shield?.strictMode &&
     state?.isActive &&
     state?.timerState === "FLOW"
   );
@@ -180,7 +179,7 @@ export function Blocked() {
           <button
             onClick={pauseShieldTemporarily}
             disabled={isStrictLocked}
-            title={isStrictLocked ? "Locked by Strict Mode during active focus session" : undefined}
+            title={isStrictLocked ? "Locked while focus timer is running" : undefined}
             className={`w-full py-3 px-4 rounded-xl font-semibold text-xs border transition-all flex items-center justify-center gap-1.5 ${
               isStrictLocked
                 ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border"
@@ -188,7 +187,7 @@ export function Blocked() {
             }`}
           >
             {isStrictLocked && <Lock className="w-3.5 h-3.5" />}
-            {isStrictLocked ? "Shield Locked (Strict Mode)" : "Disable Shield"}
+            {isStrictLocked ? "Shield Locked" : "Disable Shield"}
           </button>
         </div>
       </div>

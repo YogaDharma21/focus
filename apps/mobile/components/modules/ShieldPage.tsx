@@ -123,11 +123,13 @@ function BlockedAppRow({
   label,
   colors,
   onRemove,
+  disabled = false,
 }: {
   packageName: string;
   label: string;
   colors: ThemeColors;
   onRemove: () => void;
+  disabled?: boolean;
 }) {
   return (
     <View
@@ -146,8 +148,17 @@ function BlockedAppRow({
           {packageName}
         </Text>
       </View>
-      <TouchableOpacity onPress={onRemove} hitSlop={8}>
-        <X size={16} color={colors.mutedText} />
+      <TouchableOpacity
+        onPress={disabled ? undefined : onRemove}
+        disabled={disabled}
+        hitSlop={8}
+        style={{ opacity: disabled ? 0.4 : 1 }}
+      >
+        {disabled ? (
+          <Lock size={14} color={colors.mutedText} />
+        ) : (
+          <X size={16} color={colors.mutedText} />
+        )}
       </TouchableOpacity>
     </View>
   );
@@ -158,19 +169,26 @@ function InstalledAppRow({
   blocked,
   colors,
   onToggle,
+  disabled = false,
 }: {
   app: InstalledShieldApp;
   blocked: boolean;
   colors: ThemeColors;
   onToggle: () => void;
+  disabled?: boolean;
 }) {
   return (
     <TouchableOpacity
       style={[
         styles.pickerAppRow,
-        { backgroundColor: colors.muted, borderColor: blocked ? colors.primary : colors.border },
+        {
+          backgroundColor: colors.muted,
+          borderColor: blocked ? colors.primary : colors.border,
+          opacity: disabled ? 0.5 : 1,
+        },
       ]}
-      onPress={onToggle}
+      onPress={disabled ? undefined : onToggle}
+      disabled={disabled}
       activeOpacity={0.7}
     >
       <ShieldAppIcon packageName={app.packageName} label={app.label} colors={colors} size={36} />
@@ -215,6 +233,8 @@ export function ShieldPage() {
     musicEnabled,
   } = useAppStore();
 
+  const isStrictLocked = isActive && timerState === 'FLOW';
+
   const [listTab, setListTab] = useState<'blocked' | 'allowed'>('blocked');
   const [siteInput, setSiteInput] = useState('');
   const [nativeStatus, setNativeStatus] = useState<NativeShieldStatus | null>(() =>
@@ -253,6 +273,7 @@ export function ShieldPage() {
   }, [refreshNativeStatus]);
 
   const handleAddSite = () => {
+    if (isStrictLocked) return;
     const value = siteInput.trim();
     if (!value) return;
     if (listTab === 'blocked') addBlockedSite(value);
@@ -263,6 +284,7 @@ export function ShieldPage() {
   const sites = listTab === 'blocked' ? shield.blockedSites : shield.allowedSites;
 
   const openAppPicker = () => {
+    if (isStrictLocked) return;
     setInstalledApps(getInstalledApps());
     setAppSearch('');
     setPickerOpen(true);
@@ -312,10 +334,19 @@ export function ShieldPage() {
           <TouchableOpacity
             style={[
               styles.switchTrack,
-              { backgroundColor: shield.enabled ? colors.primary : colors.muted },
+              {
+                backgroundColor: shield.enabled ? colors.primary : colors.muted,
+                opacity: isStrictLocked ? 0.6 : 1,
+              },
             ]}
-            onPress={() => setShieldEnabled(!shield.enabled)}
+            onPress={() => {
+              if (isStrictLocked) return;
+              setShieldEnabled(!shield.enabled);
+            }}
+            disabled={isStrictLocked}
             activeOpacity={0.8}
+            accessibilityRole="switch"
+            accessibilityState={{ checked: shield.enabled, disabled: isStrictLocked }}
           >
             <View
               style={[
@@ -328,6 +359,15 @@ export function ShieldPage() {
             />
           </TouchableOpacity>
         </View>
+
+        {isStrictLocked ? (
+          <View style={[styles.lockedHintRow, { borderTopColor: colors.border }]}>
+            <Lock size={12} color={colors.mutedText} />
+            <Text style={[styles.lockedHintText, { color: colors.mutedText }]}>
+              Locked during active flow session
+            </Text>
+          </View>
+        ) : null}
       </View>
 
       {/* ── WEBSITES SECTION ── */}
@@ -382,22 +422,45 @@ export function ShieldPage() {
           <TextInput
             style={[
               styles.input,
-              { backgroundColor: colors.muted, borderColor: colors.border, color: colors.text },
+              {
+                backgroundColor: colors.muted,
+                borderColor: colors.border,
+                color: colors.text,
+                opacity: isStrictLocked ? 0.6 : 1,
+              },
             ]}
-            placeholder={listTab === 'blocked' ? 'Block domain (twitter.com)...' : 'Allow domain...'}
+            placeholder={
+              isStrictLocked
+                ? 'Locked during active flow session'
+                : listTab === 'blocked'
+                  ? 'Block domain (twitter.com)...'
+                  : 'Allow domain...'
+            }
             placeholderTextColor={colors.mutedText}
             value={siteInput}
             onChangeText={setSiteInput}
             onSubmitEditing={handleAddSite}
             autoCapitalize="none"
             autoCorrect={false}
+            editable={!isStrictLocked}
           />
           <TouchableOpacity
-            style={[styles.addBtn, { backgroundColor: colors.text }]}
+            style={[
+              styles.addBtn,
+              {
+                backgroundColor: colors.text,
+                opacity: isStrictLocked ? 0.4 : 1,
+              },
+            ]}
             onPress={handleAddSite}
+            disabled={isStrictLocked}
             activeOpacity={0.8}
           >
-            <Plus size={18} color={colors.background} />
+            {isStrictLocked ? (
+              <Lock size={16} color={colors.background} />
+            ) : (
+              <Plus size={18} color={colors.background} />
+            )}
           </TouchableOpacity>
         </View>
 
@@ -421,10 +484,19 @@ export function ShieldPage() {
                   {site}
                 </Text>
                 <TouchableOpacity
-                  onPress={() => (listTab === 'blocked' ? removeBlockedSite(site) : removeAllowedSite(site))}
+                  onPress={() => {
+                    if (isStrictLocked) return;
+                    listTab === 'blocked' ? removeBlockedSite(site) : removeAllowedSite(site);
+                  }}
+                  disabled={isStrictLocked}
                   hitSlop={8}
+                  style={{ opacity: isStrictLocked ? 0.4 : 1 }}
                 >
-                  <X size={16} color={colors.mutedText} />
+                  {isStrictLocked ? (
+                    <Lock size={14} color={colors.mutedText} />
+                  ) : (
+                    <X size={16} color={colors.mutedText} />
+                  )}
                 </TouchableOpacity>
               </View>
             ))}
@@ -432,8 +504,20 @@ export function ShieldPage() {
         )}
 
         <TouchableOpacity
-          style={[styles.toggleRow, styles.urlToggleRow, { backgroundColor: colors.muted, borderColor: colors.border }]}
-          onPress={() => setUrlBlocking(!shield.urlBlocking)}
+          style={[
+            styles.toggleRow,
+            styles.urlToggleRow,
+            {
+              backgroundColor: colors.muted,
+              borderColor: colors.border,
+              opacity: isStrictLocked ? 0.6 : 1,
+            },
+          ]}
+          onPress={() => {
+            if (isStrictLocked) return;
+            setUrlBlocking(!shield.urlBlocking);
+          }}
+          disabled={isStrictLocked}
           activeOpacity={0.7}
         >
           <View style={styles.toggleText}>
@@ -481,15 +565,26 @@ export function ShieldPage() {
             {
               backgroundColor: colors.muted,
               borderColor: colors.border,
-              opacity: nativeStatus?.supported ? 1 : 0.5,
+              opacity: nativeStatus?.supported && !isStrictLocked ? 1 : 0.5,
             },
           ]}
           onPress={openAppPicker}
-          disabled={!nativeStatus?.supported}
+          disabled={!nativeStatus?.supported || isStrictLocked}
           activeOpacity={0.7}
         >
-          <Search size={16} color={colors.text} />
-          <Text style={[styles.browseBtnText, { color: colors.text }]}>Browse installed apps</Text>
+          {isStrictLocked ? (
+            <Lock size={15} color={colors.mutedText} />
+          ) : (
+            <Search size={16} color={colors.text} />
+          )}
+          <Text
+            style={[
+              styles.browseBtnText,
+              { color: isStrictLocked ? colors.mutedText : colors.text },
+            ]}
+          >
+            {isStrictLocked ? 'Locked during active flow session' : 'Browse installed apps'}
+          </Text>
         </TouchableOpacity>
         {!nativeStatus?.supported ? (
           <Text style={[styles.subNoteText, { color: colors.mutedText }]}>
@@ -507,7 +602,11 @@ export function ShieldPage() {
                 packageName={app}
                 label={installedLabels[app] ?? app}
                 colors={colors}
-                onRemove={() => removeBlockedApp(app)}
+                disabled={isStrictLocked}
+                onRemove={() => {
+                  if (isStrictLocked) return;
+                  removeBlockedApp(app);
+                }}
               />
             ))}
           </View>
@@ -646,9 +745,11 @@ export function ShieldPage() {
                   app={app}
                   blocked={blocked}
                   colors={colors}
-                  onToggle={() =>
-                    blocked ? removeBlockedApp(app.packageName) : addBlockedApp(app.packageName)
-                  }
+                  disabled={isStrictLocked}
+                  onToggle={() => {
+                    if (isStrictLocked) return;
+                    blocked ? removeBlockedApp(app.packageName) : addBlockedApp(app.packageName);
+                  }}
                 />
               );
             })}
@@ -702,6 +803,18 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: '500',
     marginTop: 2,
+  },
+  lockedHintRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    marginTop: 2,
+  },
+  lockedHintText: {
+    fontSize: 11,
+    fontWeight: '500',
   },
   sectionHeader: {
     flexDirection: 'row',

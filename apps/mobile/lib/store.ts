@@ -335,7 +335,10 @@ export const useAppStore = create<AppState>()(
 
       shield: { ...DEFAULT_SHIELD_CONFIG },
       setShieldEnabled: (enabled) =>
-        set((state) => ({ shield: { ...state.shield, enabled } })),
+        set((state) => {
+          if (state.isActive && state.timerState === "FLOW") return state;
+          return { shield: { ...state.shield, enabled } };
+        }),
       setUrlBlocking: (enabled) =>
         set((state) => ({ shield: { ...state.shield, urlBlocking: enabled } })),
       addBlockedSite: (site) =>
@@ -345,9 +348,12 @@ export const useAppStore = create<AppState>()(
           return { shield: { ...state.shield, blockedSites: [...state.shield.blockedSites, clean] } };
         }),
       removeBlockedSite: (site) =>
-        set((state) => ({
-          shield: { ...state.shield, blockedSites: state.shield.blockedSites.filter((s) => s !== site) },
-        })),
+        set((state) => {
+          if (state.isActive && state.timerState === "FLOW") return state;
+          return {
+            shield: { ...state.shield, blockedSites: state.shield.blockedSites.filter((s) => s !== site) },
+          };
+        }),
       addAllowedSite: (site) =>
         set((state) => {
           const clean = normalizeSite(site);
@@ -365,9 +371,12 @@ export const useAppStore = create<AppState>()(
           return { shield: { ...state.shield, blockedApps: [...state.shield.blockedApps, clean] } };
         }),
       removeBlockedApp: (app) =>
-        set((state) => ({
-          shield: { ...state.shield, blockedApps: state.shield.blockedApps.filter((a) => a !== app) },
-        })),
+        set((state) => {
+          if (state.isActive && state.timerState === "FLOW") return state;
+          return {
+            shield: { ...state.shield, blockedApps: state.shield.blockedApps.filter((a) => a !== app) },
+          };
+        }),
 
       addSession: (session) =>
         set((state) => ({
@@ -412,7 +421,14 @@ export const useAppStore = create<AppState>()(
             ? (state.shield as Record<string, unknown>)
             : {};
         // Field-merge so new shield options backfill onto existing installs.
-        state.shield = { ...DEFAULT_SHIELD_CONFIG, ...storedShield };
+        state.shield = {
+          ...DEFAULT_SHIELD_CONFIG,
+          ...storedShield,
+          strictMode:
+            typeof storedShield.strictMode === 'boolean'
+              ? storedShield.strictMode
+              : (DEFAULT_SHIELD_CONFIG.strictMode ?? true),
+        };
         if (!Array.isArray(state.tasks)) {
           state.tasks = [];
         }

@@ -263,6 +263,7 @@ function updateTrayMenu() {
         },
         {
             label: shieldActionLabel,
+            enabled: !(shieldSession.isActive && shieldSession.timerState === "FLOW"),
             click: () => {
                 if (mainWindow) {
                     mainWindow.webContents.send("shield-action", "toggle");
@@ -434,6 +435,9 @@ function setupIPC() {
             ? payload.keys
             : [];
         if (action === "dismiss") {
+            if (shieldSession.isActive && shieldSession.timerState === "FLOW") {
+                return;
+            }
             // Snooze the dismissed detections so repeat polls stop
             // re-showing the overlay for the next 10 minutes.
             const until = Date.now() + SHIELD_SNOOZE_MS;

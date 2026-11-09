@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
@@ -6,11 +6,14 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
+  Modal,
+  Pressable,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import { useAppStore, TaskItem, TaskPriority } from '@/lib/store';
 import { useTheme } from '@/context/ThemeContext';
+import { Colors, Fonts } from '@/constants/theme';
 import {
   CheckSquare,
   Square,
@@ -22,9 +25,101 @@ import {
   ChevronUp,
   ListChecks,
   Clock,
+  SlidersHorizontal,
+  X,
 } from 'lucide-react-native';
 
 const PRIORITIES: TaskPriority[] = ['low', 'medium', 'high', 'urgent'];
+
+const monoFontFamily = Platform.select({
+  ios: Fonts.mono.ios,
+  android: Fonts.mono.android,
+  web: Fonts.mono.web,
+  default: Fonts.mono.android,
+});
+
+const getTodayISO = (): string => {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+const getTomorrowISO = (): string => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+const getFutureISO = (daysAhead: number): string => {
+  const d = new Date();
+  d.setDate(d.getDate() + daysAhead);
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+};
+
+const formatDateConcise = (iso?: string): string => {
+  if (!iso) return '';
+  const parts = iso.split('-').map(Number);
+  if (parts.length !== 3 || parts.some(isNaN)) return iso;
+  const [y, m, d] = parts;
+  const target = new Date(y, m - 1, d);
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const tomorrow = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1);
+  const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+
+  if (target.getTime() === today.getTime()) return 'Today';
+  if (target.getTime() === tomorrow.getTime()) return 'Tomorrow';
+  if (target.getTime() === yesterday.getTime()) return 'Yesterday';
+
+  const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  const monthName = months[m - 1];
+  if (y === now.getFullYear()) {
+    return `${monthName} ${d}`;
+  }
+  return `${monthName} ${d}, ${y}`;
+};
+
+const formatMins = (mins: number) => {
+  if (mins < 60) return `${mins}m`;
+  const h = Math.floor(mins / 60);
+  const m = mins % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+};
+
+const getPriorityColors = (p: TaskPriority, colors: typeof Colors.dark) => {
+  switch (p) {
+    case 'urgent':
+      return { text: colors.crimson, bg: colors.crimsonBg };
+    case 'high':
+      return { text: colors.amber, bg: colors.amberBg };
+    case 'medium':
+      return { text: colors.blue, bg: colors.blueBg };
+    case 'low':
+      return { text: colors.emerald, bg: colors.emeraldBg };
+    default:
+      return { text: colors.mutedText, bg: colors.surfaceInset };
+  }
+};
+
+const getVelocityBadgeColors = (
+  actual: number,
+  est: number,
+  completed: boolean,
+  colors: typeof Colors.dark
+) => {
+  if (actual > est) return { text: colors.crimson, bg: colors.crimsonBg };
+  if (completed) return { text: colors.emerald, bg: colors.emeraldBg };
+  if (actual >= est * 0.8) return { text: colors.amber, bg: colors.amberBg };
+  return { text: colors.mutedText, bg: colors.surfaceInset };
+};
 
 export function TasksPage() {
   const { colors } = useTheme();
@@ -47,8 +142,14 @@ export function TasksPage() {
   const [filter, setFilter] = useState<'all' | 'active' | 'completed'>('all');
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('medium');
-  const [deadline, setDeadline] = useState('');
-  const [estimatedMinutes, setEstimatedMinutes] = useState('');
+  const [selectedDuration, setSelectedDuration] = useState<number | null>(null);
+  const [selectedDeadline, setSelectedDeadline] = useState('');
+  const [showMicroControls, setShowMicroControls] = useState(false);
+  const [isInputFocused, setIsInputFocused] = useState(false);
+  const [showDateModal, setShowDateModal] = useState(false);
+  const [customDateInput, setCustomDateInput] = useState('');
+  const inputRef = useRef<TextInput>(null);
+
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [subtaskInputs, setSubtaskInputs] = useState<Record<string, string>>({});
 
@@ -62,16 +163,18 @@ export function TasksPage() {
     const trimmed = title.trim();
     if (!trimmed) return;
     triggerHaptic();
-    const parsedEst = parseInt(estimatedMinutes, 10);
     addTask({
       text: trimmed,
       priority,
-      deadline: deadline.trim() || undefined,
-      estimatedMinutes: Number.isFinite(parsedEst) && parsedEst > 0 ? parsedEst : undefined,
+      deadline: selectedDeadline.trim() || undefined,
+      estimatedMinutes:
+        selectedDuration && selectedDuration > 0 ? selectedDuration : undefined,
     });
     setTitle('');
-    setDeadline('');
-    setEstimatedMinutes('');
+    setPriority('medium');
+    setSelectedDuration(null);
+    setSelectedDeadline('');
+    setShowMicroControls(false);
   };
 
   const handleToggleTask = (id: string) => {
@@ -112,33 +215,10 @@ export function TasksPage() {
   const activeCount = tasks.filter((t) => !t.completed).length;
   const completedCount = tasks.filter((t) => t.completed).length;
 
-  const getPriorityColors = (p: TaskPriority) => {
-    switch (p) {
-      case 'urgent':
-        return { text: colors.crimson, bg: colors.crimsonBg };
-      case 'high':
-        return { text: colors.amber, bg: colors.amberBg };
-      case 'medium':
-        return { text: colors.blue, bg: colors.blueBg };
-      case 'low':
-      default:
-        return { text: colors.mutedText, bg: colors.surfaceInset };
-    }
-  };
-
-  const getVelocityBadgeColors = (actual: number, est: number, completed: boolean) => {
-    if (actual > est) return { text: colors.crimson, bg: colors.crimsonBg };
-    if (completed) return { text: colors.emerald, bg: colors.emeraldBg };
-    if (actual >= est * 0.8) return { text: colors.amber, bg: colors.amberBg };
-    return { text: colors.mutedText, bg: colors.surfaceInset };
-  };
-
-  const formatMins = (mins: number) => {
-    if (mins < 60) return `${mins}m`;
-    const h = Math.floor(mins / 60);
-    const m = mins % 60;
-    return m > 0 ? `${h}h ${m}m` : `${h}h`;
-  };
+  const hasActiveMicroControls =
+    priority !== 'medium' ||
+    selectedDuration !== null ||
+    Boolean(selectedDeadline);
 
   return (
     <View style={styles.container}>
@@ -154,11 +234,21 @@ export function TasksPage() {
             <Text style={[styles.metricLabel, { color: colors.mutedText }]}>
               ACTIVE TASKS
             </Text>
-            <View style={[styles.metricIconWrap, { backgroundColor: colors.surfaceInset }]}>
+            <View
+              style={[
+                styles.metricIconWrap,
+                { backgroundColor: colors.surfaceInset },
+              ]}
+            >
               <CheckSquare size={13} color={colors.mutedText} />
             </View>
           </View>
-          <Text style={[styles.metricValue, { color: colors.text }]}>
+          <Text
+            style={[
+              styles.metricValue,
+              { color: colors.text, fontFamily: monoFontFamily },
+            ]}
+          >
             {activeCount}
           </Text>
         </View>
@@ -173,132 +263,427 @@ export function TasksPage() {
             <Text style={[styles.metricLabel, { color: colors.mutedText }]}>
               COMPLETED
             </Text>
-            <View style={[styles.metricIconWrap, { backgroundColor: colors.surfaceInset }]}>
+            <View
+              style={[
+                styles.metricIconWrap,
+                { backgroundColor: colors.surfaceInset },
+              ]}
+            >
               <ListChecks size={13} color={colors.mutedText} />
             </View>
           </View>
-          <Text style={[styles.metricValue, { color: colors.text }]}>
+          <Text
+            style={[
+              styles.metricValue,
+              { color: colors.text, fontFamily: monoFontFamily },
+            ]}
+          >
             {completedCount}
           </Text>
         </View>
       </View>
 
-      {/* Add Task Card */}
+      {/* Modern Inline Quick-Entry Card */}
       <View
         style={[
-          styles.createCard,
-          { backgroundColor: colors.card, borderColor: colors.border },
+          styles.quickEntryCard,
+          {
+            backgroundColor: colors.card,
+            borderColor: colors.border,
+          },
         ]}
       >
-        <TextInput
-          placeholder="Add a new task..."
-          placeholderTextColor={colors.mutedText}
-          value={title}
-          onChangeText={setTitle}
+        {/* Single-line inset input container */}
+        <View
           style={[
-            styles.titleInput,
+            styles.singleLineInsetInputContainer,
             {
-              color: colors.text,
               backgroundColor: colors.surfaceInset,
-              borderColor: colors.border,
+              borderColor: isInputFocused ? colors.text : colors.borderSubtle,
             },
           ]}
-        />
+        >
+          <TextInput
+            ref={inputRef}
+            placeholder="Add a new task..."
+            placeholderTextColor={colors.subtleText}
+            value={title}
+            onChangeText={setTitle}
+            onFocus={() => {
+              setIsInputFocused(true);
+            }}
+            onBlur={() => setIsInputFocused(false)}
+            returnKeyType="done"
+            onSubmitEditing={handleAddTask}
+            style={[
+              styles.quickInputText,
+              {
+                color: colors.text,
+              },
+            ]}
+          />
 
-        <View style={styles.metaRow}>
-          {/* Priority selector */}
-          <View style={styles.prioritySelector}>
-            {PRIORITIES.map((p) => {
-              const isSelected = priority === p;
-              const { text: pText, bg: pBg } = getPriorityColors(p);
-              return (
-                <TouchableOpacity
-                  key={p}
-                  activeOpacity={0.7}
-                  onPress={() => setPriority(p)}
+          <View style={styles.quickInputControlsGroup}>
+            {/* Options toggle button */}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={() => {
+                triggerHaptic();
+                setShowMicroControls((prev) => !prev);
+              }}
+              style={[
+                styles.microOptionToggle,
+                {
+                  backgroundColor: showMicroControls
+                    ? colors.surface
+                    : 'transparent',
+                  borderColor: hasActiveMicroControls
+                    ? colors.amber
+                    : colors.borderSubtle,
+                },
+              ]}
+              accessibilityLabel="Toggle task options"
+            >
+              <SlidersHorizontal
+                size={14}
+                color={hasActiveMicroControls ? colors.amber : colors.mutedText}
+              />
+              {hasActiveMicroControls && (
+                <View
                   style={[
-                    styles.priorityBtn,
+                    styles.activeOptionDot,
+                    { backgroundColor: colors.amber },
+                  ]}
+                />
+              )}
+            </TouchableOpacity>
+
+            {/* Compact add icon button */}
+            <TouchableOpacity
+              activeOpacity={0.7}
+              onPress={handleAddTask}
+              disabled={!title.trim()}
+              style={[
+                styles.compactAddBtn,
+                {
+                  backgroundColor: colors.primary,
+                  opacity: title.trim() ? 1 : 0.4,
+                },
+              ]}
+              accessibilityLabel="Add task"
+            >
+              <Plus size={16} color={colors.primaryText} strokeWidth={2.5} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Expandable micro-controls */}
+        {showMicroControls && (
+          <View
+            style={[
+              styles.microControlsContainer,
+              { borderTopColor: colors.borderSubtle },
+            ]}
+          >
+            {/* Priority row with mineral badges */}
+            <View style={styles.microGroup}>
+              <Text
+                style={[styles.microGroupLabel, { color: colors.mutedText }]}
+              >
+                PRIORITY
+              </Text>
+              <View style={styles.chipsRow}>
+                {PRIORITIES.map((p) => {
+                  const isSelected = priority === p;
+                  const pColors = getPriorityColors(p, colors);
+                  return (
+                    <TouchableOpacity
+                      key={p}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        triggerHaptic();
+                        setPriority(p);
+                      }}
+                      style={[
+                        styles.mineralChip,
+                        {
+                          backgroundColor: isSelected
+                            ? pColors.bg
+                            : colors.surfaceInset,
+                          borderColor: isSelected
+                            ? pColors.text
+                            : colors.borderSubtle,
+                        },
+                      ]}
+                    >
+                      <View
+                        style={[
+                          styles.mineralDot,
+                          { backgroundColor: pColors.text },
+                        ]}
+                      />
+                      <Text
+                        style={[
+                          styles.mineralChipText,
+                          {
+                            color: isSelected ? pColors.text : colors.mutedText,
+                          },
+                        ]}
+                      >
+                        {p.charAt(0).toUpperCase() + p.slice(1)}
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Duration presets row */}
+            <View style={styles.microGroup}>
+              <Text
+                style={[styles.microGroupLabel, { color: colors.mutedText }]}
+              >
+                DURATION
+              </Text>
+              <View style={styles.chipsRow}>
+                {[15, 25, 45, 60].map((mins) => {
+                  const isSelected = selectedDuration === mins;
+                  return (
+                    <TouchableOpacity
+                      key={mins}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        triggerHaptic();
+                        setSelectedDuration(isSelected ? null : mins);
+                      }}
+                      style={[
+                        styles.presetChip,
+                        {
+                          backgroundColor: isSelected
+                            ? colors.primary
+                            : colors.surfaceInset,
+                          borderColor: isSelected
+                            ? colors.primary
+                            : colors.borderSubtle,
+                        },
+                      ]}
+                    >
+                      <Clock
+                        size={11}
+                        color={
+                          isSelected ? colors.primaryText : colors.mutedText
+                        }
+                      />
+                      <Text
+                        style={[
+                          styles.presetChipText,
+                          {
+                            color: isSelected
+                              ? colors.primaryText
+                              : colors.mutedText,
+                            fontFamily: monoFontFamily,
+                          },
+                        ]}
+                      >
+                        {mins}m
+                      </Text>
+                    </TouchableOpacity>
+                  );
+                })}
+              </View>
+            </View>
+
+            {/* Deadline presets row */}
+            <View style={styles.microGroup}>
+              <Text
+                style={[styles.microGroupLabel, { color: colors.mutedText }]}
+              >
+                DEADLINE
+              </Text>
+              <View style={styles.chipsRow}>
+                {/* Today */}
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    triggerHaptic();
+                    const today = getTodayISO();
+                    setSelectedDeadline(selectedDeadline === today ? '' : today);
+                  }}
+                  style={[
+                    styles.presetChip,
                     {
-                      backgroundColor: isSelected ? pBg : 'transparent',
-                      borderColor: isSelected ? pText : colors.borderSubtle,
+                      backgroundColor:
+                        selectedDeadline === getTodayISO()
+                          ? colors.primary
+                          : colors.surfaceInset,
+                      borderColor:
+                        selectedDeadline === getTodayISO()
+                          ? colors.primary
+                          : colors.borderSubtle,
                     },
                   ]}
                 >
+                  <Calendar
+                    size={11}
+                    color={
+                      selectedDeadline === getTodayISO()
+                        ? colors.primaryText
+                        : colors.mutedText
+                    }
+                  />
                   <Text
                     style={[
-                      styles.priorityBtnText,
-                      { color: isSelected ? pText : colors.mutedText },
+                      styles.presetChipText,
+                      {
+                        color:
+                          selectedDeadline === getTodayISO()
+                            ? colors.primaryText
+                            : colors.mutedText,
+                      },
                     ]}
                   >
-                    {p.charAt(0).toUpperCase() + p.slice(1)}
+                    Today
                   </Text>
                 </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
 
-        <View style={styles.inputActionRow}>
-          <View style={[styles.deadlineWrap, { flex: 1 }]}>
-            <TextInput
-              placeholder="Est min"
-              placeholderTextColor={colors.mutedText}
-              value={estimatedMinutes}
-              onChangeText={setEstimatedMinutes}
-              keyboardType="numeric"
-              style={[
-                styles.deadlineInput,
-                {
-                  color: colors.text,
-                  backgroundColor: colors.surfaceInset,
-                  borderColor: colors.border,
-                },
-              ]}
-            />
-          </View>
+                {/* Tomorrow */}
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    triggerHaptic();
+                    const tomorrow = getTomorrowISO();
+                    setSelectedDeadline(
+                      selectedDeadline === tomorrow ? '' : tomorrow
+                    );
+                  }}
+                  style={[
+                    styles.presetChip,
+                    {
+                      backgroundColor:
+                        selectedDeadline === getTomorrowISO()
+                          ? colors.primary
+                          : colors.surfaceInset,
+                      borderColor:
+                        selectedDeadline === getTomorrowISO()
+                          ? colors.primary
+                          : colors.borderSubtle,
+                    },
+                  ]}
+                >
+                  <Calendar
+                    size={11}
+                    color={
+                      selectedDeadline === getTomorrowISO()
+                        ? colors.primaryText
+                        : colors.mutedText
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.presetChipText,
+                      {
+                        color:
+                          selectedDeadline === getTomorrowISO()
+                            ? colors.primaryText
+                            : colors.mutedText,
+                      },
+                    ]}
+                  >
+                    Tomorrow
+                  </Text>
+                </TouchableOpacity>
 
-          <View style={[styles.deadlineWrap, { flex: 1.2 }]}>
-            <TextInput
-              placeholder="Due date (optional)"
-              placeholderTextColor={colors.mutedText}
-              value={deadline}
-              onChangeText={setDeadline}
-              style={[
-                styles.deadlineInput,
-                {
-                  color: colors.text,
-                  backgroundColor: colors.surfaceInset,
-                  borderColor: colors.border,
-                },
-              ]}
-            />
-          </View>
+                {/* Custom Date Modal trigger */}
+                <TouchableOpacity
+                  activeOpacity={0.7}
+                  onPress={() => {
+                    triggerHaptic();
+                    setCustomDateInput(selectedDeadline);
+                    setShowDateModal(true);
+                  }}
+                  style={[
+                    styles.presetChip,
+                    {
+                      backgroundColor:
+                        selectedDeadline &&
+                        selectedDeadline !== getTodayISO() &&
+                        selectedDeadline !== getTomorrowISO()
+                          ? colors.primary
+                          : colors.surfaceInset,
+                      borderColor:
+                        selectedDeadline &&
+                        selectedDeadline !== getTodayISO() &&
+                        selectedDeadline !== getTomorrowISO()
+                          ? colors.primary
+                          : colors.borderSubtle,
+                    },
+                  ]}
+                >
+                  <Calendar
+                    size={11}
+                    color={
+                      selectedDeadline &&
+                      selectedDeadline !== getTodayISO() &&
+                      selectedDeadline !== getTomorrowISO()
+                        ? colors.primaryText
+                        : colors.mutedText
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.presetChipText,
+                      {
+                        color:
+                          selectedDeadline &&
+                          selectedDeadline !== getTodayISO() &&
+                          selectedDeadline !== getTomorrowISO()
+                            ? colors.primaryText
+                            : colors.mutedText,
+                      },
+                    ]}
+                  >
+                    {selectedDeadline &&
+                    selectedDeadline !== getTodayISO() &&
+                    selectedDeadline !== getTomorrowISO()
+                      ? formatDateConcise(selectedDeadline)
+                      : 'Custom...'}
+                  </Text>
+                </TouchableOpacity>
 
-          <TouchableOpacity
-            activeOpacity={0.8}
-            onPress={handleAddTask}
-            disabled={!title.trim()}
-            style={[
-              styles.addButton,
-              {
-                backgroundColor: colors.primary,
-                opacity: title.trim() ? 1 : 0.45,
-              },
-            ]}
-          >
-            <Plus size={16} color={colors.primaryText} />
-            <Text style={[styles.addButtonText, { color: colors.primaryText }]}>
-              Add
-            </Text>
-          </TouchableOpacity>
-        </View>
+                {/* Clear Deadline Button */}
+                {selectedDeadline ? (
+                  <TouchableOpacity
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      triggerHaptic();
+                      setSelectedDeadline('');
+                    }}
+                    style={[
+                      styles.clearDeadlineBtn,
+                      {
+                        backgroundColor: colors.surfaceInset,
+                        borderColor: colors.borderSubtle,
+                      },
+                    ]}
+                    accessibilityLabel="Clear deadline"
+                  >
+                    <X size={12} color={colors.mutedText} />
+                  </TouchableOpacity>
+                ) : null}
+              </View>
+            </View>
+          </View>
+        )}
       </View>
 
       {/* Filter Tabs */}
       <View
         style={[
           styles.filterRow,
-          { backgroundColor: colors.surfaceInset, borderColor: colors.borderSubtle },
+          {
+            backgroundColor: colors.surfaceInset,
+            borderColor: colors.borderSubtle,
+          },
         ]}
       >
         {(['all', 'active', 'completed'] as const).map((tab) => {
@@ -306,7 +691,7 @@ export function TasksPage() {
           return (
             <TouchableOpacity
               key={tab}
-              activeOpacity={0.8}
+              activeOpacity={0.7}
               onPress={() => setFilter(tab)}
               style={[
                 styles.filterTab,
@@ -351,14 +736,28 @@ export function TasksPage() {
           filteredTasks.map((task) => {
             const isExpanded = expandedTaskId === task.id;
             const isFocusSelected = selectedTaskId === task.id;
-            const pColors = getPriorityColors(task.priority || 'medium');
+            const pColors = getPriorityColors(task.priority || 'medium', colors);
             const subtasks = task.subtasks || [];
             const completedSubtasks = subtasks.filter((s) => s.completed).length;
-            const taskSessions = (sessions || []).filter((s) => s.taskId === task.id);
-            const totalSeconds = taskSessions.reduce((acc, s) => acc + (s.duration || 0), 0);
+            const taskSessions = (sessions || []).filter(
+              (s) => s.taskId === task.id
+            );
+            const totalSeconds = taskSessions.reduce(
+              (acc, s) => acc + (s.duration || 0),
+              0
+            );
             const actualMinutes = Math.round(totalSeconds / 60);
             const hasEstimate =
-              typeof task.estimatedMinutes === 'number' && task.estimatedMinutes > 0;
+              typeof task.estimatedMinutes === 'number' &&
+              task.estimatedMinutes > 0;
+            const velocityColors = hasEstimate
+              ? getVelocityBadgeColors(
+                  actualMinutes,
+                  task.estimatedMinutes!,
+                  task.completed,
+                  colors
+                )
+              : null;
 
             return (
               <View
@@ -366,8 +765,12 @@ export function TasksPage() {
                 style={[
                   styles.taskCard,
                   {
-                    backgroundColor: colors.card,
-                    borderColor: isFocusSelected ? colors.emerald : colors.border,
+                    backgroundColor: isFocusSelected
+                      ? colors.surface
+                      : colors.card,
+                    borderColor: isFocusSelected
+                      ? colors.text
+                      : colors.border,
                   },
                 ]}
               >
@@ -376,12 +779,16 @@ export function TasksPage() {
                   <TouchableOpacity
                     onPress={() => handleToggleTask(task.id)}
                     activeOpacity={0.7}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     style={styles.checkHit}
+                    accessibilityLabel={
+                      task.completed ? 'Mark incomplete' : 'Mark complete'
+                    }
                   >
                     {task.completed ? (
-                      <CheckSquare size={19} color={colors.emerald} />
+                      <CheckSquare size={18} color={colors.emerald} />
                     ) : (
-                      <Square size={19} color={colors.mutedText} />
+                      <Square size={18} color={colors.mutedText} />
                     )}
                   </TouchableOpacity>
 
@@ -392,7 +799,9 @@ export function TasksPage() {
                         styles.taskTitle,
                         {
                           color: task.completed ? colors.mutedText : colors.text,
-                          textDecorationLine: task.completed ? 'line-through' : 'none',
+                          textDecorationLine: task.completed
+                            ? 'line-through'
+                            : 'none',
                         },
                       ]}
                     >
@@ -404,10 +813,21 @@ export function TasksPage() {
                         <View
                           style={[
                             styles.badge,
-                            { backgroundColor: pColors.bg },
+                            {
+                              backgroundColor: pColors.bg,
+                              borderColor: colors.borderSubtle,
+                            },
                           ]}
                         >
-                          <Text style={[styles.badgeText, { color: pColors.text }]}>
+                          <View
+                            style={[
+                              styles.chipDot,
+                              { backgroundColor: pColors.text },
+                            ]}
+                          />
+                          <Text
+                            style={[styles.badgeText, { color: pColors.text }]}
+                          >
                             {task.priority}
                           </Text>
                         </View>
@@ -417,52 +837,49 @@ export function TasksPage() {
                         <View
                           style={[
                             styles.badge,
-                            { backgroundColor: colors.surfaceInset },
-                          ]}
-                        >
-                          <Calendar size={10} color={colors.mutedText} />
-                          <Text style={[styles.badgeText, { color: colors.mutedText }]}>
-                            {task.deadline}
-                          </Text>
-                        </View>
-                      ) : null}
-
-                      {hasEstimate && (
-                        <View
-                          style={[
-                            styles.badge,
                             {
-                              backgroundColor: getVelocityBadgeColors(
-                                actualMinutes,
-                                task.estimatedMinutes!,
-                                task.completed,
-                              ).bg,
+                              backgroundColor: colors.surfaceInset,
+                              borderColor: colors.borderSubtle,
                             },
                           ]}
                         >
-                          <Clock
-                            size={10}
-                            color={
-                              getVelocityBadgeColors(
-                                actualMinutes,
-                                task.estimatedMinutes!,
-                                task.completed,
-                              ).text
-                            }
-                          />
+                          <Calendar size={10} color={colors.mutedText} />
                           <Text
                             style={[
                               styles.badgeText,
                               {
-                                color: getVelocityBadgeColors(
-                                  actualMinutes,
-                                  task.estimatedMinutes!,
-                                  task.completed,
-                                ).text,
+                                color: colors.mutedText,
+                                fontFamily: monoFontFamily,
                               },
                             ]}
                           >
-                            {formatMins(actualMinutes)} / {formatMins(task.estimatedMinutes!)}
+                            {formatDateConcise(task.deadline)}
+                          </Text>
+                        </View>
+                      ) : null}
+
+                      {hasEstimate && velocityColors && (
+                        <View
+                          style={[
+                            styles.badge,
+                            {
+                              backgroundColor: velocityColors.bg,
+                              borderColor: colors.borderSubtle,
+                            },
+                          ]}
+                        >
+                          <Clock size={10} color={velocityColors.text} />
+                          <Text
+                            style={[
+                              styles.badgeText,
+                              {
+                                color: velocityColors.text,
+                                fontFamily: monoFontFamily,
+                              },
+                            ]}
+                          >
+                            {formatMins(actualMinutes)} /{' '}
+                            {formatMins(task.estimatedMinutes!)}
                           </Text>
                         </View>
                       )}
@@ -471,11 +888,22 @@ export function TasksPage() {
                         <View
                           style={[
                             styles.badge,
-                            { backgroundColor: colors.surfaceInset },
+                            {
+                              backgroundColor: colors.surfaceInset,
+                              borderColor: colors.borderSubtle,
+                            },
                           ]}
                         >
                           <Clock size={10} color={colors.mutedText} />
-                          <Text style={[styles.badgeText, { color: colors.mutedText }]}>
+                          <Text
+                            style={[
+                              styles.badgeText,
+                              {
+                                color: colors.mutedText,
+                                fontFamily: monoFontFamily,
+                              },
+                            ]}
+                          >
                             {formatMins(actualMinutes)}
                           </Text>
                         </View>
@@ -485,14 +913,53 @@ export function TasksPage() {
                         <View
                           style={[
                             styles.badge,
-                            { backgroundColor: colors.emeraldBg },
+                            {
+                              backgroundColor: colors.emeraldBg,
+                              borderColor: colors.borderSubtle,
+                            },
                           ]}
                         >
                           <Target size={10} color={colors.emerald} />
-                          <Text style={[styles.badgeText, { color: colors.emerald }]}>
+                          <Text
+                            style={[styles.badgeText, { color: colors.emerald }]}
+                          >
                             Focus Active
                           </Text>
                         </View>
+                      )}
+
+                      {subtasks.length > 0 && (
+                        <TouchableOpacity
+                          activeOpacity={0.7}
+                          onPress={() =>
+                            setExpandedTaskId(isExpanded ? null : task.id)
+                          }
+                          style={[
+                            styles.subtaskBadgeBtn,
+                            {
+                              backgroundColor: colors.surfaceInset,
+                              borderColor: colors.borderSubtle,
+                            },
+                          ]}
+                        >
+                          <ListChecks size={10} color={colors.mutedText} />
+                          <Text
+                            style={[
+                              styles.badgeText,
+                              {
+                                color: colors.mutedText,
+                                fontFamily: monoFontFamily,
+                              },
+                            ]}
+                          >
+                            {completedSubtasks}/{subtasks.length}
+                          </Text>
+                          {isExpanded ? (
+                            <ChevronUp size={10} color={colors.mutedText} />
+                          ) : (
+                            <ChevronDown size={10} color={colors.mutedText} />
+                          )}
+                        </TouchableOpacity>
                       )}
                     </View>
                   </View>
@@ -507,7 +974,7 @@ export function TasksPage() {
                           styles.actionIconBtn,
                           {
                             backgroundColor: isFocusSelected
-                              ? colors.emeraldBg
+                              ? colors.primary
                               : colors.surfaceInset,
                           },
                         ]}
@@ -515,7 +982,11 @@ export function TasksPage() {
                       >
                         <Target
                           size={15}
-                          color={isFocusSelected ? colors.emerald : colors.mutedText}
+                          color={
+                            isFocusSelected
+                              ? colors.primaryText
+                              : colors.mutedText
+                          }
                         />
                       </TouchableOpacity>
                     )}
@@ -525,33 +996,35 @@ export function TasksPage() {
                         setExpandedTaskId(isExpanded ? null : task.id)
                       }
                       activeOpacity={0.7}
-                      style={[styles.actionIconBtn, { backgroundColor: colors.surfaceInset }]}
+                      style={[
+                        styles.actionIconBtn,
+                        {
+                          backgroundColor: isExpanded
+                            ? colors.surface
+                            : colors.surfaceInset,
+                        },
+                      ]}
+                      accessibilityLabel="Toggle subtasks"
                     >
-                      {isExpanded ? (
-                        <ChevronUp size={15} color={colors.mutedText} />
-                      ) : (
-                        <ChevronDown size={15} color={colors.mutedText} />
-                      )}
+                      <ListChecks
+                        size={15}
+                        color={isExpanded ? colors.text : colors.mutedText}
+                      />
                     </TouchableOpacity>
 
                     <TouchableOpacity
                       onPress={() => handleDeleteTask(task.id)}
                       activeOpacity={0.7}
-                      style={[styles.actionIconBtn, { backgroundColor: colors.surfaceInset }]}
+                      style={[
+                        styles.actionIconBtn,
+                        { backgroundColor: colors.surfaceInset },
+                      ]}
+                      accessibilityLabel="Delete task"
                     >
                       <Trash2 size={14} color={colors.destructive} />
                     </TouchableOpacity>
                   </View>
                 </View>
-
-                {/* Subtask count preview if collapsed and has subtasks */}
-                {!isExpanded && subtasks.length > 0 && (
-                  <View style={styles.subtaskPreviewRow}>
-                    <Text style={[styles.subtaskPreviewText, { color: colors.mutedText }]}>
-                      {completedSubtasks} of {subtasks.length} subtasks done
-                    </Text>
-                  </View>
-                )}
 
                 {/* Expanded Subtasks */}
                 {isExpanded && (
@@ -564,73 +1037,100 @@ export function TasksPage() {
                       },
                     ]}
                   >
-                    {subtasks.map((sub) => (
-                      <View key={sub.id} style={styles.subtaskRow}>
-                        <TouchableOpacity
-                          onPress={() => {
-                            triggerHaptic();
-                            toggleSubtask(task.id, sub.id);
-                          }}
-                          style={styles.subtaskCheckHit}
-                          activeOpacity={0.7}
-                        >
-                          {sub.completed ? (
-                            <CheckSquare size={15} color={colors.emerald} />
-                          ) : (
-                            <Square size={15} color={colors.mutedText} />
-                          )}
-                        </TouchableOpacity>
+                    {subtasks.length === 0 ? (
+                      <Text
+                        style={[
+                          styles.noSubtasksText,
+                          { color: colors.subtleText },
+                        ]}
+                      >
+                        No subtasks yet. Add one below.
+                      </Text>
+                    ) : (
+                      subtasks.map((sub) => (
+                        <View key={sub.id} style={styles.subtaskRow}>
+                          <TouchableOpacity
+                            onPress={() => {
+                              triggerHaptic();
+                              toggleSubtask(task.id, sub.id);
+                            }}
+                            style={styles.subtaskCheckHit}
+                            activeOpacity={0.7}
+                            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                          >
+                            {sub.completed ? (
+                              <CheckSquare size={14} color={colors.emerald} />
+                            ) : (
+                              <Square size={14} color={colors.mutedText} />
+                            )}
+                          </TouchableOpacity>
 
-                        <Text
-                          style={[
-                            styles.subtaskText,
-                            {
-                              color: sub.completed ? colors.mutedText : colors.text,
-                              textDecorationLine: sub.completed ? 'line-through' : 'none',
-                            },
-                          ]}
-                        >
-                          {sub.text}
-                        </Text>
+                          <Text
+                            style={[
+                              styles.subtaskText,
+                              {
+                                color: sub.completed
+                                  ? colors.mutedText
+                                  : colors.text,
+                                textDecorationLine: sub.completed
+                                  ? 'line-through'
+                                  : 'none',
+                              },
+                            ]}
+                          >
+                            {sub.text}
+                          </Text>
 
-                        <TouchableOpacity
-                          onPress={() => {
-                            triggerHaptic();
-                            deleteSubtask(task.id, sub.id);
-                          }}
-                          activeOpacity={0.7}
-                          style={styles.subtaskDeleteHit}
-                        >
-                          <Trash2 size={12} color={colors.mutedText} />
-                        </TouchableOpacity>
-                      </View>
-                    ))}
+                          <TouchableOpacity
+                            onPress={() => {
+                              triggerHaptic();
+                              deleteSubtask(task.id, sub.id);
+                            }}
+                            activeOpacity={0.7}
+                            style={styles.subtaskDeleteHit}
+                            hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
+                          >
+                            <Trash2 size={12} color={colors.mutedText} />
+                          </TouchableOpacity>
+                        </View>
+                      ))
+                    )}
 
                     {/* Add subtask inline input */}
                     <View style={styles.addSubtaskRow}>
                       <TextInput
                         placeholder="Add subtask..."
-                        placeholderTextColor={colors.mutedText}
+                        placeholderTextColor={colors.subtleText}
                         value={subtaskInputs[task.id] || ''}
                         onChangeText={(txt) =>
-                          setSubtaskInputs((prev) => ({ ...prev, [task.id]: txt }))
+                          setSubtaskInputs((prev) => ({
+                            ...prev,
+                            [task.id]: txt,
+                          }))
                         }
                         onSubmitEditing={() => handleAddSubtask(task.id)}
+                        returnKeyType="done"
                         style={[
                           styles.subtaskInput,
                           {
                             color: colors.text,
                             backgroundColor: colors.card,
-                            borderColor: colors.border,
+                            borderColor: colors.borderSubtle,
                           },
                         ]}
                       />
                       <TouchableOpacity
-                        activeOpacity={0.8}
+                        activeOpacity={0.7}
                         onPress={() => handleAddSubtask(task.id)}
+                        disabled={!(subtaskInputs[task.id] || '').trim()}
                         style={[
                           styles.subtaskAddBtn,
-                          { backgroundColor: colors.primary },
+                          {
+                            backgroundColor: colors.primary,
+                            opacity: (subtaskInputs[task.id] || '').trim()
+                              ? 1
+                              : 0.35,
+                          },
                         ]}
                       >
                         <Plus size={14} color={colors.primaryText} />
@@ -643,6 +1143,166 @@ export function TasksPage() {
           })
         )}
       </View>
+
+      {/* Custom Date Modal */}
+      <Modal
+        visible={showDateModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowDateModal(false)}
+      >
+        <Pressable
+          style={styles.modalOverlay}
+          onPress={() => setShowDateModal(false)}
+        >
+          <Pressable
+            style={[
+              styles.modalCard,
+              {
+                backgroundColor: colors.card,
+                borderColor: colors.border,
+              },
+            ]}
+            onPress={(e) => e.stopPropagation()}
+          >
+            <View style={styles.modalHeader}>
+              <View style={styles.modalHeaderTitleRow}>
+                <Calendar size={16} color={colors.mutedText} />
+                <Text style={[styles.modalTitle, { color: colors.text }]}>
+                  Set Deadline
+                </Text>
+              </View>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => setShowDateModal(false)}
+                style={styles.modalCloseBtn}
+              >
+                <X size={16} color={colors.mutedText} />
+              </TouchableOpacity>
+            </View>
+
+            {/* Date Preset Suggestions */}
+            <View style={styles.modalPresetRow}>
+              {[
+                { label: 'Today', date: getTodayISO() },
+                { label: 'Tomorrow', date: getTomorrowISO() },
+                { label: '+3 Days', date: getFutureISO(3) },
+                { label: 'Next Week', date: getFutureISO(7) },
+              ].map((p) => {
+                const isSelected = customDateInput === p.date;
+                return (
+                  <TouchableOpacity
+                    key={p.label}
+                    activeOpacity={0.7}
+                    onPress={() => {
+                      triggerHaptic();
+                      setCustomDateInput(p.date);
+                    }}
+                    style={[
+                      styles.modalPresetChip,
+                      {
+                        backgroundColor: isSelected
+                          ? colors.primary
+                          : colors.surfaceInset,
+                        borderColor: isSelected
+                          ? colors.primary
+                          : colors.borderSubtle,
+                      },
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.modalPresetText,
+                        {
+                          color: isSelected
+                            ? colors.primaryText
+                            : colors.mutedText,
+                        },
+                      ]}
+                    >
+                      {p.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+
+            {/* Direct ISO Input */}
+            <View style={styles.modalInputSection}>
+              <Text
+                style={[styles.modalInputLabel, { color: colors.mutedText }]}
+              >
+                DATE (YYYY-MM-DD)
+              </Text>
+              <TextInput
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={colors.subtleText}
+                value={customDateInput}
+                onChangeText={setCustomDateInput}
+                style={[
+                  styles.modalTextInput,
+                  {
+                    color: colors.text,
+                    backgroundColor: colors.surfaceInset,
+                    borderColor: colors.borderSubtle,
+                    fontFamily: monoFontFamily,
+                  },
+                ]}
+              />
+            </View>
+
+            {/* Modal Actions */}
+            <View style={styles.modalActionsRow}>
+              <TouchableOpacity
+                activeOpacity={0.7}
+                onPress={() => {
+                  triggerHaptic();
+                  setSelectedDeadline('');
+                  setShowDateModal(false);
+                }}
+                style={[
+                  styles.modalSecondaryBtn,
+                  {
+                    borderColor: colors.borderSubtle,
+                    backgroundColor: colors.surfaceInset,
+                  },
+                ]}
+              >
+                <Text
+                  style={[styles.modalBtnText, { color: colors.mutedText }]}
+                >
+                  Clear
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                activeOpacity={0.7}
+                disabled={!customDateInput.trim()}
+                onPress={() => {
+                  triggerHaptic();
+                  if (customDateInput.trim()) {
+                    setSelectedDeadline(customDateInput.trim());
+                  }
+                  setShowDateModal(false);
+                }}
+                style={[
+                  styles.modalPrimaryBtn,
+                  {
+                    backgroundColor: colors.primary,
+                    opacity: customDateInput.trim() ? 1 : 0.4,
+                  },
+                ]}
+              >
+                <Text
+                  style={[styles.modalBtnText, { color: colors.primaryText }]}
+                >
+                  Apply
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </View>
   );
 }
@@ -661,10 +1321,10 @@ const styles = StyleSheet.create({
   metricCard: {
     flex: 1,
     padding: 14,
-    borderRadius: 20,
-    borderWidth: 1,
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
     justifyContent: 'space-between',
-    minHeight: 84,
+    minHeight: 80,
   },
   metricHeader: {
     flexDirection: 'row',
@@ -688,71 +1348,116 @@ const styles = StyleSheet.create({
     letterSpacing: -0.6,
     marginTop: 4,
   },
-  createCard: {
-    padding: 14,
-    borderRadius: 20,
-    borderWidth: 1,
-    gap: 12,
+  quickEntryCard: {
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 10,
+    gap: 8,
   },
-  titleInput: {
-    fontSize: 14,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+  singleLineInsetInputContainer: {
     borderRadius: 12,
-    borderWidth: 1,
-  },
-  metaRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  prioritySelector: {
-    flexDirection: 'row',
-    gap: 6,
-    flexWrap: 'wrap',
-  },
-  priorityBtn: {
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 8,
-    borderWidth: 1,
-  },
-  priorityBtnText: {
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  inputActionRow: {
-    flexDirection: 'row',
-    gap: 10,
-    alignItems: 'center',
-  },
-  deadlineWrap: {
-    flex: 1,
-  },
-  deadlineInput: {
-    fontSize: 12,
     paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    borderWidth: 1,
+    minHeight: 46,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
   },
-  addButton: {
+  quickInputText: {
+    flex: 1,
+    fontSize: 14,
+    paddingVertical: 10,
+  },
+  quickInputControlsGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginLeft: 8,
+  },
+  microOptionToggle: {
+    padding: 7,
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    position: 'relative',
+  },
+  activeOptionDot: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
+  },
+  compactAddBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  microControlsContainer: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    paddingTop: 8,
+    gap: 8,
+  },
+  microGroup: {
+    gap: 4,
+  },
+  microGroupLabel: {
+    fontSize: 9,
+    fontWeight: '600',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+  },
+  chipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+    alignItems: 'center',
+  },
+  mineralChip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 5,
-    paddingHorizontal: 14,
-    paddingVertical: 9,
-    borderRadius: 10,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
   },
-  addButtonText: {
-    fontSize: 13,
-    fontWeight: '600',
+  mineralDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  mineralChipText: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  presetChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 9,
+    paddingVertical: 5,
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  presetChipText: {
+    fontSize: 11,
+    fontWeight: '500',
+    fontVariant: ['tabular-nums'],
+  },
+  clearDeadlineBtn: {
+    padding: 5,
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   filterRow: {
     flexDirection: 'row',
     padding: 4,
     borderRadius: 12,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   filterTab: {
     flex: 1,
@@ -761,7 +1466,7 @@ const styles = StyleSheet.create({
     borderRadius: 9,
   },
   filterTabActive: {
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   filterTabText: {
     fontSize: 12,
@@ -773,7 +1478,7 @@ const styles = StyleSheet.create({
   emptyCard: {
     padding: 32,
     borderRadius: 20,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
     alignItems: 'center',
     justifyContent: 'center',
     gap: 10,
@@ -783,26 +1488,28 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   taskCard: {
-    borderRadius: 18,
-    borderWidth: 1,
+    borderRadius: 16,
+    borderWidth: StyleSheet.hairlineWidth,
     overflow: 'hidden',
   },
   taskMainRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     padding: 12,
     gap: 10,
   },
   checkHit: {
-    padding: 4,
+    paddingTop: 1,
+    paddingRight: 2,
   },
   taskContent: {
     flex: 1,
-    gap: 4,
+    gap: 6,
   },
   taskTitle: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: '500',
+    lineHeight: 18,
   },
   badgeRow: {
     flexDirection: 'row',
@@ -814,45 +1521,57 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    paddingHorizontal: 7,
+    paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 6,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  chipDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 2.5,
   },
   badgeText: {
     fontSize: 10,
     fontWeight: '500',
+    fontVariant: ['tabular-nums'],
     textTransform: 'capitalize',
+  },
+  subtaskBadgeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   taskActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
+    gap: 5,
   },
   actionIconBtn: {
     padding: 7,
     borderRadius: 8,
   },
-  subtaskPreviewRow: {
-    paddingHorizontal: 14,
-    paddingBottom: 10,
-  },
-  subtaskPreviewText: {
-    fontSize: 11,
-    fontVariant: ['tabular-nums'],
-  },
   subtasksContainer: {
-    borderTopWidth: 1,
+    borderTopWidth: StyleSheet.hairlineWidth,
     padding: 12,
     gap: 8,
+  },
+  noSubtasksText: {
+    fontSize: 11,
+    fontStyle: 'italic',
   },
   subtaskRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    paddingVertical: 3,
+    paddingVertical: 2,
   },
   subtaskCheckHit: {
-    padding: 3,
+    padding: 2,
   },
   subtaskText: {
     flex: 1,
@@ -864,7 +1583,7 @@ const styles = StyleSheet.create({
   addSubtaskRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
+    gap: 6,
     marginTop: 4,
   },
   subtaskInput: {
@@ -873,12 +1592,94 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 6,
     borderRadius: 8,
-    borderWidth: 1,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   subtaskAddBtn: {
     padding: 7,
     borderRadius: 8,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalCard: {
+    width: '100%',
+    maxWidth: 360,
+    borderRadius: 18,
+    borderWidth: StyleSheet.hairlineWidth,
+    padding: 16,
+    gap: 14,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  modalHeaderTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  modalTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  modalCloseBtn: {
+    padding: 4,
+  },
+  modalPresetRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 6,
+  },
+  modalPresetChip: {
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  modalPresetText: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  modalInputSection: {
+    gap: 6,
+  },
+  modalInputLabel: {
+    fontSize: 9,
+    fontWeight: '600',
+    letterSpacing: 1.2,
+  },
+  modalTextInput: {
+    fontSize: 13,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  modalActionsRow: {
+    flexDirection: 'row',
+    gap: 8,
+    justifyContent: 'flex-end',
+  },
+  modalSecondaryBtn: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  modalPrimaryBtn: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  modalBtnText: {
+    fontSize: 12,
+    fontWeight: '600',
   },
 });

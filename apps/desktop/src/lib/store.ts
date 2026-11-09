@@ -421,7 +421,10 @@ export const useDesktopStore = create<DesktopState>()(
       // Focus Shield
       shield: { ...DEFAULT_SHIELD_CONFIG },
       setShieldEnabled: (enabled) =>
-        set((state) => ({ shield: { ...state.shield, enabled } })),
+        set((state) => {
+          if (state.isActive && state.timerState === "FLOW") return state;
+          return { shield: { ...state.shield, enabled } };
+        }),
       addBlockedSite: (site) => {
         const clean = normalizeSite(site);
         if (!clean) return;
@@ -436,12 +439,15 @@ export const useDesktopStore = create<DesktopState>()(
         });
       },
       removeBlockedSite: (site) =>
-        set((state) => ({
-          shield: {
-            ...state.shield,
-            blockedSites: state.shield.blockedSites.filter((s) => s !== site),
-          },
-        })),
+        set((state) => {
+          if (state.isActive && state.timerState === "FLOW") return state;
+          return {
+            shield: {
+              ...state.shield,
+              blockedSites: state.shield.blockedSites.filter((s) => s !== site),
+            },
+          };
+        }),
       addAllowedSite: (site) => {
         const clean = normalizeSite(site);
         if (!clean) return;
@@ -456,12 +462,15 @@ export const useDesktopStore = create<DesktopState>()(
         });
       },
       removeAllowedSite: (site) =>
-        set((state) => ({
-          shield: {
-            ...state.shield,
-            allowedSites: state.shield.allowedSites.filter((s) => s !== site),
-          },
-        })),
+        set((state) => {
+          if (state.isActive && state.timerState === "FLOW") return state;
+          return {
+            shield: {
+              ...state.shield,
+              allowedSites: state.shield.allowedSites.filter((s) => s !== site),
+            },
+          };
+        }),
       addBlockedApp: (app) => {
         const clean = normalizeAppName(app);
         if (!clean) return;
@@ -476,12 +485,15 @@ export const useDesktopStore = create<DesktopState>()(
         });
       },
       removeBlockedApp: (app) =>
-        set((state) => ({
-          shield: {
-            ...state.shield,
-            blockedApps: state.shield.blockedApps.filter((a) => a !== app),
-          },
-        })),
+        set((state) => {
+          if (state.isActive && state.timerState === "FLOW") return state;
+          return {
+            shield: {
+              ...state.shield,
+              blockedApps: state.shield.blockedApps.filter((a) => a !== app),
+            },
+          };
+        }),
 
       shieldViolations: [],
       pushShieldViolation: (violation) =>
@@ -543,7 +555,9 @@ export const useDesktopStore = create<DesktopState>()(
               storedShield.allowedSites ?? DEFAULT_SHIELD_CONFIG.allowedSites,
             blockedApps:
               storedShield.blockedApps ?? DEFAULT_SHIELD_CONFIG.blockedApps,
-          },
+            strictMode:
+              storedShield.strictMode ?? DEFAULT_SHIELD_CONFIG.strictMode ?? true,
+          } as ShieldConfig,
         };
       },
       partialize: (state) => {

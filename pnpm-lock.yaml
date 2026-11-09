@@ -17,6 +17,9 @@ importers:
       '@focus/types':
         specifier: workspace:*
         version: link:../../packages/types
+      '@focus/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@focus/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -90,6 +93,9 @@ importers:
       '@focus/types':
         specifier: workspace:*
         version: link:../../packages/types
+      '@focus/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
       '@focus/utils':
         specifier: workspace:*
         version: link:../../packages/utils
@@ -448,9 +454,15 @@ importers:
 
   packages/ui:
     dependencies:
+      '@focus/types':
+        specifier: workspace:*
+        version: link:../types
       '@focus/utils':
         specifier: workspace:*
         version: link:../utils
+      lucide-react:
+        specifier: ^0.563.0
+        version: 0.563.0(react@19.3.0)
     devDependencies:
       '@types/react':
         specifier: ^19

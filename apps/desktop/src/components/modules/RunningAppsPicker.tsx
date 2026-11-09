@@ -6,6 +6,7 @@ import { BlockedAppIcon } from './ShieldIcons';
 interface RunningAppsPickerProps {
   blockedApps: string[];
   onBlock: (image: string) => void;
+  disabled?: boolean;
 }
 
 type PickerTab = "running" | "installed";
@@ -14,7 +15,7 @@ function isSupportedError(result: { success: boolean; error?: string }): boolean
   return !result.success && !!result.error?.includes("Not running inside Electron");
 }
 
-export const RunningAppsPicker: React.FC<RunningAppsPickerProps> = ({ blockedApps, onBlock }) => {
+export const RunningAppsPicker: React.FC<RunningAppsPickerProps> = ({ blockedApps, onBlock, disabled = false }) => {
   const [tab, setTab] = useState<PickerTab>("running");
   const [apps, setApps] = useState<RunningAppInfo[]>([]);
   const [installed, setInstalled] = useState<InstalledAppInfo[]>([]);
@@ -116,7 +117,7 @@ export const RunningAppsPicker: React.FC<RunningAppsPickerProps> = ({ blockedApp
   const emptyHint =
     tab === "running"
       ? apps.length === 0
-        ? "No windowed apps detected — open an app and refresh."
+        ? "No windowed apps detected - open an app and refresh."
         : q
           ? `No running apps match "${query}".`
           : "Every running app is already blocked."
@@ -129,18 +130,19 @@ export const RunningAppsPicker: React.FC<RunningAppsPickerProps> = ({ blockedApp
             : "Every installed app is already blocked.";
 
   return (
-    <div className="rounded-2xl border border-border bg-card/40 overflow-hidden">
+    <div className={`rounded-2xl border border-border bg-card/40 overflow-hidden transition-opacity duration-300 ${disabled ? "opacity-50" : ""}`}>
       <div className="px-4 pt-3.5 pb-3 border-b border-border space-y-2">
         <div className="flex gap-1 p-1 rounded-xl bg-secondary/60 border border-border">
           {(["running", "installed"] as PickerTab[]).map((t) => (
             <button
               key={t}
               onClick={() => handleTab(t)}
-              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all ${
+              disabled={disabled}
+              className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider transition-all duration-300 ${
                 tab === t
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground"
-              }`}
+              } ${disabled ? "cursor-not-allowed" : "active:scale-95 cursor-pointer"}`}
             >
               {t === "running" ? "Running" : "Installed"}
             </button>
@@ -152,16 +154,19 @@ export const RunningAppsPicker: React.FC<RunningAppsPickerProps> = ({ blockedApp
             <input
               type="text"
               value={query}
+              disabled={disabled}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={tab === "running" ? "Search running apps..." : "Search all installed apps..."}
-              className="w-full pl-8 pr-3 py-2 rounded-xl text-xs bg-secondary/70 border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:border-muted-foreground transition-colors"
+              placeholder={disabled ? "Locked during active flow session" : tab === "running" ? "Search running apps..." : "Search all installed apps..."}
+              className={`w-full pl-8 pr-3 py-2 rounded-xl text-xs bg-secondary/70 border border-border text-foreground placeholder-muted-foreground focus:outline-none focus:border-muted-foreground transition-colors ${
+                disabled ? "cursor-not-allowed" : ""
+              }`}
             />
           </div>
           <button
             onClick={handleRefresh}
-            disabled={loading}
-            className="p-2 rounded-xl bg-secondary border border-border text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50 shrink-0"
-            title={tab === "running" ? "Refresh running apps" : "Refresh installed apps"}
+            disabled={loading || disabled}
+            className="p-2 rounded-xl bg-secondary border border-border text-muted-foreground hover:text-foreground transition-all duration-300 disabled:opacity-50 shrink-0 cursor-pointer disabled:cursor-not-allowed"
+            title={disabled ? "Locked during active flow session" : tab === "running" ? "Refresh running apps" : "Refresh installed apps"}
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
           </button>
@@ -216,9 +221,17 @@ export const RunningAppsPicker: React.FC<RunningAppsPickerProps> = ({ blockedApp
               )}
             </div>
             <button
-              onClick={() => onBlock(app.image)}
-              className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary border border-transparent hover:border-border transition-all opacity-60 group-hover:opacity-100"
-              title={`Block ${app.image}`}
+              disabled={disabled}
+              onClick={() => {
+                if (disabled) return;
+                onBlock(app.image);
+              }}
+              className={`shrink-0 p-1.5 rounded-lg text-muted-foreground transition-all duration-300 ${
+                disabled
+                  ? "opacity-30 cursor-not-allowed"
+                  : "hover:text-foreground hover:bg-secondary border border-transparent hover:border-border opacity-60 group-hover:opacity-100 active:scale-95 cursor-pointer"
+              }`}
+              title={disabled ? "Locked during active flow session" : `Block ${app.image}`}
             >
               <Plus className="w-4 h-4" />
             </button>
@@ -239,9 +252,17 @@ export const RunningAppsPicker: React.FC<RunningAppsPickerProps> = ({ blockedApp
               </p>
             </div>
             <button
-              onClick={() => onBlock(app.image)}
-              className="shrink-0 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary border border-transparent hover:border-border transition-all opacity-60 group-hover:opacity-100"
-              title={`Block ${app.image}`}
+              disabled={disabled}
+              onClick={() => {
+                if (disabled) return;
+                onBlock(app.image);
+              }}
+              className={`shrink-0 p-1.5 rounded-lg text-muted-foreground transition-all duration-300 ${
+                disabled
+                  ? "opacity-30 cursor-not-allowed"
+                  : "hover:text-foreground hover:bg-secondary border border-transparent hover:border-border opacity-60 group-hover:opacity-100 active:scale-95 cursor-pointer"
+              }`}
+              title={disabled ? "Locked during active flow session" : `Block ${app.image}`}
             >
               <Plus className="w-4 h-4" />
             </button>

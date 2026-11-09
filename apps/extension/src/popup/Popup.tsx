@@ -69,11 +69,10 @@ import {
 } from "../types";
 import { SOUNDSCAPE_PRESETS, DEFAULT_CHANNELS } from "../lib/soundscape";
 import { getBreakDuration } from "@focus/utils";
+import { TaskQuickAdd, TaskRow, TaskSelectPopover, type TaskQuickAddPayload } from "@focus/ui";
 import {
   formatTaskDuration,
   getTaskActualMinutes,
-  getVelocityStatus,
-  type VelocityStatus,
   downloadFile,
   sessionsToCsv,
   sessionsToMarkdown,
@@ -117,20 +116,6 @@ function formatBreakDuration(seconds: number): string {
   return `${secs} second${secs === 1 ? "" : "s"}`;
 }
 
-const PRIORITY_STYLES: Record<TaskPriority, string> = {
-  urgent: "bg-crimson-bg text-crimson",
-  high: "bg-amber-bg text-amber",
-  medium: "bg-blue-bg text-blue",
-  low: "bg-surface-inset text-muted-foreground",
-};
-
-const VELOCITY_STYLES: Record<VelocityStatus, string> = {
-  "completed-on-time": "bg-emerald-bg text-emerald",
-  "on-track": "bg-surface-inset text-muted-foreground",
-  "approaching": "bg-amber-bg text-amber",
-  "exceeded": "bg-crimson-bg text-crimson",
-};
-
 export function Popup() {
   const [state, setState] = useState<AppStateData | null>(getCachedState());
   const [activeTab, setActiveTab] = useState<"timer" | "tasks" | "shield" | "stats" | "settings">("timer");
@@ -138,10 +123,6 @@ export function Popup() {
   const [showFloatingTimerCard, setShowFloatingTimerCard] = useState(false);
 
   // Local inputs
-  const [taskTitle, setTaskTitle] = useState("");
-  const [taskPriority, setTaskPriority] = useState<TaskPriority>("medium");
-  const [taskDeadline, setTaskDeadline] = useState("");
-  const [taskEstimatedMinutes, setTaskEstimatedMinutes] = useState("");
   const [taskFilter, setTaskFilter] = useState<"all" | "active" | "completed">("all");
   const [expandedTaskId, setExpandedTaskId] = useState<string | null>(null);
   const [newSubtaskText, setNewSubtaskText] = useState("");
@@ -826,7 +807,6 @@ export function Popup() {
   };
 
   const isStrictLocked = Boolean(
-    state?.shield?.strictMode &&
     state?.isActive &&
     state?.timerState === "FLOW"
   );
@@ -942,26 +922,24 @@ export function Popup() {
   };
 
   // Task Handlers
-  const handleAddTask = (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = taskTitle.trim();
+  const handleAddTask = (payload: TaskQuickAddPayload) => {
+    const trimmed = payload.text.trim();
     if (!trimmed) return;
-    const parsedEst = parseInt(taskEstimatedMinutes, 10);
     const newTask: TaskItem = {
       id: crypto.randomUUID(),
       text: trimmed,
       completed: false,
-      priority: taskPriority,
-      deadline: taskDeadline || undefined,
-      estimatedMinutes: Number.isFinite(parsedEst) && parsedEst > 0 ? parsedEst : undefined,
+      priority: payload.priority,
+      deadline: payload.deadline || undefined,
+      estimatedMinutes:
+        typeof payload.estimatedMinutes === "number" && payload.estimatedMinutes > 0
+          ? payload.estimatedMinutes
+          : undefined,
       subtasks: [],
     };
     updateState({
-      tasks: [newTask, ...(state.tasks || [])],
+      tasks: [newTask, ...(state?.tasks || [])],
     });
-    setTaskTitle("");
-    setTaskDeadline("");
-    setTaskEstimatedMinutes("");
   };
 
   const handleToggleTask = (id: string) => {
@@ -1435,18 +1413,12 @@ export function Popup() {
               if (activeTasks.length > 0) {
                 return (
                   <div className="flex items-center gap-1.5">
-                    <select
-                      value=""
-                      onChange={(e) => updateState({ selectedTaskId: e.target.value || null })}
-                      className="bg-card border border-border text-[11px] text-muted-foreground rounded-full px-2.5 py-1 focus:outline-none cursor-pointer max-w-[200px] truncate"
-                    >
-                      <option value="" disabled>Link a task...</option>
-                      {activeTasks.map((t) => (
-                        <option key={t.id} value={t.id}>
-                          {t.text}
-                        </option>
-                      ))}
-                    </select>
+                    <TaskSelectPopover
+                      tasks={activeTasks}
+                      selectedTaskId={state.selectedTaskId}
+                      onSelectTask={(taskId) => updateState({ selectedTaskId: taskId })}
+                      placeholder="Link a task..."
+                    />
                   </div>
                 );
               }
@@ -1566,70 +1538,12 @@ export function Popup() {
               </div>
             </div>
 
-            {/* Task Add Form */}
-            <form onSubmit={handleAddTask} className="p-3 bg-card border border-border rounded-2xl space-y-2">
-              <div className="flex items-center gap-1.5">
-                <input
-                  type="text"
-                  placeholder="Add a new task..."
-                  value={taskTitle}
-                  onChange={(e) => setTaskTitle(e.target.value)}
-                  className="flex-1 bg-surface-inset border-0 rounded-xl px-3 h-8 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none"
-                />
-                <button
-                  type="submit"
-                  className="h-8 px-3 rounded-xl bg-primary text-primary-foreground text-xs font-medium shadow-sm hover:shadow active:scale-95 transition-all duration-200 cursor-pointer flex items-center gap-1 shrink-0"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Add</span>
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between flex-wrap gap-1.5 pt-0.5 text-[10px] text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <span>Priority:</span>
-                  {(["low", "medium", "high", "urgent"] as TaskPriority[]).map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      onClick={() => setTaskPriority(p)}
-                      className={`px-2 py-0.5 rounded-full capitalize font-medium transition-all cursor-pointer ${
-                        taskPriority === p
-                          ? PRIORITY_STYLES[p]
-                          : "bg-surface-inset text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center gap-1">
-                    <Clock className="w-3 h-3 text-muted-foreground" />
-                    <input
-                      type="number"
-                      min="1"
-                      max="1440"
-                      placeholder="Est (m)"
-                      value={taskEstimatedMinutes}
-                      onChange={(e) => setTaskEstimatedMinutes(e.target.value)}
-                      className="w-12 bg-transparent border-0 text-[10px] text-muted-foreground placeholder:text-subtle-foreground focus:outline-none tabular-nums"
-                    />
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    <Calendar className="w-3 h-3" />
-                    <input
-                      type="date"
-                      value={taskDeadline}
-                      onChange={(e) => setTaskDeadline(e.target.value)}
-                      className="bg-transparent border-0 text-[10px] text-muted-foreground focus:outline-none cursor-pointer [color-scheme:dark]"
-                    />
-                  </div>
-                </div>
-              </div>
-            </form>
+            {/* Task Quick Add Bar */}
+            <TaskQuickAdd
+              onAdd={handleAddTask}
+              placeholder="Add a new task..."
+              compact
+            />
 
             {/* Filter Tabs & Task List */}
             <div className="p-3 bg-card border border-border rounded-2xl space-y-2">
@@ -1682,213 +1596,99 @@ export function Popup() {
                       const isFocused = state.selectedTaskId === task.id;
                       const isExpanded = expandedTaskId === task.id;
                       const subtasks = task.subtasks || [];
-                      const completedSubtasks = subtasks.filter((s) => s.completed).length;
                       const actualMinutes = getTaskActualMinutes(state.sessions || [], task.id);
-                      const hasEstimate =
-                        typeof task.estimatedMinutes === "number" && task.estimatedMinutes > 0;
-                      const velocityStatus = hasEstimate
-                        ? getVelocityStatus(actualMinutes, task.estimatedMinutes!, task.completed)
-                        : null;
 
                       return (
-                        <div
+                        <TaskRow
                           key={task.id}
-                          className={`p-2.5 rounded-xl border transition-all ${
-                            isFocused
-                              ? "bg-surface border-foreground/30"
-                              : "bg-surface-inset border-border hover:border-border/80"
-                          }`}
+                          task={task}
+                          isFocused={isFocused}
+                          actualMinutes={actualMinutes}
+                          isExpanded={isExpanded}
+                          onToggle={handleToggleTask}
+                          onFocus={handleFocusTask}
+                          onDelete={handleDeleteTask}
+                          onToggleExpand={(taskId) =>
+                            setExpandedTaskId(isExpanded ? null : taskId)
+                          }
+                          className="p-2.5 rounded-xl gap-1.5"
                         >
-                          <div className="flex items-center justify-between gap-2">
-                            <div className="flex items-center gap-2 flex-1 min-w-0">
-                              <button
-                                onClick={() => handleToggleTask(task.id)}
-                                className="text-muted-foreground hover:text-foreground transition-all cursor-pointer shrink-0"
-                                title={task.completed ? "Mark incomplete" : "Mark complete"}
+                          {/* Expanded Subtasks */}
+                          <div className="flex flex-col gap-1.5 pl-4 pr-1 text-[11px]">
+                            {subtasks.map((sub) => (
+                              <div
+                                key={sub.id}
+                                className="flex items-center justify-between gap-1.5"
                               >
-                                {task.completed ? (
-                                  <CheckSquare className="w-3.5 h-3.5 text-emerald" />
-                                ) : (
-                                  <Square className="w-3.5 h-3.5" />
-                                )}
-                              </button>
-
-                              <div className="flex flex-col min-w-0 flex-1">
-                                <span
-                                  className={`text-xs font-medium truncate ${
-                                    task.completed
-                                      ? "line-through text-muted-foreground"
-                                      : "text-foreground"
-                                  }`}
-                                >
-                                  {task.text}
-                                </span>
-
-                                <div className="flex items-center gap-1.5 mt-0.5">
-                                  {task.priority && (
-                                    <span
-                                      className={`text-[9px] px-1.5 py-0.2 rounded-full font-medium capitalize ${
-                                        PRIORITY_STYLES[task.priority]
-                                      }`}
-                                    >
-                                      {task.priority}
-                                    </span>
-                                  )}
-
-                                  {task.deadline && (
-                                    <span className="text-[9px] font-mono tabular-nums text-muted-foreground flex items-center gap-0.5">
-                                      <Calendar className="w-2.5 h-2.5" />
-                                      {task.deadline}
-                                    </span>
-                                  )}
-
-                                  {hasEstimate && velocityStatus && (
-                                    <span
-                                      className={`text-[9px] font-mono tabular-nums px-1.5 py-0.2 rounded-full font-medium flex items-center gap-0.5 ${
-                                        VELOCITY_STYLES[velocityStatus]
-                                      }`}
-                                      title={`Velocity: ${actualMinutes}m actual of ${task.estimatedMinutes}m estimated (${velocityStatus})`}
-                                    >
-                                      <Clock className="w-2.5 h-2.5" />
-                                      <span>
-                                        {formatTaskDuration(actualMinutes)} / {formatTaskDuration(task.estimatedMinutes!)}
-                                      </span>
-                                    </span>
-                                  )}
-
-                                  {!hasEstimate && actualMinutes > 0 && (
-                                    <span
-                                      className="text-[9px] font-mono tabular-nums px-1.5 py-0.2 rounded-full font-medium flex items-center gap-0.5 bg-surface-inset text-muted-foreground"
-                                      title={`Focus time: ${actualMinutes}m`}
-                                    >
-                                      <Clock className="w-2.5 h-2.5" />
-                                      <span>{formatTaskDuration(actualMinutes)}</span>
-                                    </span>
-                                  )}
-
-                                  {subtasks.length > 0 && (
-                                    <button
-                                      onClick={() =>
-                                        setExpandedTaskId(isExpanded ? null : task.id)
-                                      }
-                                      className="text-[9px] font-mono tabular-nums text-muted-foreground hover:text-foreground flex items-center gap-0.5 cursor-pointer"
-                                    >
-                                      <span>
-                                        {completedSubtasks}/{subtasks.length}
-                                      </span>
-                                      {isExpanded ? (
-                                        <ChevronUp className="w-2.5 h-2.5" />
-                                      ) : (
-                                        <ChevronDown className="w-2.5 h-2.5" />
-                                      )}
-                                    </button>
-                                  )}
+                                <div className="flex items-center gap-1.5 flex-1 min-w-0">
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleToggleSubtask(task.id, sub.id)
+                                    }
+                                    className="text-muted-foreground hover:text-foreground cursor-pointer shrink-0"
+                                    title={
+                                      sub.completed
+                                        ? "Mark incomplete"
+                                        : "Mark complete"
+                                    }
+                                  >
+                                    {sub.completed ? (
+                                      <CheckSquare className="w-3 h-3 text-emerald" />
+                                    ) : (
+                                      <Square className="w-3 h-3" />
+                                    )}
+                                  </button>
+                                  <span
+                                    className={`truncate ${
+                                      sub.completed
+                                        ? "line-through text-muted-foreground"
+                                        : "text-foreground"
+                                    }`}
+                                  >
+                                    {sub.text}
+                                  </span>
                                 </div>
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    handleDeleteSubtask(task.id, sub.id)
+                                  }
+                                  className="text-muted-foreground hover:text-crimson transition-colors p-0.5 shrink-0 cursor-pointer"
+                                  title="Delete subtask"
+                                >
+                                  <Trash2 className="w-2.5 h-2.5" />
+                                </button>
                               </div>
-                            </div>
+                            ))}
 
-                            <div className="flex items-center gap-1 shrink-0">
-                              <button
-                                onClick={() =>
-                                  setExpandedTaskId(isExpanded ? null : task.id)
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <input
+                                type="text"
+                                placeholder="Add subtask..."
+                                value={newSubtaskText}
+                                onChange={(e) =>
+                                  setNewSubtaskText(e.target.value)
                                 }
-                                className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-surface transition-colors cursor-pointer"
-                                title="Subtasks"
-                              >
-                                <ListChecks className="w-3 h-3" />
-                              </button>
-
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter") {
+                                    e.preventDefault();
+                                    handleAddSubtask(task.id);
+                                  }
+                                }}
+                                className="flex-1 bg-surface border border-border rounded-lg px-2.5 py-1 text-[11px] text-foreground placeholder:text-muted-foreground focus:outline-none"
+                              />
                               <button
-                                onClick={() => handleFocusTask(task)}
-                                className={`p-1 rounded-lg transition-colors cursor-pointer ${
-                                  isFocused
-                                    ? "bg-primary text-primary-foreground"
-                                    : "text-muted-foreground hover:text-foreground hover:bg-surface"
-                                }`}
-                                title={isFocused ? "Current focus target" : "Focus on task"}
+                                type="button"
+                                onClick={() => handleAddSubtask(task.id)}
+                                disabled={!newSubtaskText.trim()}
+                                className="px-2.5 py-1 rounded-lg bg-primary text-primary-foreground text-[10px] font-medium active:scale-95 transition-all duration-300 cursor-pointer disabled:opacity-30 disabled:pointer-events-none"
                               >
-                                <Target className="w-3 h-3" />
-                              </button>
-
-                              <button
-                                onClick={() => handleDeleteTask(task.id)}
-                                className="p-1 rounded-lg text-muted-foreground hover:text-crimson hover:bg-crimson-bg transition-colors cursor-pointer"
-                                title="Delete task"
-                              >
-                                <Trash2 className="w-3 h-3" />
+                                Add
                               </button>
                             </div>
                           </div>
-
-                          {/* Expanded Subtasks */}
-                          {isExpanded && (
-                            <div className="mt-2 pt-2 border-t border-border flex flex-col gap-1.5">
-                              {subtasks.map((sub) => (
-                                <div
-                                  key={sub.id}
-                                  className="flex items-center justify-between gap-1.5 pl-4 pr-1 text-[11px]"
-                                >
-                                  <div className="flex items-center gap-1.5 flex-1 min-w-0">
-                                    <button
-                                      onClick={() =>
-                                        handleToggleSubtask(task.id, sub.id)
-                                      }
-                                      className="text-muted-foreground hover:text-foreground cursor-pointer"
-                                    >
-                                      {sub.completed ? (
-                                        <CheckSquare className="w-3 h-3 text-emerald" />
-                                      ) : (
-                                        <Square className="w-3 h-3" />
-                                      )}
-                                    </button>
-                                    <span
-                                      className={`truncate ${
-                                        sub.completed
-                                          ? "line-through text-muted-foreground"
-                                          : "text-foreground"
-                                      }`}
-                                    >
-                                      {sub.text}
-                                    </span>
-                                  </div>
-                                  <button
-                                    onClick={() =>
-                                      handleDeleteSubtask(task.id, sub.id)
-                                    }
-                                    className="text-muted-foreground hover:text-crimson p-0.5"
-                                  >
-                                    <Trash2 className="w-2.5 h-2.5" />
-                                  </button>
-                                </div>
-                              ))}
-
-                              <div className="flex items-center gap-1.5 pl-4 mt-0.5">
-                                <input
-                                  type="text"
-                                  placeholder="Add subtask..."
-                                  value={newSubtaskText}
-                                  onChange={(e) =>
-                                    setNewSubtaskText(e.target.value)
-                                  }
-                                  onKeyDown={(e) => {
-                                    if (e.key === "Enter") {
-                                      e.preventDefault();
-                                      handleAddSubtask(task.id);
-                                    }
-                                  }}
-                                  className="flex-1 bg-surface border border-border rounded-lg px-2 py-1 text-[11px] text-foreground placeholder:text-muted-foreground focus:outline-none"
-                                />
-                                <button
-                                  type="button"
-                                  onClick={() => handleAddSubtask(task.id)}
-                                  className="px-2 py-1 rounded-lg bg-primary text-primary-foreground text-[10px] font-medium cursor-pointer"
-                                >
-                                  Add
-                                </button>
-                              </div>
-                            </div>
-                          )}
-                        </div>
+                        </TaskRow>
                       );
                     })}
                   </div>
@@ -1907,10 +1707,12 @@ export function Popup() {
             <div className="flex flex-col gap-3">
               {/* Lock Alert Banner */}
               {isStrictLocked && (
-                <div className="p-2.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-500 flex items-center gap-2 text-xs">
-                  <Lock className="w-4 h-4 shrink-0" />
-                  <span className="text-[11px] font-mono leading-tight">
-                    Strict Mode active: Shield toggle and rules are locked while focus timer is running.
+                <div className="p-2.5 rounded-[12px] bg-amber-bg border border-amber/20 flex items-center gap-2.5 text-xs">
+                  <div className="p-1 bg-amber-bg rounded-[8px] text-amber shrink-0">
+                    <Lock className="w-3.5 h-3.5" />
+                  </div>
+                  <span className="text-[11px] text-muted-foreground leading-snug">
+                    Shield controls and rules are locked while focusing.
                   </span>
                 </div>
               )}
@@ -1923,7 +1725,7 @@ export function Popup() {
               }`}>
                 <div className="flex items-center gap-2.5">
                   {isStrictLocked ? (
-                    <Lock className="w-5 h-5 text-amber-500" />
+                    <Lock className="w-5 h-5 text-amber" />
                   ) : isEnforcing ? (
                     <ShieldCheck className="w-5 h-5 text-emerald" />
                   ) : state.shield.enabled ? (
@@ -1949,7 +1751,7 @@ export function Popup() {
                     updateState({ shield: { ...state.shield, enabled: !state.shield.enabled } });
                   }}
                   disabled={isStrictLocked}
-                  title={isStrictLocked ? "Locked by Strict Mode during active focus session" : undefined}
+                  title={isStrictLocked ? "Locked while focusing" : undefined}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all flex items-center gap-1.5 ${
                     isStrictLocked
                       ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border"
@@ -1963,63 +1765,17 @@ export function Popup() {
                 </button>
               </div>
 
-              {/* Strict Mode Toggle Card */}
-              <div className="p-2.5 rounded-xl border bg-card border-border flex items-center justify-between">
-                <div className="flex items-center gap-2.5">
-                  <div className={`p-1.5 rounded-lg border flex items-center justify-center ${
-                    state.shield.strictMode
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : "bg-secondary text-muted-foreground border-border"
-                  }`}>
-                    <Lock className="w-3.5 h-3.5" />
-                  </div>
-                  <div>
-                    <div className="text-xs font-bold font-mono flex items-center gap-1.5">
-                      STRICT MODE
-                      {state.shield.strictMode && (
-                        <span className="text-[9px] px-1 rounded bg-primary/20 text-primary font-sans font-medium">LOCKED WHEN FOCUSING</span>
-                      )}
-                    </div>
-                    <p className="text-[10px] text-muted-foreground">
-                      Locks shield toggle & rules while focus timer is running
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  disabled={isStrictLocked}
-                  onClick={() => {
-                    if (isStrictLocked) return;
-                    updateState({
-                      shield: {
-                        ...state.shield,
-                        strictMode: !state.shield.strictMode,
-                      },
-                    });
-                  }}
-                  title={isStrictLocked ? "Cannot change Strict Mode while focus timer is running" : undefined}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                    isStrictLocked
-                      ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border"
-                      : state.shield.strictMode
-                        ? "bg-primary text-primary-foreground border-primary"
-                        : "bg-secondary text-secondary-foreground border-border"
-                  }`}
-                >
-                  {state.shield.strictMode ? "ON" : "OFF"}
-                </button>
-              </div>
-
               {/* Sub-view Navigation (Rules vs Schedules) */}
               <div className="flex gap-1 p-1 rounded-xl bg-card border border-border">
                 <button
                   onClick={() => setShieldSubTab("rules")}
-                  className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono uppercase transition-all ${
+                  className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold font-mono uppercase transition-all flex items-center justify-center gap-1.5 ${
                     shieldSubTab === "rules"
                       ? "bg-primary text-primary-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
+                  <Shield className="w-3 h-3" />
                   Rules ({state.shield.blockedSites.length + state.shield.allowedSites.length})
                 </button>
                 <button
@@ -2111,7 +1867,7 @@ export function Popup() {
                             <button
                               onClick={() => removeBlockedSite(site)}
                               disabled={isStrictLocked}
-                              title={isStrictLocked ? "Locked by Strict Mode" : "Remove"}
+                              title={isStrictLocked ? "Locked while focusing" : "Remove"}
                               className={`p-1 transition-opacity ${
                                 isStrictLocked
                                   ? "opacity-40 cursor-not-allowed text-muted-foreground"
@@ -2141,7 +1897,7 @@ export function Popup() {
                             <button
                               onClick={() => removeAllowedSite(site)}
                               disabled={isStrictLocked}
-                              title={isStrictLocked ? "Locked by Strict Mode" : "Remove"}
+                              title={isStrictLocked ? "Locked while focusing" : "Remove"}
                               className={`p-1 transition-opacity ${
                                 isStrictLocked
                                   ? "opacity-40 cursor-not-allowed text-muted-foreground"
@@ -2288,7 +2044,7 @@ export function Popup() {
                               <button
                                 onClick={() => handleToggleSchedule(schedule.id)}
                                 disabled={isStrictLocked}
-                                title={isStrictLocked ? "Locked by Strict Mode" : undefined}
+                                title={isStrictLocked ? "Locked while focusing" : undefined}
                                 className={`px-2 py-0.5 rounded text-[10px] font-mono font-bold border transition-all flex items-center gap-1 ${
                                   isStrictLocked
                                     ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border"
@@ -2303,7 +2059,7 @@ export function Popup() {
                               <button
                                 onClick={() => handleDeleteSchedule(schedule.id)}
                                 disabled={isStrictLocked}
-                                title={isStrictLocked ? "Locked by Strict Mode" : "Delete"}
+                                title={isStrictLocked ? "Locked while focusing" : "Delete"}
                                 className={`p-1 transition-opacity ${
                                   isStrictLocked
                                     ? "opacity-40 cursor-not-allowed text-muted-foreground"

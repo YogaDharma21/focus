@@ -6,6 +6,7 @@ import React, { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Play, Pause, RotateCcw, CheckCircle2, Focus, Clock, Coffee, Target, X } from "lucide-react";
 import { cn, getBreakDuration } from "@/lib/utils";
+import { TaskSelectPopover } from "@focus/ui";
 import { DistractionCounter } from "./DistractionCounter";
 import { playCompletionSound, requestNotificationPermission, registerAutoplayUnlock } from "@/lib/sound";
 
@@ -275,18 +276,12 @@ export function FocusTimer() {
                     if (activeTasks.length > 0) {
                         return (
                             <div className="flex items-center gap-1.5">
-                                <select
-                                    value={selectedTaskId || ""}
-                                    onChange={(e) => setSelectedTaskId(e.target.value || null)}
-                                    className="bg-card border border-border text-[11px] text-muted-foreground rounded-full px-3 py-1 focus:outline-none cursor-pointer max-w-[220px] truncate"
-                                >
-                                    <option value="" disabled>Link a task to focus...</option>
-                                    {activeTasks.map((t) => (
-                                        <option key={t.id} value={t.id}>
-                                            {t.text}
-                                        </option>
-                                    ))}
-                                </select>
+                                <TaskSelectPopover
+                                    tasks={activeTasks}
+                                    selectedTaskId={selectedTaskId}
+                                    onSelectTask={(id) => setSelectedTaskId(id)}
+                                    placeholder="Link a task to focus..."
+                                />
                             </div>
                         );
                     }

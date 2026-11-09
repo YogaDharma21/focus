@@ -66,8 +66,10 @@ export const App: React.FC = () => {
 
     const cleanupShieldAction = electron.onShieldAction((action) => {
       if (action === 'toggle') {
-        const currentShield = useDesktopStore.getState().shield;
-        useDesktopStore.getState().setShieldEnabled(!currentShield.enabled);
+        const state = useDesktopStore.getState();
+        if (state.isActive && state.timerState === "FLOW") return;
+        const currentShield = state.shield;
+        state.setShieldEnabled(!currentShield.enabled);
       }
     });
 
@@ -163,9 +165,11 @@ export const App: React.FC = () => {
         state.setIsActive(false);
         state.dismissShieldViolations();
       } else if (action === 'disable-shield') {
+        if (state.isActive && state.timerState === "FLOW") return;
         state.setShieldEnabled(false);
         state.dismissShieldViolations();
       } else if (action === 'dismiss') {
+        if (state.isActive && state.timerState === "FLOW") return;
         // Dismiss originated in the overlay window: the main process already
         // snoozed these keys, so mirror the snooze locally without echoing
         // back (avoids a redundant IPC round-trip). Only the forwarded keys
