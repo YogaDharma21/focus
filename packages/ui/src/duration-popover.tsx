@@ -84,6 +84,9 @@ export function DurationPopover({
     setIsOpen(false);
   };
 
+  const parsedCustom = parseInt(customInput, 10);
+  const isCustomValid = Number.isFinite(parsedCustom) && parsedCustom > 0 && parsedCustom <= 1440;
+
   return (
     <div ref={containerRef} className={cn("relative inline-block", className)}>
       {trigger ? (
@@ -97,7 +100,7 @@ export function DurationPopover({
             "flex items-center gap-1.5 h-8 px-2.5 rounded-[10px] text-xs font-medium transition-all duration-300 cursor-pointer active:scale-95 border select-none",
             compact && (value ? "h-7 px-2 rounded-[8px] text-[11px]" : "h-7 w-7 p-0 justify-center rounded-[8px]"),
             value
-              ? "bg-surface-inset text-foreground border-white/10"
+              ? "bg-surface-inset text-foreground border-border"
               : "bg-surface-inset text-muted-foreground hover:text-foreground border-transparent"
           )}
           title={value ? `Estimate: ${formatTaskDuration(value)}` : "Set duration"}
@@ -182,7 +185,7 @@ export function DurationPopover({
             </div>
             <button
               type="submit"
-              disabled={!customInput || isNaN(parseInt(customInput, 10))}
+              disabled={!isCustomValid}
               className="p-1 rounded-[8px] bg-primary text-primary-foreground disabled:opacity-40 transition-all duration-200 active:scale-95 cursor-pointer"
               title="Apply duration"
             >

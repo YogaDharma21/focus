@@ -1277,6 +1277,7 @@ export function TasksPage() {
 
               <TouchableOpacity
                 activeOpacity={0.7}
+                disabled={!customDateInput.trim()}
                 onPress={() => {
                   triggerHaptic();
                   if (customDateInput.trim()) {
@@ -1286,7 +1287,10 @@ export function TasksPage() {
                 }}
                 style={[
                   styles.modalPrimaryBtn,
-                  { backgroundColor: colors.primary },
+                  {
+                    backgroundColor: colors.primary,
+                    opacity: customDateInput.trim() ? 1 : 0.4,
+                  },
                 ]}
               >
                 <Text

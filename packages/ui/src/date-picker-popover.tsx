@@ -203,7 +203,7 @@ export function DatePickerPopover({
             "flex items-center gap-1.5 h-8 px-2.5 rounded-[10px] text-xs font-medium transition-all duration-300 cursor-pointer active:scale-95 border select-none",
             compact && (value ? "h-7 px-2 rounded-[8px] text-[11px]" : "h-7 w-7 p-0 justify-center rounded-[8px]"),
             value
-              ? "bg-surface-inset text-foreground border-white/10"
+              ? "bg-surface-inset text-foreground border-border"
               : "bg-surface-inset text-muted-foreground hover:text-foreground border-transparent"
           )}
           title={value ? `Deadline: ${value}` : "Set deadline"}
