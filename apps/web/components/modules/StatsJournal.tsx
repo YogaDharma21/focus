@@ -12,7 +12,24 @@ import {
     BarChart3,
     TrendingUp,
 } from "lucide-react";
-import { format } from "date-fns";
+import { format, differenceInCalendarDays, subDays } from "date-fns";
+import { AnnualHeatmap } from "./AnnualHeatmap";
+
+const toDateKey = (dateStr?: string) => {
+    if (!dateStr) return "";
+    if (!dateStr.includes("T") && /^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+        return dateStr;
+    }
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return "";
+    return format(date, "yyyy-MM-dd");
+};
+
+const parseDateKey = (key: string) => {
+    const parts = key.split("-").map(Number);
+    if (parts.length !== 3 || parts.some(isNaN)) return new Date(NaN);
+    return new Date(parts[0], parts[1] - 1, parts[2]);
+};
 
 const DAYS_OF_WEEK = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 const DISTRACTION_CATEGORIES = ["Phone", "Social Media", "Bathroom", "Meeting", "Other"];
@@ -73,7 +90,7 @@ export function StatsJournal() {
 
     const historicalSeconds = useMemo(() => {
         const todaysSessions = sessions.filter((s) =>
-            s.date && s.date.startsWith(todayStr)
+            s && s.date && toDateKey(s.date) === todayStr
         );
         return todaysSessions.reduce((acc, s) => acc + s.duration, 0);
     }, [sessions, todayStr]);
@@ -84,37 +101,21 @@ export function StatsJournal() {
 
     // Calculate streaks
     const { currentStreak, bestStreak } = useMemo(() => {
-        if (sessions.length === 0) return { currentStreak: 0, bestStreak: 0 };
+        if (!sessions || sessions.length === 0) return { currentStreak: 0, bestStreak: 0 };
 
         const uniqueDates = Array.from(
-            new Set(sessions.map((s) => s.date.split("T")[0])),
-        ).sort().reverse();
+            new Set(sessions.map((s) => toDateKey(s?.date)).filter(Boolean)),
+        ).sort();
 
-        let streak = 0;
-        const currentDate = new Date();
-        currentDate.setHours(0, 0, 0, 0);
+        if (uniqueDates.length === 0) return { currentStreak: 0, bestStreak: 0 };
 
-        for (const dateStr of uniqueDates) {
-            const sessionDate = new Date(dateStr);
-            sessionDate.setHours(0, 0, 0, 0);
-
-            const diffDays = Math.floor((currentDate.getTime() - sessionDate.getTime()) / (1000 * 60 * 60 * 24));
-
-            if (diffDays === streak) {
-                streak++;
-            } else if (diffDays > streak) {
-                break;
-            }
-        }
-
-        const sortedAsc = [...uniqueDates].sort();
         let best = 1;
         let currentRun = 1;
 
-        for (let i = 1; i < sortedAsc.length; i++) {
-            const prev = new Date(sortedAsc[i - 1]);
-            const curr = new Date(sortedAsc[i]);
-            const diffDays = Math.floor((curr.getTime() - prev.getTime()) / (1000 * 60 * 60 * 24));
+        for (let i = 1; i < uniqueDates.length; i++) {
+            const prev = parseDateKey(uniqueDates[i - 1]);
+            const curr = parseDateKey(uniqueDates[i]);
+            const diffDays = differenceInCalendarDays(curr, prev);
 
             if (diffDays === 1) {
                 currentRun++;
@@ -124,7 +125,13 @@ export function StatsJournal() {
             }
         }
 
-        return { currentStreak: streak, bestStreak: best };
+        const todayKey = format(new Date(), "yyyy-MM-dd");
+        const yesterdayKey = format(subDays(new Date(), 1), "yyyy-MM-dd");
+        const lastDate = uniqueDates[uniqueDates.length - 1];
+
+        const current = (lastDate === todayKey || lastDate === yesterdayKey) ? currentRun : 0;
+
+        return { currentStreak: current, bestStreak: Math.max(best, current) };
     }, [sessions]);
 
     // Calculate weekly minutes (Sun - Sat)
@@ -144,7 +151,7 @@ export function StatsJournal() {
             const targetStr = format(targetDate, "yyyy-MM-dd");
 
             const daySessions = sessions.filter(
-                (s) => s.date && s.date.startsWith(targetStr)
+                (s) => s && s.date && toDateKey(s.date) === targetStr
             );
             const histSecs = daySessions.reduce(
                 (acc, s) => acc + s.duration,
@@ -188,15 +195,17 @@ export function StatsJournal() {
                 </div>
                 <Progress value={dayProgress} className="h-2 bg-surface-inset" />
                 <p className="text-[11px] text-muted-foreground mt-2">
-                    {Math.floor((totalMinutesInDay - totalMinutesPassed) / 60)}h{" "}
-                    {(totalMinutesInDay - totalMinutesPassed) % 60}m remaining
-                    today
+                    <span className="tabular-nums">
+                        {Math.floor((totalMinutesInDay - totalMinutesPassed) / 60)}h{" "}
+                        {(totalMinutesInDay - totalMinutesPassed) % 60}m
+                    </span>{" "}
+                    remaining today
                 </p>
             </Card>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Card
-                    className="p-5 flex flex-col justify-between bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-[24px] cursor-pointer hover:bg-surface/50 transition-colors"
+                    className="p-5 flex flex-col justify-between bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] rounded-[24px] cursor-pointer hover:bg-surface transition-colors"
                     onClick={() => setShowHours(!showHours)}
                 >
                     <div className="flex items-center justify-between">
@@ -294,6 +303,8 @@ export function StatsJournal() {
                 </div>
             </Card>
 
+            <AnnualHeatmap sessions={sessions} liveElapsed={liveElapsed} />
+
             <Card className="p-5 bg-card border border-border shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)] flex flex-col gap-4 rounded-[24px]">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -303,7 +314,7 @@ export function StatsJournal() {
                         <h2 className="font-semibold text-lg">Distraction Analysis</h2>
                     </div>
                     {totalDistractions > 0 && (
-                        <span className="text-xs text-muted-foreground font-medium">
+                        <span className="text-xs text-muted-foreground font-medium tabular-nums">
                             {totalDistractions} total
                         </span>
                     )}
@@ -314,12 +325,15 @@ export function StatsJournal() {
                     <span className="font-medium text-foreground">
                         {totalDistractions > 0 ? mostCommon?.[0] : "None"}
                     </span>{" "}
-                    {totalDistractions > 0 &&
-                        `(${Math.round(((mostCommon?.[1] || 0) / totalDistractions) * 100)}%)`}
+                    {totalDistractions > 0 && (
+                        <span className="tabular-nums">
+                            ({Math.round(((mostCommon?.[1] || 0) / totalDistractions) * 100)}%)
+                        </span>
+                    )}
                 </div>
 
                 {totalDistractions === 0 ? (
-                    <div className="p-4 border border-dashed rounded-[var(--radius)] text-center text-sm text-muted-foreground bg-muted/10">
+                    <div className="p-4 border border-dashed border-border rounded-[16px] text-center text-sm text-muted-foreground bg-surface-inset">
                         No distractions logged yet. Keep up the deep focus!
                     </div>
                 ) : (
@@ -332,7 +346,7 @@ export function StatsJournal() {
                                 <div key={cat} className="space-y-1">
                                     <div className="flex items-center justify-between text-sm">
                                         <span className="font-medium">{cat}</span>
-                                        <span className="text-muted-foreground">
+                                        <span className="text-muted-foreground tabular-nums">
                                             {count} ({percentage}%)
                                         </span>
                                     </div>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Pressable, StyleSheet } from 'react-native';
-import { BottomTabBarProps } from 'expo-router/js-tabs';
+import { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { useTheme } from '@/context/ThemeContext';
@@ -8,7 +8,7 @@ import { useTheme } from '@/context/ThemeContext';
 export const FLOATING_TAB_BAR_HEIGHT = 64;
 export const FLOATING_TAB_BAR_BOTTOM_GAP = 12;
 
-export function FloatingTabBar({ state, descriptors, emitter, navigateToTab }: BottomTabBarProps) {
+export function FloatingTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
 
@@ -34,7 +34,7 @@ export function FloatingTabBar({ state, descriptors, emitter, navigateToTab }: B
           const isFocused = state.index === index;
 
           const onPress = () => {
-            const event = emitter.emit({
+            const event = navigation.emit({
               type: 'tabPress',
               target: route.key,
               canPreventDefault: true,
@@ -43,12 +43,12 @@ export function FloatingTabBar({ state, descriptors, emitter, navigateToTab }: B
               if (process.env.EXPO_OS === 'ios') {
                 void Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               }
-              navigateToTab(route.key);
+              navigation.navigate(route.name, route.params);
             }
           };
 
           const onLongPress = () => {
-            emitter.emit({
+            navigation.emit({
               type: 'tabLongPress',
               target: route.key,
             });

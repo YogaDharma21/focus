@@ -3,7 +3,26 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { safeStorage } from './storage';
 import { DEFAULT_SHIELD_CONFIG, normalizeAppName, normalizeSite, type ShieldConfig } from './shield';
 
-export type ViewType = 'FOCUS' | 'JOURNAL' | 'SHIELD' | 'SETTINGS';
+export type ViewType = 'FOCUS' | 'TASKS' | 'JOURNAL' | 'SHIELD' | 'SETTINGS';
+
+export type TaskPriority = 'low' | 'medium' | 'high' | 'urgent';
+
+export interface SubtaskItem {
+  id: string;
+  text: string;
+  completed: boolean;
+}
+
+export interface TaskItem {
+  id: string;
+  text: string;
+  completed: boolean;
+  priority?: TaskPriority;
+  deadline?: string;
+  estimatedMinutes?: number;
+  subtasks?: SubtaskItem[];
+  completedAt?: string;
+}
 
 const generateId = () => Date.now().toString(36) + Math.random().toString(36).substring(2, 9);
 
@@ -12,6 +31,8 @@ export interface Session {
   date: string;
   duration: number;
   mode: 'STOPWATCH';
+  taskId?: string;
+  taskName?: string;
 }
 
 export interface Distraction {
@@ -63,6 +84,17 @@ interface AppState {
   setSessionStartTime: (time: string | null) => void;
   setAutoStartBreak: (enabled: boolean) => void;
   setAutoStartFlow: (enabled: boolean) => void;
+
+  tasks: TaskItem[];
+  selectedTaskId: string | null;
+  addTask: (task: { text: string; priority?: TaskPriority; deadline?: string; estimatedMinutes?: number }) => void;
+  toggleTask: (id: string) => void;
+  updateTask: (id: string, updates: Partial<TaskItem>) => void;
+  deleteTask: (id: string) => void;
+  addSubtask: (taskId: string, text: string) => void;
+  toggleSubtask: (taskId: string, subtaskId: string) => void;
+  deleteSubtask: (taskId: string, subtaskId: string) => void;
+  setSelectedTaskId: (id: string | null) => void;
 
   sessions: Session[];
   distractions: Distraction[];
@@ -162,6 +194,139 @@ export const useAppStore = create<AppState>()(
       autoStartFlow: true,
       setAutoStartFlow: (enabled) => set({ autoStartFlow: enabled }),
 
+      tasks: [],
+      selectedTaskId: null,
+      addTask: ({ text, priority = 'medium', deadline, estimatedMinutes }) =>
+        set((state) => ({
+          tasks: [
+            {
+              id: generateId(),
+              text: text.trim(),
+              completed: false,
+              priority,
+              deadline: deadline || undefined,
+              estimatedMinutes: estimatedMinutes && estimatedMinutes > 0 ? estimatedMinutes : undefined,
+              subtasks: [],
+            },
+            ...(state.tasks || []),
+          ],
+        })),
+      toggleTask: (id) =>
+        set((state) => {
+          let shouldClearSelected = false;
+          const tasks = (state.tasks || []).map((task) => {
+            if (task.id !== id) return task;
+            const nextCompleted = !task.completed;
+            if (nextCompleted && state.selectedTaskId === id) {
+              shouldClearSelected = true;
+            }
+            return {
+              ...task,
+              completed: nextCompleted,
+              completedAt: nextCompleted
+                ? (task.completedAt || new Date().toISOString())
+                : undefined,
+              subtasks: (task.subtasks || []).map((sub) => ({
+                ...sub,
+                completed: nextCompleted,
+              })),
+            };
+          });
+          return {
+            tasks,
+            selectedTaskId: shouldClearSelected ? null : state.selectedTaskId,
+          };
+        }),
+      updateTask: (id, updates) =>
+        set((state) => ({
+          tasks: (state.tasks || []).map((task) =>
+            task.id === id ? { ...task, ...updates } : task
+          ),
+          selectedTaskId:
+            updates.completed === true && state.selectedTaskId === id
+              ? null
+              : state.selectedTaskId,
+        })),
+      deleteTask: (id) =>
+        set((state) => ({
+          tasks: (state.tasks || []).filter((task) => task.id !== id),
+          selectedTaskId: state.selectedTaskId === id ? null : state.selectedTaskId,
+        })),
+      addSubtask: (taskId, text) =>
+        set((state) => ({
+          tasks: (state.tasks || []).map((task) => {
+            if (task.id !== taskId) return task;
+            const subtasks = [
+              ...(task.subtasks || []),
+              {
+                id: generateId(),
+                text: text.trim(),
+                completed: false,
+              },
+            ];
+            return {
+              ...task,
+              completed: false,
+              completedAt: undefined,
+              subtasks,
+            };
+          }),
+        })),
+      toggleSubtask: (taskId, subtaskId) =>
+        set((state) => {
+          let shouldClearSelected = false;
+          const tasks = (state.tasks || []).map((task) => {
+            if (task.id !== taskId) return task;
+            const subtasks = (task.subtasks || []).map((sub) =>
+              sub.id === subtaskId ? { ...sub, completed: !sub.completed } : sub
+            );
+            const allCompleted = subtasks.length > 0 && subtasks.every((sub) => sub.completed);
+            if (allCompleted && state.selectedTaskId === taskId) {
+              shouldClearSelected = true;
+            }
+            return {
+              ...task,
+              completed: allCompleted,
+              completedAt: allCompleted
+                ? (task.completed ? task.completedAt : new Date().toISOString())
+                : undefined,
+              subtasks,
+            };
+          });
+          return {
+            tasks,
+            selectedTaskId: shouldClearSelected ? null : state.selectedTaskId,
+          };
+        }),
+      deleteSubtask: (taskId, subtaskId) =>
+        set((state) => {
+          let shouldClearSelected = false;
+          const tasks = (state.tasks || []).map((task) => {
+            if (task.id !== taskId) return task;
+            const subtasks = (task.subtasks || []).filter((sub) => sub.id !== subtaskId);
+            if (subtasks.length === 0) {
+              return { ...task, subtasks };
+            }
+            const allCompleted = subtasks.every((sub) => sub.completed);
+            if (allCompleted && state.selectedTaskId === taskId) {
+              shouldClearSelected = true;
+            }
+            return {
+              ...task,
+              completed: allCompleted,
+              completedAt: allCompleted
+                ? (task.completed ? task.completedAt : new Date().toISOString())
+                : undefined,
+              subtasks,
+            };
+          });
+          return {
+            tasks,
+            selectedTaskId: shouldClearSelected ? null : state.selectedTaskId,
+          };
+        }),
+      setSelectedTaskId: (id) => set({ selectedTaskId: id }),
+
       sessions: [],
       distractions: [],
 
@@ -170,7 +335,10 @@ export const useAppStore = create<AppState>()(
 
       shield: { ...DEFAULT_SHIELD_CONFIG },
       setShieldEnabled: (enabled) =>
-        set((state) => ({ shield: { ...state.shield, enabled } })),
+        set((state) => {
+          if (state.isActive && state.timerState === "FLOW") return state;
+          return { shield: { ...state.shield, enabled } };
+        }),
       setUrlBlocking: (enabled) =>
         set((state) => ({ shield: { ...state.shield, urlBlocking: enabled } })),
       addBlockedSite: (site) =>
@@ -180,9 +348,12 @@ export const useAppStore = create<AppState>()(
           return { shield: { ...state.shield, blockedSites: [...state.shield.blockedSites, clean] } };
         }),
       removeBlockedSite: (site) =>
-        set((state) => ({
-          shield: { ...state.shield, blockedSites: state.shield.blockedSites.filter((s) => s !== site) },
-        })),
+        set((state) => {
+          if (state.isActive && state.timerState === "FLOW") return state;
+          return {
+            shield: { ...state.shield, blockedSites: state.shield.blockedSites.filter((s) => s !== site) },
+          };
+        }),
       addAllowedSite: (site) =>
         set((state) => {
           const clean = normalizeSite(site);
@@ -200,9 +371,12 @@ export const useAppStore = create<AppState>()(
           return { shield: { ...state.shield, blockedApps: [...state.shield.blockedApps, clean] } };
         }),
       removeBlockedApp: (app) =>
-        set((state) => ({
-          shield: { ...state.shield, blockedApps: state.shield.blockedApps.filter((a) => a !== app) },
-        })),
+        set((state) => {
+          if (state.isActive && state.timerState === "FLOW") return state;
+          return {
+            shield: { ...state.shield, blockedApps: state.shield.blockedApps.filter((a) => a !== app) },
+          };
+        }),
 
       addSession: (session) =>
         set((state) => ({
@@ -223,6 +397,8 @@ export const useAppStore = create<AppState>()(
 
       resetAllData: () =>
         set({
+          tasks: [],
+          selectedTaskId: null,
           sessions: [],
           distractions: [],
           timerMode: 'STOPWATCH',
@@ -245,7 +421,20 @@ export const useAppStore = create<AppState>()(
             ? (state.shield as Record<string, unknown>)
             : {};
         // Field-merge so new shield options backfill onto existing installs.
-        state.shield = { ...DEFAULT_SHIELD_CONFIG, ...storedShield };
+        state.shield = {
+          ...DEFAULT_SHIELD_CONFIG,
+          ...storedShield,
+          strictMode:
+            typeof storedShield.strictMode === 'boolean'
+              ? storedShield.strictMode
+              : (DEFAULT_SHIELD_CONFIG.strictMode ?? true),
+        };
+        if (!Array.isArray(state.tasks)) {
+          state.tasks = [];
+        }
+        if (state.selectedTaskId === undefined) {
+          state.selectedTaskId = null;
+        }
         return state as unknown as AppState;
       },
     }

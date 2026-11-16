@@ -8,7 +8,6 @@ import {
   ViewStyle,
   StyleProp,
   LayoutChangeEvent,
-  type ViewInstance,
 } from 'react-native';
 import { useTheme } from '@/context/ThemeContext';
 
@@ -28,7 +27,7 @@ export function VolumeSlider({
   disabled = false,
 }: VolumeSliderProps) {
   const { colors } = useTheme();
-  const trackRef = useRef<ViewInstance>(null);
+  const trackRef = useRef<View>(null);
   const [trackWidth, setTrackWidth] = useState(0);
   const [trackPageX, setTrackPageX] = useState(0);
 
@@ -67,12 +66,21 @@ export function VolumeSlider({
 
   const onLayout = (e: LayoutChangeEvent) => {
     setTrackWidth(e.nativeEvent.layout.width);
-    trackRef.current?.measure((_x, _y, width, _height, pageX, _pageY) => {
-      if (width > 0) {
-        setTrackWidth(width);
-      }
-      setTrackPageX(pageX);
-    });
+    trackRef.current?.measure(
+      (
+        _x: number,
+        _y: number,
+        width: number,
+        _height: number,
+        pageX: number,
+        _pageY: number,
+      ) => {
+        if (width > 0) {
+          setTrackWidth(width);
+        }
+        setTrackPageX(pageX);
+      },
+    );
   };
 
   const clamped = Math.max(0, Math.min(1, typeof value === 'number' ? value : 0.8));

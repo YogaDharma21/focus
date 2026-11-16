@@ -1,4 +1,24 @@
-export type TimerMode = "FLOW";
+import type {
+  TaskItem,
+  TaskPriority,
+  SubtaskItem,
+  BreakRatio,
+  SoundChannelId,
+  SoundChannelState,
+  SoundscapePreset,
+} from "@focus/types";
+
+export type {
+  TaskItem,
+  TaskPriority,
+  SubtaskItem,
+  BreakRatio,
+  SoundChannelId,
+  SoundChannelState,
+  SoundscapePreset,
+};
+
+export type TimerMode = "STOPWATCH" | "FLOW" | "flow" | "pomodoro";
 export type TimerState = "FLOW" | "BREAK";
 export type ThemeMode = "light" | "dark";
 
@@ -6,7 +26,9 @@ export interface Session {
   id: string;
   date: string;
   duration: number; // in seconds
-  mode: TimerMode;
+  mode: TimerMode | string;
+  taskId?: string;
+  taskName?: string;
 }
 
 export interface Distraction {
@@ -16,15 +38,36 @@ export interface Distraction {
   website?: string;
 }
 
+export interface ShieldSchedule {
+  id: string;
+  name: string;
+  days: number[];
+  startTime: string;
+  endTime: string;
+  enabled: boolean;
+}
+
 export interface ShieldConfig {
   enabled: boolean;
   blockedSites: string[];
   allowedSites: string[];
+  strictMode?: boolean;
+  schedules?: ShieldSchedule[];
+}
+
+export interface PomodoroSettings {
+  workDuration: number; // in minutes
+  breakDuration: number; // in minutes
 }
 
 export interface TimerSettings {
   autoStartBreak?: boolean;
   autoStartTimer?: boolean;
+  breakRatio?: BreakRatio;
+  timerMode?: "flow" | "pomodoro";
+  pomodoro?: PomodoroSettings;
+  workDuration?: number;
+  breakDuration?: number;
 }
 
 export interface AppStateData {
@@ -36,8 +79,13 @@ export interface AppStateData {
   timeLeft: number; // seconds
   isActive: boolean;
   sessionStartTime: string | null;
+  timerAnchorTimestamp?: number | null;
+  targetEndTime?: number | null;
   
   timerSettings?: TimerSettings;
+
+  tasks: TaskItem[];
+  selectedTaskId?: string | null;
 
   sessions: Session[];
   distractions: Distraction[];
@@ -60,4 +108,10 @@ export interface AppStateData {
   soundEffectEnabled?: boolean;
   autoPauseOnExternalAudio?: boolean;
   autoPauseFadeDuration?: number;
+
+  audioSourceType?: "lofi" | "soundscape";
+  isSoundscapePlaying?: boolean;
+  soundscapeMasterVolume?: number; // 0 - 100
+  soundChannels?: SoundChannelState[];
+  soundscapeActivePreset?: string | null;
 }

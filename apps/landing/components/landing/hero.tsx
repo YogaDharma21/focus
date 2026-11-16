@@ -5,11 +5,11 @@ import { WebTimerPreview } from "./app-previews"
 
 export function Hero() {
   return (
-    <section className="relative pt-28 pb-16 md:pt-36 md:pb-24 bg-gradient-to-b from-background via-background to-muted/30">
+    <section className="relative pt-24 pb-16 sm:pt-28 md:pt-36 md:pb-24 bg-gradient-to-b from-background via-background to-muted/30 overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
 
         {/* Hero Title */}
-        <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight max-w-4xl mx-auto leading-tight text-foreground text-balance">
+        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight max-w-4xl mx-auto leading-tight text-foreground text-balance">
           Master Your Attention <br className="hidden sm:block" />
           Stay in Flow
         </h1>
@@ -20,14 +20,14 @@ export function Hero() {
             href="https://app.focustrackers.my.id"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"
+            className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"
           >
             Launch Web App
             <ExternalLink className="size-4" />
           </a>
           <a
             href="#features"
-            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-medium text-sm border border-border transition-colors"
+            className="inline-flex items-center gap-2 px-5 py-2.5 sm:px-6 sm:py-3 rounded-xl bg-muted hover:bg-muted/80 text-foreground font-medium text-sm border border-border transition-colors"
           >
             Explore Features
             <ArrowRight className="size-4" />
@@ -35,7 +35,7 @@ export function Hero() {
         </div>
 
         {/* App Preview Component */}
-        <div className="mt-12 max-w-2xl mx-auto shadow-2xl shadow-black/40 rounded-xl">
+        <div className="mt-12 max-w-2xl mx-auto shadow-2xl shadow-black/40 rounded-xl overflow-hidden w-full">
           <WebTimerPreview />
         </div>
       </div>

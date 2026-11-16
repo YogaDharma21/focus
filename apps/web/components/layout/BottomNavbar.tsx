@@ -1,7 +1,8 @@
 "use client";
 
+import * as React from "react";
 import { useAppStore, ViewType } from "@/lib/store";
-import { LayoutGrid, Calendar, Settings } from "lucide-react";
+import { LayoutGrid, CheckSquare, Calendar, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function BottomNavbar() {
@@ -14,6 +15,7 @@ export function BottomNavbar() {
         icon: React.ReactNode;
     }[] = [
         { label: "Focus", value: "FOCUS", icon: <LayoutGrid className="w-5 h-5" /> },
+        { label: "Tasks", value: "TASKS", icon: <CheckSquare className="w-5 h-5" /> },
         {
             label: "Stats",
             value: "JOURNAL",
@@ -45,7 +47,7 @@ export function BottomNavbar() {
                             title={item.label}
                             aria-label={item.label}
                             className={cn(
-                                "relative flex flex-col items-center justify-center w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 transition-all duration-300 ease-out group rounded-full",
+                                "relative flex flex-col items-center justify-center w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 transition-all duration-300 ease-out group rounded-full active:scale-95 cursor-pointer",
                                 isActive
                                     ? "text-primary-foreground bg-primary shadow-sm"
                                     : "text-muted-foreground hover:text-foreground hover:bg-surface",

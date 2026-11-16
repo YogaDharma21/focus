@@ -8,7 +8,7 @@
     "scripts": {
         "dev": "concurrently \"vite\" \"wait-on http://localhost:5173 && cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .\"",
         "dev:electron": "electron .",
-        "build": "tsc && vite build && tsc -p tsconfig.node.json",
+        "build": "node electron/build-helper.cjs && tsc && vite build && tsc -p tsconfig.node.json",
         "preview": "vite preview",
         "electron": "cross-env VITE_DEV_SERVER_URL=http://localhost:5173 electron .",
         "typecheck": "tsc --noEmit",
@@ -16,6 +16,7 @@
     },
     "dependencies": {
         "@focus/types": "workspace:*",
+        "@focus/ui": "workspace:*",
         "@focus/utils": "workspace:*",
         "clsx": "^2.1.1",
         "date-fns": "^4.1.0",
@@ -52,7 +53,8 @@
             "public/**/*"
         ],
         "asarUnpack": [
-            "electron/external-audio-watch.ps1"
+            "electron/external-audio-watch.ps1",
+            "electron/win32-process-helper.exe"
         ],
         "win": {
             "target": "nsis",

@@ -127,7 +127,7 @@ function FeatureList({ items }: { items: { icon: React.ComponentType<{ className
 
 function TimerIllustration() {
   return (
-    <div className="bg-card border-border/50 relative flex aspect-square rounded-3xl border p-6 md:col-span-3">
+    <div className="bg-card border-border/50 relative flex aspect-auto min-h-[280px] sm:aspect-square sm:min-h-0 rounded-3xl border p-4 sm:p-6 md:col-span-3 overflow-hidden">
       <div className="m-auto w-full max-w-[280px]">
         <div className="flex gap-2 p-1 bg-secondary/40 rounded-[10px] border border-border/30 mb-4">
           <div className="flex-1 flex items-center justify-center gap-1.5 py-2 rounded-[10px] text-xs font-medium bg-primary text-primary-foreground shadow-md">
@@ -173,7 +173,7 @@ function TimerIllustration() {
 
 function ShieldIllustration() {
   return (
-    <div className="bg-card border-border/50 relative flex aspect-square rounded-3xl border p-6 md:col-span-3">
+    <div className="bg-card border-border/50 relative flex aspect-auto min-h-[280px] sm:aspect-square sm:min-h-0 rounded-3xl border p-4 sm:p-6 md:col-span-3 overflow-hidden">
       <div className="m-auto w-full max-w-[280px] space-y-3">
         <div className="flex items-center gap-3 p-3 rounded-xl bg-red-500/10 border border-red-500/20">
           <ShieldOff className="size-5 text-red-400 shrink-0" />
@@ -219,7 +219,7 @@ function ShieldIllustration() {
 
 function LofiIllustration() {
   return (
-    <div className="bg-card border-border/50 relative flex aspect-square rounded-3xl border p-6 md:col-span-3">
+    <div className="bg-card border-border/50 relative flex aspect-auto min-h-[280px] sm:aspect-square sm:min-h-0 rounded-3xl border p-4 sm:p-6 md:col-span-3 overflow-hidden">
       <div className="m-auto w-full max-w-[280px]">
         <div className="bg-neutral-900/90 border border-neutral-800 rounded-2xl p-4">
           <div className="flex items-center justify-between mb-4">
@@ -257,13 +257,13 @@ function LofiIllustration() {
 
 function SessionHistoryIllustration() {
   const sessions = [
-    { text: "Deep work — 50m", meta: "Today 09:12" },
-    { text: "Reading — 25m", meta: "Today 08:30" },
-    { text: "Deep work — 45m", meta: "Yesterday" },
-    { text: "Review — 30m", meta: "Yesterday" },
+    { text: "Deep work - 50m", meta: "Today 09:12" },
+    { text: "Reading - 25m", meta: "Today 08:30" },
+    { text: "Deep work - 45m", meta: "Yesterday" },
+    { text: "Review - 30m", meta: "Yesterday" },
   ]
   return (
-    <div className="bg-card border-border/50 relative flex aspect-square rounded-3xl border p-6 md:col-span-3">
+    <div className="bg-card border-border/50 relative flex aspect-auto min-h-[280px] sm:aspect-square sm:min-h-0 rounded-3xl border p-4 sm:p-6 md:col-span-3 overflow-hidden">
       <div className="m-auto w-full max-w-[280px] space-y-2">
         {sessions.map((session, i) => (
           <div
@@ -295,7 +295,7 @@ function SessionHistoryIllustration() {
 function AnalyticsIllustration() {
   const bars = [30, 55, 45, 70, 60, 85, 75, 90, 65, 80, 95, 70]
   return (
-    <div className="bg-card border-border/50 relative flex aspect-square rounded-3xl border p-6 md:col-span-3">
+    <div className="bg-card border-border/50 relative flex aspect-auto min-h-[280px] sm:aspect-square sm:min-h-0 rounded-3xl border p-4 sm:p-6 md:col-span-3 overflow-hidden">
       <div className="m-auto w-full max-w-[280px]">
         <div className="grid grid-cols-2 gap-2 mb-4">
           <div className="p-3 rounded-xl bg-neutral-900 border border-neutral-800">
@@ -371,8 +371,8 @@ export function FeaturesSection() {
 
   return (
     <section id="features" className="py-16 md:py-20">
-      <div className="mx-auto max-w-7xl px-6">
-        <h2 className="text-muted-foreground max-w-4xl text-balance text-4xl font-medium tracking-tight">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <h2 className="text-muted-foreground max-w-4xl text-balance text-3xl sm:text-4xl font-medium tracking-tight">
           <span className="text-foreground">Built for deep focus.</span> <br /> One unified productivity suite.
         </h2>
         <div className="mt-16 grid gap-6 md:mt-32 lg:grid-cols-[auto_1fr]">

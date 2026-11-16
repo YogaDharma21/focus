@@ -59,5 +59,6 @@ const styles = StyleSheet.create({
   label: {
     fontWeight: '700',
     textAlign: 'center',
+    fontVariant: ['tabular-nums'],
   },
 });

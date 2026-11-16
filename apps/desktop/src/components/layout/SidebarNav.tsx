@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutGrid, Calendar, Shield, SlidersHorizontal } from 'lucide-react';
+import { LayoutGrid, CheckSquare, Calendar, Shield, SlidersHorizontal } from 'lucide-react';
 import { useDesktopStore, ViewType } from '../../lib/store';
 import { cn } from '../../lib/utils';
 
@@ -10,6 +10,7 @@ export const SidebarNav: React.FC = () => {
 
   const navItems: { id: ViewType; label: string; icon: React.FC<{ className?: string }>; dot?: boolean }[] = [
     { id: "FOCUS", label: "Focus", icon: LayoutGrid },
+    { id: "TASKS", label: "Tasks", icon: CheckSquare },
     { id: "JOURNAL", label: "Stats", icon: Calendar },
     { id: "SHIELD", label: "Shield", icon: Shield, dot: shieldEnforcing },
     { id: "SETTINGS", label: "Settings", icon: SlidersHorizontal },
@@ -32,7 +33,7 @@ export const SidebarNav: React.FC = () => {
               aria-label={item.label}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "relative flex items-center justify-center w-11 h-11 rounded-full transition-all duration-300 ease-out group",
+                "relative flex items-center justify-center w-11 h-11 rounded-full transition-all duration-300 ease-out group active:scale-95 cursor-pointer",
                 active
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "text-muted-foreground hover:text-foreground hover:bg-surface"

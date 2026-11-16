@@ -25,10 +25,10 @@
 <summary>View Web Application Screenshots</summary>
 
 ### Focus Session
-![Main Dashboard](./apps/website/public/screenshots/screenshot-main.png)
+![Main Dashboard](./apps/web/public/screenshots/screenshot-main.png)
 
 ### Stats & Analytics
-![Stats & Journal](./apps/website/public/screenshots/screenshot-stats.png)
+![Stats & Journal](./apps/web/public/screenshots/screenshot-stats.png)
 
 </details>
 
@@ -77,7 +77,7 @@ This is a monorepo — each application is structured independently with its own
 ```
 focus/
 ├── apps/
-│   ├── website/       🚧 Next.js web application (in development)
+│   ├── web/           🚧 Next.js web application (in development)
 │   ├── mobile/        🚧 Expo / React Native mobile application (in development)
 │   ├── extension/     🚧 Browser extension (in development)
 │   ├── desktop/       🚧 Desktop application (in development)
@@ -96,7 +96,7 @@ focus/
 
 | App | Path | Status | Tech Stack |
 |-----|------|--------|------------|
-| **Website** | `apps/website/` | 🚧 In Development | Next.js, React, TypeScript, Tailwind CSS, Zustand |
+| **Website** | `apps/web/` | 🚧 In Development | Next.js, React, TypeScript, Tailwind CSS, Zustand |
 | **Mobile** | `apps/mobile/` | 🚧 In Development | Expo, React Native, TypeScript, Zustand |
 | **Extension** | `apps/extension/` | 🚧 In Development | Vite, React, TypeScript, Tailwind CSS, Zustand, MV3 |
 | **Desktop** | `apps/desktop/` | 🚧 In Development | Electron, Vite, React, TypeScript, Tailwind CSS, Zustand |
@@ -123,7 +123,7 @@ pnpm run dev
 ### Web Development Setup
 
 ```bash
-cd apps/website
+cd apps/web
 pnpm install
 pnpm run dev
 ```

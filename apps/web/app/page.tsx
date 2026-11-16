@@ -3,6 +3,7 @@
 import { BottomNavbar } from "@/components/layout/BottomNavbar";
 import { MediaPlayer } from "@/components/modules/MediaPlayer";
 import { FocusTimer } from "@/components/modules/FocusTimer";
+import { TasksPage } from "@/components/modules/TasksPage";
 import { StatsJournal } from "@/components/modules/StatsJournal";
 import { DynamicIslandTimer } from "@/components/modules/DynamicIslandTimer";
 import { DeepFocusOverlay } from "@/components/modules/DeepFocusOverlay";
@@ -82,6 +83,12 @@ export default function Page() {
                         {currentView === "FOCUS" && (
                             <div className="flex-1 flex items-center justify-center min-h-[55vh]">
                                 <FocusTimer />
+                            </div>
+                        )}
+
+                        {currentView === "TASKS" && (
+                            <div className="max-w-2xl mx-auto w-full pb-8 pt-12">
+                                <TasksPage />
                             </div>
                         )}
 

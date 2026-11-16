@@ -1,7 +1,14 @@
 import React, { useEffect, useState } from "react";
-import { Pause, ShieldAlert, Timer } from "lucide-react";
+import { Lock, Pause, ShieldAlert, Timer } from "lucide-react";
 import { AppStateData } from "../types";
-import { getStoredState, saveStoredState, subscribeToStateChanges } from "../lib/storage";
+import {
+  getStoredState,
+  saveStoredState,
+  subscribeToStateChanges,
+  getEffectiveTimeLeft,
+  isShieldEnforcing,
+  isAnyScheduleActive,
+} from "../lib/storage";
 import "../index.css";
 
 export function Blocked() {
@@ -38,6 +45,16 @@ export function Blocked() {
     };
   }, []);
 
+  const [, setTick] = useState(0);
+
+  useEffect(() => {
+    if (!state?.isActive) return;
+    const interval = setInterval(() => {
+      setTick((t) => t + 1);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [state?.isActive]);
+
   useEffect(() => {
     if (!state || !targetUrl) return;
 
@@ -59,18 +76,25 @@ export function Blocked() {
       return;
     }
 
-    const isBlockingActive =
-      state.shield.enabled &&
-      state.isActive &&
-      state.timerState === "FLOW";
+    const isBlockingActive = isShieldEnforcing(state);
 
     if (!isBlockingActive) {
       window.location.href = targetUrl;
     }
   }, [state, targetUrl]);
 
+  const isStrictLocked = Boolean(
+    state?.isActive &&
+    state?.timerState === "FLOW"
+  );
+
+  const isScheduleEnforcing = Boolean(
+    state?.shield?.schedules &&
+    isAnyScheduleActive(state.shield.schedules)
+  );
+
   const pauseShieldTemporarily = async () => {
-    if (!state) return;
+    if (!state || isStrictLocked) return;
     await saveStoredState({
       shield: {
         ...state.shield,
@@ -86,11 +110,18 @@ export function Blocked() {
 
   const pauseTimer = async () => {
     if (!state) return;
-    await saveStoredState({ isActive: false });
+    const current = getEffectiveTimeLeft(state);
+    await saveStoredState({
+      isActive: false,
+      timeLeft: current,
+      timerAnchorTimestamp: null,
+      targetEndTime: null,
+    });
   };
 
-  const mins = state ? Math.floor(state.timeLeft / 60) : 0;
-  const secs = state ? state.timeLeft % 60 : 0;
+  const effectiveTime = state ? getEffectiveTimeLeft(state) : 0;
+  const mins = Math.floor(effectiveTime / 60);
+  const secs = effectiveTime % 60;
   const timeFormatted = `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
 
   let displayDomain = "Website Blocked";
@@ -118,35 +149,45 @@ export function Blocked() {
           {displayDomain}
         </h1>
 
-<p className="text-xs max-w-sm mb-6 leading-relaxed text-muted-foreground">
-          This domain is blocked during your active <b>Focus Session</b>.
+        <p className="text-xs max-w-sm mb-6 leading-relaxed text-muted-foreground">
+          This domain is blocked during your {isScheduleEnforcing ? "scheduled" : "active"}{" "}
+          <b>{isScheduleEnforcing ? "Focus Hours" : "Focus Session"}</b>.
         </p>
 
         {/* Live Timer Card */}
-        {state && (
+        {state && state.isActive && state.timerState === "FLOW" && (
           <div className="w-full p-4 rounded-xl border flex items-center gap-3 mb-6 bg-card border-border">
             <Timer className="w-5 h-5 shrink-0" />
             <div className="text-left">
               <div className="text-[10px] font-mono opacity-60 uppercase">Session Time Remaining</div>
-              <div className="text-lg font-bold font-mono">{timeFormatted}</div>
+              <div className="text-lg font-bold font-mono tracking-tight tabular-nums">{timeFormatted}</div>
             </div>
           </div>
         )}
 
         {/* Actions */}
         <div className="w-full flex flex-col gap-2">
-          <button
-            onClick={pauseTimer}
-            className="w-full py-3 px-4 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 border transition-all bg-primary text-primary-foreground border-primary hover:bg-accent"
-          >
-            <Pause className="w-3.5 h-3.5" />
-            Pause Timer
-          </button>
+          {state && state.isActive && state.timerState === "FLOW" && (
+            <button
+              onClick={pauseTimer}
+              className="w-full py-3 px-4 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 border transition-all bg-primary text-primary-foreground border-primary hover:bg-accent"
+            >
+              <Pause className="w-3.5 h-3.5" />
+              Pause Timer
+            </button>
+          )}
           <button
             onClick={pauseShieldTemporarily}
-            className="w-full py-3 px-4 rounded-xl font-semibold text-xs border transition-all bg-card border-border text-secondary-foreground hover:bg-accent"
+            disabled={isStrictLocked}
+            title={isStrictLocked ? "Locked while focus timer is running" : undefined}
+            className={`w-full py-3 px-4 rounded-xl font-semibold text-xs border transition-all flex items-center justify-center gap-1.5 ${
+              isStrictLocked
+                ? "opacity-50 cursor-not-allowed bg-muted text-muted-foreground border-border"
+                : "bg-card border-border text-secondary-foreground hover:bg-accent"
+            }`}
           >
-            Disable Shield
+            {isStrictLocked && <Lock className="w-3.5 h-3.5" />}
+            {isStrictLocked ? "Shield Locked" : "Disable Shield"}
           </button>
         </div>
       </div>

@@ -7,7 +7,7 @@ The Focus repository is organized as an independent polyglot monorepo containing
 ```
 focus/
 ├── apps/
-│   ├── website/       # Next.js web application
+│   ├── web/           # Next.js web application
 │   ├── landing/       # Next.js promotional landing page & interactive demo
 │   ├── mobile/        # Expo / React Native mobile application
 │   ├── desktop/       # Electron + Vite desktop client
@@ -24,7 +24,7 @@ focus/
 
 | App | Path | Framework | Key Technologies |
 |---|---|---|---|
-| **Website** | `apps/website/` | Next.js 16 | React 19, TypeScript, Tailwind CSS, Zustand |
+| **Website** | `apps/web/` | Next.js 16 | React 19, TypeScript, Tailwind CSS, Zustand |
 | **Landing** | `apps/landing/` | Next.js 16 | React 19, TypeScript, Tailwind CSS, Lucide Icons |
 | **Mobile** | `apps/mobile/` | Expo / React Native | React Native, TypeScript, Zustand |
 | **Desktop** | `apps/desktop/` | Electron + Vite | React, TypeScript, Tailwind CSS, Electron |

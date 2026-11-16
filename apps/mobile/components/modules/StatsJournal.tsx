@@ -394,6 +394,7 @@ const styles = StyleSheet.create({
     fontSize: 34,
     fontWeight: '800',
     letterSpacing: -1,
+    fontVariant: ['tabular-nums'],
   },
   bigStatUnit: {
     fontSize: 14,
@@ -422,6 +423,7 @@ const styles = StyleSheet.create({
   percentBadge: {
     fontSize: 14,
     fontWeight: '700',
+    fontVariant: ['tabular-nums'],
   },
   progressBarTrack: {
     height: 6,
@@ -457,6 +459,8 @@ const styles = StyleSheet.create({
   volumeNum: {
     fontSize: 26,
     fontWeight: '800',
+    letterSpacing: -0.5,
+    fontVariant: ['tabular-nums'],
   },
   volumeUnit: {
     fontSize: 13,
@@ -478,6 +482,7 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '600',
     height: 14,
+    fontVariant: ['tabular-nums'],
   },
   barWrapper: {
     width: 14,
@@ -518,6 +523,7 @@ const styles = StyleSheet.create({
   catCount: {
     fontSize: 12,
     fontWeight: '500',
+    fontVariant: ['tabular-nums'],
   },
   trackBg: {
     height: 6,

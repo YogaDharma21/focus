@@ -71,7 +71,7 @@
 3. **Start the Expo development server:**
 
    ```bash
-   pnpm dlx expo start
+   pnpm start
    ```
 
 4. **Run on target platform:**

@@ -3,6 +3,7 @@ export interface ShieldConfig {
   blockedSites: string[];
   allowedSites: string[];
   blockedApps: string[];
+  strictMode?: boolean;
 }
 
 export interface ShieldViolation {
@@ -38,6 +39,7 @@ export const DEFAULT_SHIELD_CONFIG: ShieldConfig = {
   blockedSites: DEFAULT_BLOCKED_SITES,
   allowedSites: [],
   blockedApps: DEFAULT_BLOCKED_APPS,
+  strictMode: true,
 };
 
 /** Strip scheme, www prefix, path, and port from a user-entered domain. */

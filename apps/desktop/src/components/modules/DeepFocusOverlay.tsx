@@ -3,7 +3,7 @@ import { playCompletionSound } from '../../lib/sound';
 import { X, Play, Pause, AlertTriangle, CheckCircle2, Music, Volume2, VolumeX } from 'lucide-react';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
-import { cn } from '../../lib/utils';
+import { cn, getBreakDuration } from '../../lib/utils';
 
 const DISTRACTION_OPTIONS = ["Phone", "Social Media", "Bathroom", "Meeting", "Other"];
 
@@ -27,6 +27,9 @@ export const DeepFocusOverlay: React.FC = () => {
     setVolume,
     autoStartBreak,
     autoStartFlow,
+    breakRatio,
+    tasks,
+    selectedTaskId,
   } = useDesktopStore();
 
   const [showDistractionMenu, setShowDistractionMenu] = useState(false);
@@ -68,13 +71,16 @@ export const DeepFocusOverlay: React.FC = () => {
     }
 
     const durationWorked = Math.max(1, flowTimeElapsed);
-    const calculatedBreakSeconds = Math.max(1, Math.floor(durationWorked / 5));
+    const calculatedBreakSeconds = Math.max(1, getBreakDuration(durationWorked, breakRatio));
 
+    const focusedTask = tasks.find((t) => t.id === selectedTaskId);
     addSession({
       id: crypto.randomUUID(),
       date: new Date().toISOString(),
       duration: durationWorked,
       mode: 'STOPWATCH',
+      taskId: focusedTask?.id,
+      taskName: focusedTask?.text,
     });
 
     const breakMins = Math.floor(calculatedBreakSeconds / 60);
@@ -178,7 +184,21 @@ export const DeepFocusOverlay: React.FC = () => {
       <div />
 
       <div className="flex flex-col items-center justify-center space-y-6 my-auto">
-        <h1 className="text-[120px] md:text-[150px] font-extrabold tracking-tight text-foreground leading-none font-sans select-none">
+        {(() => {
+          const focused = tasks.find((t) => t.id === selectedTaskId);
+          if (!focused) return null;
+          return (
+            <div className="px-3.5 py-1.5 rounded-full bg-card border border-border text-xs font-medium text-foreground tracking-wide max-w-sm truncate shadow-[0_28px_56px_-40px_rgba(0,0,0,0.9)]">
+              {focused.text}
+            </div>
+          );
+        })()}
+
+        <h1
+          role="timer"
+          aria-label={`${timerState === "BREAK" ? "Break time remaining" : "Flow time elapsed"}: ${timeString}`}
+          className="text-[120px] md:text-[150px] font-extrabold tracking-tight text-foreground leading-none font-sans select-none"
+        >
           {timeString}
         </h1>
 
@@ -192,6 +212,7 @@ export const DeepFocusOverlay: React.FC = () => {
                 !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
               )}
               title={isActive ? "Log Distraction" : "Start timer to log distraction"}
+              aria-label={isActive ? "Log distraction" : "Start timer to log distraction"}
             >
               <AlertTriangle className="w-4 h-4" />
             </button>
@@ -218,6 +239,7 @@ export const DeepFocusOverlay: React.FC = () => {
             onClick={() => setIsActive(!isActive)}
             className="w-11 h-11 flex items-center justify-center text-foreground hover:scale-110 transition-transform"
             title={isActive ? "Pause" : "Start"}
+            aria-label={isActive ? "Pause timer" : "Start timer"}
           >
             {isActive ? (
               <Pause className="w-5 h-5 fill-foreground text-foreground" />
@@ -234,6 +256,7 @@ export const DeepFocusOverlay: React.FC = () => {
               !isActive && "opacity-40 cursor-not-allowed pointer-events-none"
             )}
             title={isActive ? "Complete Session" : "Start timer to complete session"}
+            aria-label={isActive ? "Complete session" : "Start timer to complete session"}
           >
             <CheckCircle2 className="w-4 h-4" />
           </button>

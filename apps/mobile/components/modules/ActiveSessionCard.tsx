@@ -12,7 +12,11 @@ export function ActiveSessionCard() {
     timerState,
     setIsActive,
     setDeepFocusMode,
+    tasks,
+    selectedTaskId,
   } = useAppStore();
+
+  const activeTask = tasks.find((t) => t.id === selectedTaskId);
 
   const formattedTime = (() => {
     const mins = Math.floor(timeLeft / 60);
@@ -23,6 +27,8 @@ export function ActiveSessionCard() {
   const sessionStatusText = isActive
     ? timerState === 'BREAK'
       ? 'Break · In progress'
+      : activeTask
+      ? `${activeTask.text} · In progress`
       : 'Flow focus · In progress'
     : 'Ready · Tap to focus';
 

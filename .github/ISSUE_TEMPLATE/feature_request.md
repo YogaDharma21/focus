@@ -13,7 +13,7 @@ A clear and concise description of what the problem is. Ex. I'm always frustrate
 A clear and concise description of what you want to happen.
 
 **Target App(s)**
-- [ ] Website (`apps/website`)
+- [ ] Web (`apps/web`)
 - [ ] Landing (`apps/landing`)
 - [ ] Desktop (`apps/desktop`)
 - [ ] Mobile (`apps/mobile`)

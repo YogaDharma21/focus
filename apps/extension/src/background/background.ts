@@ -1,9 +1,18 @@
-import { getStoredState, saveStoredState, getWeeklyMinutesFromSessions, getTodayMinutesFromSessions, calculateStreaksFromSessions } from "../lib/storage";
-import { AppStateData } from "../types";
+import {
+  getStoredState,
+  saveStoredState,
+  getEffectiveTimeLeft,
+  getWeeklyMinutesFromSessions,
+  getTodayMinutesFromSessions,
+  calculateStreaksFromSessions,
+  isShieldEnforcing,
+} from "../lib/storage";
+import { AppStateData, Session } from "../types";
+import { DEFAULT_CHANNELS } from "@focus/utils";
 
-let timerInterval: ReturnType<typeof setInterval> | null = null;
-
-const KEEPALIVE_ALARM = "focus-keepalive";
+const BREAK_ALARM = "focus-break-end";
+const POMODORO_WORK_ALARM = "focus-pomodoro-work-end";
+const SCHEDULE_CHECK_ALARM = "focus-schedule-check";
 const OFFSCREEN_DOCUMENT_PATH = "offscreen.html";
 
 // ─── Auto-Pause State Persistence ─────────────────────────────────────────
@@ -11,8 +20,36 @@ const OFFSCREEN_DOCUMENT_PATH = "offscreen.html";
 // without modifying focus_extension_state_v6.
 const SESSION_MUSIC_AUTO_PAUSED_KEY = "focus_music_auto_paused";
 const SESSION_MUSIC_CURRENT_TIME_KEY = "focus_music_current_time";
+const SESSION_SOUNDSCAPE_AUTO_PAUSED_KEY = "focus_soundscape_auto_paused";
 let cachedMusicAutoPaused = false;
 let cachedMusicCurrentTime = 0;
+let cachedSoundscapeAutoPaused = false;
+
+async function getSoundscapeAutoPaused(): Promise<boolean> {
+  if (typeof chrome !== "undefined" && chrome.storage?.session) {
+    try {
+      const res = await chrome.storage.session.get(SESSION_SOUNDSCAPE_AUTO_PAUSED_KEY);
+      if (res && typeof res[SESSION_SOUNDSCAPE_AUTO_PAUSED_KEY] === "boolean") {
+        cachedSoundscapeAutoPaused = res[SESSION_SOUNDSCAPE_AUTO_PAUSED_KEY];
+        return cachedSoundscapeAutoPaused;
+      }
+    } catch {
+      // Fallback to cache
+    }
+  }
+  return cachedSoundscapeAutoPaused;
+}
+
+async function setSoundscapeAutoPaused(val: boolean): Promise<void> {
+  cachedSoundscapeAutoPaused = val;
+  if (typeof chrome !== "undefined" && chrome.storage?.session) {
+    try {
+      await chrome.storage.session.set({ [SESSION_SOUNDSCAPE_AUTO_PAUSED_KEY]: val });
+    } catch {
+      // Ignore
+    }
+  }
+}
 
 async function getMusicAutoPaused(): Promise<boolean> {
   if (typeof chrome !== "undefined" && chrome.storage?.session) {
@@ -210,6 +247,10 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
             return;
           }
           const nextPlaying = !state.isMusicPlaying;
+          if (nextPlaying && state.isSoundscapePlaying) {
+            await sendToOffscreen("STOP_SOUNDSCAPE");
+            await saveStoredState({ isSoundscapePlaying: false });
+          }
           await saveStoredState({ isMusicPlaying: nextPlaying });
           await scheduleSyncExternalAudioState("TOGGLE_MUSIC");
           sendResponse({ isMusicPlaying: nextPlaying });
@@ -237,8 +278,121 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
         saveStoredState({ soundEnabled: enabled }).then(async () => {
           if (!enabled) {
             await sendToOffscreen("PAUSE_MUSIC");
+            await sendToOffscreen("STOP_SOUNDSCAPE");
+            await saveStoredState({ isMusicPlaying: false, isSoundscapePlaying: false });
           }
           sendResponse({ success: true });
+        });
+        return true;
+      } else if (message.action === "TOGGLE_SOUNDSCAPE") {
+        getStoredState().then(async (state) => {
+          const soundEnabled = state.soundEnabled ?? true;
+          if (!soundEnabled) {
+            sendResponse({ isSoundscapePlaying: false });
+            return;
+          }
+          const nextPlaying = !state.isSoundscapePlaying;
+          if (nextPlaying && state.isMusicPlaying) {
+            await sendToOffscreen("PAUSE_MUSIC");
+            await saveStoredState({ isMusicPlaying: false });
+          }
+          await saveStoredState({ isSoundscapePlaying: nextPlaying });
+          if (nextPlaying) {
+            const channels = state.soundChannels || DEFAULT_CHANNELS;
+            const masterVolume = state.soundscapeMasterVolume ?? 60;
+            await sendToOffscreen("START_SOUNDSCAPE", { channels, masterVolume });
+          } else {
+            await sendToOffscreen("STOP_SOUNDSCAPE");
+          }
+          sendResponse({ isSoundscapePlaying: nextPlaying });
+        });
+        return true;
+      } else if (message.action === "START_SOUNDSCAPE") {
+        getStoredState().then(async (state) => {
+          const soundEnabled = state.soundEnabled ?? true;
+          if (!soundEnabled) {
+            sendResponse({ success: false, error: "Sound is disabled" });
+            return;
+          }
+          if (state.isMusicPlaying) {
+            await sendToOffscreen("PAUSE_MUSIC");
+          }
+          const channels = message.channels || state.soundChannels || DEFAULT_CHANNELS;
+          const masterVolume = typeof message.masterVolume === "number" ? message.masterVolume : (state.soundscapeMasterVolume ?? 60);
+          await saveStoredState({ isSoundscapePlaying: true, isMusicPlaying: false });
+          await sendToOffscreen("START_SOUNDSCAPE", { channels, masterVolume });
+          sendResponse({ success: true });
+        });
+        return true;
+      } else if (message.action === "STOP_SOUNDSCAPE") {
+        saveStoredState({ isSoundscapePlaying: false }).then(async () => {
+          await sendToOffscreen("STOP_SOUNDSCAPE");
+          sendResponse({ success: true });
+        });
+        return true;
+      } else if (message.action === "SET_SOUNDSCAPE_MASTER_VOLUME") {
+        const volume = typeof message.volume === "number" ? Math.max(0, Math.min(100, Math.round(message.volume))) : 60;
+        saveStoredState({ soundscapeMasterVolume: volume }).then(async () => {
+          await sendToOffscreen("SET_SOUNDSCAPE_MASTER_VOLUME", { volume });
+          sendResponse({ success: true, volume });
+        });
+        return true;
+      } else if (message.action === "SET_SOUNDSCAPE_CHANNEL_VOLUME") {
+        getStoredState().then(async (state) => {
+          const { id, volume, enabled } = message;
+          const numVol = typeof volume === "number" ? Math.max(0, Math.min(100, Math.round(volume))) : 50;
+          const currentChannels = state.soundChannels || DEFAULT_CHANNELS;
+          const updatedChannels = currentChannels.map((ch) => {
+            if (ch.id === id) {
+              const isEnabled = typeof enabled === "boolean" ? enabled : (numVol > 0 ? (ch.enabled || true) : ch.enabled);
+              return { ...ch, volume: numVol, enabled: isEnabled };
+            }
+            return ch;
+          });
+          await saveStoredState({ soundChannels: updatedChannels });
+          await sendToOffscreen("SET_SOUNDSCAPE_CHANNEL_VOLUME", { id, volume: numVol, enabled });
+          sendResponse({ success: true, id, volume: numVol });
+        });
+        return true;
+      } else if (message.action === "TOGGLE_SOUNDSCAPE_CHANNEL") {
+        getStoredState().then(async (state) => {
+          const { id, enabled } = message;
+          const currentChannels = state.soundChannels || DEFAULT_CHANNELS;
+          const updatedChannels = currentChannels.map((ch) => {
+            if (ch.id === id) {
+              const nextEnabled = typeof enabled === "boolean" ? enabled : !ch.enabled;
+              return { ...ch, enabled: nextEnabled };
+            }
+            return ch;
+          });
+          await saveStoredState({ soundChannels: updatedChannels });
+          await sendToOffscreen("TOGGLE_SOUNDSCAPE_CHANNEL", { id, enabled });
+          sendResponse({ success: true, id });
+        });
+        return true;
+      } else if (message.action === "APPLY_SOUNDSCAPE_PRESET") {
+        getStoredState().then(async (state) => {
+          const { presetId, channels: presetChannels } = message;
+          const currentChannels = state.soundChannels || DEFAULT_CHANNELS;
+          const updatedChannels = currentChannels.map((ch) => {
+            const targetVol = presetChannels?.[ch.id];
+            if (targetVol !== undefined) {
+              return { ...ch, volume: targetVol, enabled: targetVol > 0 };
+            }
+            return { ...ch, enabled: false };
+          });
+          await saveStoredState({
+            soundChannels: updatedChannels,
+            soundscapeActivePreset: presetId || null,
+          });
+          await sendToOffscreen("APPLY_SOUNDSCAPE_PRESET", { channels: presetChannels });
+          sendResponse({ success: true, channels: updatedChannels });
+        });
+        return true;
+      } else if (message.action === "SET_AUDIO_SOURCE_TYPE") {
+        const type = message.sourceType === "soundscape" ? "soundscape" : "lofi";
+        saveStoredState({ audioSourceType: type }).then(() => {
+          sendResponse({ success: true, audioSourceType: type });
         });
         return true;
       } else if (message.action === "SET_MUSIC_ENABLED") {
@@ -267,6 +421,23 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
         restoreBlockedTabs();
         sendResponse({ success: true });
         return true;
+      } else if (message.action === "CHECK_BREAK_END") {
+        getStoredState().then(async (state) => {
+          if (state.isActive && state.timerState === "BREAK" && state.targetEndTime && state.targetEndTime <= Date.now()) {
+            await handleBreakFinished();
+          }
+          sendResponse({ success: true });
+        });
+        return true;
+      } else if (message.action === "CHECK_POMODORO_END") {
+        getStoredState().then(async (state) => {
+          const isPomo = state.timerSettings?.timerMode === "pomodoro" || state.timerMode === "pomodoro";
+          if (isPomo && state.isActive && state.timerState === "FLOW" && state.targetEndTime && state.targetEndTime <= Date.now()) {
+            await handlePomodoroFinished();
+          }
+          sendResponse({ success: true });
+        });
+        return true;
       } else if (message.action === "SET_AUTO_PAUSE_ON_EXTERNAL_AUDIO") {
         const enabled = Boolean(message.enabled);
         saveStoredState({ autoPauseOnExternalAudio: enabled }).then(async () => {
@@ -287,7 +458,13 @@ if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.onMessage)
 // ─── URL Blocking Helpers ──────────────────────────────────────────────
 
 function isUrlBlocked(targetUrl: string, blockedSites: string[], allowedSites: string[] = []): boolean {
-  if (!targetUrl || targetUrl.startsWith("chrome://") || targetUrl.startsWith("chrome-extension://") || targetUrl.startsWith("about:")) {
+  if (
+    !targetUrl ||
+    targetUrl.startsWith("chrome://") ||
+    targetUrl.startsWith("chrome-extension://") ||
+    targetUrl.startsWith("about:") ||
+    targetUrl.startsWith("edge://")
+  ) {
     return false;
   }
 
@@ -318,10 +495,7 @@ async function enforceTabBlocking(state?: AppStateData) {
   if (typeof chrome === "undefined" || !chrome.tabs) return;
 
   const currentState = state || (await getStoredState());
-  const isBlockingRequired =
-    currentState.shield.enabled &&
-    currentState.isActive &&
-    currentState.timerState === "FLOW";
+  const isBlockingRequired = isShieldEnforcing(currentState);
 
   if (!isBlockingRequired) return;
 
@@ -373,137 +547,216 @@ async function restoreBlockedTabs() {
 
 // ─── Badge ─────────────────────────────────────────────────────────────
 
-async function updateBadge(timeLeft: number, isActive: boolean, timerState: string) {
+async function updateBadgeForState(state?: AppStateData) {
   if (typeof chrome === "undefined" || !chrome.action) return;
 
-  if (!isActive) {
+  const currentState = state || (await getStoredState());
+  if (!currentState.isActive) {
     chrome.action.setBadgeText({ text: "" });
     return;
   }
 
+  const timeLeft = getEffectiveTimeLeft(currentState);
   const mins = Math.floor(timeLeft / 60);
   const secs = timeLeft % 60;
-  const badgeText = timerState === "FLOW" ? `${mins}m` : (mins > 0 ? `${mins}m` : `${secs}s`);
+  const isPomo = currentState.timerSettings?.timerMode === "pomodoro" || currentState.timerMode === "pomodoro";
+
+  let badgeText = "";
+  if (currentState.timerState === "FLOW") {
+    badgeText = isPomo ? (mins > 0 ? `${mins}m` : `${secs}s`) : `${mins}m`;
+  } else {
+    badgeText = mins > 0 ? `${mins}m` : `${secs}s`;
+  }
 
   chrome.action.setBadgeText({ text: badgeText });
   chrome.action.setBadgeBackgroundColor({
-    color: timerState === "FLOW" ? "#262626" : "#525252",
+    color: currentState.timerState === "FLOW" ? "#262626" : "#525252",
   });
 }
 
-// ─── Keepalive Alarm ───────────────────────────────────────────────────
+// ─── Break & Pomodoro Handling & Alarms ───────────────────────────────────
 
-async function startKeepalive() {
-  if (typeof chrome !== "undefined" && chrome.alarms) {
-    await chrome.alarms.create(KEEPALIVE_ALARM, { periodInMinutes: 0.4 }); // ~24s
-  }
-}
+async function syncTimerAlarms(state: AppStateData) {
+  if (typeof chrome === "undefined" || !chrome.alarms) return;
 
-async function stopKeepalive() {
-  if (typeof chrome !== "undefined" && chrome.alarms) {
-    await chrome.alarms.clear(KEEPALIVE_ALARM);
-  }
-}
+  const isPomo = state.timerSettings?.timerMode === "pomodoro" || state.timerMode === "pomodoro";
 
-function stopBackgroundTimer() {
-  if (timerInterval !== null) {
-    if (timerInterval !== (-1 as any)) {
-      clearInterval(timerInterval);
+  if (state.isActive && state.timerState === "BREAK" && state.targetEndTime) {
+    if (state.targetEndTime <= Date.now()) {
+      await handleBreakFinished();
+    } else {
+      await chrome.alarms.create(BREAK_ALARM, { when: state.targetEndTime });
     }
-    timerInterval = null;
+    await chrome.alarms.clear(POMODORO_WORK_ALARM);
+  } else if (isPomo && state.isActive && state.timerState === "FLOW" && state.targetEndTime) {
+    if (state.targetEndTime <= Date.now()) {
+      await handlePomodoroFinished();
+    } else {
+      await chrome.alarms.create(POMODORO_WORK_ALARM, { when: state.targetEndTime });
+    }
+    await chrome.alarms.clear(BREAK_ALARM);
+  } else {
+    await chrome.alarms.clear(BREAK_ALARM);
+    await chrome.alarms.clear(POMODORO_WORK_ALARM);
   }
-  stopKeepalive();
 }
 
-// ─── Background Timer ──────────────────────────────────────────────────
+async function handlePomodoroFinished() {
+  if (typeof chrome !== "undefined" && chrome.alarms) {
+    await chrome.alarms.clear(POMODORO_WORK_ALARM);
+  }
 
-async function startBackgroundTimer() {
-  if (timerInterval !== null) {
+  const state = await getStoredState();
+  const isPomo = state.timerSettings?.timerMode === "pomodoro" || state.timerMode === "pomodoro";
+  if (!state.isActive || state.timerState !== "FLOW" || !isPomo) {
     return;
   }
-  timerInterval = -1 as any;
 
-  try {
-    await startKeepalive();
-    const initialState = await getStoredState();
-    if (!initialState.isActive) {
-      stopBackgroundTimer();
-      return;
-    }
+  const workMins = state.timerSettings?.pomodoro?.workDuration ?? 25;
+  const workSecs = workMins * 60;
+  const breakMins = state.timerSettings?.pomodoro?.breakDuration ?? 5;
+  const breakSecs = breakMins * 60;
 
-    enforceTabBlocking(initialState);
-    updateBadge(initialState.timeLeft, true, initialState.timerState);
+  const focusedTask = (state.tasks || []).find((t) => t.id === state.selectedTaskId);
+  const newSession: Session = {
+    id: crypto.randomUUID(),
+    date: new Date().toISOString(),
+    duration: workSecs,
+    mode: "pomodoro",
+    taskId: focusedTask?.id,
+    taskName: focusedTask?.text,
+  };
+  const newSessions = [newSession, ...(state.sessions || [])];
+  const updatedWeekly = getWeeklyMinutesFromSessions(newSessions);
+  const updatedToday = getTodayMinutesFromSessions(newSessions);
+  const streaks = calculateStreaksFromSessions(newSessions);
 
-    if (timerInterval !== (-1 as any)) {
-      if (timerInterval !== null) {
-        clearInterval(timerInterval);
-      }
-    }
+  const autoStartBreak = Boolean(state.timerSettings?.autoStartBreak);
+  const soundEnabled = state.soundEnabled ?? true;
+  const musicEnabled = state.musicEnabled ?? true;
+  const sfxEnabled = state.soundEffectEnabled ?? true;
 
-    timerInterval = setInterval(async () => {
-      const state = await getStoredState();
-      if (!state.isActive) {
-        stopBackgroundTimer();
-        updateBadge(state.timeLeft, false, state.timerState);
-        return;
-      }
+  const targetEnd = autoStartBreak ? Date.now() + (breakSecs * 1000) : null;
 
-      if (state.timerState === "FLOW") {
-        const nextTime = state.timeLeft + 1;
-        await saveStoredState({ timeLeft: nextTime });
-        updateBadge(nextTime, true, "FLOW");
-      } else if (state.timerState === "BREAK") {
-        if (state.timeLeft > 0) {
-          const nextTime = state.timeLeft - 1;
-          await saveStoredState({ timeLeft: nextTime });
-          updateBadge(nextTime, true, "BREAK");
-        } else {
-          stopBackgroundTimer();
+  const nextState = await saveStoredState({
+    isActive: autoStartBreak,
+    isMusicPlaying: false,
+    deepFocusMode: false,
+    timerState: "BREAK",
+    timeLeft: breakSecs,
+    timerAnchorTimestamp: null,
+    targetEndTime: targetEnd,
+    sessions: newSessions,
+    stats: {
+      ...state.stats,
+      todayMinutes: updatedToday,
+      weeklyMinutes: updatedWeekly,
+      streakDays: streaks.current,
+      longestStreak: streaks.best,
+    },
+  });
 
-          const autoStart = Boolean(state.timerSettings?.autoStartTimer);
-          const soundEnabled = state.soundEnabled ?? true;
-          const musicEnabled = state.musicEnabled ?? true;
-          const sfxEnabled = state.soundEffectEnabled ?? true;
+  await updateBadgeForState(nextState);
 
-          await saveStoredState({
-            isActive: autoStart,
-            isMusicPlaying: autoStart && soundEnabled && musicEnabled,
-            deepFocusMode: false,
-            timerMode: "FLOW",
-            timerState: "FLOW",
-            previousMode: "FLOW",
-            timeLeft: 0,
-          });
-
-          if (autoStart) {
-            startBackgroundTimer();
-          }
-
-          updateBadge(0, autoStart, "FLOW");
-
-          if (soundEnabled && sfxEnabled) {
-            sendToOffscreen("PLAY_SOUND_EFFECT", { volume: state.soundEffectVolume ?? 0.8 });
-          }
-          restoreBlockedTabs();
-
-          if (typeof chrome !== "undefined" && chrome.notifications) {
-            const iconUrl = typeof chrome.runtime?.getURL === "function"
-              ? chrome.runtime.getURL("icons/icon128.png")
-              : "icons/icon128.png";
-            chrome.notifications.create({
-              type: "basic",
-              iconUrl,
-              title: "Break Finished!",
-              message: "Break is over. Ready to focus again.",
-              priority: 2,
-            });
-          }
-        }
-      }
-    }, 1000);
-  } catch (err) {
-    stopBackgroundTimer();
+  if (soundEnabled && sfxEnabled) {
+    sendToOffscreen("PLAY_SOUND_EFFECT", { volume: state.soundEffectVolume ?? 0.8 });
   }
+
+  if (isShieldEnforcing(nextState)) {
+    enforceTabBlocking(nextState);
+  } else {
+    restoreBlockedTabs();
+  }
+
+  if (typeof chrome !== "undefined" && chrome.notifications) {
+    const iconUrl = typeof chrome.runtime?.getURL === "function"
+      ? chrome.runtime.getURL("icons/icon128.png")
+      : "icons/icon128.png";
+    chrome.notifications.create({
+      type: "basic",
+      iconUrl,
+      title: "Pomodoro Finished!",
+      message: `Focus session complete. Time for a ${breakMins}-minute break.`,
+      priority: 2,
+    });
+  }
+
+  scheduleSyncExternalAudioState("pomodoro.finished");
+}
+
+async function handleBreakFinished() {
+  if (typeof chrome !== "undefined" && chrome.alarms) {
+    await chrome.alarms.clear(BREAK_ALARM);
+  }
+
+  const state = await getStoredState();
+  if (!state.isActive || state.timerState !== "BREAK") {
+    return;
+  }
+
+  const isPomo = state.timerSettings?.timerMode === "pomodoro" || state.timerMode === "pomodoro";
+  const autoStart = Boolean(state.timerSettings?.autoStartTimer);
+  const soundEnabled = state.soundEnabled ?? true;
+  const musicEnabled = state.musicEnabled ?? true;
+  const sfxEnabled = state.soundEffectEnabled ?? true;
+
+  const workMins = state.timerSettings?.pomodoro?.workDuration ?? 25;
+  const workSecs = workMins * 60;
+
+  let timeLeft = 0;
+  let anchor: number | null = null;
+  let targetEnd: number | null = null;
+
+  if (isPomo) {
+    timeLeft = workSecs;
+    if (autoStart) {
+      targetEnd = Date.now() + (workSecs * 1000);
+    }
+  } else {
+    timeLeft = 0;
+    if (autoStart) {
+      anchor = Date.now();
+    }
+  }
+
+  const nextState = await saveStoredState({
+    isActive: autoStart,
+    isMusicPlaying: autoStart && soundEnabled && musicEnabled,
+    deepFocusMode: false,
+    timerMode: isPomo ? "pomodoro" : "FLOW",
+    timerState: "FLOW",
+    previousMode: "FLOW",
+    timeLeft,
+    timerAnchorTimestamp: anchor,
+    targetEndTime: targetEnd,
+  });
+
+  await updateBadgeForState(nextState);
+
+  if (soundEnabled && sfxEnabled) {
+    sendToOffscreen("PLAY_SOUND_EFFECT", { volume: state.soundEffectVolume ?? 0.8 });
+  }
+
+  if (isShieldEnforcing(nextState)) {
+    enforceTabBlocking(nextState);
+  } else {
+    restoreBlockedTabs();
+  }
+
+  if (typeof chrome !== "undefined" && chrome.notifications) {
+    const iconUrl = typeof chrome.runtime?.getURL === "function"
+      ? chrome.runtime.getURL("icons/icon128.png")
+      : "icons/icon128.png";
+    chrome.notifications.create({
+      type: "basic",
+      iconUrl,
+      title: "Break Finished!",
+      message: "Break is over. Ready to focus again.",
+      priority: 2,
+    });
+  }
+
+  scheduleSyncExternalAudioState("break.finished");
 }
 
 // ─── External Audio Detection & Synchronization ─────────────────────────
@@ -561,6 +814,17 @@ async function performSyncExternalAudioState(_reason?: string): Promise<void> {
   const fadeDuration = AUTO_PAUSE_FADE_DURATION;
   const musicVolume = state.musicVolume ?? 0.8;
   const wasAutoPaused = await getMusicAutoPaused();
+  const isSoundscapePlaying = Boolean(state.isSoundscapePlaying);
+  const wasSoundscapeAutoPaused = await getSoundscapeAutoPaused();
+
+  if (!soundEnabled) {
+    if (wasSoundscapeAutoPaused) {
+      await setSoundscapeAutoPaused(false);
+    }
+    if (isSoundscapePlaying) {
+      await sendToOffscreen("STOP_SOUNDSCAPE");
+    }
+  }
 
   if (!isMusicPlaying || !soundEnabled || !musicEnabled) {
     if (wasAutoPaused) {
@@ -610,6 +874,10 @@ async function performSyncExternalAudioState(_reason?: string): Promise<void> {
     // already paused would hit a recycled offscreen document (fresh Audio element
     // at currentTime=0) and overwrite the saved position with 0.
     await setSessionNumber(SESSION_EXTERNAL_AUDIO_SINCE_KEY, 0);
+    if (isSoundscapePlaying && !wasSoundscapeAutoPaused) {
+      await setSoundscapeAutoPaused(true);
+      await sendToOffscreen("STOP_SOUNDSCAPE");
+    }
     await setMusicAutoPaused(true);
     const pauseResult = await sendToOffscreen("PAUSE_MUSIC", { fadeDuration });
     if (pauseResult && typeof pauseResult.currentTime === "number") {
@@ -619,6 +887,13 @@ async function performSyncExternalAudioState(_reason?: string): Promise<void> {
     // No external tab is producing audio: drop any pending audible tracking
     // so a blip that ended early never pauses.
     await setSessionNumber(SESSION_EXTERNAL_AUDIO_SINCE_KEY, 0);
+    if (wasSoundscapeAutoPaused && isSoundscapePlaying && soundEnabled) {
+      await setSoundscapeAutoPaused(false);
+      await sendToOffscreen("START_SOUNDSCAPE", {
+        channels: state.soundChannels || DEFAULT_CHANNELS,
+        masterVolume: state.soundscapeMasterVolume ?? 60,
+      });
+    }
     if (wasAutoPaused) {
       // Require sustained silence before resuming.
       let silenceSince = await getSessionNumber(SESSION_SILENCE_SINCE_KEY);
@@ -651,9 +926,9 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
   chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     // URL blocking
     const url = changeInfo.url || tab.url;
+    const state = await getStoredState();
     if (url) {
-      const state = await getStoredState();
-      if (state.shield.enabled && state.isActive && state.timerState === "FLOW") {
+      if (isShieldEnforcing(state)) {
         if (isUrlBlocked(url, state.shield.blockedSites, state.shield.allowedSites)) {
           const blockedPageUrl = chrome.runtime.getURL(
             `blocked.html?target=${encodeURIComponent(url)}`
@@ -663,13 +938,14 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
       }
     }
 
+    await updateBadgeForState(state);
     // Always trigger audio synchronization on tab updates (audible, url, title, status changes)
     scheduleSyncExternalAudioState("tabs.onUpdated");
   });
 
   chrome.tabs.onActivated.addListener(async (activeInfo) => {
     const state = await getStoredState();
-    if (state.shield.enabled && state.isActive && state.timerState === "FLOW") {
+    if (isShieldEnforcing(state)) {
       chrome.tabs.get(activeInfo.tabId, (tab) => {
         if (tab?.id && tab.url && isUrlBlocked(tab.url, state.shield.blockedSites, state.shield.allowedSites)) {
           const blockedPageUrl = chrome.runtime.getURL(
@@ -679,6 +955,7 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
         }
       });
     }
+    await updateBadgeForState(state);
     scheduleSyncExternalAudioState("tabs.onActivated");
   });
 
@@ -698,23 +975,27 @@ if (typeof chrome !== "undefined" && chrome.tabs) {
 }
 
 if (typeof chrome !== "undefined" && chrome.windows && chrome.windows.onFocusChanged) {
-  chrome.windows.onFocusChanged.addListener(() => {
+  chrome.windows.onFocusChanged.addListener(async () => {
+    await updateBadgeForState();
     scheduleSyncExternalAudioState("windows.onFocusChanged");
   });
 }
 
-// ─── Alarm Listener (keepalive wakeup) ─────────────────────────────────
+// ─── Alarm Listener (break & pomodoro timers) ───────────────────────────
 
 if (typeof chrome !== "undefined" && chrome.alarms) {
   chrome.alarms.onAlarm.addListener(async (alarm) => {
-    if (alarm.name === KEEPALIVE_ALARM) {
+    if (alarm.name === BREAK_ALARM) {
+      await handleBreakFinished();
+    } else if (alarm.name === POMODORO_WORK_ALARM) {
+      await handlePomodoroFinished();
+    } else if (alarm.name === SCHEDULE_CHECK_ALARM) {
       const state = await getStoredState();
-      if (state.isActive && timerInterval === null) {
-        startBackgroundTimer();
-      } else if (!state.isActive) {
-        stopBackgroundTimer();
+      if (isShieldEnforcing(state)) {
+        enforceTabBlocking(state);
+      } else if (!state.isActive || state.timerState !== "FLOW") {
+        restoreBlockedTabs();
       }
-      scheduleSyncExternalAudioState("alarm");
     }
   });
 }
@@ -728,37 +1009,29 @@ if (typeof chrome !== "undefined" && chrome.storage) {
       const oldState: AppStateData | undefined = changes.focus_extension_state_v6.oldValue;
       if (!newState) return;
 
-      const wasActive = Boolean(oldState?.isActive);
-      const isNowActive = Boolean(newState.isActive);
+      await syncTimerAlarms(newState);
 
-      if (isNowActive) {
-        if (timerInterval === null) {
-          startBackgroundTimer();
-        } else {
-          // If shield was toggled or blocked sites updated during an active session
-          const oldShield = oldState ? JSON.stringify(oldState.shield) : "";
-          const newShield = JSON.stringify(newState.shield);
-          if (oldShield !== newShield && newState.shield.enabled) {
-            enforceTabBlocking(newState);
-          }
-        }
-      } else {
-        stopBackgroundTimer();
-        updateBadge(newState.timeLeft || 0, false, newState.timerState || "FLOW");
-        if (wasActive) {
-          restoreBlockedTabs();
-        }
+      const oldEnforcing = oldState ? isShieldEnforcing(oldState) : false;
+      const newEnforcing = isShieldEnforcing(newState);
+
+      if (newEnforcing) {
+        enforceTabBlocking(newState);
+      } else if (oldEnforcing && !newEnforcing) {
+        restoreBlockedTabs();
       }
 
-      const musicChanged =
+      await updateBadgeForState(newState);
+
+      const audioChanged =
         !oldState ||
         newState.isMusicPlaying !== oldState.isMusicPlaying ||
+        newState.isSoundscapePlaying !== oldState.isSoundscapePlaying ||
         newState.autoPauseOnExternalAudio !== oldState.autoPauseOnExternalAudio ||
         newState.musicVolume !== oldState.musicVolume ||
         newState.soundEnabled !== oldState.soundEnabled ||
         newState.musicEnabled !== oldState.musicEnabled;
 
-      if (musicChanged) {
+      if (audioChanged) {
         scheduleSyncExternalAudioState("storage.onChanged");
       }
     }
@@ -772,6 +1045,7 @@ if (typeof chrome !== "undefined" && chrome.runtime) {
     chrome.runtime.onStartup.addListener(() => {
       setMusicAutoPaused(false);
       setMusicCurrentTime(0);
+      setSoundscapeAutoPaused(false);
       clearAudioDelayTracking();
       scheduleSyncExternalAudioState("runtime.onStartup");
     });
@@ -780,6 +1054,7 @@ if (typeof chrome !== "undefined" && chrome.runtime) {
     chrome.runtime.onInstalled.addListener(() => {
       setMusicAutoPaused(false);
       setMusicCurrentTime(0);
+      setSoundscapeAutoPaused(false);
       clearAudioDelayTracking();
       scheduleSyncExternalAudioState("runtime.onInstalled");
     });
@@ -789,12 +1064,20 @@ if (typeof chrome !== "undefined" && chrome.runtime) {
 // ─── Init ──────────────────────────────────────────────────────────────
 
 getStoredState().then(async (state) => {
-  if (state.isActive) {
-    startBackgroundTimer();
+  if (typeof chrome !== "undefined" && chrome.alarms) {
+    chrome.alarms.clear("focus-keepalive").catch(() => {});
+    chrome.alarms.create(SCHEDULE_CHECK_ALARM, { periodInMinutes: 1 });
+  }
+
+  if (isShieldEnforcing(state)) {
+    enforceTabBlocking(state);
   } else {
-    updateBadge(state.timeLeft, false, state.timerState);
     restoreBlockedTabs();
   }
+  if (state.isActive) {
+    await syncTimerAlarms(state);
+  }
+  await updateBadgeForState(state);
   scheduleSyncExternalAudioState("init");
 });
 

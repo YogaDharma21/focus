@@ -39,6 +39,7 @@ export function Header({ onOpenBackgrounds, onOpenInfo }: HeaderProps = {}) {
 
   const getScreenTitle = () => {
     if (!pathname || pathname === '/' || pathname.endsWith('index')) return 'Focus';
+    if (pathname.includes('tasks')) return 'Tasks';
     if (pathname.includes('journal')) return 'Stats';
     if (pathname.includes('shield')) return 'Shield';
     if (pathname.includes('settings')) return 'Settings';

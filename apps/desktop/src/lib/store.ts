@@ -1,5 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import type { TaskItem, TaskPriority, BreakRatio, SoundChannelState, SoundChannelId } from "@focus/types";
+import { DEFAULT_CHANNELS } from "@focus/utils";
 import {
   DEFAULT_SHIELD_CONFIG,
   ShieldConfig,
@@ -7,14 +9,17 @@ import {
   normalizeAppName,
   normalizeSite,
 } from "./shield";
+import { electron } from "./electron";
 
-export type ViewType = "FOCUS" | "JOURNAL" | "SHIELD" | "SETTINGS";
+export type ViewType = "FOCUS" | "TASKS" | "JOURNAL" | "SHIELD" | "SETTINGS";
 
 export interface Session {
   id: string;
   date: string;
   duration: number;
   mode: "STOPWATCH";
+  taskId?: string;
+  taskName?: string;
 }
 
 export interface Distraction {
@@ -31,8 +36,16 @@ export interface DesktopState {
   setView: (view: ViewType) => void;
   isAlwaysOnTop: boolean;
   setAlwaysOnTop: (onTop: boolean) => void;
+  isMiniMode: boolean;
+  setMiniMode: (mini: boolean) => void;
 
   // Media Player & Audio
+  audioSourceType: "lofi" | "soundscape";
+  setAudioSourceType: (type: "lofi" | "soundscape") => void;
+  soundChannels: SoundChannelState[];
+  setChannelVolume: (id: SoundChannelId, volume: number) => void;
+  toggleChannel: (id: SoundChannelId) => void;
+  applySoundscapePreset: (channels: Partial<Record<SoundChannelId, number>>) => void;
   mediaType: "YOUTUBE" | "SPOTIFY" | "LOCAL";
   youtubeUrl: string;
   youtubePlaylist: string[];
@@ -67,6 +80,7 @@ export interface DesktopState {
   sessionStartTime: string | null;
   autoStartBreak: boolean;
   autoStartFlow: boolean;
+  breakRatio: BreakRatio;
 
   setTimeLeft: (time: number | ((prev: number) => number)) => void;
   setFlowTimeElapsed: (time: number | ((prev: number) => number)) => void;
@@ -75,6 +89,19 @@ export interface DesktopState {
   setSessionStartTime: (time: string | null) => void;
   setAutoStartBreak: (enabled: boolean) => void;
   setAutoStartFlow: (enabled: boolean) => void;
+  setBreakRatio: (ratio: BreakRatio) => void;
+
+  // Tasks
+  tasks: TaskItem[];
+  selectedTaskId: string | null;
+  addTask: (task: { text: string; priority?: TaskPriority; deadline?: string; estimatedMinutes?: number }) => void;
+  toggleTask: (id: string) => void;
+  updateTask: (id: string, updates: Partial<TaskItem>) => void;
+  deleteTask: (id: string) => void;
+  addSubtask: (taskId: string, text: string) => void;
+  toggleSubtask: (taskId: string, subtaskId: string) => void;
+  deleteSubtask: (taskId: string, subtaskId: string) => void;
+  setSelectedTaskId: (id: string | null) => void;
 
   // Sessions
   sessions: Session[];
@@ -114,8 +141,38 @@ export const useDesktopStore = create<DesktopState>()(
       setView: (view) => set({ currentView: view }),
       isAlwaysOnTop: false,
       setAlwaysOnTop: (onTop) => set({ isAlwaysOnTop: onTop }),
+      isMiniMode: false,
+      setMiniMode: (mini) => {
+        set({ isMiniMode: mini });
+        electron.setMiniMode(mini);
+      },
 
       // Media
+      audioSourceType: "lofi",
+      setAudioSourceType: (type) => set({ audioSourceType: type }),
+      soundChannels: DEFAULT_CHANNELS,
+      setChannelVolume: (id, volume) =>
+        set((state) => ({
+          soundChannels: state.soundChannels.map((ch) =>
+            ch.id === id ? { ...ch, volume } : ch
+          ),
+        })),
+      toggleChannel: (id) =>
+        set((state) => ({
+          soundChannels: state.soundChannels.map((ch) =>
+            ch.id === id ? { ...ch, enabled: !ch.enabled } : ch
+          ),
+        })),
+      applySoundscapePreset: (presetChannels) =>
+        set((state) => ({
+          soundChannels: state.soundChannels.map((ch) => {
+            const targetVol = presetChannels[ch.id];
+            if (targetVol !== undefined) {
+              return { ...ch, volume: targetVol, enabled: true };
+            }
+            return { ...ch, enabled: false };
+          }),
+        })),
       mediaType: "LOCAL",
       youtubeUrl: "https://www.youtube.com/watch?v=DEWzT1geuPU",
       youtubePlaylist: ["https://www.youtube.com/watch?v=DEWzT1geuPU"],
@@ -194,6 +251,142 @@ export const useDesktopStore = create<DesktopState>()(
       setAutoStartBreak: (enabled) => set({ autoStartBreak: enabled }),
       autoStartFlow: true,
       setAutoStartFlow: (enabled) => set({ autoStartFlow: enabled }),
+      breakRatio: "1/5",
+      setBreakRatio: (ratio) => set({ breakRatio: ratio }),
+
+      // Tasks
+      tasks: [],
+      selectedTaskId: null,
+      addTask: ({ text, priority = "medium", deadline, estimatedMinutes }) =>
+        set((state) => ({
+          tasks: [
+            {
+              id: crypto.randomUUID(),
+              text: text.trim(),
+              completed: false,
+              priority,
+              deadline: deadline || undefined,
+              estimatedMinutes: estimatedMinutes && estimatedMinutes > 0 ? estimatedMinutes : undefined,
+              subtasks: [],
+            },
+            ...state.tasks,
+          ],
+        })),
+      toggleTask: (id) =>
+        set((state) => {
+          let shouldClearSelected = false;
+          const tasks = state.tasks.map((task) => {
+            if (task.id !== id) return task;
+            const nextCompleted = !task.completed;
+            if (nextCompleted && state.selectedTaskId === id) {
+              shouldClearSelected = true;
+            }
+            return {
+              ...task,
+              completed: nextCompleted,
+              completedAt: nextCompleted
+                ? (task.completedAt || new Date().toISOString())
+                : undefined,
+              subtasks: (task.subtasks || []).map((sub) => ({
+                ...sub,
+                completed: nextCompleted,
+              })),
+            };
+          });
+          return {
+            tasks,
+            selectedTaskId: shouldClearSelected ? null : state.selectedTaskId,
+          };
+        }),
+      updateTask: (id, updates) =>
+        set((state) => ({
+          tasks: state.tasks.map((task) =>
+            task.id === id ? { ...task, ...updates } : task
+          ),
+          selectedTaskId:
+            updates.completed === true && state.selectedTaskId === id
+              ? null
+              : state.selectedTaskId,
+        })),
+      deleteTask: (id) =>
+        set((state) => ({
+          tasks: state.tasks.filter((task) => task.id !== id),
+          selectedTaskId: state.selectedTaskId === id ? null : state.selectedTaskId,
+        })),
+      addSubtask: (taskId, text) =>
+        set((state) => ({
+          tasks: state.tasks.map((task) => {
+            if (task.id !== taskId) return task;
+            const subtasks = [
+              ...(task.subtasks || []),
+              {
+                id: crypto.randomUUID(),
+                text: text.trim(),
+                completed: false,
+              },
+            ];
+            return {
+              ...task,
+              completed: false,
+              completedAt: undefined,
+              subtasks,
+            };
+          }),
+        })),
+      toggleSubtask: (taskId, subtaskId) =>
+        set((state) => {
+          let shouldClearSelected = false;
+          const tasks = state.tasks.map((task) => {
+            if (task.id !== taskId) return task;
+            const subtasks = (task.subtasks || []).map((sub) =>
+              sub.id === subtaskId ? { ...sub, completed: !sub.completed } : sub
+            );
+            const allCompleted = subtasks.length > 0 && subtasks.every((sub) => sub.completed);
+            if (allCompleted && state.selectedTaskId === taskId) {
+              shouldClearSelected = true;
+            }
+            return {
+              ...task,
+              completed: allCompleted,
+              completedAt: allCompleted
+                ? (task.completed ? task.completedAt : new Date().toISOString())
+                : undefined,
+              subtasks,
+            };
+          });
+          return {
+            tasks,
+            selectedTaskId: shouldClearSelected ? null : state.selectedTaskId,
+          };
+        }),
+      deleteSubtask: (taskId, subtaskId) =>
+        set((state) => {
+          let shouldClearSelected = false;
+          const tasks = state.tasks.map((task) => {
+            if (task.id !== taskId) return task;
+            const subtasks = (task.subtasks || []).filter((sub) => sub.id !== subtaskId);
+            if (subtasks.length === 0) {
+              return { ...task, subtasks };
+            }
+            const allCompleted = subtasks.every((sub) => sub.completed);
+            if (allCompleted && state.selectedTaskId === taskId) {
+              shouldClearSelected = true;
+            }
+            return {
+              ...task,
+              completed: allCompleted,
+              completedAt: allCompleted
+                ? (task.completed ? task.completedAt : new Date().toISOString())
+                : undefined,
+              subtasks,
+            };
+          });
+          return {
+            tasks,
+            selectedTaskId: shouldClearSelected ? null : state.selectedTaskId,
+          };
+        }),
+      setSelectedTaskId: (id) => set({ selectedTaskId: id }),
 
       // Sessions
       sessions: [
@@ -228,7 +421,10 @@ export const useDesktopStore = create<DesktopState>()(
       // Focus Shield
       shield: { ...DEFAULT_SHIELD_CONFIG },
       setShieldEnabled: (enabled) =>
-        set((state) => ({ shield: { ...state.shield, enabled } })),
+        set((state) => {
+          if (state.isActive && state.timerState === "FLOW") return state;
+          return { shield: { ...state.shield, enabled } };
+        }),
       addBlockedSite: (site) => {
         const clean = normalizeSite(site);
         if (!clean) return;
@@ -243,12 +439,15 @@ export const useDesktopStore = create<DesktopState>()(
         });
       },
       removeBlockedSite: (site) =>
-        set((state) => ({
-          shield: {
-            ...state.shield,
-            blockedSites: state.shield.blockedSites.filter((s) => s !== site),
-          },
-        })),
+        set((state) => {
+          if (state.isActive && state.timerState === "FLOW") return state;
+          return {
+            shield: {
+              ...state.shield,
+              blockedSites: state.shield.blockedSites.filter((s) => s !== site),
+            },
+          };
+        }),
       addAllowedSite: (site) => {
         const clean = normalizeSite(site);
         if (!clean) return;
@@ -263,12 +462,15 @@ export const useDesktopStore = create<DesktopState>()(
         });
       },
       removeAllowedSite: (site) =>
-        set((state) => ({
-          shield: {
-            ...state.shield,
-            allowedSites: state.shield.allowedSites.filter((s) => s !== site),
-          },
-        })),
+        set((state) => {
+          if (state.isActive && state.timerState === "FLOW") return state;
+          return {
+            shield: {
+              ...state.shield,
+              allowedSites: state.shield.allowedSites.filter((s) => s !== site),
+            },
+          };
+        }),
       addBlockedApp: (app) => {
         const clean = normalizeAppName(app);
         if (!clean) return;
@@ -283,12 +485,15 @@ export const useDesktopStore = create<DesktopState>()(
         });
       },
       removeBlockedApp: (app) =>
-        set((state) => ({
-          shield: {
-            ...state.shield,
-            blockedApps: state.shield.blockedApps.filter((a) => a !== app),
-          },
-        })),
+        set((state) => {
+          if (state.isActive && state.timerState === "FLOW") return state;
+          return {
+            shield: {
+              ...state.shield,
+              blockedApps: state.shield.blockedApps.filter((a) => a !== app),
+            },
+          };
+        }),
 
       shieldViolations: [],
       pushShieldViolation: (violation) =>
@@ -335,6 +540,7 @@ export const useDesktopStore = create<DesktopState>()(
         const storedShield = (persisted.shield ?? {}) as Partial<ShieldConfig>;
         return {
           ...(persisted as object),
+          breakRatio: (persisted.breakRatio as BreakRatio) ?? "1/5",
           autoPauseOnExternalAudio: persisted.autoPauseOnExternalAudio ?? false,
           autoPauseFadeDuration:
             typeof persisted.autoPauseFadeDuration === "number"
@@ -349,11 +555,13 @@ export const useDesktopStore = create<DesktopState>()(
               storedShield.allowedSites ?? DEFAULT_SHIELD_CONFIG.allowedSites,
             blockedApps:
               storedShield.blockedApps ?? DEFAULT_SHIELD_CONFIG.blockedApps,
-          },
+            strictMode:
+              storedShield.strictMode ?? DEFAULT_SHIELD_CONFIG.strictMode ?? true,
+          } as ShieldConfig,
         };
       },
       partialize: (state) => {
-        const { shieldViolations: _omit, ...persisted } = state;
+        const { shieldViolations: _omit, isMiniMode: _omitMini, ...persisted } = state;
         return persisted;
       },
     }

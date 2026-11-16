@@ -10,7 +10,7 @@ assignees: ''
 A clear and concise description of what the bug is.
 
 **App Affected**
-- [ ] Website (`apps/website`)
+- [ ] Web (`apps/web`)
 - [ ] Landing (`apps/landing`)
 - [ ] Desktop (`apps/desktop`)
 - [ ] Mobile (`apps/mobile`)

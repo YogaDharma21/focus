@@ -19,10 +19,10 @@ pnpm run dev
 ```
 Open [http://localhost:3000](http://localhost:3000) or specified port.
 
-### 2. Main Web Application (`apps/website`)
+### 2. Main Web Application (`apps/web`)
 
 ```bash
-cd apps/website
+cd apps/web
 pnpm install
 pnpm run dev
 ```

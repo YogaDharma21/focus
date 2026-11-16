@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { playCompletionSound } from '../../lib/sound';
+import { playCompletionSound, registerAutoplayUnlock } from '../../lib/sound';
 import { useDesktopStore } from '../../lib/store';
 import { electron } from '../../lib/electron';
 
@@ -19,6 +19,10 @@ export const GlobalTimerEngine: React.FC = () => {
   } = useDesktopStore();
 
   const prevTimerRef = React.useRef({ isActive, timerState });
+
+  useEffect(() => {
+    registerAutoplayUnlock();
+  }, []);
 
   useEffect(() => {
     const prev = prevTimerRef.current;
@@ -41,7 +45,11 @@ export const GlobalTimerEngine: React.FC = () => {
           setTimeLeft((prev) => {
             const next = prev - 1;
             if (next <= 0) {
-              playCompletionSound();
+              const breakNotification = {
+                title: 'Break Finished!',
+                body: 'Time to get back into flow.',
+              };
+              playCompletionSound(false, breakNotification);
               setTimerState('FLOW');
               if (autoStartFlow ?? true) {
                 setDeepFocusMode(true);
