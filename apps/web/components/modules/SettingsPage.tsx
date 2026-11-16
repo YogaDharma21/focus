@@ -28,6 +28,7 @@ import {
     AlertCircle,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import * as React from "react";
 import { useState, useRef } from "react";
 
 export function SettingsPage() {

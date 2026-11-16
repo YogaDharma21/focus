@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useAppStore, ViewType } from "@/lib/store";
 import { LayoutGrid, CheckSquare, Calendar, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
